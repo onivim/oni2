@@ -110,9 +110,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
           startItems={Feature_StatusBar.Configuration.startItems.get(config)}
           endItems={Feature_StatusBar.Configuration.endItems.get(config)}
           showOnNotification={
-            Feature_StatusBar.Configuration.showOnNotification.get(
-              config,
-            )
+            Feature_StatusBar.Configuration.showOnNotification.get(config)
           }
         />
       </View>;

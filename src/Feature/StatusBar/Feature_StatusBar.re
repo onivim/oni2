@@ -561,11 +561,7 @@ module View = {
       |> Option.value(~default=React.empty);
 
     let allItems =
-      List.concat([
-        startItems,
-        endItems,
-      ])
-      |> List.filter(a => a != "...");
+      List.concat([startItems, endItems]) |> List.filter(a => a != "...");
 
     let itemsTextMapper = (def, str) =>
       switch (str) {
@@ -574,24 +570,47 @@ module View = {
       };
 
     let def = ["notificationCount", "modeIndicator"];
-    let showOnNotification = showOnNotification |> List.map(str =>
-      switch (str) {
-      | "..." => def 
-      | str => [str]
-    }) |> List.concat;
+    let showOnNotification =
+      showOnNotification
+      |> List.map(str =>
+           switch (str) {
+           | "..." => def
+           | str => [str]
+           }
+         )
+      |> List.concat;
 
-    let def = ["notificationCount", "macro", "leftItems", "diagnosticCount", "git"] |> List.filter(a => !List.exists(b => a == b, allItems));
-    let startItems = startItems |> List.map(itemsTextMapper(def)) |> List.concat;
+    let def =
+      ["notificationCount", "macro", "leftItems", "diagnosticCount", "git"]
+      |> List.filter(a => !List.exists(b => a == b, allItems));
+    let startItems =
+      startItems |> List.map(itemsTextMapper(def)) |> List.concat;
 
-    let def = ["rightItems", "lineEndings", "indentation", "fileType", "position", "modeIndicator"] |> List.filter(a => !List.exists(b => a == b, allItems));
+    let def =
+      [
+        "rightItems",
+        "lineEndings",
+        "indentation",
+        "fileType",
+        "position",
+        "modeIndicator",
+      ]
+      |> List.filter(a => !List.exists(b => a == b, allItems));
     let endItems = endItems |> List.map(itemsTextMapper(def)) |> List.concat;
 
-    let notificationItemsStart = startItems |> List.filter(a => !List.exists(b => a == b, showOnNotification))
-    let startItems = startItems |> List.filter(a => List.exists(b => a == b, showOnNotification))
+    let notificationItemsStart =
+      startItems
+      |> List.filter(a => !List.exists(b => a == b, showOnNotification));
+    let startItems =
+      startItems
+      |> List.filter(a => List.exists(b => a == b, showOnNotification));
 
-    let notificationItemsEnd = endItems |> List.filter(a => !List.exists(b => a == b, showOnNotification))
-    let endItems = endItems |> List.filter(a => List.exists(b => a == b, showOnNotification))
-
+    let notificationItemsEnd =
+      endItems
+      |> List.filter(a => !List.exists(b => a == b, showOnNotification));
+    let endItems =
+      endItems
+      |> List.filter(a => List.exists(b => a == b, showOnNotification));
 
     let fieldMaper = str =>
       switch (str) {
