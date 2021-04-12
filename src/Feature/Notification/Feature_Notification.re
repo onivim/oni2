@@ -456,26 +456,26 @@ module View = {
           />;
         | None => React.empty
         };
-      
-      onlyAnimation ? 
-      <View ?key style={Styles.container(~background, ~yOffset)}>
-        <Text
-          style={Styles.text(~foreground)}
-          fontFamily={font.family}
-          fontSize=11.
-          text={""}
-        />
-      </View> :
-      <View ?key style={Styles.container(~background, ~yOffset)}>
-        <icon />
-        <source />
-        <Text
-          style={Styles.text(~foreground)}
-          fontFamily={font.family}
-          fontSize=11.
-          text={model.message}
-        />
-      </View>;
+
+      onlyAnimation
+        ? <View ?key style={Styles.container(~background, ~yOffset)}>
+            <Text
+              style={Styles.text(~foreground)}
+              fontFamily={font.family}
+              fontSize=11.
+              text=""
+            />
+          </View>
+        : <View ?key style={Styles.container(~background, ~yOffset)}>
+            <icon />
+            <source />
+            <Text
+              style={Styles.text(~foreground)}
+              fontFamily={font.family}
+              fontSize=11.
+              text={model.message}
+            />
+          </View>;
     };
   };
 

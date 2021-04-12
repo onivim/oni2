@@ -55,7 +55,11 @@ module ConfigurationItems = {
           startItems: field.withDefault("start", ["..."], list(string)),
           endItems: field.withDefault("end", ["..."], list(string)),
           showOnNotification:
-            field.withDefault("showOnNotification", [ "notificationCount", "modeIndicator" ], list(string)),
+            field.withDefault(
+              "showOnNotification",
+              ["notificationCount", "modeIndicator"],
+              list(string),
+            ),
         }
       )
     );
@@ -73,6 +77,78 @@ module ConfigurationItems = {
     );
 
   let codec = Config.Schema.DSL.custom(~decode, ~encode);
+
+  let startItemsDef = [
+    "notificationCount",
+    "macro",
+    "leftItems",
+    "diagnosticCount",
+    "git",
+    "notificationPopup",
+  ];
+
+  let endItemsDef = [
+    "rightItems",
+    "lineEndings",
+    "indentation",
+    "fileType",
+    "position",
+    "modeIndicator",
+  ];
+
+  let preProcess = (t, statusBarItems) => {
+    //Helper funcions
+    let removeFromList = (listToRemove, list) =>
+      list |> List.filter(a => !List.mem(a, listToRemove));
+
+    let process = (def, list) =>
+      list
+      //List (srt) -> List ((str, notificaion))
+      |> List.map(str =>
+           switch (str) {
+           | "..." => def
+           | str => [str]
+           }
+         )
+      |> List.flatten
+      |> List.map(str => (str, !List.mem(str, t.showOnNotification)))
+      //List ((str, notificaion)) -> List (list(str), notificaion)
+      |> List.fold_left(
+           (a, item) => {
+             let (toAdd, notificationToAdd) = item;
+             let (head, notification) = a |> List.hd;
+
+             notificationToAdd == notification
+               ? List.append(
+                   [(List.append(head, [toAdd]), notification)],
+                   a |> List.tl,
+                 )
+               : List.append([([toAdd], notificationToAdd)], a);
+           },
+           [([], false)],
+         );
+
+    let allItems =
+      List.concat([t.startItems, t.endItems]) |> List.filter(a => a != "...");
+
+    let startItemsDef = startItemsDef |> removeFromList(allItems);
+
+    let endItemsDef = endItemsDef |> removeFromList(allItems);
+
+    let getItemsFromAlign = align =>
+      statusBarItems
+      |> List.filter((item: Item.t) =>
+           item.alignment == align && !List.mem(item.id, allItems)
+         );
+
+    (
+      process(startItemsDef, t.startItems),
+      process(endItemsDef, t.endItems),
+      List.mem("center", t.showOnNotification),
+      getItemsFromAlign(Right),
+      getItemsFromAlign(Left),
+    );
+  };
 };
 
 // MSG
@@ -429,11 +505,6 @@ module View = {
         ~items: ConfigurationItems.t,
         (),
       ) => {
-
-    let startItems = items.startItems;
-    let endItems = items.endItems;
-    let showOnNotification = items.showOnNotification;
-
     let activeNotifications = Feature_Notification.active(notifications);
     let background =
       Feature_Notification.statusBarBackground(~theme, notifications);
@@ -565,7 +636,13 @@ module View = {
       activeNotifications
       |> List.rev
       |> List.map(model =>
-           <Feature_Notification.View.Popup model background foreground font onlyAnimation />
+           <Feature_Notification.View.Popup
+             model
+             background
+             foreground
+             font
+             onlyAnimation
+           />
          )
       |> React.listToElement;
 
@@ -574,120 +651,84 @@ module View = {
       |> Option.map(register => <macro register />)
       |> Option.value(~default=React.empty);
 
-    let allItems =
-      List.concat([startItems, endItems]) |> List.filter(a => a != "...");
-
-    let itemsPreProcess = (def, list) => list |> List.map( str =>
-      switch (str) {
-      | "..." => def
-      | str => [str]
-      }) |> List.flatten |> 
-        List.map(str => (str, !List.mem(str, showOnNotification)));
-
-    let removeFromList = (listToRemove, list) => list |> List.filter(a => !List.mem(a, listToRemove));
+    let (startItems, endItems, center, rightItems, leftItems) =
+      ConfigurationItems.preProcess(items, statusBar.items);
 
     let rightItems =
-      statusBar.items
-      |> List.filter((item: Item.t) => item.alignment == Right && !List.mem(item.id, allItems))
+      rightItems
       |> List.map(({command, label, color, tooltip, _}: Item.t) =>
            toStatusBarElement(~command?, ~color?, ~tooltip?, label)
          )
       |> React.listToElement;
 
     let leftItems =
-      statusBar.items
-      |> List.filter((item: Item.t) => item.alignment == Left && !List.mem(item.id, allItems))
-      |> List.map(
-           ({command, label, color, tooltip, backgroundColor, _}: Item.t) =>
-           toStatusBarElement(
-             ~command?,
-             ~backgroundColor?, ~color?,
-             ~tooltip?,
-             label,
-           )
+      leftItems
+      |> List.map(({command, label, color, tooltip, _}: Item.t) =>
+           toStatusBarElement(~command?, ~color?, ~tooltip?, label)
          )
       |> React.listToElement;
 
-
-    let startItems = startItems |> itemsPreProcess([
-      "notificationCount", 
-      "macro", 
-      "leftItems", 
-      "diagnosticCount", 
-      "git",
-      "notificationPopup"
-    ] |> removeFromList(allItems));
-
-    let endItems = endItems |> itemsPreProcess([
-      "rightItems",
-      "lineEndings",
-      "indentation",
-      "fileType",
-      "position",
-      "modeIndicator",
-    ] |> removeFromList(allItems));
-
-    let itemsToElement = list => list |> 
-    //List (item) -> List ((List ( item name ), notificaion))
-    List.fold_left((a, item) => {
-      let (toAdd, notificationToAdd) = item;
-      let (head, notification) = a |> List.hd;
-
-      switch (notificationToAdd == notification) {
-      | true => List.append([(List.append(head, [toAdd]),notification)], a |> List.tl)
-      | false => List.append([([toAdd], notificationToAdd)],a)
-      } 
-    }, [([], false)]) |> 
-
-    //List ((List ( item name ), notificaion)) -> List(elements)
-    List.rev_map(item => {
-      let (list, noti) = item;
-      let onlyAnimation = !List.mem("notificationPopup", list)
-      let list = list |> List.map(str => switch str {
-      | "modeIndicator" => <ModeIndicator font theme mode subMode />
-      | "notificationCount" =>
-        <notificationCount
-          dispatch
-          theme
-          font
-          foreground
-          notifications
-          maybeContextMenu={statusBar.contextMenu}
-        />
-      | "diagnosticCount" =>
-        <diagnosticCount font theme diagnostics dispatch />
-      | "lineEndings" => <lineEndings />
-      | "indentation" => <indentation />
-      | "fileType" => <fileType />
-      | "position" => <position />
-      | "macro" => macroElement
-      | "leftItems" => leftItems
-      | "git" => scmItems
-      | "rightItems" => rightItems
-      | str =>
-        statusBar.items
-        |> List.filter((item: Item.t) => item.id == str)
-        |> List.map(({command, label, color, tooltip, _}: Item.t) =>
-             toStatusBarElement(~command?, ~color?, ~tooltip?, label)
-           )
-        |> React.listToElement
-      }) |> React.listToElement
-      if (noti) {
-        <sectionGroup>
-          <section align=`Center>
-            {list}
-          </section>
-          <notificationPopups onlyAnimation />
-        </sectionGroup>
-      } else {
-        list
-      }
-    })
-    |> React.listToElement;
+    let itemsToElement = list =>
+      list
+      |> List.rev_map(item => {
+           let (list, noti) = item;
+           let onlyAnimation = !List.mem("notificationPopup", list);
+           let list =
+             list
+             |> List.map(str =>
+                  switch (str) {
+                  | "modeIndicator" =>
+                    <ModeIndicator font theme mode subMode />
+                  | "notificationCount" =>
+                    <notificationCount
+                      dispatch
+                      theme
+                      font
+                      foreground
+                      notifications
+                      maybeContextMenu={statusBar.contextMenu}
+                    />
+                  | "diagnosticCount" =>
+                    <diagnosticCount font theme diagnostics dispatch />
+                  | "lineEndings" => <lineEndings />
+                  | "indentation" => <indentation />
+                  | "fileType" => <fileType />
+                  | "position" => <position />
+                  | "macro" => macroElement
+                  | "leftItems" => leftItems
+                  | "git" => scmItems
+                  | "rightItems" => rightItems
+                  | str =>
+                    statusBar.items
+                    |> List.filter((item: Item.t) => item.id == str)
+                    |> List.map(
+                         ({command, label, color, tooltip, _}: Item.t) =>
+                         toStatusBarElement(
+                           ~command?,
+                           ~color?,
+                           ~tooltip?,
+                           label,
+                         )
+                       )
+                    |> React.listToElement
+                  }
+                )
+             |> React.listToElement;
+           if (noti) {
+             <sectionGroup>
+               <section align=`Center> list </section>
+               <notificationPopups onlyAnimation />
+             </sectionGroup>;
+           } else {
+             list;
+           };
+         })
+      |> React.listToElement;
 
     let startItems = startItems |> itemsToElement;
     let endItems = endItems |> itemsToElement;
-    let center = List.mem("center", showOnNotification) ? React.empty : <notificationPopups onlyAnimation=true />;
+    let center =
+      center ? React.empty : <notificationPopups onlyAnimation=true />;
 
     <View
       ?key
@@ -696,9 +737,7 @@ module View = {
         yOffset,
       )}>
       <section align=`FlexStart> startItems </section>
-      <section align=`Center>
-        center
-      </section>
+      <section align=`Center> center </section>
       <section align=`FlexStart> endItems </section>
     </View>;
   };
@@ -714,7 +753,7 @@ module Configuration = {
       ~default={
         startItems: ["..."],
         endItems: ["..."],
-        showOnNotification: [ "notificationCount", "modeIndicator" ],
+        showOnNotification: ["notificationCount", "modeIndicator"],
       },
     );
 };
