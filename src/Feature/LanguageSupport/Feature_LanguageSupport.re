@@ -964,6 +964,7 @@ let sub =
       ~isInsertMode,
       ~isAnimatingScroll,
       ~activeBuffer,
+      ~activeEditor,
       ~activePosition,
       ~lineHeightInPixels,
       ~positionToRelativePixel,
@@ -1000,6 +1001,7 @@ let sub =
       ~buffer=activeBuffer,
       ~config,
       ~activePosition,
+      ~activeEditor,
       ~topVisibleBufferLine,
       ~bottomVisibleBufferLine,
       ~lineHeightInPixels,
@@ -1082,6 +1084,7 @@ module View = {
         (
           ~x as _,
           ~y as _,
+          ~editorId,
           ~theme,
           ~model,
           ~editorFont,
@@ -1089,7 +1092,7 @@ module View = {
           ~dispatch as _,
           (),
         ) => {
-      <CodeActions.View editorFont theme model={model.codeActions} />;
+      <CodeActions.View editorId editorFont theme model={model.codeActions} />;
     };
   };
 };

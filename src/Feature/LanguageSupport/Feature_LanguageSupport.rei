@@ -171,6 +171,7 @@ let sub:
     ~isInsertMode: bool,
     ~isAnimatingScroll: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
+    ~activeEditor: int,
     ~activePosition: CharacterPosition.t,
     ~lineHeightInPixels: float,
     ~positionToRelativePixel: CharacterPosition.t => PixelPosition.t,
@@ -251,6 +252,7 @@ module View: {
       (
         ~x: int,
         ~y: int,
+        ~editorId: int,
         ~theme: ColorTheme.Colors.t,
         ~model: model,
         ~editorFont: Service_Font.font,

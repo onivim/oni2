@@ -370,6 +370,7 @@ let start =
              ~isInsertMode=isInsertOrSelectMode,
              ~isAnimatingScroll,
              ~activeBuffer,
+             ~activeEditor=activeEditorId,
              ~activePosition,
              ~lineHeightInPixels,
              ~positionToRelativePixel,

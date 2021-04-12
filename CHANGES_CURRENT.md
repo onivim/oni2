@@ -44,6 +44,7 @@
 - #3394 - Extensions: Fix error parsing extension manifest with boolean when express (related #3388)
 - #3390 - Diagnostics: Some diagnostics wouldn't show in hover UI (related #3231)
 - #3403 - Code Actions: Add 'editor.lightBulb.enabled' configuration setting
+- #3396 - Code Actions: Fix some issues around light bulb rendering
 
 ### Performance
 
