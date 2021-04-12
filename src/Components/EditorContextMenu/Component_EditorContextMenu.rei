@@ -1,9 +1,23 @@
 open EditorCoreTypes;
 open Oni_Core;
 
+module Schema: {
+  type t('item);
+
+  module Renderer: {
+    type t('item) =
+      (~theme: ColorTheme.Colors.t, ~uiFont: UiFont.t, 'item) =>
+      Revery.UI.element;
+
+    let default: (~toString: 'item => string) => t('item);
+  };
+
+  let contextMenu: (~renderer: Renderer.t('item)) => t('item);
+};
+
 type model('item);
 
-let create: list('item) => model('item);
+let create: (~schema: Schema.t('item), list('item)) => model('item);
 
 let set: (~items: list('item), model('item)) => model('item);
 
@@ -28,4 +42,13 @@ let sub:
   ) =>
   Isolinear.Sub.t(msg('item));
 
-module View: {let make: (~model: model(_), unit) => Revery.UI.element;};
+module View: {
+  let make:
+    (
+      ~theme: ColorTheme.Colors.t,
+      ~uiFont: UiFont.t,
+      ~model: model(_),
+      unit
+    ) =>
+    Revery.UI.element;
+};

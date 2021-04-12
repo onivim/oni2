@@ -1,6 +1,22 @@
 open EditorCoreTypes;
 open Oni_Core;
 
+module Schema = {
+  module Renderer = {
+    type t('item) =
+      (~theme: ColorTheme.Colors.t, ~uiFont: UiFont.t, 'item) =>
+      Revery.UI.element;
+
+    let default = (~toString, ~theme, ~uiFont, item) => {
+      <Revery.UI.Text text={toString(item)} />;
+    };
+  };
+
+  type t('item) = {renderer: Renderer.t('item)};
+
+  let contextMenu = (~renderer) => {renderer: renderer};
+};
+
 module Constants = {
   let maxWidth = 500.;
   let maxHeight = 500.;
@@ -8,20 +24,22 @@ module Constants = {
 };
 
 type model('item) = {
+  schema: Schema.t('item),
   popup: Component_Popup.model,
-  items: list('item),
+  items: array('item),
 };
 
-let create = items => {
+let create = (~schema, items) => {
+  schema,
   popup:
     Component_Popup.create(
       ~width=Constants.maxWidth,
       ~height=Constants.maxHeight,
     ),
-  items,
+  items: Array.of_list(items),
 };
 
-let set = (~items, model) => {...model, items};
+let set = (~items, model) => {...model, items: Array.of_list(items)};
 
 type msg('item) =
   | Nothing
@@ -55,14 +73,21 @@ let sub = (~isVisible, ~pixelPosition, model) => {
 
 module View = {
   open Revery.UI;
-  let make = (~model, ()) => {
+  let make = (~theme, ~uiFont, ~model, ()) => {
     <Component_Popup.View
       model={model.popup}
       inner={(~transition) => {
-        <Revery.UI.Components.Container
-          width=24 height=24 color=Revery.Colors.red>
-          <Text text="hello" />
-        </Revery.UI.Components.Container>
+        <Oni_Components.FlatList
+          rowHeight=20
+          initialRowsToRender=5
+          count={Array.length(model.items)}
+          theme
+          focused=None>
+          ...{index => {
+            let item = model.items[index];
+            model.schema.renderer(~theme, ~uiFont, item);
+          }}
+        </Oni_Components.FlatList>
       }}
     />;
   };

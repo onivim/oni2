@@ -174,8 +174,14 @@ let update = (~buffer, ~cursorLocation, msg, model) => {
         |> Option.value(~default=Outmsg.Nothing);
       (model, outmsg);
     } else {
+      let toString = (codeAction: CodeAction.t) => {
+        Exthost.CodeAction.(codeAction.action.title);
+      };
+      let renderer =
+        Component_EditorContextMenu.Schema.Renderer.default(~toString);
+      let schema = Component_EditorContextMenu.Schema.contextMenu(~renderer);
       let quickFixMenu =
-        Component_EditorContextMenu.create([]) |> Option.some;
+        Component_EditorContextMenu.create(~schema, all) |> Option.some;
 
       ({...model, quickFixContextMenu: quickFixMenu}, Outmsg.Nothing);
     };
@@ -371,6 +377,8 @@ module View = {
       model.quickFixContextMenu
       |> Option.map(model => {
            <Component_EditorContextMenu.View
+             theme
+             model
              // <Revery.UI.Components.Clickable
              //   onClick={_ => prerr_endline("clicked")}
              //   style=Revery.UI.Style.[
@@ -384,7 +392,7 @@ module View = {
              //     height=32
              //     color=Revery.Colors.magenta
              //   />
-             model
+             uiFont
              // </Revery.UI.Components.Clickable>;
            />
          })
