@@ -227,7 +227,13 @@ let update = (~buffer, ~cursorLocation, msg, model) => {
 
            let eff =
              switch (outmsg) {
-             | _ => Outmsg.Nothing
+             | Nothing => Outmsg.Nothing
+             | Cancelled => Outmsg.Nothing
+             | FocusChanged(_) => Outmsg.Nothing
+             | Selected(item) =>
+               Exthost.CodeAction.(item.action.edit)
+               |> Option.map(edit => {Outmsg.ApplyWorkspaceEdit(edit)})
+               |> Option.value(~default=Outmsg.Nothing)
              };
 
            ({...model, quickFixContextMenu: Some(model')}, eff);
@@ -417,39 +423,38 @@ module View = {
       };
   };
 
-    module Overlay = {
-      let make =
-          (~dispatch as _, ~theme, ~uiFont, ~editorFont as _, ~model, ()) => {
-        model.quickFixContextMenu
-        |> Option.map(model => {
-             <Component_EditorContextMenu.View
-               theme
-               model
-               // <Revery.UI.Components.Clickable
-               //   onClick={_ => prerr_endline("clicked")}
-               //   style=Revery.UI.Style.[
-               //     pointerEvents(`Allow),
-               //     position(`Absolute),
-               //     top(0),
-               //     left(0),
-               //   ]>
-               //   <Revery.UI.Components.Container
-               //     width=32
-               //     height=32
-               //     color=Revery.Colors.magenta
-               //   />
-               uiFont
-               // </Revery.UI.Components.Clickable>;
-             />
-           })
-        |> Option.value(
-             ~default=
-               <Revery.UI.Components.Container
-                 width=32
-                 height=32
-                 color=Revery.Colors.magenta
-               />,
-           );
-      };
+  module Overlay = {
+    let make = (~dispatch as _, ~theme, ~uiFont, ~editorFont as _, ~model, ()) => {
+      model.quickFixContextMenu
+      |> Option.map(model => {
+           <Component_EditorContextMenu.View
+             theme
+             model
+             // <Revery.UI.Components.Clickable
+             //   onClick={_ => prerr_endline("clicked")}
+             //   style=Revery.UI.Style.[
+             //     pointerEvents(`Allow),
+             //     position(`Absolute),
+             //     top(0),
+             //     left(0),
+             //   ]>
+             //   <Revery.UI.Components.Container
+             //     width=32
+             //     height=32
+             //     color=Revery.Colors.magenta
+             //   />
+             uiFont
+             // </Revery.UI.Components.Clickable>;
+           />
+         })
+      |> Option.value(
+           ~default=
+             <Revery.UI.Components.Container
+               width=32
+               height=32
+               color=Revery.Colors.magenta
+             />,
+         );
     };
+  };
 };

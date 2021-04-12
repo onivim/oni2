@@ -82,7 +82,7 @@ module Internal = {
     };
   };
 
-  let selectNext = ({items, selected, _} as model) => {
+  let selectNext = ({selected, _} as model) => {
     let selected' =
       switch (selected) {
       | None => Some(0)
@@ -92,7 +92,7 @@ module Internal = {
     {...model, selected: selected'} |> ensureSelectionInRange;
   };
 
-  let selectPrevious = ({items, selected, _} as model) => {
+  let selectPrevious = ({selected, _} as model) => {
     let selected' =
       switch (selected) {
       | None => Some(0)

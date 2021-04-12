@@ -698,10 +698,14 @@ let update =
              })
           |> List.map((textEdit: Exthost.WorkspaceEdit.TextEdit.t) => {
                let edit = textEdit.edit;
+               let text =
+                 edit.text
+                 |> Oni_Core.Utility.StringEx.removeWindowsNewLines
+                 |> Oni_Core.Utility.StringEx.splitNewLines;
 
                Vim.Edit.{
                  range: edit.range |> Exthost.OneBasedRange.toRange,
-                 text: [|edit.text|],
+                 text,
                };
              });
         };
