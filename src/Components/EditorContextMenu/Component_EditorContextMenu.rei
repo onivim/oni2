@@ -32,7 +32,7 @@ type outmsg('item) =
 let update: (msg('item), model('item)) => (model('item), outmsg('item));
 
 module Contributions: {
-  let commands: list(Oni_Core.Command.t(msg(_)));
+  let commands: model('item) => list(Oni_Core.Command.t(msg('item)));
 
   let contextKeys: model(_) => WhenExpr.ContextKeys.t;
 

@@ -313,7 +313,7 @@ module Hover: {
 
 module Contributions: {
   let colors: list(ColorTheme.Schema.definition);
-  let commands: list(Command.t(msg));
+  let commands: model => list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
   let contextKeys: model => WhenExpr.ContextKeys.t;
   let keybindings: list(Feature_Input.Schema.keybinding);

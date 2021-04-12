@@ -138,12 +138,13 @@ module View = {
 };
 
 module Contributions = {
-  let commands =
+  let commands = _model => {
     Commands.[
       acceptContextItem,
       selectNextContextItem,
       selectPrevContextItem,
     ];
+  };
 
   let contextKeys = model =>
     WhenExpr.ContextKeys.(

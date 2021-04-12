@@ -271,11 +271,11 @@ let make = (~dispatch, ~state: State.t, ()) => {
       />
       <Feature_LanguageSupport.View.Overlay
         theme
-        uiFont=uiFont
-        editorFont=state.editorFont
+        uiFont
+        editorFont={state.editorFont}
         model={state.languageSupport}
         dispatch={msg => dispatch(Actions.LanguageSupport(msg))}
-        />
+      />
     </Overlay>
     <statusBar />
     <Component_ContextMenu.View.Overlay />

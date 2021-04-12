@@ -336,17 +336,29 @@ module Keybindings = {
 };
 
 module Contributions = {
-  let commands = Commands.[quickFix];
+  let commands = model => {
+    let static = Commands.[quickFix];
+
+    let dynamic =
+      model.quickFixContextMenu
+      |> Option.map(qf => {
+           Component_EditorContextMenu.Contributions.commands(qf)
+           |> List.map(Oni_Core.Command.map(msg => QuickFixContextMenu(msg)))
+         })
+      |> Option.value(~default=[]);
+
+    static @ dynamic;
+  };
 
   let keybindings = Keybindings.[quickFix];
 
-  let contextKeys = (model) => {
+  let contextKeys = model => {
     model.quickFixContextMenu
     |> Option.map(qf => {
-      Component_EditorContextMenu.Contributions.contextKeys(qf)
-    })
+         Component_EditorContextMenu.Contributions.contextKeys(qf)
+       })
     |> Option.value(~default=WhenExpr.ContextKeys.empty);
-  }
+  };
 };
 
 module View = {

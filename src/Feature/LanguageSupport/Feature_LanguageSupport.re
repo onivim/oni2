@@ -697,14 +697,14 @@ module Contributions = {
 
   let colors = CodeLens.Contributions.colors @ Completion.Contributions.colors;
 
-  let commands =
+  let commands = model =>
     [Commands.close]
     @ (
       Completion.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Completion(msg)))
     )
     @ (
-      CodeActions.Contributions.commands
+      CodeActions.Contributions.commands(model.codeActions)
       |> List.map(Oni_Core.Command.map(msg => CodeActions(msg)))
     )
     @ (
