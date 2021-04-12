@@ -15,6 +15,8 @@ module Spring: {
   let set: (~instant: bool, ~position: float, t) => t;
   let get: t => float;
   let getTarget: t => float;
+
+  let toDebugString: t => string;
 };
 
 module ColorTransition: {

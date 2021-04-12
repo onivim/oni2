@@ -61,11 +61,7 @@ let getTarget = ({target, _}) => target;
 
 let set = (~instant: bool, ~position: float, model) => {
   switch (model.startTime) {
-  | None => {
-      ...model,
-      target: position,
-      spring: Spring.create(position, Revery.Time.now()),
-    }
+  | None => {...model, target: position}
   | Some(_) when instant => {
       ...model,
       target: position,
@@ -88,3 +84,13 @@ let sub = model =>
   } else {
     Isolinear.Sub.none;
   };
+
+let toDebugString = model => {
+  Printf.sprintf(
+    "Spring: %s (%f -> %f) isActive: %b",
+    model.uniqueId,
+    get(model),
+    getTarget(model),
+    isActive(model),
+  );
+};

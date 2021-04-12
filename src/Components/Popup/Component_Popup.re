@@ -2,6 +2,9 @@ open EditorCoreTypes;
 open Oni_Core;
 module Spring = Component_Animation.Spring;
 
+module UniqueId =
+  UniqueId.Make({});
+
 type model = {
   width: float,
   height: float,
@@ -9,6 +12,7 @@ type model = {
   direction: float,
   isAnimated: bool,
   position: option(PixelPosition.t),
+  uniqueId: UniqueId.t,
 };
 
 let create = (~width, ~height) => {
@@ -18,6 +22,7 @@ let create = (~width, ~height) => {
   direction: 1.0,
   isAnimated: true,
   position: None,
+  uniqueId: UniqueId.create(~friendlyName="Component_Popup"),
 };
 
 type msg =
@@ -37,6 +42,7 @@ let update = (msg, model) => {
           model.enterExitSpring,
         ),
     }
+
   | PositionChanged(position) => {...model, position: Some(position)}
   | Hide => {
       ...model,
@@ -60,8 +66,10 @@ let configurationChanged = (~config as _, model) => {
 };
 
 let sub = (~isVisible: bool, ~pixelPosition: option(PixelPosition.t), model) => {
+  let uniqueIdStr = model.uniqueId |> UniqueId.toString;
+
   let visibleSubUniqueId =
-    "Component_Popup.Visible" ++ string_of_bool(isVisible);
+    Printf.sprintf("Component_Popup.Visible:%s.%b", uniqueIdStr, isVisible);
 
   let visibleSub =
     SubEx.value(~uniqueId=visibleSubUniqueId, isVisible ? Show : Hide);
@@ -71,7 +79,8 @@ let sub = (~isVisible: bool, ~pixelPosition: option(PixelPosition.t), model) => 
     |> Option.map((position: PixelPosition.t) => {
          let positionSubUniqueId =
            Printf.sprintf(
-             "Component_Popup.Position.%f.%f",
+             "Component_Popup.Position:%s.%f.%f",
+             uniqueIdStr,
              position.x,
              position.y,
            );
@@ -83,14 +92,10 @@ let sub = (~isVisible: bool, ~pixelPosition: option(PixelPosition.t), model) => 
     |> Option.value(~default=Isolinear.Sub.none);
 
   let springSub =
-    if (Component_Animation.Spring.isActive(model.enterExitSpring)) {
-      Component_Animation.Spring.sub(model.enterExitSpring)
-      |> Isolinear.Sub.map(msg => Animation(msg));
-    } else {
-      Isolinear.Sub.none;
-    };
+    Component_Animation.Spring.sub(model.enterExitSpring)
+    |> Isolinear.Sub.map(msg => Animation(msg));
 
-  [visibleSub, positionSub, springSub] |> Isolinear.Sub.batch;
+  [springSub, visibleSub, positionSub] |> Isolinear.Sub.batch;
 };
 
 module View = {

@@ -91,7 +91,8 @@ type model = {
   providers: list(provider),
   quickFixes: QuickFixes.t,
   lightBulbPopup: Component_Popup.model,
-  quickFixContextMenu: Component_EditorContextMenu.model(CodeAction.t),
+  quickFixContextMenu:
+    option(Component_EditorContextMenu.model(CodeAction.t)),
 };
 
 [@deriving show]
@@ -121,7 +122,7 @@ let initial = {
 
   lightBulbPopup: Component_Popup.create(~width=32., ~height=32.),
 
-  quickFixContextMenu: Component_EditorContextMenu.initial,
+  quickFixContextMenu: None,
 };
 
 let register =
@@ -173,7 +174,10 @@ let update = (~buffer, ~cursorLocation, msg, model) => {
         |> Option.value(~default=Outmsg.Nothing);
       (model, outmsg);
     } else {
-      (model, Outmsg.NotifyFailure("Context menu not yet implemented"));
+      let quickFixMenu =
+        Component_EditorContextMenu.create([]) |> Option.some;
+
+      ({...model, quickFixContextMenu: quickFixMenu}, Outmsg.Nothing);
     };
 
   | LightBulbPopup(popupMsg) => (
@@ -186,17 +190,22 @@ let update = (~buffer, ~cursorLocation, msg, model) => {
     )
 
   | QuickFixContextMenu(contextMenuMsg) =>
-    let (quickFixContextMenu', outmsg) =
+    let (model', eff) =
       model.quickFixContextMenu
-      |> Component_EditorContextMenu.update(contextMenuMsg);
+      |> Option.map(contextMenu => {
+           let (model', outmsg) =
+             Component_EditorContextMenu.update(contextMenuMsg, contextMenu);
 
-    // TODO
-    let eff =
-      switch (outmsg) {
-      | _ => Outmsg.Nothing
-      };
+           let eff =
+             switch (outmsg) {
+             | _ => Outmsg.Nothing
+             };
 
-    ({...model, quickFixContextMenu: quickFixContextMenu'}, eff);
+           ({...model, quickFixContextMenu: Some(model')}, eff);
+         })
+      |> Option.value(~default=(model, Outmsg.Nothing));
+
+    (model', eff);
 
   | QuickFixesAvailable({handle, actions}) => (
       {
@@ -278,11 +287,15 @@ let sub =
     |> Isolinear.Sub.map(msg => LightBulbPopup(msg));
 
   let quickFixContextMenuSub =
-    Component_EditorContextMenu.sub(
-      ~isVisible,
-      ~pixelPosition=Some(PixelPosition.zero),
-      codeActions.quickFixContextMenu,
-    )
+    codeActions.quickFixContextMenu
+    |> Option.map(qf => {
+         Component_EditorContextMenu.sub(
+           ~isVisible=true,
+           ~pixelPosition=Some(PixelPosition.zero),
+           qf,
+         )
+       })
+    |> Option.value(~default=Isolinear.Sub.none)
     |> Isolinear.Sub.map(msg => QuickFixContextMenu(msg));
 
   [lightBulbPopup, quickFixContextMenuSub, ...codeActionsSubs]
@@ -355,23 +368,34 @@ module View = {
           ~model,
           (),
         ) => {
-      <Component_EditorContextMenu.View
-        model={model.quickFixContextMenu}
-        // <Revery.UI.Components.Clickable
-        //   onClick={_ => prerr_endline("clicked")}
-        //   style=Revery.UI.Style.[
-        //     pointerEvents(`Allow),
-        //     position(`Absolute),
-        //     top(0),
-        //     left(0),
-        //   ]>
-        //   <Revery.UI.Components.Container
-        //     width=32
-        //     height=32
-        //     color=Revery.Colors.magenta
-        //   />
-        // </Revery.UI.Components.Clickable>;
-      />;
+      model.quickFixContextMenu
+      |> Option.map(model => {
+           <Component_EditorContextMenu.View
+             // <Revery.UI.Components.Clickable
+             //   onClick={_ => prerr_endline("clicked")}
+             //   style=Revery.UI.Style.[
+             //     pointerEvents(`Allow),
+             //     position(`Absolute),
+             //     top(0),
+             //     left(0),
+             //   ]>
+             //   <Revery.UI.Components.Container
+             //     width=32
+             //     height=32
+             //     color=Revery.Colors.magenta
+             //   />
+             model
+             // </Revery.UI.Components.Clickable>;
+           />
+         })
+      |> Option.value(
+           ~default=
+             <Revery.UI.Components.Container
+               width=32
+               height=32
+               color=Revery.Colors.magenta
+             />,
+         );
     };
   };
 };

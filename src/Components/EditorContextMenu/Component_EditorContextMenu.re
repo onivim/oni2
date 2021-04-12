@@ -21,8 +21,6 @@ let create = items => {
   items,
 };
 
-let initial = [] |> create;
-
 let set = (~items, model) => {...model, items};
 
 type msg('item) =
@@ -60,7 +58,12 @@ module View = {
   let make = (~model, ()) => {
     <Component_Popup.View
       model={model.popup}
-      inner={(~transition) => {<Text text="Hello world" />}}
+      inner={(~transition) => {
+        <Revery.UI.Components.Container
+          width=24 height=24 color=Revery.Colors.red>
+          <Text text="hello" />
+        </Revery.UI.Components.Container>
+      }}
     />;
   };
 };
