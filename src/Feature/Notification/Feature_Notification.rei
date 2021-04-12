@@ -99,6 +99,7 @@ module View: {
         ~background: Color.t,
         ~foreground: Color.t,
         ~font: UiFont.t,
+        ~onlyAnimation: bool,
         unit
       ) =>
       React.element(React.node);

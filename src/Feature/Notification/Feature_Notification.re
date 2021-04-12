@@ -436,6 +436,7 @@ module View = {
           ~background,
           ~foreground,
           ~font: UiFont.t,
+          ~onlyAnimation: bool,
           (),
         ) => {
       let yOffset = model.yOffset;
@@ -455,7 +456,16 @@ module View = {
           />;
         | None => React.empty
         };
-
+      
+      onlyAnimation ? 
+      <View ?key style={Styles.container(~background, ~yOffset)}>
+        <Text
+          style={Styles.text(~foreground)}
+          fontFamily={font.family}
+          fontSize=11.
+          text={""}
+        />
+      </View> :
       <View ?key style={Styles.container(~background, ~yOffset)}>
         <icon />
         <source />
