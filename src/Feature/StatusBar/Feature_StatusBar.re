@@ -138,7 +138,16 @@ module ConfigurationItems = {
     let getItemsFromAlign = align =>
       statusBarItems
       |> List.filter((item: Item.t) =>
-           item.alignment == align && !List.mem(item.id, allItems)
+           item.alignment == align
+           && !(
+                (
+                  switch (item.command) {
+                  | Some(command) => List.mem(command, allItems)
+                  | None => false
+                  }
+                )
+                || List.mem(item.id, allItems)
+              )
          );
 
     (
@@ -700,7 +709,15 @@ module View = {
                   | "rightItems" => rightItems
                   | str =>
                     statusBar.items
-                    |> List.filter((item: Item.t) => item.id == str)
+                    |> List.filter((item: Item.t) =>
+                         (
+                           switch (item.command) {
+                           | Some(command) => command == str
+                           | None => false
+                           }
+                         )
+                         || item.id == str
+                       )
                     |> List.map(
                          ({command, label, color, tooltip, _}: Item.t) =>
                          toStatusBarElement(
