@@ -7,8 +7,8 @@ module Schema = {
       (~theme: ColorTheme.Colors.t, ~uiFont: UiFont.t, 'item) =>
       Revery.UI.element;
 
-    let default = (~toString, ~theme, ~uiFont, item) => {
-      <Revery.UI.Text text={toString(item)} />;
+    let default = (~toString, ~theme, ~uiFont: UiFont.t, item) => {
+      <Revery.UI.Text fontFamily={uiFont.family} text={toString(item)} />;
     };
   };
 
@@ -74,20 +74,32 @@ let sub = (~isVisible, ~pixelPosition, model) => {
 module View = {
   open Revery.UI;
   let make = (~theme, ~uiFont, ~model, ()) => {
+    let bg = Feature_Theme.Colors.EditorWidget.background.from(theme);
+    let fg = Feature_Theme.Colors.EditorWidget.foreground.from(theme);
+
     <Component_Popup.View
       model={model.popup}
       inner={(~transition) => {
-        <Oni_Components.FlatList
-          rowHeight=20
-          initialRowsToRender=5
-          count={Array.length(model.items)}
-          theme
-          focused=None>
-          ...{index => {
-            let item = model.items[index];
-            model.schema.renderer(~theme, ~uiFont, item);
-          }}
-        </Oni_Components.FlatList>
+        <View
+          style=Style.[
+            position(`Absolute),
+            backgroundColor(bg),
+            color(fg),
+            width(500),
+            height(100),
+          ]>
+          <Oni_Components.FlatList
+            rowHeight=20
+            initialRowsToRender=5
+            count={Array.length(model.items)}
+            theme
+            focused=None>
+            ...{index => {
+              let item = model.items[index];
+              model.schema.renderer(~theme, ~uiFont, item);
+            }}
+          </Oni_Components.FlatList>
+        </View>
       }}
     />;
   };
