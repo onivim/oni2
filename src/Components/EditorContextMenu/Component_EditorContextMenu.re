@@ -41,8 +41,14 @@ let create = (~schema, items) => {
 
 let set = (~items, model) => {...model, items: Array.of_list(items)};
 
+type command =
+  | AcceptSelected
+  | SelectPrevious
+  | SelectNext;
+
 type msg('item) =
   | Nothing
+  | Command(command)
   | Popup(Component_Popup.msg);
 
 type outmsg('item) =
@@ -59,6 +65,11 @@ let configurationChanged = (~config, model) => {
 let update = (msg: msg('item), model) => {
   switch (msg) {
   | Nothing => (model, Nothing)
+  | Command(_) =>
+    // TODO
+    failwith("TODO");
+    prerr_endline("TODO");
+    (model, Nothing);
   | Popup(msg) => (
       {...model, popup: Component_Popup.update(msg, model.popup)},
       Nothing,
@@ -71,11 +82,23 @@ let sub = (~isVisible, ~pixelPosition, model) => {
   |> Isolinear.Sub.map(msg => Popup(msg));
 };
 
+module Commands = {
+  open Feature_Commands.Schema;
+  let acceptContextItem =
+    define("acceptContextItem", Command(AcceptSelected));
+
+  let selectPrevContextItem =
+    define("selectPrevContextItem", Command(SelectPrevious));
+
+  let selectNextContextItem =
+    define("selectNextContextItem", Command(SelectNext));
+};
+
 module View = {
   open Revery.UI;
   let make = (~theme, ~uiFont, ~model, ()) => {
-    let bg = Feature_Theme.Colors.EditorWidget.background.from(theme);
-    let fg = Feature_Theme.Colors.EditorWidget.foreground.from(theme);
+    let bg = Feature_Theme.Colors.EditorSuggestWidget.background.from(theme);
+    let fg = Feature_Theme.Colors.EditorSuggestWidget.foreground.from(theme);
 
     <Component_Popup.View
       model={model.popup}
@@ -87,20 +110,51 @@ module View = {
             color(fg),
             width(500),
             height(100),
+            boxShadow(
+              ~xOffset=4.,
+              ~yOffset=4.,
+              ~blurRadius=12.,
+              ~spreadRadius=0.,
+              ~color=Revery.Color.rgba(0., 0., 0., 0.75),
+            ),
           ]>
-          <Oni_Components.FlatList
-            rowHeight=20
-            initialRowsToRender=5
-            count={Array.length(model.items)}
-            theme
-            focused=None>
-            ...{index => {
-              let item = model.items[index];
-              model.schema.renderer(~theme, ~uiFont, item);
-            }}
-          </Oni_Components.FlatList>
-        </View>
+          //borderRadius(8.),
+
+            <Oni_Components.FlatList
+              rowHeight=20
+              initialRowsToRender=5
+              count={Array.length(model.items)}
+              theme
+              focused=None>
+              ...{index => {
+                let item = model.items[index];
+                model.schema.renderer(~theme, ~uiFont, item);
+              }}
+            </Oni_Components.FlatList>
+          </View>
       }}
     />;
   };
+};
+
+module Contributions = {
+  let commands =
+    Commands.[
+      acceptContextItem,
+      selectNextContextItem,
+      selectPrevContextItem,
+    ];
+
+  let contextKeys = model =>
+    WhenExpr.ContextKeys.(
+      [
+        Schema.bool("contextMenuVisible", ({popup, _}) => {
+          Component_Popup.isVisible(popup)
+        }),
+      ]
+      |> Schema.fromList
+      |> fromSchema(model)
+    );
+
+  let keybindings = [];
 };

@@ -31,6 +31,12 @@ type msg =
   | PositionChanged(PixelPosition.t)
   | Animation(Component_Animation.msg);
 
+let isVisible = model => {
+  let target = model.enterExitSpring |> Spring.getTarget;
+
+  target >= 1.;
+};
+
 let update = (msg, model) => {
   switch (msg) {
   | Show => {

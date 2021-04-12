@@ -297,7 +297,7 @@ let sub =
     |> Option.map(qf => {
          Component_EditorContextMenu.sub(
            ~isVisible=true,
-           ~pixelPosition=Some(PixelPosition.zero),
+           ~pixelPosition=Some(PixelPosition.{x: 250., y: 250.}),
            qf,
          )
        })
@@ -339,6 +339,14 @@ module Contributions = {
   let commands = Commands.[quickFix];
 
   let keybindings = Keybindings.[quickFix];
+
+  let contextKeys = (model) => {
+    model.quickFixContextMenu
+    |> Option.map(qf => {
+      Component_EditorContextMenu.Contributions.contextKeys(qf)
+    })
+    |> Option.value(~default=WhenExpr.ContextKeys.empty);
+  }
 };
 
 module View = {

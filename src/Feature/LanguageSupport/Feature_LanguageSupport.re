@@ -747,8 +747,8 @@ module Contributions = {
     @ Formatting.Contributions.configuration
     @ SignatureHelp.Contributions.configuration;
 
-  let contextKeys =
-    [
+  let contextKeys = {
+    let static = [
       Rename.Contributions.contextKeys
       |> fromList
       |> map(({rename, _}: model) => rename),
@@ -758,8 +758,17 @@ module Contributions = {
       SignatureHelp.Contributions.contextKeys
       |> fromList
       |> map(({signatureHelp, _}: model) => signatureHelp),
-    ]
-    |> unionMany;
+    ];
+    model => {
+      let staticContextKeys =
+        static |> unionMany |> WhenExpr.ContextKeys.fromSchema(model);
+
+      let codeActions =
+        CodeActions.Contributions.contextKeys(model.codeActions);
+
+      WhenExpr.ContextKeys.unionMany([staticContextKeys, codeActions]);
+    };
+  };
 
   let keybindings =
     Keybindings.[close]

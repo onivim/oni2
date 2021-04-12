@@ -6,6 +6,8 @@ let create: (~width: float, ~height: float) => model;
 
 type msg;
 
+let isVisible: model => bool;
+
 let update: (msg, model) => model;
 
 let configurationChanged: (~config: Config.resolver, model) => model;

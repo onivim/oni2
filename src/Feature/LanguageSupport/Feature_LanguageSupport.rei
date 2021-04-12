@@ -315,7 +315,7 @@ module Contributions: {
   let colors: list(ColorTheme.Schema.definition);
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
-  let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
+  let contextKeys: model => WhenExpr.ContextKeys.t;
   let keybindings: list(Feature_Input.Schema.keybinding);
   let menuGroups: list(MenuBar.Schema.group);
 };

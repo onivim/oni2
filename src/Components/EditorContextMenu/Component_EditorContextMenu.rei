@@ -1,6 +1,8 @@
 open EditorCoreTypes;
 open Oni_Core;
 
+type model('item);
+
 module Schema: {
   type t('item);
 
@@ -15,8 +17,6 @@ module Schema: {
   let contextMenu: (~renderer: Renderer.t('item)) => t('item);
 };
 
-type model('item);
-
 let create: (~schema: Schema.t('item), list('item)) => model('item);
 
 let set: (~items: list('item), model('item)) => model('item);
@@ -29,10 +29,15 @@ type outmsg('item) =
   | FocusChanged('item)
   | Selected('item);
 
-let configurationChanged:
-  (~config: Config.resolver, model('item)) => model('item);
-
 let update: (msg('item), model('item)) => (model('item), outmsg('item));
+
+module Contributions: {
+  let commands: list(Oni_Core.Command.t(msg(_)));
+
+  let contextKeys: model(_) => WhenExpr.ContextKeys.t;
+
+  let keybindings: list(Feature_Input.Schema.keybinding);
+};
 
 let sub:
   (
