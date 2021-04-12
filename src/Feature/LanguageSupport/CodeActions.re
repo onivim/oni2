@@ -10,6 +10,12 @@ type provider = {
   supportsResolve: bool,
 };
 
+module Configuration = {
+  open Config.Schema;
+
+  let enabled = setting("editor.lightBulb.enabled", bool, ~default=false);
+};
+
 module CodeAction = {
   type t = {
     handle: int,
@@ -199,6 +205,7 @@ let update = (~buffer, ~cursorLocation, msg, model) => {
 
 let sub =
     (
+      ~config,
       ~buffer,
       ~activePosition,
       ~topVisibleBufferLine as _,
@@ -225,6 +232,8 @@ let sub =
       stop: activePosition,
     };
 
+  let isLightBulbEnabled = Configuration.enabled.get(config);
+
   let codeActionsSubs =
     codeActions.providers
     |> List.filter(({selector, _}) => {
@@ -241,7 +250,8 @@ let sub =
          )
        });
 
-  let isVisible = QuickFixes.any(codeActions.quickFixes);
+  let isVisible =
+    isLightBulbEnabled && QuickFixes.any(codeActions.quickFixes);
   let pixelPosition =
     QuickFixes.position(codeActions.quickFixes)
     |> Option.map(position => {
@@ -289,6 +299,8 @@ module Keybindings = {
 
 module Contributions = {
   let commands = Commands.[quickFix];
+
+  let configuration = Configuration.[enabled.spec];
 
   let keybindings = Keybindings.[quickFix];
 };
