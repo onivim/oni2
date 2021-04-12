@@ -38,8 +38,6 @@ module QuickFixes = {
   };
 
   let addQuickFixes = (~handle, ~bufferId, ~position, ~newActions, quickFixes) => {
-    newActions |> List.iter(qf => prerr_endline(Exthost.CodeAction.show(qf)));
-
     let actions = newActions |> List.map(CodeAction.ofExthost(~handle));
     // If at the same location, just append!
     let fixes =
