@@ -10,6 +10,12 @@ type provider = {
   supportsResolve: bool,
 };
 
+module Configuration = {
+  open Config.Schema;
+
+  let enabled = setting("editor.lightBulb.enabled", bool, ~default=false);
+};
+
 module CodeAction = {
   type t = {
     handle: int,
@@ -50,6 +56,7 @@ module QuickFixes = {
 
     {bufferId, position, fixes};
   };
+
   let initial = {
     bufferId: (-1),
     position: EditorCoreTypes.CharacterPosition.zero,
@@ -72,7 +79,11 @@ module QuickFixes = {
 
   let any = ({fixes, _}) => fixes != [];
 
-  let position = ({fixes, _}) => {
+  let appliesToBuffer = (buffer, {bufferId, _}) => {
+    bufferId == Buffer.getId(buffer);
+  };
+
+  let position = ({fixes, position, _}) => {
     Base.List.nth(fixes, 0)
     |> Utility.OptionEx.flatMap((fix: CodeAction.t) => {
          Base.List.nth(fix.action.diagnostics, 0)
@@ -81,7 +92,14 @@ module QuickFixes = {
          let range = diagnostic.range |> Exthost.OneBasedRange.toRange;
 
          CharacterRange.(range.start);
-       });
+       })
+    |> Utility.OptionEx.or_lazy(() =>
+         if (fixes == []) {
+           None;
+         } else {
+           Some(position);
+         }
+       );
   };
 
   let all = ({fixes, _}) => fixes;
@@ -91,6 +109,7 @@ type model = {
   providers: list(provider),
   quickFixes: QuickFixes.t,
   lightBulbPopup: Component_Popup.model,
+  lightBulbActiveEditorId: option(int),
   quickFixContextMenu:
     option(Component_EditorContextMenu.model(CodeAction.t)),
 };
@@ -102,7 +121,11 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
-  | LightBulbPopup([@opaque] Component_Popup.msg)
+  | LightBulbPopup({
+      editorId: int,
+      [@opaque]
+      msg: Component_Popup.msg,
+    })
   | QuickFixContextMenu(
       [@opaque] Component_EditorContextMenu.msg(CodeAction.t),
     )
@@ -121,8 +144,8 @@ let initial = {
   quickFixes: QuickFixes.initial,
 
   lightBulbPopup: Component_Popup.create(~width=32., ~height=32.),
-
   quickFixContextMenu: None,
+  lightBulbActiveEditorId: None,
 };
 
 let register =
@@ -186,11 +209,11 @@ let update = (~buffer, ~cursorLocation, msg, model) => {
       ({...model, quickFixContextMenu: quickFixMenu}, Outmsg.Nothing);
     };
 
-  | LightBulbPopup(popupMsg) => (
+  | LightBulbPopup({editorId, msg}) => (
       {
         ...model,
-        lightBulbPopup:
-          Component_Popup.update(popupMsg, model.lightBulbPopup),
+        lightBulbPopup: Component_Popup.update(msg, model.lightBulbPopup),
+        lightBulbActiveEditorId: Some(editorId),
       },
       Outmsg.Nothing,
     )
@@ -234,7 +257,9 @@ let update = (~buffer, ~cursorLocation, msg, model) => {
 
 let sub =
     (
+      ~config,
       ~buffer,
+      ~activeEditor,
       ~activePosition,
       ~topVisibleBufferLine as _,
       ~bottomVisibleBufferLine as _,
@@ -260,6 +285,8 @@ let sub =
       stop: activePosition,
     };
 
+  let isLightBulbEnabled = Configuration.enabled.get(config);
+
   let codeActionsSubs =
     codeActions.providers
     |> List.filter(({selector, _}) => {
@@ -276,7 +303,8 @@ let sub =
          )
        });
 
-  let isVisible = QuickFixes.any(codeActions.quickFixes);
+  let isVisible =
+    isLightBulbEnabled && QuickFixes.any(codeActions.quickFixes);
   let pixelPosition =
     QuickFixes.position(codeActions.quickFixes)
     |> Option.map(position => {
@@ -290,7 +318,7 @@ let sub =
       ~pixelPosition,
       codeActions.lightBulbPopup,
     )
-    |> Isolinear.Sub.map(msg => LightBulbPopup(msg));
+    |> Isolinear.Sub.map(msg => LightBulbPopup({editorId: activeEditor, msg}));
 
   let quickFixContextMenuSub =
     codeActions.quickFixContextMenu
@@ -350,6 +378,8 @@ module Contributions = {
     static @ dynamic;
   };
 
+  let configuration = Configuration.[enabled.spec];
+
   let keybindings = Keybindings.[quickFix];
 
   let contextKeys = model => {
@@ -363,67 +393,63 @@ module Contributions = {
 
 module View = {
   module EditorWidgets = {
-    let make = (~theme, ~editorFont: Service_Font.font, ~model, ()) => {
-      let foregroundColor =
-        Feature_Theme.Colors.Editor.lightBulbForeground.from(theme);
+    let make = (~editorId, ~theme, ~editorFont: Service_Font.font, ~model, ()) =>
+      if (Some(editorId) == model.lightBulbActiveEditorId) {
+        let foregroundColor =
+          Feature_Theme.Colors.Editor.lightBulbForeground.from(theme);
 
-      let fontSize = editorFont.fontSize;
-      <Component_Popup.View
-        model={model.lightBulbPopup}
-        inner={(~transition as _) => {
-          <Revery.UI.Components.Container
-            width=24 height=24 color=Revery.Colors.transparentWhite>
-            <Oni_Core.Codicon
-              fontSize
-              color=foregroundColor
-              icon=Codicon.lightbulb
-            />
-          </Revery.UI.Components.Container>
-        }}
-      />;
-    };
+        let fontSize = editorFont.fontSize;
+        <Component_Popup.View
+          model={model.lightBulbPopup}
+          inner={(~transition as _) => {
+            <Revery.UI.Components.Container
+              width=24 height=24 color=Revery.Colors.transparentWhite>
+              <Oni_Core.Codicon
+                fontSize
+                color=foregroundColor
+                icon=Codicon.lightbulb
+              />
+            </Revery.UI.Components.Container>
+          }}
+        />;
+      } else {
+        Revery.UI.React.empty;
+      };
   };
 
-  module Overlay = {
-    let make =
-        (
-          ~dispatch as _,
-          ~theme,
-          ~uiFont,
-          ~editorFont as _,
-          ~model,
-          (),
-        ) => {
-      model.quickFixContextMenu
-      |> Option.map(model => {
-           <Component_EditorContextMenu.View
-             theme
-             model
-             // <Revery.UI.Components.Clickable
-             //   onClick={_ => prerr_endline("clicked")}
-             //   style=Revery.UI.Style.[
-             //     pointerEvents(`Allow),
-             //     position(`Absolute),
-             //     top(0),
-             //     left(0),
-             //   ]>
-             //   <Revery.UI.Components.Container
-             //     width=32
-             //     height=32
-             //     color=Revery.Colors.magenta
-             //   />
-             uiFont
-             // </Revery.UI.Components.Clickable>;
-           />
-         })
-      |> Option.value(
-           ~default=
-             <Revery.UI.Components.Container
-               width=32
-               height=32
-               color=Revery.Colors.magenta
-             />,
-         );
+    module Overlay = {
+      let make =
+          (~dispatch as _, ~theme, ~uiFont, ~editorFont as _, ~model, ()) => {
+        model.quickFixContextMenu
+        |> Option.map(model => {
+             <Component_EditorContextMenu.View
+               theme
+               model
+               // <Revery.UI.Components.Clickable
+               //   onClick={_ => prerr_endline("clicked")}
+               //   style=Revery.UI.Style.[
+               //     pointerEvents(`Allow),
+               //     position(`Absolute),
+               //     top(0),
+               //     left(0),
+               //   ]>
+               //   <Revery.UI.Components.Container
+               //     width=32
+               //     height=32
+               //     color=Revery.Colors.magenta
+               //   />
+               uiFont
+               // </Revery.UI.Components.Clickable>;
+             />
+           })
+        |> Option.value(
+             ~default=
+               <Revery.UI.Components.Container
+                 width=32
+                 height=32
+                 color=Revery.Colors.magenta
+               />,
+           );
+      };
     };
-  };
 };

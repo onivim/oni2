@@ -741,7 +741,8 @@ module Contributions = {
     );
 
   let configuration =
-    CodeLens.Contributions.configuration
+    CodeActions.Contributions.configuration
+    @ CodeLens.Contributions.configuration
     @ Completion.Contributions.configuration
     @ DocumentHighlights.Contributions.configuration
     @ Formatting.Contributions.configuration
@@ -972,6 +973,7 @@ let sub =
       ~isInsertMode,
       ~isAnimatingScroll,
       ~activeBuffer,
+      ~activeEditor,
       ~activePosition,
       ~lineHeightInPixels,
       ~positionToRelativePixel,
@@ -1006,7 +1008,9 @@ let sub =
   let codeActionsSub =
     CodeActions.sub(
       ~buffer=activeBuffer,
+      ~config,
       ~activePosition,
+      ~activeEditor,
       ~topVisibleBufferLine,
       ~bottomVisibleBufferLine,
       ~lineHeightInPixels,
@@ -1089,6 +1093,7 @@ module View = {
         (
           ~x as _,
           ~y as _,
+          ~editorId,
           ~theme,
           ~model,
           ~editorFont,
@@ -1097,6 +1102,7 @@ module View = {
           (),
         ) => {
       <CodeActions.View.EditorWidgets
+        editorId
         editorFont
         theme
         model={model.codeActions}
