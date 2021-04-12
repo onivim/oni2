@@ -25,6 +25,7 @@ type model('item) = {
   schema: Schema.t('item),
   popup: Component_Popup.model,
   items: array('item),
+  selected: option(int),
 };
 
 let create = (~schema, items) => {
@@ -35,6 +36,7 @@ let create = (~schema, items) => {
       ~height=Constants.maxHeight,
     ),
   items: Array.of_list(items),
+  selected: None,
 };
 
 let set = (~items, model) => {...model, items: Array.of_list(items)};
@@ -59,13 +61,80 @@ let configurationChanged = (~config, model) => {
   popup: Component_Popup.configurationChanged(~config, model.popup),
 };
 
+module Internal = {
+  let ensureSelectionInRange = ({items, selected, _} as model) => {
+    let len = Array.length(items);
+    if (len == 0) {
+      {...model, selected: None};
+    } else {
+      let selected' =
+        selected
+        |> Option.map(selectedIdx =>
+             if (selectedIdx >= len) {
+               0;
+             } else if (selectedIdx < 0) {
+               len - 1;
+             } else {
+               selectedIdx;
+             }
+           );
+      {...model, selected: selected'};
+    };
+  };
+
+  let selectNext = ({items, selected, _} as model) => {
+    let selected' =
+      switch (selected) {
+      | None => Some(0)
+      | Some(idx) => Some(idx + 1)
+      };
+
+    {...model, selected: selected'} |> ensureSelectionInRange;
+  };
+
+  let selectPrevious = ({items, selected, _} as model) => {
+    let selected' =
+      switch (selected) {
+      | None => Some(0)
+      | Some(idx) => Some(idx + 1)
+      };
+
+    {...model, selected: selected'} |> ensureSelectionInRange;
+  };
+
+  let selected = model => {
+    let model' = model |> ensureSelectionInRange;
+
+    model'.selected |> Option.map(idx => {model'.items[idx]});
+  };
+};
+
 let update = (msg: msg('item), model) => {
   switch (msg) {
-  | Command(_) =>
-    // TODO
-    failwith("TODO");
-    prerr_endline("TODO");
-    (model, Nothing);
+  | Command(SelectNext) =>
+    let model' = Internal.selectNext(model);
+    let eff =
+      switch (Internal.selected(model)) {
+      | None => Nothing
+      | Some(item) => FocusChanged(item)
+      };
+    (model', eff);
+  | Command(SelectPrevious) =>
+    let model' = Internal.selectPrevious(model);
+    let eff =
+      switch (Internal.selected(model)) {
+      | None => Nothing
+      | Some(item) => FocusChanged(item)
+      };
+    (model', eff);
+  | Command(AcceptSelected) =>
+    let eff =
+      switch (Internal.selected(model)) {
+      | None => Cancelled
+      | Some(item) => Selected(item)
+      };
+
+    (model, eff);
   | Popup(msg) => (
       {...model, popup: Component_Popup.update(msg, model.popup)},
       Nothing,
@@ -133,6 +202,53 @@ module View = {
   };
 };
 
+module KeyBindings = {
+  open Feature_Input.Schema;
+
+  let contextMenuVisible = "contextMenuVisible" |> WhenExpr.parse;
+
+  let nextSuggestion =
+    bind(
+      ~key="<C-N>",
+      ~command=Commands.selectNextContextItem.id,
+      ~condition=contextMenuVisible,
+    );
+
+  let nextSuggestionArrow =
+    bind(
+      ~key="<DOWN>",
+      ~command=Commands.selectNextContextItem.id,
+      ~condition=contextMenuVisible,
+    );
+
+  let previousSuggestion =
+    bind(
+      ~key="<C-P>",
+      ~command=Commands.selectPrevContextItem.id,
+      ~condition=contextMenuVisible,
+    );
+  let previousSuggestionArrow =
+    bind(
+      ~key="<UP>",
+      ~command=Commands.selectPrevContextItem.id,
+      ~condition=contextMenuVisible,
+    );
+
+  let acceptSuggestionEnter =
+    bind(
+      ~key="<CR>",
+      ~command=Commands.acceptContextItem.id,
+      ~condition=contextMenuVisible,
+    );
+
+  let acceptSuggestionTab =
+    bind(
+      ~key="<TAB>",
+      ~command=Commands.acceptContextItem.id,
+      ~condition=contextMenuVisible,
+    );
+};
+
 module Contributions = {
   let commands = _model => {
     Commands.[
@@ -153,5 +269,13 @@ module Contributions = {
       |> fromSchema(model)
     );
 
-  let keybindings = [];
+  let keybindings =
+    KeyBindings.[
+      previousSuggestion,
+      previousSuggestionArrow,
+      nextSuggestionArrow,
+      nextSuggestion,
+      acceptSuggestionEnter,
+      acceptSuggestionTab,
+    ];
 };
