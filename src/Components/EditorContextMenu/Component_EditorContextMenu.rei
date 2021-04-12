@@ -19,6 +19,9 @@ module Schema: {
 
 let create: (~schema: Schema.t('item), list('item)) => model('item);
 
+let configurationChanged:
+  (~config: Oni_Core.Config.resolver, model('item)) => model('item);
+
 let set: (~items: list('item), model('item)) => model('item);
 
 type msg('item);

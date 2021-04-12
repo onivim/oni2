@@ -387,10 +387,10 @@ module View = {
   module Overlay = {
     let make =
         (
-          ~dispatch,
+          ~dispatch as _,
           ~theme,
           ~uiFont,
-          ~editorFont: Service_Font.font,
+          ~editorFont as _,
           ~model,
           (),
         ) => {

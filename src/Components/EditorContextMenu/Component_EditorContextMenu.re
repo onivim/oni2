@@ -1,4 +1,3 @@
-open EditorCoreTypes;
 open Oni_Core;
 
 module Schema = {
@@ -7,7 +6,7 @@ module Schema = {
       (~theme: ColorTheme.Colors.t, ~uiFont: UiFont.t, 'item) =>
       Revery.UI.element;
 
-    let default = (~toString, ~theme, ~uiFont: UiFont.t, item) => {
+    let default = (~toString, ~theme as _, ~uiFont: UiFont.t, item) => {
       <Revery.UI.Text fontFamily={uiFont.family} text={toString(item)} />;
     };
   };
@@ -20,7 +19,6 @@ module Schema = {
 module Constants = {
   let maxWidth = 500.;
   let maxHeight = 500.;
-  let rowHeight = 20;
 };
 
 type model('item) = {
@@ -47,7 +45,6 @@ type command =
   | SelectNext;
 
 type msg('item) =
-  | Nothing
   | Command(command)
   | Popup(Component_Popup.msg);
 
@@ -64,7 +61,6 @@ let configurationChanged = (~config, model) => {
 
 let update = (msg: msg('item), model) => {
   switch (msg) {
-  | Nothing => (model, Nothing)
   | Command(_) =>
     // TODO
     failwith("TODO");
@@ -102,7 +98,7 @@ module View = {
 
     <Component_Popup.View
       model={model.popup}
-      inner={(~transition) => {
+      inner={(~transition as _) => {
         <View
           style=Style.[
             position(`Absolute),
