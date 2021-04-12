@@ -51,6 +51,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `workbench.editor.enablePreview` __(_bool_ default: `true`)__ - When `true`, Onivim will open files in _preview mode_ unless a change is made or the tab is double-clicked. In _preview mode_, the editor tab will be re-used.
 
+- `editor.lightBulb.enabled` __(_bool_ default: `true`)__ - When `true`, show a lightbulb icon in the editor if there are quick fixes or refactorings available.
+
 - `editor.lineHeight` __(_float_ default: `0.`)__ - Controls the absolute height of lines on the editor surface. Use 0 to compute lineHeight from the font size.
 
 - `editor.lineNumbers` __(_"on"|"off"|"relative"_ default: `"on"`)__ - Controls how line numbers are rendered on the editor surface

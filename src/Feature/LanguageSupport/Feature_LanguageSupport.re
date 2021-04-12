@@ -741,7 +741,8 @@ module Contributions = {
     );
 
   let configuration =
-    CodeLens.Contributions.configuration
+    CodeActions.Contributions.configuration
+    @ CodeLens.Contributions.configuration
     @ Completion.Contributions.configuration
     @ DocumentHighlights.Contributions.configuration
     @ Formatting.Contributions.configuration
@@ -998,6 +999,7 @@ let sub =
   let codeActionsSub =
     CodeActions.sub(
       ~buffer=activeBuffer,
+      ~config,
       ~activePosition,
       ~activeEditor,
       ~topVisibleBufferLine,
