@@ -43,6 +43,7 @@
 - #3389 - Editor: Render diagnostics with squiggly lines (fixes #2827)
 - #3394 - Extensions: Fix error parsing extension manifest with boolean when express (related #3388)
 - #3390 - Diagnostics: Some diagnostics wouldn't show in hover UI (related #3231)
+- #3403 - Code Actions: Add 'editor.lightBulb.enabled' configuration setting
 
 ### Performance
 
