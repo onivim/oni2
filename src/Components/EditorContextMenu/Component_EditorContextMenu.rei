@@ -8,7 +8,12 @@ module Schema: {
 
   module Renderer: {
     type t('item) =
-      (~theme: ColorTheme.Colors.t, ~uiFont: UiFont.t, 'item) =>
+      (
+        ~isFocused: bool,
+        ~theme: ColorTheme.Colors.t,
+        ~uiFont: UiFont.t,
+        'item
+      ) =>
       Revery.UI.element;
 
     let default: (~toString: 'item => string) => t('item);
@@ -55,7 +60,8 @@ module View: {
     (
       ~theme: ColorTheme.Colors.t,
       ~uiFont: UiFont.t,
-      ~model: model(_),
+      ~dispatch: msg('item) => unit,
+      ~model: model('item),
       unit
     ) =>
     Revery.UI.element;

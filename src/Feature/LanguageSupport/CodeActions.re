@@ -424,10 +424,11 @@ module View = {
   };
 
   module Overlay = {
-    let make = (~dispatch as _, ~theme, ~uiFont, ~editorFont as _, ~model, ()) => {
+    let make = (~dispatch, ~theme, ~uiFont, ~editorFont as _, ~model, ()) => {
       model.quickFixContextMenu
       |> Option.map(model => {
            <Component_EditorContextMenu.View
+             dispatch={msg => dispatch(QuickFixContextMenu(msg))}
              theme
              model
              // <Revery.UI.Components.Clickable

@@ -3,11 +3,32 @@ open Oni_Core;
 module Schema = {
   module Renderer = {
     type t('item) =
-      (~theme: ColorTheme.Colors.t, ~uiFont: UiFont.t, 'item) =>
+      (
+        ~isFocused: bool,
+        ~theme: ColorTheme.Colors.t,
+        ~uiFont: UiFont.t,
+        'item
+      ) =>
       Revery.UI.element;
 
-    let default = (~toString, ~theme as _, ~uiFont: UiFont.t, item) => {
-      <Revery.UI.Text fontFamily={uiFont.family} text={toString(item)} />;
+    let default = (~toString, ~isFocused, ~theme, ~uiFont: UiFont.t, item) => {
+      let bg =
+        isFocused
+          ? Feature_Theme.Colors.EditorSuggestWidget.selectedBackground.from(
+              theme,
+            )
+          : Revery.Colors.transparentBlack;
+      <Revery.UI.View
+        style=Revery.UI.Style.[
+          position(`Absolute),
+          backgroundColor(bg),
+          top(0),
+          left(0),
+          right(0),
+          bottom(0),
+        ]>
+        <Revery.UI.Text fontFamily={uiFont.family} text={toString(item)} />
+      </Revery.UI.View>;
     };
   };
 
@@ -48,7 +69,8 @@ type command =
 
 type msg('item) =
   | Command(command)
-  | Popup(Component_Popup.msg);
+  | Popup(Component_Popup.msg)
+  | MouseOver(int);
 
 type outmsg('item) =
   | Nothing
@@ -135,6 +157,18 @@ let update = (msg: msg('item), model) => {
       };
 
     (model, eff);
+
+  | MouseOver(index) =>
+    let model' =
+      {...model, selected: Some(index)} |> Internal.ensureSelectionInRange;
+
+    let eff =
+      switch (Internal.selected(model)) {
+      | None => Nothing
+      | Some(item) => FocusChanged(item)
+      };
+    (model', eff);
+
   | Popup(msg) => (
       {...model, popup: Component_Popup.update(msg, model.popup)},
       Nothing,
@@ -161,7 +195,7 @@ module Commands = {
 
 module View = {
   open Revery.UI;
-  let make = (~theme, ~uiFont, ~model, ()) => {
+  let make = (~theme, ~uiFont, ~dispatch, ~model, ()) => {
     let bg = Feature_Theme.Colors.EditorSuggestWidget.background.from(theme);
     let fg = Feature_Theme.Colors.EditorSuggestWidget.foreground.from(theme);
 
@@ -182,6 +216,7 @@ module View = {
               ~spreadRadius=0.,
               ~color=Revery.Color.rgba(0., 0., 0., 0.75),
             ),
+            pointerEvents(`Allow),
           ]>
           //borderRadius(8.),
 
@@ -190,10 +225,22 @@ module View = {
               initialRowsToRender=5
               count={Array.length(model.items)}
               theme
-              focused=None>
+              focused={model.selected}>
               ...{index => {
+                let isFocused = model.selected == Some(index);
                 let item = model.items[index];
-                model.schema.renderer(~theme, ~uiFont, item);
+                <Revery.UI.View
+                  onMouseOver={item => dispatch(MouseOver(index))}
+                  style=Revery.UI.Style.[
+                    position(`Absolute),
+                    backgroundColor(bg),
+                    top(0),
+                    left(0),
+                    right(0),
+                    bottom(0),
+                  ]>
+                  {model.schema.renderer(~isFocused, ~theme, ~uiFont, item)}
+                </Revery.UI.View>;
               }}
             </Oni_Components.FlatList>
           </View>
