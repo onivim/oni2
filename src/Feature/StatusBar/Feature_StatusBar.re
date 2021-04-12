@@ -43,8 +43,8 @@ module Item = {
 module ConfigurationItems = {
   [@deriving show]
   type t = {
-    startItems: list(string),
-    endItems: list(string),
+    leftItems: list(string),
+    rightItems: list(string),
     showOnNotification: list(string),
   };
 
@@ -52,8 +52,8 @@ module ConfigurationItems = {
     Json.Decode.(
       obj(({field, _}) =>
         {
-          startItems: field.withDefault("start", ["..."], list(string)),
-          endItems: field.withDefault("end", ["..."], list(string)),
+          leftItems: field.withDefault("left", ["..."], list(string)),
+          rightItems: field.withDefault("right", ["..."], list(string)),
           showOnNotification:
             field.withDefault(
               "showOnNotification",
@@ -67,18 +67,18 @@ module ConfigurationItems = {
   let encode = configurationItems =>
     Json.Encode.(
       obj([
-        ("start", configurationItems.startItems |> list(string)),
+        ("right", configurationItems.rightItems |> list(string)),
         (
           "showOnNotification",
           configurationItems.showOnNotification |> list(string),
         ),
-        ("end", configurationItems.endItems |> list(string)),
+        ("left", configurationItems.leftItems |> list(string)),
       ])
     );
 
   let codec = Config.Schema.DSL.custom(~decode, ~encode);
 
-  let startItemsDef = [
+  let leftItemsDef = [
     "notificationCount",
     "macro",
     "leftItems",
@@ -87,7 +87,7 @@ module ConfigurationItems = {
     "notificationPopup",
   ];
 
-  let endItemsDef = [
+  let rightItemsDef = [
     "rightItems",
     "lineEndings",
     "indentation",
@@ -95,6 +95,8 @@ module ConfigurationItems = {
     "position",
     "modeIndicator",
   ];
+
+  let extendItem = "...";
 
   let preProcess = (t, statusBarItems) => {
     //Helper funcions
@@ -105,10 +107,11 @@ module ConfigurationItems = {
       list
       //List (srt) -> List ((str, notificaion))
       |> List.map(str =>
-           switch (str) {
-           | "..." => def
-           | str => [str]
-           }
+          if (str == extendItem) {
+            def
+          } else {
+            [str]
+          }
          )
       |> List.flatten
       |> List.map(str => (str, !List.mem(str, t.showOnNotification)))
@@ -128,12 +131,32 @@ module ConfigurationItems = {
            [([], false)],
          );
 
-    let allItems =
-      List.concat([t.startItems, t.endItems]) |> List.filter(a => a != "...");
+    let allItems = (t.rightItems @ t.leftItems) |> List.filter(a => a != extendItem);
 
-    let startItemsDef = startItemsDef |> removeFromList(allItems);
+    //Get if `...` if its, on the rigth and left
+    let extendRight = List.mem(extendItem, t.rightItems)
+    let extendLeft = List.mem(extendItem, t.leftItems)
+    
+    /*
+      if x has `...` and !x doesn't then add them all
+      else if x can extended then do
+      else then no default
+    */
+    let leftItemsPDef = (if (extendLeft && !extendRight) {
+      leftItemsDef @ rightItemsDef 
+    } else if (extendLeft) { 
+      leftItemsDef
+    } else {
+      [] 
+    }) |> removeFromList(allItems);
 
-    let endItemsDef = endItemsDef |> removeFromList(allItems);
+    let rightItemsPDef = (if (extendRight && !extendLeft) {
+      leftItemsDef @ rightItemsDef 
+    } else if (extendRight) {
+      rightItemsDef
+    } else {
+      []
+    }) |> removeFromList(allItems);
 
     let getItemsFromAlign = align =>
       statusBarItems
@@ -151,8 +174,8 @@ module ConfigurationItems = {
          );
 
     (
-      process(startItemsDef, t.startItems),
-      process(endItemsDef, t.endItems),
+      process(leftItemsPDef, t.leftItems),
+      process(rightItemsPDef, t.rightItems),
       List.mem("center", t.showOnNotification),
       getItemsFromAlign(Right),
       getItemsFromAlign(Left),
@@ -768,8 +791,8 @@ module Configuration = {
       "workbench.statusBar.items",
       ConfigurationItems.codec,
       ~default={
-        startItems: ["..."],
-        endItems: ["..."],
+        rightItems: ["..."],
+        leftItems: ["..."],
         showOnNotification: ["notificationCount", "modeIndicator"],
       },
     );

@@ -19,8 +19,8 @@ module Item: {
 
 module ConfigurationItems: {
   type t = {
-    startItems: list(string),
-    endItems: list(string),
+    leftItems: list(string),
+    rightItems: list(string),
     showOnNotification: list(string),
   };
 };
