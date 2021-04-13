@@ -597,6 +597,7 @@ let bufferSaved = (~isLargeBuffer, ~buffer, ~config, ~activeBufferId, model) => 
 
 let configurationChanged = (~config, model) => {
   ...model,
+  codeActions: CodeActions.configurationChanged(~config, model.codeActions),
   completion: Completion.configurationChanged(~config, model.completion),
   documentHighlights:
     DocumentHighlights.configurationChanged(

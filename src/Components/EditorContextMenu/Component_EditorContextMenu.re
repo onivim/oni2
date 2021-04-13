@@ -22,7 +22,7 @@ module Schema = {
         style=Revery.UI.Style.[
           position(`Absolute),
           backgroundColor(bg),
-          borderRadius(4.),
+          // borderRadius(4.),
           top(0),
           left(0),
           right(0),
@@ -44,11 +44,6 @@ module Schema = {
   let contextMenu = (~renderer) => {renderer: renderer};
 };
 
-module Constants = {
-  let maxWidth = 500.;
-  let maxHeight = 500.;
-};
-
 type model('item) = {
   schema: Schema.t('item),
   items: array('item),
@@ -56,20 +51,14 @@ type model('item) = {
 };
 
 let create = (~schema, items) => {
-  schema,
-  items: Array.of_list(items),
-  selected: None,
+  let items = Array.of_list(items);
+  let selected = Array.length(items) > 0 ? Some(0) : None;
+  {schema, items, selected};
 };
 
 let set = (~items, model) => {...model, items: Array.of_list(items)};
 
-type command =
-  | AcceptSelected
-  | SelectPrevious
-  | SelectNext;
-
 type msg('item) =
-  | Command(command)
   | MouseOver(int)
   | MouseUp(int)
   | MouseClickedBackground;
@@ -77,7 +66,6 @@ type msg('item) =
 type outmsg('item) =
   | Nothing
   | Cancelled
-  | FocusChanged('item)
   | Selected('item);
 
 let configurationChanged = (~config as _, model) => {
@@ -132,45 +120,19 @@ module Internal = {
   };
 };
 
+let next = model => model |> Internal.selectNext;
+let previous = model => model |> Internal.selectPrevious;
+let selected = model => model |> Internal.selected;
+
 let update = (msg: msg('item), model) => {
   switch (msg) {
-  | Command(SelectNext) =>
-    let model' = Internal.selectNext(model);
-    let eff =
-      switch (Internal.selected(model)) {
-      | None => Nothing
-      | Some(item) => FocusChanged(item)
-      };
-    (model', eff);
-  | Command(SelectPrevious) =>
-    let model' = Internal.selectPrevious(model);
-    let eff =
-      switch (Internal.selected(model)) {
-      | None => Nothing
-      | Some(item) => FocusChanged(item)
-      };
-    (model', eff);
-  | Command(AcceptSelected) =>
-    let eff =
-      switch (Internal.selected(model)) {
-      | None => Cancelled
-      | Some(item) => Selected(item)
-      };
-
-    (model, eff);
-
   | MouseOver(index) =>
     let model' =
       {...model, selected: Some(index)} |> Internal.ensureSelectionInRange;
 
-    let eff =
-      switch (Internal.selected(model)) {
-      | None => Nothing
-      | Some(item) => FocusChanged(item)
-      };
-    (model', eff);
+    (model', Nothing);
 
-  | MouseUp(index) =>
+  | MouseUp(_index) =>
     let eff =
       switch (Internal.selected(model)) {
       | None => Nothing
@@ -183,20 +145,8 @@ let update = (msg: msg('item), model) => {
   };
 };
 
-let sub = model => {
+let sub = _model => {
   Isolinear.Sub.none;
-};
-
-module Commands = {
-  open Feature_Commands.Schema;
-  let acceptContextItem =
-    define("acceptContextItem", Command(AcceptSelected));
-
-  let selectPrevContextItem =
-    define("selectPrevContextItem", Command(SelectPrevious));
-
-  let selectNextContextItem =
-    define("selectNextContextItem", Command(SelectNext));
 };
 
 module View = {
@@ -233,7 +183,7 @@ module View = {
         right(0),
         bottom(0),
         backgroundColor(
-          Revery.Colors.red |> Revery.Color.multiplyAlpha(0.1),
+          Revery.Colors.black |> Revery.Color.multiplyAlpha(0.1),
         ),
         pointerEvents(`Allow),
       ]>
@@ -246,7 +196,7 @@ module View = {
           top(int_of_float(pixelPosition.y)),
           width(500),
           height(pixelHeight),
-          borderRadius(8.),
+          //borderRadius(8.),
           boxShadow(
             ~xOffset=4.,
             ~yOffset=4.,
@@ -273,8 +223,8 @@ module View = {
               let isFocused = model.selected == Some(index);
               let item = model.items[index];
               <Revery.UI.View
-                onMouseOver={item => dispatch(MouseOver(index))}
-                onMouseUp={item => dispatch(MouseUp(index))}
+                onMouseOver={_item => dispatch(MouseOver(index))}
+                onMouseUp={_item => dispatch(MouseUp(index))}
                 style=Revery.UI.Style.[
                   position(`Absolute),
                   backgroundColor(bg),
@@ -291,78 +241,4 @@ module View = {
       </View>
     </View>;
   };
-};
-
-module KeyBindings = {
-  open Feature_Input.Schema;
-
-  let contextMenuVisible = "contextMenuVisible" |> WhenExpr.parse;
-
-  let nextSuggestion =
-    bind(
-      ~key="<C-N>",
-      ~command=Commands.selectNextContextItem.id,
-      ~condition=contextMenuVisible,
-    );
-
-  let nextSuggestionArrow =
-    bind(
-      ~key="<DOWN>",
-      ~command=Commands.selectNextContextItem.id,
-      ~condition=contextMenuVisible,
-    );
-
-  let previousSuggestion =
-    bind(
-      ~key="<C-P>",
-      ~command=Commands.selectPrevContextItem.id,
-      ~condition=contextMenuVisible,
-    );
-  let previousSuggestionArrow =
-    bind(
-      ~key="<UP>",
-      ~command=Commands.selectPrevContextItem.id,
-      ~condition=contextMenuVisible,
-    );
-
-  let acceptSuggestionEnter =
-    bind(
-      ~key="<CR>",
-      ~command=Commands.acceptContextItem.id,
-      ~condition=contextMenuVisible,
-    );
-
-  let acceptSuggestionTab =
-    bind(
-      ~key="<TAB>",
-      ~command=Commands.acceptContextItem.id,
-      ~condition=contextMenuVisible,
-    );
-};
-
-module Contributions = {
-  let commands = _model => {
-    Commands.[
-      acceptContextItem,
-      selectNextContextItem,
-      selectPrevContextItem,
-    ];
-  };
-
-  let contextKeys = model =>
-    WhenExpr.ContextKeys.
-      // Schema.bool("contextMenuVisible", ({popup, _}) => {
-      //   Component_Popup.isVisible(popup)
-      // }),
-      ([] |> Schema.fromList |> fromSchema(model));
-
-  let keybindings =
-    KeyBindings.[
-      previousSuggestion,
-      previousSuggestionArrow,
-      nextSuggestionArrow,
-      nextSuggestion,
-      acceptSuggestionEnter,
-      acceptSuggestionTab,
-    ];
 };

@@ -153,9 +153,6 @@ module Session = {
       (buffer, position) => {
         handles
         |> List.map(handle => {
-             prerr_endline(
-               "Sub - querying handle: " ++ string_of_int(handle),
-             );
              let range =
                EditorCoreTypes.CharacterRange.{
                  start: position,
@@ -183,8 +180,7 @@ module Session = {
   };
 
   let doFix = (~editorId, ~positionOrSelection, results) => {
-    prerr_endline("All fixes available!");
-    let allFixes = IntMap.fold((key, a, b) => {a @ b}, results, []);
+    let allFixes = IntMap.fold((_key, a, b) => {a @ b}, results, []);
     let len = List.length(allFixes);
     if (len == 0) {
       (Idle, Outmsg.NotifyFailure("No code actions available."));
@@ -233,7 +229,6 @@ module Session = {
       ) => {
         let results' = IntMap.add(handle, codeActions, results);
 
-        prerr_endline("Gathering fixes...");
         if (allFixesAreAvailable(handles, results')) {
           doFix(~editorId, ~positionOrSelection, results');
         } else {
@@ -242,7 +237,6 @@ module Session = {
       };
 
   let update = (msg, model) => {
-    prerr_endline("Session.update: " ++ show_msg(msg));
     switch (msg) {
     | CodeActionsAvailable({handle, codeActions}) =>
       addToResults(~handle, codeActions, model)
@@ -262,7 +256,6 @@ module Session = {
         switch (outmsg) {
         | Nothing => (model', Outmsg.Nothing)
         | Cancelled => (Idle, Outmsg.Nothing)
-        | FocusChanged(_) => (model', Outmsg.Nothing)
         | Selected(item) => (
             Idle,
             Exthost.CodeAction.(item.action.edit)
@@ -285,8 +278,7 @@ module Session = {
   let stop = _session => Idle;
 
   let checkLightBulb =
-      (~editorId, ~buffer, ~handles, ~positionOrSelection, session) => {
-    prerr_endline("Checking light bulb...");
+      (~editorId, ~buffer, ~handles, ~positionOrSelection, _session) => {
     QueryingForFixes({
       editorId,
       buffer,
@@ -329,113 +321,76 @@ module Session = {
       );
     };
   };
+
+  let next =
+    fun
+    | ApplyingFixes({contextMenu, _} as orig) => {
+        let contextMenu' = Component_EditorContextMenu.next(contextMenu);
+        (
+          ApplyingFixes({...orig, contextMenu: contextMenu'}),
+          Outmsg.Nothing,
+        );
+      }
+    | model => (model, Outmsg.Nothing);
+
+  let previous =
+    fun
+    | ApplyingFixes({contextMenu, _} as orig) => {
+        let contextMenu' = Component_EditorContextMenu.previous(contextMenu);
+        (
+          ApplyingFixes({...orig, contextMenu: contextMenu'}),
+          Outmsg.Nothing,
+        );
+      }
+    | model => (model, Outmsg.Nothing);
+
+  let select =
+    fun
+    | ApplyingFixes({contextMenu, _}) => {
+        let maybeSelected = Component_EditorContextMenu.selected(contextMenu);
+        switch (maybeSelected) {
+        | None => (Idle, Outmsg.Nothing)
+        | Some(item: CodeAction.t) =>
+          let maybeEdit = Exthost.CodeAction.(item.action.edit);
+
+          let outmsg =
+            maybeEdit
+            |> Option.map(edit => Outmsg.ApplyWorkspaceEdit(edit))
+            |> Option.value(~default=Outmsg.Nothing);
+          (Idle, outmsg);
+        };
+      }
+    | model => (model, Outmsg.Nothing);
 };
-
-// module QuickFixes = {
-//   type t = {
-//     bufferId: int,
-//     position: EditorCoreTypes.CharacterPosition.t,
-//     fixes: list(CodeAction.t),
-//   };
-
-//   let addQuickFixes = (~handle, ~bufferId, ~position, ~newActions, quickFixes) => {
-//     let actions = newActions |> List.map(CodeAction.ofExthost(~handle));
-// If at the same location, just append!
-//     let fixes =
-//       if (bufferId == quickFixes.bufferId && position == quickFixes.position) {
-//         quickFixes.fixes @ actions;
-//       } else {
-// If not, replace
-//         actions;
-//       };
-
-//     {bufferId, position, fixes};
-//   };
-
-//   let initial = {
-//     bufferId: (-1),
-//     position: EditorCoreTypes.CharacterPosition.zero,
-//     fixes: [],
-//   };
-
-//   let cursorMoved = (~bufferId, ~position, qf) =>
-// Totally different buffer, reset...
-//     if (bufferId != qf.bufferId) {
-//       {...initial, bufferId, position};
-//     } else if (position != qf.position) {
-//       {
-//         ...qf,
-//         position,
-//         fixes: qf.fixes |> List.filter(CodeAction.intersects(position)),
-//       };
-//     } else {
-//       qf;
-//     };
-
-//   let any = ({fixes, _}) => fixes != [];
-
-//   let appliesToBuffer = (buffer, {bufferId, _}) => {
-//     bufferId == Buffer.getId(buffer);
-//   };
-
-//   let position = ({fixes, position, _}) => {
-//     Base.List.nth(fixes, 0)
-//     |> Utility.OptionEx.flatMap((fix: CodeAction.t) => {
-//          Base.List.nth(fix.action.diagnostics, 0)
-//        })
-//     |> Option.map((diagnostic: Exthost.Diagnostic.t) => {
-//          let range = diagnostic.range |> Exthost.OneBasedRange.toRange;
-
-//          CharacterRange.(range.start);
-//        })
-//     |> Utility.OptionEx.or_lazy(() =>
-//          if (fixes == []) {
-//            None;
-//          } else {
-//            Some(position);
-//          }
-//        );
-//   };
-
-//   let all = ({fixes, _}) => fixes;
-// };
 
 type model = {
   providers: list(provider),
-  // quickFixes: QuickFixes.t,
   session: Session.t,
-  // lightBulbActiveEditorId: option(int),
-  // quickFixContextMenu:
-  //   option(Component_EditorContextMenu.model(CodeAction.t)),
+  isLightBulbEnabled: bool,
 };
 
 [@deriving show]
 type command =
-  | QuickFix;
+  | QuickFix
+  | AcceptSelected
+  | SelectPrevious
+  | SelectNext
+  | Cancel;
 
 [@deriving show]
 type msg =
   | Command(command)
   | Session(Session.msg);
-// | QuickFixContextMenu(
-//     [@opaque] Component_EditorContextMenu.msg(CodeAction.t),
-//   )
-// | QuickFixesAvailable({
-//     handle: int,
-//     actions: list(Exthost.CodeAction.t),
-//   })
-// | QuickFixesNotAvailable({handle: int})
-// | QuickFixesError({
-//     handle: int,
-//     msg: string,
-//   });
 
 let initial = {
   providers: [],
   session: Session.initial,
-  // quickFixes: QuickFixes.initial,
-  // quickFixContextMenu: None,
-  // lightBulbActiveEditorId: None,
+  isLightBulbEnabled: true,
+};
+
+let configurationChanged = (~config, model) => {
+  ...model,
+  isLightBulbEnabled: Configuration.enabled.get(config),
 };
 
 let register =
@@ -449,25 +404,28 @@ let register =
   };
 };
 
-let cursorMoved = (~editorId, ~buffer, ~cursor, model) => {
-  let handles =
-    model.providers
-    |> List.filter(({selector, _}) => {
-         Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
-       })
-    |> List.map(({handle, _}) => handle);
-  {
-    ...model,
-    session:
-      Session.checkLightBulb(
-        ~editorId,
-        ~buffer,
-        ~positionOrSelection=Position(cursor),
-        ~handles,
-        model.session,
-      ),
+let cursorMoved = (~editorId, ~buffer, ~cursor, model) =>
+  if (model.isLightBulbEnabled) {
+    let handles =
+      model.providers
+      |> List.filter(({selector, _}) => {
+           Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
+         })
+      |> List.map(({handle, _}) => handle);
+    {
+      ...model,
+      session:
+        Session.checkLightBulb(
+          ~editorId,
+          ~buffer,
+          ~positionOrSelection=Position(cursor),
+          ~handles,
+          model.session,
+        ),
+    };
+  } else {
+    model;
   };
-};
 
 let unregister = (~handle, model) => {
   ...model,
@@ -476,10 +434,26 @@ let unregister = (~handle, model) => {
 };
 
 let update = (~editorId, ~buffer, ~cursorLocation, msg, model) => {
-  let bufferId = Buffer.getId(buffer);
   switch (msg) {
   | Session(sessionMsg) =>
     let (session', outmsg) = Session.update(sessionMsg, model.session);
+    ({...model, session: session'}, outmsg);
+
+  | Command(Cancel) => (
+      {...model, session: Session.stop(model.session)},
+      Outmsg.Nothing,
+    )
+
+  | Command(AcceptSelected) =>
+    let (session', outmsg) = Session.select(model.session);
+    ({...model, session: session'}, outmsg);
+
+  | Command(SelectNext) =>
+    let (session', outmsg) = Session.next(model.session);
+    ({...model, session: session'}, outmsg);
+
+  | Command(SelectPrevious) =>
+    let (session', outmsg) = Session.previous(model.session);
     ({...model, session: session'}, outmsg);
 
   | Command(QuickFix) =>
@@ -500,86 +474,19 @@ let update = (~editorId, ~buffer, ~cursorLocation, msg, model) => {
         model.session,
       );
     ({...model, session: session'}, outmsg);
-  // TODO: Revive with session
-  // let all = QuickFixes.all(model.quickFixes);
-  // let allCount = List.length(all);
-  // if (allCount == 0) {
-  //   (model, Outmsg.NotifyFailure("No quickfixes available here."));
-  // } else if (allCount == 1) {
-  //   let maybeEdit =
-  //     List.nth_opt(all, 0)
-  //     |> Utility.OptionEx.flatMap((fix: CodeAction.t) =>
-  //          Exthost.CodeAction.(fix.action.edit)
-  //        );
-  //   let outmsg =
-  //     maybeEdit
-  //     |> Option.map((edit: Exthost.WorkspaceEdit.t) =>
-  //          Outmsg.ApplyWorkspaceEdit(edit)
-  //        )
-  //     |> Option.value(~default=Outmsg.Nothing);
-  //   (model, outmsg);
-  // } else {
-  //   let toString = (codeAction: CodeAction.t) => {
-  //     Exthost.CodeAction.(codeAction.action.title);
-  //   };
-  //   let renderer =
-  //     Component_EditorContextMenu.Schema.Renderer.default(~toString);
-  //   let schema = Component_EditorContextMenu.Schema.contextMenu(~renderer);
-  //   let quickFixMenu =
-  //     Component_EditorContextMenu.create(~schema, all) |> Option.some;
-  //   ({...model, quickFixContextMenu: quickFixMenu}, Outmsg.Nothing);
-  // };
-  // | QuickFixContextMenu(contextMenuMsg) =>
-  //   let (model', eff) =
-  //     model.quickFixContextMenu
-  //     |> Option.map(contextMenu => {
-  //          let (model', outmsg) =
-  //            Component_EditorContextMenu.update(contextMenuMsg, contextMenu);
-  //          let (model'', eff) =
-  //            switch (outmsg) {
-  //            | Nothing => (Some(model'), Outmsg.Nothing)
-  //            | Cancelled => (None, Outmsg.Nothing)
-  //            | FocusChanged(_) => (Some(model'), Outmsg.Nothing)
-  //            | Selected(item) => (
-  //                None,
-  //                Exthost.CodeAction.(item.action.edit)
-  //                |> Option.map(edit => {Outmsg.ApplyWorkspaceEdit(edit)})
-  //                |> Option.value(~default=Outmsg.Nothing),
-  //              )
-  //            };
-  //          ({...model, quickFixContextMenu: model''}, eff);
-  //        })
-  //     |> Option.value(~default=(model, Outmsg.Nothing));
-  //   (model', eff);
-  // | QuickFixesAvailable({handle, actions}) => (
-  //     {
-  //       ...model,
-  //       quickFixes:
-  //         QuickFixes.addQuickFixes(
-  //           ~handle,
-  //           ~bufferId,
-  //           ~position=cursorLocation,
-  //           ~newActions=actions,
-  //           model.quickFixes,
-  //         ),
-  //     },
-  //     Outmsg.Nothing,
-  //   )
-  // | QuickFixesNotAvailable(_) => (model, Outmsg.Nothing)
-  // | QuickFixesError(_) => (model, Outmsg.Nothing)
   };
 };
 
 let sub =
     (
-      ~config,
-      ~buffer,
-      ~activeEditor,
-      ~activePosition,
+      ~config as _,
+      ~buffer as _,
+      ~activeEditor as _,
+      ~activePosition as _,
       ~topVisibleBufferLine as _,
       ~bottomVisibleBufferLine as _,
-      ~lineHeightInPixels,
-      ~positionToRelativePixel,
+      ~lineHeightInPixels as _,
+      ~positionToRelativePixel as _,
       ~client,
       codeActions,
     ) => {
@@ -598,6 +505,16 @@ module Commands = {
       "editor.action.quickFix",
       Command(QuickFix),
     );
+
+  let acceptContextItem = define("acceptQuickFix", Command(AcceptSelected));
+
+  let selectPrevContextItem =
+    define("selectPrevQuickFix", Command(SelectPrevious));
+
+  let selectNextContextItem =
+    define("selectNextQuickFix", Command(SelectNext));
+
+  let cancel = define("cancelQuickFix", Command(Cancel));
 };
 
 module Keybindings = {
@@ -607,40 +524,101 @@ module Keybindings = {
 
   let condition = "editorTextFocus && normalMode" |> WhenExpr.parse;
 
+  let contextMenuCondition =
+    "normalMode || visualMode && editorTextFocus && quickFixWidgetVisible"
+    |> WhenExpr.parse;
+
   let quickFix =
     bind(
       ~key=isMac ? "<D-.>" : "<C-.>",
       ~command=Commands.quickFix.id,
       ~condition,
     );
+
+  let nextSuggestion =
+    bind(
+      ~key="<C-N>",
+      ~command=Commands.selectNextContextItem.id,
+      ~condition=contextMenuCondition,
+    );
+
+  let nextSuggestionArrow =
+    bind(
+      ~key="<DOWN>",
+      ~command=Commands.selectNextContextItem.id,
+      ~condition=contextMenuCondition,
+    );
+
+  let previousSuggestion =
+    bind(
+      ~key="<C-P>",
+      ~command=Commands.selectPrevContextItem.id,
+      ~condition=contextMenuCondition,
+    );
+  let previousSuggestionArrow =
+    bind(
+      ~key="<UP>",
+      ~command=Commands.selectPrevContextItem.id,
+      ~condition=contextMenuCondition,
+    );
+
+  let acceptSuggestionEnter =
+    bind(
+      ~key="<CR>",
+      ~command=Commands.acceptContextItem.id,
+      ~condition=contextMenuCondition,
+    );
+
+  let acceptSuggestionTab =
+    bind(
+      ~key="<TAB>",
+      ~command=Commands.acceptContextItem.id,
+      ~condition=contextMenuCondition,
+    );
+
+  let cancelEscape =
+    bind(
+      ~key="<ESC>",
+      ~command=Commands.cancel.id,
+      ~condition=contextMenuCondition,
+    );
 };
 
 module Contributions = {
-  let commands = model => {
-    let static = Commands.[quickFix];
-
-    let dynamic = [];
-    // model.quickFixContextMenu
-    // |> Option.map(qf => {
-    //      Component_EditorContextMenu.Contributions.commands(qf)
-    //      |> List.map(Oni_Core.Command.map(msg => QuickFixContextMenu(msg)))
-    //    })
-    // |> Option.value(~default=[]);
-
-    static @ dynamic;
+  let commands = _model => {
+    Commands.[
+      quickFix,
+      acceptContextItem,
+      selectNextContextItem,
+      selectPrevContextItem,
+      cancel,
+    ];
   };
 
   let configuration = Configuration.[enabled.spec];
 
-  let keybindings = Keybindings.[quickFix];
+  let keybindings =
+    Keybindings.[
+      quickFix,
+      acceptSuggestionEnter,
+      acceptSuggestionTab,
+      nextSuggestionArrow,
+      nextSuggestion,
+      previousSuggestion,
+      previousSuggestionArrow,
+      cancelEscape,
+    ];
 
   let contextKeys = model => {
-    WhenExpr.ContextKeys.empty;
-    // model.quickFixContextMenu
-    // |> Option.map(qf => {
-    //      Component_EditorContextMenu.Contributions.contextKeys(qf)
-    //    })
-    // |> Option.value(~default=WhenExpr.ContextKeys.empty);
+    WhenExpr.ContextKeys.(
+      [
+        Schema.bool("quickFixWidgetVisible", ({session, _}) => {
+          Session.contextMenu(session) != None
+        }),
+      ]
+      |> Schema.fromList
+      |> fromSchema(model)
+    );
   };
 };
 

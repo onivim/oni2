@@ -34,18 +34,14 @@ type msg('item);
 type outmsg('item) =
   | Nothing
   | Cancelled
-  | FocusChanged('item)
   | Selected('item);
 
 let update: (msg('item), model('item)) => (model('item), outmsg('item));
 
-module Contributions: {
-  let commands: model('item) => list(Oni_Core.Command.t(msg('item)));
+let next: model('item) => model('item);
+let previous: model('item) => model('item);
 
-  let contextKeys: model(_) => WhenExpr.ContextKeys.t;
-
-  let keybindings: list(Feature_Input.Schema.keybinding);
-};
+let selected: model('item) => option('item);
 
 let sub: model('item) => Isolinear.Sub.t(msg('item));
 

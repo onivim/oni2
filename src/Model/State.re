@@ -388,7 +388,6 @@ let defaultKeyBindings =
         ~condition=windowCommandCondition,
       ),
     ]
-  @ Component_EditorContextMenu.Contributions.keybindings
   @ Component_VimWindows.Contributions.keybindings
   @ Component_VimList.Contributions.keybindings
   @ Component_VimTree.Contributions.keybindings
