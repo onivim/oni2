@@ -183,7 +183,7 @@ let update = (msg: msg('item), model) => {
   };
 };
 
-let sub = (~isVisible, ~pixelPosition, model) => {
+let sub = model => {
   Isolinear.Sub.none;
 };
 
@@ -201,12 +201,20 @@ module Commands = {
 
 module View = {
   open Revery.UI;
-  let make = (~theme, ~uiFont, ~dispatch, ~model, ()) => {
+  let make =
+      (
+        ~pixelPosition: EditorCoreTypes.PixelPosition.t,
+        ~theme,
+        ~uiFont,
+        ~dispatch,
+        ~model,
+        (),
+      ) => {
     let bg = Feature_Theme.Colors.EditorSuggestWidget.background.from(theme);
     let fg = Feature_Theme.Colors.EditorSuggestWidget.foreground.from(theme);
 
     let count = Array.length(model.items);
-    let marginSize = 4;
+    let marginSize = 5;
     let doubleMarginSize = marginSize * 2;
     let rowHeight = 20;
     let rowsToRender = 5;
@@ -234,8 +242,8 @@ module View = {
           position(`Absolute),
           backgroundColor(bg),
           color(fg),
-          left(100),
-          top(100),
+          left(int_of_float(pixelPosition.x)),
+          top(int_of_float(pixelPosition.y)),
           width(500),
           height(pixelHeight),
           borderRadius(8.),

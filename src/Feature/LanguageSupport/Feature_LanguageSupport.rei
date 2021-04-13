@@ -136,6 +136,7 @@ let configurationChanged: (~config: Config.resolver, model) => model;
 
 let cursorMoved:
   (
+    ~editorId: int,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~buffer: Oni_Core.Buffer.t,
     ~previous: CharacterPosition.t,
@@ -266,6 +267,8 @@ module View: {
   module Overlay: {
     let make:
       (
+        ~toPixel: (~editorId: int, CharacterPosition.t) =>
+                  option(PixelPosition.t),
         ~theme: ColorTheme.Colors.t,
         ~model: model,
         ~editorFont: Service_Font.font,

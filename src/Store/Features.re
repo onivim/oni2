@@ -296,6 +296,7 @@ module Internal = {
                |> Exthost.LanguageInfo.getLanguageConfiguration(languageInfo)
                |> Option.value(~default=LanguageConfiguration.default);
              Feature_LanguageSupport.cursorMoved(
+               ~editorId=activeEditorId,
                ~languageConfiguration,
                ~buffer,
                ~previous=prevCursor,
@@ -2056,6 +2057,7 @@ let update =
                     )
                  |> Option.value(~default=LanguageConfiguration.default);
                Feature_LanguageSupport.cursorMoved(
+                 ~editorId=Feature_Editor.Editor.getId(newEditor),
                  ~languageConfiguration,
                  ~buffer,
                  ~previous=originalCursor,

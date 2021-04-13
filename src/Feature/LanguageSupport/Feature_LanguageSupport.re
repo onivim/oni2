@@ -357,6 +357,7 @@ let update =
          let (codeActions', outmsg) =
            CodeActions.update(
              ~buffer,
+             ~editorId,
              ~cursorLocation,
              codeActionsMsg,
              model.codeActions,
@@ -605,9 +606,14 @@ let configurationChanged = (~config, model) => {
 };
 
 let cursorMoved =
-    (~languageConfiguration, ~buffer, ~previous, ~current, model) => {
+    (~editorId, ~languageConfiguration, ~buffer, ~previous, ~current, model) => {
   let codeActions =
-    CodeActions.cursorMoved(~buffer, ~cursor=current, model.codeActions);
+    CodeActions.cursorMoved(
+      ~editorId,
+      ~buffer,
+      ~cursor=current,
+      model.codeActions,
+    );
   let completion =
     Completion.cursorMoved(
       ~languageConfiguration,
@@ -1091,8 +1097,8 @@ module View = {
   module EditorWidgets = {
     let make =
         (
-          ~x as _,
-          ~y as _,
+          ~x,
+          ~y,
           ~editorId,
           ~theme,
           ~model,
@@ -1102,6 +1108,8 @@ module View = {
           (),
         ) => {
       <CodeActions.View.EditorWidgets
+        x
+        y
         editorId
         editorFont
         theme
@@ -1111,8 +1119,9 @@ module View = {
   };
 
   module Overlay = {
-    let make = (~theme, ~model, ~editorFont, ~uiFont, ~dispatch, ()) => {
+    let make = (~toPixel, ~theme, ~model, ~editorFont, ~uiFont, ~dispatch, ()) => {
       <CodeActions.View.Overlay
+        toPixel
         theme
         model={model.codeActions}
         dispatch={msg => dispatch(CodeActions(msg))}

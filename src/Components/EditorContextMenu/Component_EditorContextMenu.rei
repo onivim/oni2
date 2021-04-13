@@ -47,17 +47,12 @@ module Contributions: {
   let keybindings: list(Feature_Input.Schema.keybinding);
 };
 
-let sub:
-  (
-    ~isVisible: bool,
-    ~pixelPosition: option(PixelPosition.t),
-    model('item)
-  ) =>
-  Isolinear.Sub.t(msg('item));
+let sub: model('item) => Isolinear.Sub.t(msg('item));
 
 module View: {
   let make:
     (
+      ~pixelPosition: PixelPosition.t,
       ~theme: ColorTheme.Colors.t,
       ~uiFont: UiFont.t,
       ~dispatch: msg('item) => unit,

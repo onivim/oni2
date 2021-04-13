@@ -145,9 +145,12 @@ type t = {
 };
 
 let setBoundingBox = (bbox, editor) => {
-  let (top, left, _, _) = Revery.Math.BoundingBox2d.getBounds(bbox);
+  let (left, top, _, _) = Revery.Math.BoundingBox2d.getBounds(bbox);
   {...editor, pixelY: top, pixelX: left};
 };
+
+let pixelX = ({pixelX, _}) => pixelX;
+let pixelY = ({pixelY, _}) => pixelY;
 
 let verticalScrollbarThickness = ({scrollbarVerticalWidth, _}) => scrollbarVerticalWidth;
 let horizontalScrollbarThickness = ({scrollbarHorizontalWidth, _}) => scrollbarHorizontalWidth;
