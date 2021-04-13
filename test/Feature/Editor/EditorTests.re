@@ -244,6 +244,8 @@ describe("Editor", ({describe, _}) => {
         BytePosition.{line: LineNumber.zero, byte: ByteIndex.ofInt(b)};
       };
 
+      // Simulate 'typing' in insert mode across the word wrap boundary -
+      // the same case that occurred in #3405
       let editor' =
         editor
         |> Editor.setMode(Vim.Mode.Insert({cursors: [position(0)]}))
