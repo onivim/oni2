@@ -600,9 +600,9 @@ module EditorSuggestWidget = {
       all(ref(EditorWidget.background)),
     );
   let border =
-    define("editorSuggestWidget,border", all(ref(EditorWidget.border)));
+    define("editorSuggestWidget.border", all(ref(EditorWidget.border)));
   let foreground =
-    define("editorSuggestWidget.background", all(ref(Editor.foreground)));
+    define("editorSuggestWidget.foreground", all(ref(Editor.foreground)));
   let highlightForeground =
     define(
       "editorSuggestWidget.highlightForeground",
@@ -617,6 +617,7 @@ module EditorSuggestWidget = {
   let defaults = [
     background,
     border,
+    foreground,
     highlightForeground,
     selectedBackground,
   ];

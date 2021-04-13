@@ -18,6 +18,9 @@ module Schema = {
               theme,
             )
           : Revery.Colors.transparentBlack;
+      let fg =
+        Feature_Theme.Colors.EditorSuggestWidget.foreground.from(theme);
+
       <Revery.UI.View
         style=Revery.UI.Style.[
           position(`Absolute),
@@ -30,11 +33,14 @@ module Schema = {
           flexDirection(`Row),
           alignItems(`Center),
         ]>
-        <Revery.UI.Text
-          fontFamily={uiFont.family}
-          fontSize={uiFont.size}
-          text={toString(item)}
-        />
+        <Revery.UI.View style=Revery.UI.Style.[marginLeft(8)]>
+          <Revery.UI.Text
+            fontFamily={uiFont.family}
+            fontSize={uiFont.size}
+            text={toString(item)}
+            style=Revery.UI.Style.[color(fg)]
+          />
+        </Revery.UI.View>
       </Revery.UI.View>;
     };
   };
@@ -166,7 +172,7 @@ module View = {
     let count = Array.length(model.items);
     let marginSize = 5;
     let doubleMarginSize = marginSize * 2;
-    let rowHeight = 20;
+    let rowHeight = 24;
     let rowsToRender = 5;
     let pixelHeight =
       min(
