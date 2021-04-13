@@ -77,7 +77,9 @@ type command =
 type msg('item) =
   | Command(command)
   | Popup(Component_Popup.msg)
-  | MouseOver(int);
+  | MouseOver(int)
+  | MouseUp(int)
+  | MouseClickedBackground;
 
 type outmsg('item) =
   | Nothing
@@ -176,6 +178,17 @@ let update = (msg: msg('item), model) => {
       };
     (model', eff);
 
+  | MouseUp(index) =>
+    let eff =
+      switch (Internal.selected(model)) {
+      | None => Nothing
+      | Some(item) => Selected(item)
+      };
+
+    (model, eff);
+
+  | MouseClickedBackground => (model, Cancelled)
+
   | Popup(msg) => (
       {...model, popup: Component_Popup.update(msg, model.popup)},
       Nothing,
@@ -206,61 +219,75 @@ module View = {
     let bg = Feature_Theme.Colors.EditorSuggestWidget.background.from(theme);
     let fg = Feature_Theme.Colors.EditorSuggestWidget.foreground.from(theme);
 
-    <Component_Popup.View
-      model={model.popup}
-      inner={(~transition as _) => {
-        <View
-          style=Style.[
-            position(`Absolute),
-            backgroundColor(bg),
-            color(fg),
-            width(500),
-            height(100),
-            borderRadius(8.),
-            boxShadow(
-              ~xOffset=4.,
-              ~yOffset=4.,
-              ~blurRadius=12.,
-              ~spreadRadius=0.,
-              ~color=Revery.Color.rgba(0., 0., 0., 0.75),
-            ),
-            pointerEvents(`Allow),
-          ]>
+    <View
+      onMouseUp={_ => dispatch(MouseClickedBackground)}
+      style=Style.[
+        position(`Absolute),
+        top(0),
+        left(0),
+        right(0),
+        bottom(0),
+        backgroundColor(
+          Revery.Colors.red |> Revery.Color.multiplyAlpha(0.1),
+        ),
+        pointerEvents(`Allow),
+      ]>
+      <Component_Popup.View
+        model={model.popup}
+        inner={(~transition as _) => {
           <View
             style=Style.[
               position(`Absolute),
-              top(4),
-              left(4),
-              right(4),
-              bottom(4),
+              backgroundColor(bg),
+              color(fg),
+              width(500),
+              height(100),
+              borderRadius(8.),
+              boxShadow(
+                ~xOffset=4.,
+                ~yOffset=4.,
+                ~blurRadius=12.,
+                ~spreadRadius=0.,
+                ~color=Revery.Color.rgba(0., 0., 0., 0.75),
+              ),
             ]>
-            <Oni_Components.FlatList
-              rowHeight=20
-              initialRowsToRender=5
-              count={Array.length(model.items)}
-              theme
-              focused={model.selected}>
-              ...{index => {
-                let isFocused = model.selected == Some(index);
-                let item = model.items[index];
-                <Revery.UI.View
-                  onMouseOver={item => dispatch(MouseOver(index))}
-                  style=Revery.UI.Style.[
-                    position(`Absolute),
-                    backgroundColor(bg),
-                    top(0),
-                    left(0),
-                    right(0),
-                    bottom(0),
-                  ]>
-                  {model.schema.renderer(~isFocused, ~theme, ~uiFont, item)}
-                </Revery.UI.View>;
-              }}
-            </Oni_Components.FlatList>
+            <View
+              style=Style.[
+                position(`Absolute),
+                top(4),
+                left(4),
+                right(4),
+                bottom(4),
+              ]>
+              <Oni_Components.FlatList
+                rowHeight=20
+                initialRowsToRender=5
+                count={Array.length(model.items)}
+                theme
+                focused={model.selected}>
+                ...{index => {
+                  let isFocused = model.selected == Some(index);
+                  let item = model.items[index];
+                  <Revery.UI.View
+                    onMouseOver={item => dispatch(MouseOver(index))}
+                    onMouseUp={item => dispatch(MouseUp(index))}
+                    style=Revery.UI.Style.[
+                      position(`Absolute),
+                      backgroundColor(bg),
+                      top(0),
+                      left(0),
+                      right(0),
+                      bottom(0),
+                    ]>
+                    {model.schema.renderer(~isFocused, ~theme, ~uiFont, item)}
+                  </Revery.UI.View>;
+                }}
+              </Oni_Components.FlatList>
+            </View>
           </View>
-        </View>
-      }}
-    />;
+        }}
+      />
+    </View>;
   };
 };
 

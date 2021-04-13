@@ -225,18 +225,20 @@ let update = (~buffer, ~cursorLocation, msg, model) => {
            let (model', outmsg) =
              Component_EditorContextMenu.update(contextMenuMsg, contextMenu);
 
-           let eff =
+           let (model'', eff) =
              switch (outmsg) {
-             | Nothing => Outmsg.Nothing
-             | Cancelled => Outmsg.Nothing
-             | FocusChanged(_) => Outmsg.Nothing
-             | Selected(item) =>
-               Exthost.CodeAction.(item.action.edit)
-               |> Option.map(edit => {Outmsg.ApplyWorkspaceEdit(edit)})
-               |> Option.value(~default=Outmsg.Nothing)
+             | Nothing => (Some(model'), Outmsg.Nothing)
+             | Cancelled => (None, Outmsg.Nothing)
+             | FocusChanged(_) => (Some(model'), Outmsg.Nothing)
+             | Selected(item) => (
+                 None,
+                 Exthost.CodeAction.(item.action.edit)
+                 |> Option.map(edit => {Outmsg.ApplyWorkspaceEdit(edit)})
+                 |> Option.value(~default=Outmsg.Nothing),
+               )
              };
 
-           ({...model, quickFixContextMenu: Some(model')}, eff);
+           ({...model, quickFixContextMenu: model''}, eff);
          })
       |> Option.value(~default=(model, Outmsg.Nothing));
 
@@ -448,14 +450,7 @@ module View = {
              // </Revery.UI.Components.Clickable>;
            />
          })
-      |> Option.value(
-           ~default=
-             <Revery.UI.Components.Container
-               width=32
-               height=32
-               color=Revery.Colors.magenta
-             />,
-         );
+      |> Option.value(~default=Revery.UI.React.empty);
     };
   };
 };
