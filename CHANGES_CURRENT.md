@@ -64,6 +64,7 @@
 - #3330 - Diagnostics: Add regression test for #3233
 - #3334 - Dependency: Revery -> b746d68 (thanks @timbertson !)
 - #3385 - Dependency: Revery -> 4337e2c
+- #3408 - Dependency: Revery -> 373b087
 
 ### Infrastructure
 
