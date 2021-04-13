@@ -108,7 +108,6 @@ module QuickFixes = {
 type model = {
   providers: list(provider),
   quickFixes: QuickFixes.t,
-  lightBulbPopup: Component_Popup.model,
   lightBulbActiveEditorId: option(int),
   quickFixContextMenu:
     option(Component_EditorContextMenu.model(CodeAction.t)),
@@ -121,11 +120,6 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
-  | LightBulbPopup({
-      editorId: int,
-      [@opaque]
-      msg: Component_Popup.msg,
-    })
   | QuickFixContextMenu(
       [@opaque] Component_EditorContextMenu.msg(CodeAction.t),
     )
@@ -142,8 +136,6 @@ type msg =
 let initial = {
   providers: [],
   quickFixes: QuickFixes.initial,
-
-  lightBulbPopup: Component_Popup.create(~width=32., ~height=32.),
   quickFixContextMenu: None,
   lightBulbActiveEditorId: None,
 };
@@ -208,15 +200,6 @@ let update = (~buffer, ~cursorLocation, msg, model) => {
 
       ({...model, quickFixContextMenu: quickFixMenu}, Outmsg.Nothing);
     };
-
-  | LightBulbPopup({editorId, msg}) => (
-      {
-        ...model,
-        lightBulbPopup: Component_Popup.update(msg, model.lightBulbPopup),
-        lightBulbActiveEditorId: Some(editorId),
-      },
-      Outmsg.Nothing,
-    )
 
   | QuickFixContextMenu(contextMenuMsg) =>
     let (model', eff) =
@@ -311,23 +294,6 @@ let sub =
          )
        });
 
-  let isVisible =
-    isLightBulbEnabled && QuickFixes.any(codeActions.quickFixes);
-  let pixelPosition =
-    QuickFixes.position(codeActions.quickFixes)
-    |> Option.map(position => {
-         let {x, y}: PixelPosition.t = positionToRelativePixel(position);
-         PixelPosition.{x, y: y +. lineHeightInPixels};
-       });
-
-  let lightBulbPopup =
-    Component_Popup.sub(
-      ~isVisible,
-      ~pixelPosition,
-      codeActions.lightBulbPopup,
-    )
-    |> Isolinear.Sub.map(msg => LightBulbPopup({editorId: activeEditor, msg}));
-
   let quickFixContextMenuSub =
     codeActions.quickFixContextMenu
     |> Option.map(qf => {
@@ -340,8 +306,7 @@ let sub =
     |> Option.value(~default=Isolinear.Sub.none)
     |> Isolinear.Sub.map(msg => QuickFixContextMenu(msg));
 
-  [lightBulbPopup, quickFixContextMenuSub, ...codeActionsSubs]
-  |> Isolinear.Sub.batch;
+  [quickFixContextMenuSub, ...codeActionsSubs] |> Isolinear.Sub.batch;
 };
 
 module Commands = {
@@ -407,19 +372,14 @@ module View = {
           Feature_Theme.Colors.Editor.lightBulbForeground.from(theme);
 
         let fontSize = editorFont.fontSize;
-        <Component_Popup.View
-          model={model.lightBulbPopup}
-          inner={(~transition as _) => {
-            <Revery.UI.Components.Container
-              width=24 height=24 color=Revery.Colors.transparentWhite>
-              <Oni_Core.Codicon
-                fontSize
-                color=foregroundColor
-                icon=Codicon.lightbulb
-              />
-            </Revery.UI.Components.Container>
-          }}
-        />;
+        <Revery.UI.Components.Container
+          width=24 height=24 color=Revery.Colors.transparentWhite>
+          <Oni_Core.Codicon
+            fontSize
+            color=foregroundColor
+            icon=Codicon.lightbulb
+          />
+        </Revery.UI.Components.Container>;
       } else {
         Revery.UI.React.empty;
       };
