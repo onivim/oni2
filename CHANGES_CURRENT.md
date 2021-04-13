@@ -5,6 +5,7 @@
 - #3348 - Code Actions: Implement extension host protocol for quick fix / code actions
 - #3352 - Keybindings: Add default keybinding for open configuration (related #1423, thanks @LiHRaM !)
 - #3381 - Language Support: Symbols - implement go-to buffer symbol menu
+- #3387 - Code Actions: Implement context menu for quick fixes
 
 ### Bug Fixes
 
