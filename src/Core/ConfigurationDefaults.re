@@ -40,6 +40,7 @@ let getDefaultConfigString = configName =>
     "left": ["notificationCount", "macro", "leftItems", "diagnosticCount", "git"],
     "showOnNotification": ["modeIndicator", "notificationCount"],
     "rigth": ["rightItems", "lineEndings", "indentation", "fileType", "position", "modeIndicator"],
+    "hidden": [],
   },
   "workbench.tree.indent": 2,
   "vim.useSystemClipboard": ["yank"]

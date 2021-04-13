@@ -21,7 +21,9 @@ module ConfigurationItems: {
   type t = {
     leftItems: list(string),
     rightItems: list(string),
+    hidden: list(string),
     showOnNotification: list(string),
+    notificationMode: string,
   };
 };
 // MODEL

@@ -45,7 +45,9 @@ module ConfigurationItems = {
   type t = {
     leftItems: list(string),
     rightItems: list(string),
+    hidden: list(string),
     showOnNotification: list(string),
+    notificationMode: string,
   };
 
   let decode =
@@ -54,12 +56,16 @@ module ConfigurationItems = {
         {
           leftItems: field.withDefault("left", ["..."], list(string)),
           rightItems: field.withDefault("right", ["..."], list(string)),
+
+          hidden: field.withDefault("hidden", [], list(string)),
           showOnNotification:
             field.withDefault(
               "showOnNotification",
               ["notificationCount", "modeIndicator"],
               list(string),
             ),
+          notificationMode:
+            field.withDefault("notificationMode", "default", string),
         }
       )
     );
@@ -73,6 +79,8 @@ module ConfigurationItems = {
           configurationItems.showOnNotification |> list(string),
         ),
         ("left", configurationItems.leftItems |> list(string)),
+        ("hidden", configurationItems.hidden |> list(string)),
+        ("notificationMode", configurationItems.notificationMode |> string),
       ])
     );
 
@@ -105,17 +113,21 @@ module ConfigurationItems = {
 
     let process = (def, list) =>
       list
-      //List (srt) -> List ((str, notificaion))
       |> List.map(str =>
-          if (str == extendItem) {
-            def
-          } else {
-            [str]
-          }
+           if (str == extendItem) {
+             def;
+           } else {
+             [str];
+           }
          )
       |> List.flatten
-      |> List.map(str => (str, !List.mem(str, t.showOnNotification)))
-      //List ((str, notificaion)) -> List (list(str), notificaion)
+      |> List.map(str =>
+           (
+             str,
+             t.notificationMode == "default"
+             && !List.mem(str, t.showOnNotification),
+           )
+         )
       |> List.fold_left(
            (a, item) => {
              let (toAdd, notificationToAdd) = item;
@@ -131,32 +143,41 @@ module ConfigurationItems = {
            [([], false)],
          );
 
-    let allItems = (t.rightItems @ t.leftItems) |> List.filter(a => a != extendItem);
+    let allItems =
+      t.rightItems @ t.leftItems |> List.filter(a => a != extendItem);
 
     //Get if `...` if its, on the rigth and left
-    let extendRight = List.mem(extendItem, t.rightItems)
-    let extendLeft = List.mem(extendItem, t.leftItems)
-    
-    /*
-      if x has `...` and !x doesn't then add them all
-      else if x can extended then do
-      else then no default
-    */
-    let leftItemsPDef = (if (extendLeft && !extendRight) {
-      leftItemsDef @ rightItemsDef 
-    } else if (extendLeft) { 
-      leftItemsDef
-    } else {
-      [] 
-    }) |> removeFromList(allItems);
+    let extendRight = List.mem(extendItem, t.rightItems);
+    let extendLeft = List.mem(extendItem, t.leftItems);
 
-    let rightItemsPDef = (if (extendRight && !extendLeft) {
-      leftItemsDef @ rightItemsDef 
-    } else if (extendRight) {
-      rightItemsDef
-    } else {
-      []
-    }) |> removeFromList(allItems);
+    /*
+       if x has `...` and !x doesn't then add them all
+       else if x can extended then do
+       else then no default
+     */
+    let leftItemsPDef =
+      (
+        if (extendLeft && !extendRight) {
+          leftItemsDef @ rightItemsDef;
+        } else if (extendLeft) {
+          leftItemsDef;
+        } else {
+          [];
+        }
+      )
+      |> removeFromList(allItems @ t.hidden);
+
+    let rightItemsPDef =
+      (
+        if (extendRight && !extendLeft) {
+          leftItemsDef @ rightItemsDef;
+        } else if (extendRight) {
+          rightItemsDef;
+        } else {
+          [];
+        }
+      )
+      |> removeFromList(allItems @ t.hidden);
 
     let getItemsFromAlign = align =>
       statusBarItems
@@ -165,20 +186,22 @@ module ConfigurationItems = {
            && !(
                 (
                   switch (item.command) {
-                  | Some(command) => List.mem(command, allItems)
+                  | Some(command) => List.mem(command, allItems @ t.hidden)
                   | None => false
                   }
                 )
-                || List.mem(item.id, allItems)
+                || List.mem(item.id, allItems @ t.hidden)
               )
          );
 
     (
       process(leftItemsPDef, t.leftItems),
       process(rightItemsPDef, t.rightItems),
-      List.mem("center", t.showOnNotification),
+      List.mem("center", t.showOnNotification)
+      || t.notificationMode != "default",
       getItemsFromAlign(Right),
       getItemsFromAlign(Left),
+      t.notificationMode,
     );
   };
 };
@@ -664,27 +687,42 @@ module View = {
       </item>;
     };
 
-    let notificationPopups = (~onlyAnimation, ()) =>
-      activeNotifications
-      |> List.rev
-      |> List.map(model =>
-           <Feature_Notification.View.Popup
-             model
-             background
-             foreground
-             font
-             onlyAnimation
-           />
-         )
-      |> React.listToElement;
-
     let macroElement =
       recordingMacro
       |> Option.map(register => <macro register />)
       |> Option.value(~default=React.empty);
 
-    let (startItems, endItems, center, rightItems, leftItems) =
+    let (
+      startItems,
+      endItems,
+      center,
+      rightItems,
+      leftItems,
+      notificationMode,
+    ) =
       ConfigurationItems.preProcess(items, statusBar.items);
+
+    let notificationPopups = (~onlyAnimation, ~compact, ()) =>
+      activeNotifications
+      |> List.rev
+      |> (
+        list =>
+          (
+            notificationMode == "compact+" && list |> List.length > 0
+              ? [list |> List.hd] : list
+          )
+          |> List.map(model =>
+               <Feature_Notification.View.Popup
+                 model
+                 background
+                 foreground
+                 font
+                 onlyAnimation
+                 compact
+               />
+             )
+          |> React.listToElement
+      );
 
     let rightItems =
       rightItems
@@ -730,16 +768,20 @@ module View = {
                   | "leftItems" => leftItems
                   | "git" => scmItems
                   | "rightItems" => rightItems
+                  | "notificationPopup" =>
+                    notificationMode != "default"
+                      ? <notificationPopups onlyAnimation compact=true />
+                      : React.empty
                   | str =>
                     statusBar.items
                     |> List.filter((item: Item.t) =>
-                         (
+                         item.id == str
+                         || (
                            switch (item.command) {
                            | Some(command) => command == str
                            | None => false
                            }
                          )
-                         || item.id == str
                        )
                     |> List.map(
                          ({command, label, color, tooltip, _}: Item.t) =>
@@ -757,7 +799,7 @@ module View = {
            if (noti) {
              <sectionGroup>
                <section align=`Center> list </section>
-               <notificationPopups onlyAnimation />
+               <notificationPopups onlyAnimation compact=false />
              </sectionGroup>;
            } else {
              list;
@@ -768,7 +810,8 @@ module View = {
     let startItems = startItems |> itemsToElement;
     let endItems = endItems |> itemsToElement;
     let center =
-      center ? React.empty : <notificationPopups onlyAnimation=true />;
+      center
+        ? React.empty : <notificationPopups onlyAnimation=true compact=false />;
 
     <View
       ?key
@@ -794,6 +837,8 @@ module Configuration = {
         rightItems: ["..."],
         leftItems: ["..."],
         showOnNotification: ["notificationCount", "modeIndicator"],
+        hidden: [],
+        notificationMode: "default",
       },
     );
 };
