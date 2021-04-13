@@ -523,7 +523,7 @@ module List = {
   let focusForeground =
     define("list.focusForeground", all(ref(foreground))); // actually: unspecified
 
-  let focusOutline = define("list.focusOutline", all(ref(focusBackground)));
+  let focusOutline = define("list.focusOutline", all(ref(focusBorder)));
 
   let inactiveFocusOutline =
     define("list.inactiveFocusOutline", all(ref(inactiveFocusBackground)));
