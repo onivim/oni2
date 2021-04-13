@@ -819,7 +819,7 @@ module View = {
       width(Constants.scrollBarThickness),
     ];
 
-    let viewport = (~isScrollbarVisible) => [
+    let viewport = [
       position(`Absolute),
       top(0),
       left(0),
@@ -1126,12 +1126,7 @@ module View = {
                       ? Some(contentHeight) : None,
                 )}
                 onMouseWheel=scroll>
-                <View
-                  style={Styles.viewport(
-                    ~isScrollbarVisible=scrollbar == React.empty,
-                  )}>
-                  items
-                </View>
+                <View style=Styles.viewport> items </View>
                 topShadow
                 bottomShadow
                 scrollbar
