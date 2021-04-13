@@ -570,9 +570,8 @@ module View = {
             ];
           };
         <View style=Style.[flexDirection(`Row)]>
-          //marginLeft(4),
-          //width(availableWidth - 4),
-           {innerView |> React.listToElement} </View>;
+          {innerView |> React.listToElement}
+        </View>;
       }}
     />;
   };

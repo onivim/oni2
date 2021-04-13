@@ -5,6 +5,7 @@
 - #3348 - Code Actions: Implement extension host protocol for quick fix / code actions
 - #3352 - Keybindings: Add default keybinding for open configuration (related #1423, thanks @LiHRaM !)
 - #3381 - Language Support: Symbols - implement go-to buffer symbol menu
+- #3387 - Code Actions: Implement context menu for quick fixes
 
 ### Bug Fixes
 
@@ -63,6 +64,7 @@
 - #3330 - Diagnostics: Add regression test for #3233
 - #3334 - Dependency: Revery -> b746d68 (thanks @timbertson !)
 - #3385 - Dependency: Revery -> 4337e2c
+- #3408 - Dependency: Revery -> 373b087
 
 ### Infrastructure
 

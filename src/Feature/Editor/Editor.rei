@@ -174,6 +174,9 @@ let scrollX: t => float;
 let scrollY: t => float;
 let minimapScrollY: t => float;
 
+let pixelX: t => float;
+let pixelY: t => float;
+
 let lineHeightInPixels: t => float;
 let linePaddingInPixels: t => float;
 let setLineHeight: (~lineHeight: LineHeight.t, t) => t;

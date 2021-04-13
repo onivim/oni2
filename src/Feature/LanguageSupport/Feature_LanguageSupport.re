@@ -357,6 +357,7 @@ let update =
          let (codeActions', outmsg) =
            CodeActions.update(
              ~buffer,
+             ~editorId,
              ~cursorLocation,
              codeActionsMsg,
              model.codeActions,
@@ -596,6 +597,7 @@ let bufferSaved = (~isLargeBuffer, ~buffer, ~config, ~activeBufferId, model) => 
 
 let configurationChanged = (~config, model) => {
   ...model,
+  codeActions: CodeActions.configurationChanged(~config, model.codeActions),
   completion: Completion.configurationChanged(~config, model.completion),
   documentHighlights:
     DocumentHighlights.configurationChanged(
@@ -605,9 +607,14 @@ let configurationChanged = (~config, model) => {
 };
 
 let cursorMoved =
-    (~languageConfiguration, ~buffer, ~previous, ~current, model) => {
+    (~editorId, ~languageConfiguration, ~buffer, ~previous, ~current, model) => {
   let codeActions =
-    CodeActions.cursorMoved(~buffer, ~cursor=current, model.codeActions);
+    CodeActions.cursorMoved(
+      ~editorId,
+      ~buffer,
+      ~cursor=current,
+      model.codeActions,
+    );
   let completion =
     Completion.cursorMoved(
       ~languageConfiguration,
@@ -697,14 +704,14 @@ module Contributions = {
 
   let colors = CodeLens.Contributions.colors @ Completion.Contributions.colors;
 
-  let commands =
+  let commands = model =>
     [Commands.close]
     @ (
       Completion.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Completion(msg)))
     )
     @ (
-      CodeActions.Contributions.commands
+      CodeActions.Contributions.commands(model.codeActions)
       |> List.map(Oni_Core.Command.map(msg => CodeActions(msg)))
     )
     @ (
@@ -748,8 +755,8 @@ module Contributions = {
     @ Formatting.Contributions.configuration
     @ SignatureHelp.Contributions.configuration;
 
-  let contextKeys =
-    [
+  let contextKeys = {
+    let static = [
       Rename.Contributions.contextKeys
       |> fromList
       |> map(({rename, _}: model) => rename),
@@ -759,8 +766,17 @@ module Contributions = {
       SignatureHelp.Contributions.contextKeys
       |> fromList
       |> map(({signatureHelp, _}: model) => signatureHelp),
-    ]
-    |> unionMany;
+    ];
+    model => {
+      let staticContextKeys =
+        static |> unionMany |> WhenExpr.ContextKeys.fromSchema(model);
+
+      let codeActions =
+        CodeActions.Contributions.contextKeys(model.codeActions);
+
+      WhenExpr.ContextKeys.unionMany([staticContextKeys, codeActions]);
+    };
+  };
 
   let keybindings =
     Keybindings.[close]
@@ -1082,8 +1098,8 @@ module View = {
   module EditorWidgets = {
     let make =
         (
-          ~x as _,
-          ~y as _,
+          ~x,
+          ~y,
           ~editorId,
           ~theme,
           ~model,
@@ -1092,7 +1108,27 @@ module View = {
           ~dispatch as _,
           (),
         ) => {
-      <CodeActions.View editorId editorFont theme model={model.codeActions} />;
+      <CodeActions.View.EditorWidgets
+        x
+        y
+        editorId
+        editorFont
+        theme
+        model={model.codeActions}
+      />;
+    };
+  };
+
+  module Overlay = {
+    let make = (~toPixel, ~theme, ~model, ~editorFont, ~uiFont, ~dispatch, ()) => {
+      <CodeActions.View.Overlay
+        toPixel
+        theme
+        model={model.codeActions}
+        dispatch={msg => dispatch(CodeActions(msg))}
+        editorFont
+        uiFont
+      />;
     };
   };
 };

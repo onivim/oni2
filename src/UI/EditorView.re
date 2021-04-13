@@ -130,7 +130,7 @@ module Parts = {
               left(int_of_float(gutterWidth)),
             ]>
             <Feature_LanguageSupport.View.EditorWidgets
-              x=cursorPixelX
+              x={int_of_float(float(cursorPixelX) -. gutterWidth)}
               y=cursorPixelY
               editorId={Feature_Editor.Editor.getId(editor)}
               theme
