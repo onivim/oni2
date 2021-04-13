@@ -205,6 +205,17 @@ module View = {
     let bg = Feature_Theme.Colors.EditorSuggestWidget.background.from(theme);
     let fg = Feature_Theme.Colors.EditorSuggestWidget.foreground.from(theme);
 
+    let count = Array.length(model.items);
+    let marginSize = 4;
+    let doubleMarginSize = marginSize * 2;
+    let rowHeight = 20;
+    let rowsToRender = 5;
+    let pixelHeight =
+      min(
+        count * rowHeight + doubleMarginSize,
+        rowsToRender * rowHeight + doubleMarginSize,
+      );
+
     <View
       onMouseUp={_ => dispatch(MouseClickedBackground)}
       style=Style.[
@@ -226,7 +237,7 @@ module View = {
           left(100),
           top(100),
           width(500),
-          height(100),
+          height(pixelHeight),
           borderRadius(8.),
           boxShadow(
             ~xOffset=4.,
@@ -239,15 +250,15 @@ module View = {
         <View
           style=Style.[
             position(`Absolute),
-            top(4),
-            left(4),
-            right(4),
-            bottom(4),
+            top(marginSize),
+            left(marginSize),
+            right(marginSize),
+            bottom(marginSize),
           ]>
           <Oni_Components.FlatList
-            rowHeight=20
-            initialRowsToRender=5
-            count={Array.length(model.items)}
+            rowHeight
+            initialRowsToRender=rowsToRender
+            count
             theme
             focused={model.selected}>
             ...{index => {
@@ -331,14 +342,11 @@ module Contributions = {
   };
 
   let contextKeys = model =>
-    WhenExpr.ContextKeys.(
+    WhenExpr.ContextKeys.
       // Schema.bool("contextMenuVisible", ({popup, _}) => {
       //   Component_Popup.isVisible(popup)
       // }),
-      []
-      |> Schema.fromList
-      |> fromSchema(model)
-    );
+      ([] |> Schema.fromList |> fromSchema(model));
 
   let keybindings =
     KeyBindings.[
