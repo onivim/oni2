@@ -22,12 +22,19 @@ module Schema = {
         style=Revery.UI.Style.[
           position(`Absolute),
           backgroundColor(bg),
+          borderRadius(4.),
           top(0),
           left(0),
           right(0),
           bottom(0),
+          flexDirection(`Row),
+          alignItems(`Center),
         ]>
-        <Revery.UI.Text fontFamily={uiFont.family} text={toString(item)} />
+        <Revery.UI.Text
+          fontFamily={uiFont.family}
+          fontSize={uiFont.size}
+          text={toString(item)}
+        />
       </Revery.UI.View>;
     };
   };
@@ -209,6 +216,7 @@ module View = {
             color(fg),
             width(500),
             height(100),
+            borderRadius(8.),
             boxShadow(
               ~xOffset=4.,
               ~yOffset=4.,
@@ -218,8 +226,14 @@ module View = {
             ),
             pointerEvents(`Allow),
           ]>
-          //borderRadius(8.),
-
+          <View
+            style=Style.[
+              position(`Absolute),
+              top(4),
+              left(4),
+              right(4),
+              bottom(4),
+            ]>
             <Oni_Components.FlatList
               rowHeight=20
               initialRowsToRender=5
@@ -244,6 +258,7 @@ module View = {
               }}
             </Oni_Components.FlatList>
           </View>
+        </View>
       }}
     />;
   };
