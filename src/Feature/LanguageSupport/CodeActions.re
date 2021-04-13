@@ -36,109 +36,361 @@ module CodeAction = {
   };
 };
 
-module QuickFixes = {
-  type t = {
-    bufferId: int,
-    position: EditorCoreTypes.CharacterPosition.t,
-    fixes: list(CodeAction.t),
-  };
+type positionOrSelection =
+  | Position(CharacterPosition.t)
+  | Selection({
+      cursor: CharacterPosition.t,
+      range: CharacterRange.t,
+    });
 
-  let addQuickFixes = (~handle, ~bufferId, ~position, ~newActions, quickFixes) => {
-    let actions = newActions |> List.map(CodeAction.ofExthost(~handle));
-    // If at the same location, just append!
-    let fixes =
-      if (bufferId == quickFixes.bufferId && position == quickFixes.position) {
-        quickFixes.fixes @ actions;
-      } else {
-        // If not, replace
-        actions;
-      };
+module Session = {
+  type t =
+    | Idle
+    | QueryingForFixes({
+        editorId: int,
+        handles: list(int),
+        buffer: Oni_Core.Buffer.t,
+        positionOrSelection,
+        results: IntMap.t(list(CodeAction.t)),
+      })
+    | GatheringFixes({
+        editorId: int,
+        buffer: Oni_Core.Buffer.t,
+        handles: list(int),
+        positionOrSelection,
+        results: IntMap.t(list(CodeAction.t)),
+      })
+    | ApplyingFixes({
+        editorId: int,
+        positionOrSelection,
+        contextMenu: Component_EditorContextMenu.model(CodeAction.t),
+      });
 
-    {bufferId, position, fixes};
-  };
+  let initial = Idle;
 
-  let initial = {
-    bufferId: (-1),
-    position: EditorCoreTypes.CharacterPosition.zero,
-    fixes: [],
-  };
+  [@deriving show]
+  type msg =
+    | ContextMenu([@opaque] Component_EditorContextMenu.msg(CodeAction.t))
+    | CodeActionsAvailable({
+        handle: int,
+        codeActions: [@opaque] list(CodeAction.t),
+      })
+    | NoCodeActionsAvailable({handle: int})
+    | ErrorRetrievingCodeActions({
+        handle: int,
+        msg: string,
+      });
 
-  let cursorMoved = (~bufferId, ~position, qf) =>
-    // Totally different buffer, reset...
-    if (bufferId != qf.bufferId) {
-      {...initial, bufferId, position};
-    } else if (position != qf.position) {
-      {
-        ...qf,
-        position,
-        fixes: qf.fixes |> List.filter(CodeAction.intersects(position)),
-      };
-    } else {
-      qf;
+  let handles =
+    fun
+    | Idle => []
+    | GatheringFixes({handles, _}) => handles
+    | QueryingForFixes({handles, _}) => handles
+    | ApplyingFixes(_) => [];
+
+  let buffer =
+    fun
+    | Idle => None
+    | GatheringFixes({buffer, _}) => Some(buffer)
+    | QueryingForFixes({buffer, _}) => Some(buffer)
+    | ApplyingFixes(_) => None;
+
+  let toPosition =
+    fun
+    | Position(pos) => pos
+    | Selection({cursor, _}) => cursor;
+
+  let hasAnyFixes =
+    fun
+    | Idle => false
+    | GatheringFixes({results, _})
+    | QueryingForFixes({results, _}) =>
+      results |> IntMap.exists((_handle, items) => items != [])
+    | ApplyingFixes(_) => false;
+
+  let lightBulb = session =>
+    switch (session) {
+    | QueryingForFixes({positionOrSelection, _}) when hasAnyFixes(session) =>
+      Some(toPosition(positionOrSelection))
+    | _ => None
     };
 
-  let any = ({fixes, _}) => fixes != [];
+  let position =
+    fun
+    | Idle => None
+    | GatheringFixes({positionOrSelection, _})
+    | QueryingForFixes({positionOrSelection, _})
+    | ApplyingFixes({positionOrSelection, _}) =>
+      Some(toPosition(positionOrSelection));
 
-  let appliesToBuffer = (buffer, {bufferId, _}) => {
-    bufferId == Buffer.getId(buffer);
+  let contextMenu =
+    fun
+    | ApplyingFixes({contextMenu, _}) => Some(contextMenu)
+    | _ => None;
+
+  let sub = (~client, session) => {
+    let toMsg = handle =>
+      fun
+      | Ok(Some(actionsList: Exthost.CodeAction.List.t)) =>
+        CodeActionsAvailable({
+          handle,
+          codeActions:
+            actionsList.actions |> List.map(CodeAction.ofExthost(~handle)),
+        })
+      | Ok(None) => NoCodeActionsAvailable({handle: handle})
+      | Error(msg) => ErrorRetrievingCodeActions({handle, msg});
+
+    let maybeBuffer = buffer(session);
+    // TODO: Seleciton
+    let maybePosition = position(session);
+    let handles = handles(session);
+    //let isLightBulbEnabled = Configuration.enabled.get(config);
+
+    let context =
+      Exthost.CodeAction.(Context.{only: None, trigger: TriggerType.Auto});
+
+    Utility.OptionEx.map2(
+      (buffer, position) => {
+        handles
+        |> List.map(handle => {
+             let range =
+               EditorCoreTypes.CharacterRange.{
+                 start: position,
+                 stop: position,
+               };
+             Service_Exthost.Sub.codeActionsByRange(
+               ~handle,
+               ~range,
+               ~buffer,
+               ~context,
+               ~toMsg=toMsg(handle),
+               client,
+             );
+           })
+        |> Isolinear.Sub.batch
+      },
+      maybeBuffer,
+      maybePosition,
+    )
+    |> Option.value(~default=Isolinear.Sub.none);
   };
 
-  let position = ({fixes, position, _}) => {
-    Base.List.nth(fixes, 0)
-    |> Utility.OptionEx.flatMap((fix: CodeAction.t) => {
-         Base.List.nth(fix.action.diagnostics, 0)
-       })
-    |> Option.map((diagnostic: Exthost.Diagnostic.t) => {
-         let range = diagnostic.range |> Exthost.OneBasedRange.toRange;
-
-         CharacterRange.(range.start);
-       })
-    |> Utility.OptionEx.or_lazy(() =>
-         if (fixes == []) {
-           None;
-         } else {
-           Some(position);
-         }
-       );
+  let allFixesAreAvailable = (handles, results) => {
+    handles |> List.for_all(handle => IntMap.mem(handle, results));
   };
 
-  let all = ({fixes, _}) => fixes;
+  let doFix = (~editorId, ~positionOrSelection, results) => {
+    let allFixes = IntMap.fold((_key, a, b) => {a @ b}, results, []);
+    let len = List.length(allFixes);
+    if (len == 0) {
+      (Idle, Outmsg.NotifyFailure("No code actions available."));
+    } else if (len == 1) {
+      let maybeEdit =
+        List.nth_opt(allFixes, 0)
+        |> Utility.OptionEx.flatMap((fix: CodeAction.t) =>
+             Exthost.CodeAction.(fix.action.edit)
+           );
+      let outmsg =
+        maybeEdit
+        |> Option.map((edit: Exthost.WorkspaceEdit.t) =>
+             Outmsg.ApplyWorkspaceEdit(edit)
+           )
+        |> Option.value(~default=Outmsg.Nothing);
+      (Idle, outmsg);
+    } else {
+      let toString = (codeAction: CodeAction.t) => {
+        Exthost.CodeAction.(codeAction.action.title);
+      };
+
+      let renderer =
+        Component_EditorContextMenu.Schema.Renderer.default(~toString);
+      let schema = Component_EditorContextMenu.Schema.contextMenu(~renderer);
+      let contextMenu = Component_EditorContextMenu.create(~schema, allFixes);
+      (
+        ApplyingFixes({positionOrSelection, editorId, contextMenu}),
+        Outmsg.Nothing,
+      );
+    };
+  };
+
+  let addToResults = (~handle, codeActions) =>
+    fun
+    | Idle => (Idle, Outmsg.Nothing)
+    | ApplyingFixes(_) as af => (af, Outmsg.Nothing)
+    | QueryingForFixes({results, _} as orig) => (
+        QueryingForFixes({
+          ...orig,
+          results: IntMap.add(handle, codeActions, results),
+        }),
+        Outmsg.Nothing,
+      )
+    | GatheringFixes(
+        {results, handles, positionOrSelection, editorId, _} as orig,
+      ) => {
+        let results' = IntMap.add(handle, codeActions, results);
+
+        if (allFixesAreAvailable(handles, results')) {
+          doFix(~editorId, ~positionOrSelection, results');
+        } else {
+          (GatheringFixes({...orig, results: results'}), Outmsg.Nothing);
+        };
+      };
+
+  let update = (msg, model) => {
+    switch (msg) {
+    | CodeActionsAvailable({handle, codeActions}) =>
+      addToResults(~handle, codeActions, model)
+
+    | NoCodeActionsAvailable({handle}) => addToResults(~handle, [], model)
+
+    | ErrorRetrievingCodeActions({handle, _}) =>
+      addToResults(~handle, [], model)
+
+    | ContextMenu(contextMenuMsg) =>
+      switch (model) {
+      | ApplyingFixes({contextMenu, _} as orig) =>
+        let (contextMenu, outmsg) =
+          Component_EditorContextMenu.update(contextMenuMsg, contextMenu);
+
+        let model' = ApplyingFixes({...orig, contextMenu});
+        switch (outmsg) {
+        | Nothing => (model', Outmsg.Nothing)
+        | Cancelled => (Idle, Outmsg.Nothing)
+        | Selected(item) => (
+            Idle,
+            Exthost.CodeAction.(item.action.edit)
+            |> Option.map(edit => {Outmsg.ApplyWorkspaceEdit(edit)})
+            |> Option.value(~default=Outmsg.Nothing),
+          )
+        };
+      | other => (other, Outmsg.Nothing)
+      }
+    };
+  };
+
+  let editorId =
+    fun
+    | Idle => None
+    | ApplyingFixes({editorId, _})
+    | GatheringFixes({editorId, _})
+    | QueryingForFixes({editorId, _}) => Some(editorId);
+
+  let stop = _session => Idle;
+
+  let checkLightBulb =
+      (~editorId, ~buffer, ~handles, ~positionOrSelection, _session) => {
+    QueryingForFixes({
+      editorId,
+      buffer,
+      positionOrSelection,
+      handles,
+      results: IntMap.empty,
+    });
+  };
+
+  let expandOrApply =
+      (~editorId, ~buffer, ~handles, ~positionOrSelection, session) => {
+    let results =
+      switch (session) {
+      | QueryingForFixes({
+          editorId as prevEditorId,
+          buffer as prevBuffer,
+          positionOrSelection as prevPosition,
+          results,
+          _,
+        })
+          when
+            prevEditorId == editorId
+            && Buffer.getId(buffer) == Buffer.getId(prevBuffer)
+            && positionOrSelection == prevPosition => results
+      | _ => IntMap.empty
+      };
+
+    if (allFixesAreAvailable(handles, results)) {
+      doFix(~editorId, ~positionOrSelection, results);
+    } else {
+      (
+        GatheringFixes({
+          editorId,
+          buffer,
+          handles,
+          positionOrSelection,
+          results,
+        }),
+        Outmsg.Nothing,
+      );
+    };
+  };
+
+  let next =
+    fun
+    | ApplyingFixes({contextMenu, _} as orig) => {
+        let contextMenu' = Component_EditorContextMenu.next(contextMenu);
+        (
+          ApplyingFixes({...orig, contextMenu: contextMenu'}),
+          Outmsg.Nothing,
+        );
+      }
+    | model => (model, Outmsg.Nothing);
+
+  let previous =
+    fun
+    | ApplyingFixes({contextMenu, _} as orig) => {
+        let contextMenu' = Component_EditorContextMenu.previous(contextMenu);
+        (
+          ApplyingFixes({...orig, contextMenu: contextMenu'}),
+          Outmsg.Nothing,
+        );
+      }
+    | model => (model, Outmsg.Nothing);
+
+  let select =
+    fun
+    | ApplyingFixes({contextMenu, _}) => {
+        let maybeSelected = Component_EditorContextMenu.selected(contextMenu);
+        switch (maybeSelected) {
+        | None => (Idle, Outmsg.Nothing)
+        | Some(item: CodeAction.t) =>
+          let maybeEdit = Exthost.CodeAction.(item.action.edit);
+
+          let outmsg =
+            maybeEdit
+            |> Option.map(edit => Outmsg.ApplyWorkspaceEdit(edit))
+            |> Option.value(~default=Outmsg.Nothing);
+          (Idle, outmsg);
+        };
+      }
+    | model => (model, Outmsg.Nothing);
 };
 
 type model = {
   providers: list(provider),
-  quickFixes: QuickFixes.t,
-  lightBulbPopup: Component_Popup.model,
-  lightBulbActiveEditorId: option(int),
+  session: Session.t,
+  isLightBulbEnabled: bool,
 };
 
 [@deriving show]
 type command =
-  | QuickFix;
+  | QuickFix
+  | AcceptSelected
+  | SelectPrevious
+  | SelectNext
+  | Cancel;
 
 [@deriving show]
 type msg =
   | Command(command)
-  | LightBulbPopup({
-      editorId: int,
-      msg: [@opaque] Component_Popup.msg,
-    })
-  | QuickFixesAvailable({
-      handle: int,
-      actions: list(Exthost.CodeAction.t),
-    })
-  | QuickFixesNotAvailable({handle: int})
-  | QuickFixesError({
-      handle: int,
-      msg: string,
-    });
+  | Session(Session.msg);
 
 let initial = {
   providers: [],
-  quickFixes: QuickFixes.initial,
+  session: Session.initial,
+  isLightBulbEnabled: true,
+};
 
-  lightBulbPopup: Component_Popup.create(~width=32., ~height=32.),
-  lightBulbActiveEditorId: None,
+let configurationChanged = (~config, model) => {
+  ...model,
+  isLightBulbEnabled: Configuration.enabled.get(config),
 };
 
 let register =
@@ -152,15 +404,28 @@ let register =
   };
 };
 
-let cursorMoved = (~buffer, ~cursor, model) => {
-  ...model,
-  quickFixes:
-    QuickFixes.cursorMoved(
-      ~bufferId=Oni_Core.Buffer.getId(buffer),
-      ~position=cursor,
-      model.quickFixes,
-    ),
-};
+let cursorMoved = (~editorId, ~buffer, ~cursor, model) =>
+  if (model.isLightBulbEnabled) {
+    let handles =
+      model.providers
+      |> List.filter(({selector, _}) => {
+           Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
+         })
+      |> List.map(({handle, _}) => handle);
+    {
+      ...model,
+      session:
+        Session.checkLightBulb(
+          ~editorId,
+          ~buffer,
+          ~positionOrSelection=Position(cursor),
+          ~handles,
+          model.session,
+        ),
+    };
+  } else {
+    model;
+  };
 
 let unregister = (~handle, model) => {
   ...model,
@@ -168,124 +433,66 @@ let unregister = (~handle, model) => {
     model.providers |> List.filter(provider => {provider.handle != handle}),
 };
 
-let update = (~buffer, ~cursorLocation, msg, model) => {
-  let bufferId = Buffer.getId(buffer);
+let update = (~editorId, ~buffer, ~cursorLocation, msg, model) => {
   switch (msg) {
-  | Command(QuickFix) =>
-    let all = QuickFixes.all(model.quickFixes);
-    let allCount = List.length(all);
-    if (allCount == 0) {
-      (model, Outmsg.NotifyFailure("No quickfixes available here."));
-    } else if (allCount == 1) {
-      let maybeEdit =
-        List.nth_opt(all, 0)
-        |> Utility.OptionEx.flatMap((fix: CodeAction.t) =>
-             Exthost.CodeAction.(fix.action.edit)
-           );
-      let outmsg =
-        maybeEdit
-        |> Option.map((edit: Exthost.WorkspaceEdit.t) =>
-             Outmsg.ApplyWorkspaceEdit(edit)
-           )
-        |> Option.value(~default=Outmsg.Nothing);
-      (model, outmsg);
-    } else {
-      (model, Outmsg.NotifyFailure("Context menu not yet implemented"));
-    };
+  | Session(sessionMsg) =>
+    let (session', outmsg) = Session.update(sessionMsg, model.session);
+    ({...model, session: session'}, outmsg);
 
-  | LightBulbPopup({editorId, msg}) => (
-      {
-        ...model,
-        lightBulbPopup: Component_Popup.update(msg, model.lightBulbPopup),
-        lightBulbActiveEditorId: Some(editorId),
-      },
+  | Command(Cancel) => (
+      {...model, session: Session.stop(model.session)},
       Outmsg.Nothing,
     )
-  | QuickFixesAvailable({handle, actions}) => (
-      {
-        ...model,
-        quickFixes:
-          QuickFixes.addQuickFixes(
-            ~handle,
-            ~bufferId,
-            ~position=cursorLocation,
-            ~newActions=actions,
-            model.quickFixes,
-          ),
-      },
-      Outmsg.Nothing,
-    )
-  | QuickFixesNotAvailable(_) => (model, Outmsg.Nothing)
-  | QuickFixesError(_) => (model, Outmsg.Nothing)
+
+  | Command(AcceptSelected) =>
+    let (session', outmsg) = Session.select(model.session);
+    ({...model, session: session'}, outmsg);
+
+  | Command(SelectNext) =>
+    let (session', outmsg) = Session.next(model.session);
+    ({...model, session: session'}, outmsg);
+
+  | Command(SelectPrevious) =>
+    let (session', outmsg) = Session.previous(model.session);
+    ({...model, session: session'}, outmsg);
+
+  | Command(QuickFix) =>
+    let handles =
+      model.providers
+      |> List.filter(({selector, _}) => {
+           Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
+         })
+      |> List.map(({handle, _}) => handle);
+
+    // TODO: if handles are empty, show error
+    let (session', outmsg) =
+      Session.expandOrApply(
+        ~editorId,
+        ~buffer,
+        ~handles,
+        ~positionOrSelection=Position(cursorLocation),
+        model.session,
+      );
+    ({...model, session: session'}, outmsg);
   };
 };
 
 let sub =
     (
-      ~config,
-      ~buffer,
-      ~activeEditor,
-      ~activePosition,
+      ~config as _,
+      ~buffer as _,
+      ~activeEditor as _,
+      ~activePosition as _,
       ~topVisibleBufferLine as _,
       ~bottomVisibleBufferLine as _,
-      ~lineHeightInPixels,
-      ~positionToRelativePixel,
+      ~lineHeightInPixels as _,
+      ~positionToRelativePixel as _,
       ~client,
       codeActions,
     ) => {
   // TODO:
-  let context =
-    Exthost.CodeAction.(Context.{only: None, trigger: TriggerType.Auto});
-
-  let toMsg = handle =>
-    fun
-    | Ok(Some(actionsList: Exthost.CodeAction.List.t)) =>
-      QuickFixesAvailable({handle, actions: actionsList.actions})
-    | Ok(None) => QuickFixesNotAvailable({handle: handle})
-    | Error(msg) => QuickFixesError({handle, msg});
-
-  let range =
-    EditorCoreTypes.CharacterRange.{
-      start: activePosition,
-      stop: activePosition,
-    };
-
-  let isLightBulbEnabled = Configuration.enabled.get(config);
-
-  let codeActionsSubs =
-    codeActions.providers
-    |> List.filter(({selector, _}) => {
-         Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
-       })
-    |> List.map(({handle, _}) => {
-         Service_Exthost.Sub.codeActionsByRange(
-           ~handle,
-           ~range,
-           ~buffer,
-           ~context,
-           ~toMsg=toMsg(handle),
-           client,
-         )
-       });
-
-  let isVisible =
-    isLightBulbEnabled && QuickFixes.any(codeActions.quickFixes);
-  let pixelPosition =
-    QuickFixes.position(codeActions.quickFixes)
-    |> Option.map(position => {
-         let {x, y}: PixelPosition.t = positionToRelativePixel(position);
-         PixelPosition.{x, y: y +. lineHeightInPixels};
-       });
-
-  let lightBulbPopup =
-    Component_Popup.sub(
-      ~isVisible,
-      ~pixelPosition,
-      codeActions.lightBulbPopup,
-    )
-    |> Isolinear.Sub.map(msg => LightBulbPopup({editorId: activeEditor, msg}));
-
-  [lightBulbPopup, ...codeActionsSubs] |> Isolinear.Sub.batch;
+  Session.sub(~client, codeActions.session)
+  |> Isolinear.Sub.map(msg => Session(msg));
 };
 
 module Commands = {
@@ -298,6 +505,16 @@ module Commands = {
       "editor.action.quickFix",
       Command(QuickFix),
     );
+
+  let acceptContextItem = define("acceptQuickFix", Command(AcceptSelected));
+
+  let selectPrevContextItem =
+    define("selectPrevQuickFix", Command(SelectPrevious));
+
+  let selectNextContextItem =
+    define("selectNextQuickFix", Command(SelectNext));
+
+  let cancel = define("cancelQuickFix", Command(Cancel));
 };
 
 module Keybindings = {
@@ -307,43 +524,172 @@ module Keybindings = {
 
   let condition = "editorTextFocus && normalMode" |> WhenExpr.parse;
 
+  let contextMenuCondition =
+    "normalMode || visualMode && editorTextFocus && quickFixWidgetVisible"
+    |> WhenExpr.parse;
+
   let quickFix =
     bind(
       ~key=isMac ? "<D-.>" : "<C-.>",
       ~command=Commands.quickFix.id,
       ~condition,
     );
+
+  let nextSuggestion =
+    bind(
+      ~key="<C-N>",
+      ~command=Commands.selectNextContextItem.id,
+      ~condition=contextMenuCondition,
+    );
+
+  let nextSuggestionArrow =
+    bind(
+      ~key="<DOWN>",
+      ~command=Commands.selectNextContextItem.id,
+      ~condition=contextMenuCondition,
+    );
+
+  let previousSuggestion =
+    bind(
+      ~key="<C-P>",
+      ~command=Commands.selectPrevContextItem.id,
+      ~condition=contextMenuCondition,
+    );
+  let previousSuggestionArrow =
+    bind(
+      ~key="<UP>",
+      ~command=Commands.selectPrevContextItem.id,
+      ~condition=contextMenuCondition,
+    );
+
+  let acceptSuggestionEnter =
+    bind(
+      ~key="<CR>",
+      ~command=Commands.acceptContextItem.id,
+      ~condition=contextMenuCondition,
+    );
+
+  let acceptSuggestionTab =
+    bind(
+      ~key="<TAB>",
+      ~command=Commands.acceptContextItem.id,
+      ~condition=contextMenuCondition,
+    );
+
+  let cancelEscape =
+    bind(
+      ~key="<ESC>",
+      ~command=Commands.cancel.id,
+      ~condition=contextMenuCondition,
+    );
 };
 
 module Contributions = {
-  let commands = Commands.[quickFix];
+  let commands = _model => {
+    Commands.[
+      quickFix,
+      acceptContextItem,
+      selectNextContextItem,
+      selectPrevContextItem,
+      cancel,
+    ];
+  };
 
   let configuration = Configuration.[enabled.spec];
 
-  let keybindings = Keybindings.[quickFix];
+  let keybindings =
+    Keybindings.[
+      quickFix,
+      acceptSuggestionEnter,
+      acceptSuggestionTab,
+      nextSuggestionArrow,
+      nextSuggestion,
+      previousSuggestion,
+      previousSuggestionArrow,
+      cancelEscape,
+    ];
+
+  let contextKeys = model => {
+    WhenExpr.ContextKeys.(
+      [
+        Schema.bool("quickFixWidgetVisible", ({session, _}) => {
+          Session.contextMenu(session) != None
+        }),
+      ]
+      |> Schema.fromList
+      |> fromSchema(model)
+    );
+  };
 };
 
 module View = {
-  let make = (~editorId, ~theme, ~editorFont: Service_Font.font, ~model, ()) =>
-    if (Some(editorId) == model.lightBulbActiveEditorId) {
-      let foregroundColor =
-        Feature_Theme.Colors.Editor.lightBulbForeground.from(theme);
+  module EditorWidgets = {
+    let make =
+        (
+          ~x,
+          ~y,
+          ~editorId,
+          ~theme,
+          ~editorFont: Service_Font.font,
+          ~model,
+          (),
+        ) =>
+      if (Some(editorId) == Session.editorId(model.session)) {
+        switch (Session.lightBulb(model.session)) {
+        | None => Revery.UI.React.empty
+        | Some(_pos) =>
+          let foregroundColor =
+            Feature_Theme.Colors.Editor.lightBulbForeground.from(theme);
 
-      let fontSize = editorFont.fontSize;
-      <Component_Popup.View
-        model={model.lightBulbPopup}
-        inner={(~transition as _) => {
-          <Revery.UI.Components.Container
-            width=24 height=24 color=Revery.Colors.transparentWhite>
-            <Oni_Core.Codicon
-              fontSize
-              color=foregroundColor
-              icon=Codicon.lightbulb
-            />
-          </Revery.UI.Components.Container>
-        }}
-      />;
-    } else {
-      Revery.UI.React.empty;
+          let fontSize = editorFont.fontSize;
+          <Revery.UI.View
+            style=Revery.UI.Style.[position(`Absolute), top(y), left(x)]>
+            <Revery.UI.Components.Container
+              width=24 height=24 color=Revery.Colors.transparentWhite>
+              <Oni_Core.Codicon
+                fontSize
+                color=foregroundColor
+                icon=Codicon.lightbulb
+              />
+            </Revery.UI.Components.Container>
+          </Revery.UI.View>;
+        };
+      } else {
+        Revery.UI.React.empty;
+      };
+  };
+
+  module Overlay = {
+    let make =
+        (~toPixel, ~dispatch, ~theme, ~uiFont, ~editorFont as _, ~model, ()) => {
+      let maybeEditorId = Session.editorId(model.session);
+      let maybePosition = Session.position(model.session);
+
+      let maybePixel =
+        Utility.OptionEx.map2(
+          (editorId, position) => {(editorId, position)},
+          maybeEditorId,
+          maybePosition,
+        )
+        |> Utility.OptionEx.flatMap(((editorId, position)) => {
+             toPixel(~editorId, position)
+           });
+
+      let maybeContextMenu = Session.contextMenu(model.session);
+      Utility.OptionEx.map2(
+        (pixelPosition, contextMenu) => {
+          <Component_EditorContextMenu.View
+            pixelPosition
+            theme
+            model=contextMenu
+            dispatch={msg => dispatch(Session(ContextMenu(msg)))}
+            uiFont
+          />
+        },
+        maybePixel,
+        maybeContextMenu,
+      )
+      |> Option.value(~default=Revery.UI.React.empty);
     };
+  };
 };

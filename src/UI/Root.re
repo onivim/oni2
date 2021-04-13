@@ -199,6 +199,30 @@ let make = (~dispatch, ~state: State.t, ()) => {
   // Correct for zoom in title bar height
   let titlebarHeight = state.titlebarHeight /. zoom;
 
+  let editorToAbsolutePosition = (~editorId, position) => {
+    state.layout
+    |> Feature_Layout.editorById(editorId)
+    |> Option.map(editor => {
+         EditorCoreTypes.(
+           Feature_Editor.(
+             {
+               let (pixelPosition, _) =
+                 Editor.bufferCharacterPositionToPixel(~position, editor);
+
+               let offsetX = Editor.pixelX(editor);
+               let offsetY = Editor.pixelY(editor);
+               let lineHeight = Editor.lineHeightInPixels(editor);
+
+               PixelPosition.{
+                 x: pixelPosition.x +. offsetX,
+                 y: pixelPosition.y +. offsetY +. lineHeight,
+               };
+             }
+           )
+         )
+       });
+  };
+
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
       menuBar=menuBarElement
@@ -268,6 +292,14 @@ let make = (~dispatch, ~state: State.t, ()) => {
         registration={state.registration}
         font
         dispatch={msg => dispatch(Actions.Registration(msg))}
+      />
+      <Feature_LanguageSupport.View.Overlay
+        toPixel=editorToAbsolutePosition
+        theme
+        uiFont
+        editorFont={state.editorFont}
+        model={state.languageSupport}
+        dispatch={msg => dispatch(Actions.LanguageSupport(msg))}
       />
     </Overlay>
     <statusBar />

@@ -136,6 +136,7 @@ let configurationChanged: (~config: Config.resolver, model) => model;
 
 let cursorMoved:
   (
+    ~editorId: int,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~buffer: Oni_Core.Buffer.t,
     ~previous: CharacterPosition.t,
@@ -262,6 +263,21 @@ module View: {
       ) =>
       Revery.UI.element;
   };
+
+  module Overlay: {
+    let make:
+      (
+        ~toPixel: (~editorId: int, CharacterPosition.t) =>
+                  option(PixelPosition.t),
+        ~theme: ColorTheme.Colors.t,
+        ~model: model,
+        ~editorFont: Service_Font.font,
+        ~uiFont: UiFont.t,
+        ~dispatch: msg => unit,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
 };
 
 module Rename: {
@@ -302,9 +318,9 @@ module Hover: {
 
 module Contributions: {
   let colors: list(ColorTheme.Schema.definition);
-  let commands: list(Command.t(msg));
+  let commands: model => list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
-  let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
+  let contextKeys: model => WhenExpr.ContextKeys.t;
   let keybindings: list(Feature_Input.Schema.keybinding);
   let menuGroups: list(MenuBar.Schema.group);
 };
