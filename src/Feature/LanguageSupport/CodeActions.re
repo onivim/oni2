@@ -388,10 +388,14 @@ module ViewModel = {
     |> Isolinear.Sub.map(msg => PopupAnimation(msg));
   };
 
-  let sync = (session, viewModel) => {
+  let sync = (~isAnimationEnabled, session, viewModel) => {
     {
       popupAnimation:
-        Animator.set(~instant=false, session, viewModel.popupAnimation),
+        Animator.set(
+          ~instant=!isAnimationEnabled,
+          session,
+          viewModel.popupAnimation,
+        ),
     };
   };
 
@@ -408,6 +412,7 @@ module ViewModel = {
 type model = {
   providers: list(provider),
   session: Session.t,
+  isAnimationEnabled: bool,
   isLightBulbEnabled: bool,
   viewModel: ViewModel.t,
 };
@@ -430,12 +435,15 @@ let initial = {
   providers: [],
   session: Session.initial,
   isLightBulbEnabled: true,
+  isAnimationEnabled: true,
   viewModel: ViewModel.initial,
 };
 
 let configurationChanged = (~config, model) => {
   ...model,
   isLightBulbEnabled: Configuration.enabled.get(config),
+  isAnimationEnabled:
+    Feature_Configuration.GlobalConfiguration.animation.get(config),
 };
 
 let register =
@@ -469,7 +477,12 @@ let cursorMoved = (~editorId, ~buffer, ~cursor, model) =>
     {
       ...model,
       session: session',
-      viewModel: ViewModel.sync(session', model.viewModel),
+      viewModel:
+        ViewModel.sync(
+          ~isAnimationEnabled=model.isAnimationEnabled,
+          session',
+          model.viewModel,
+        ),
     };
   } else {
     model;
@@ -531,7 +544,15 @@ let update = (~editorId, ~buffer, ~cursorLocation, msg, model) => {
     };
 
   (
-    {...model', viewModel: ViewModel.sync(model'.session, model'.viewModel)},
+    {
+      ...model',
+      viewModel:
+        ViewModel.sync(
+          ~isAnimationEnabled=model.isAnimationEnabled,
+          model'.session,
+          model'.viewModel,
+        ),
+    },
     outmsg,
   );
 };
