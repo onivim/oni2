@@ -64,7 +64,8 @@ module Session = {
         editorId: int,
         positionOrSelection,
         contextMenu: Component_EditorContextMenu.model(CodeAction.t),
-      });
+      })
+    | Resolving({ editorId: int, codeAction: CodeAction.t, positionOrSelection });
 
   let initial = Idle;
 
@@ -86,6 +87,7 @@ module Session = {
     | Idle => []
     | GatheringFixes({handles, _}) => handles
     | QueryingForFixes({handles, _}) => handles
+    | Resolving(_) => []
     | ApplyingFixes(_) => [];
 
   let buffer =
@@ -93,7 +95,8 @@ module Session = {
     | Idle => None
     | GatheringFixes({buffer, _}) => Some(buffer)
     | QueryingForFixes({buffer, _}) => Some(buffer)
-    | ApplyingFixes(_) => None;
+    | ApplyingFixes(_) => None
+    | Resolving(_) => None;
 
   let toPosition =
     fun
@@ -106,7 +109,8 @@ module Session = {
     | GatheringFixes({results, _})
     | QueryingForFixes({results, _}) =>
       results |> IntMap.exists((_handle, items) => items != [])
-    | ApplyingFixes(_) => false;
+    | ApplyingFixes(_) => false
+    | Resolving(_) => false;
 
   let lightBulb = session =>
     switch (session) {
@@ -120,7 +124,8 @@ module Session = {
     | Idle => None
     | GatheringFixes({positionOrSelection, _})
     | QueryingForFixes({positionOrSelection, _})
-    | ApplyingFixes({positionOrSelection, _}) =>
+    | ApplyingFixes({positionOrSelection, _})
+    | Resolving({positionOrSelection, _}) =>
       Some(toPosition(positionOrSelection));
 
   let contextMenu =
@@ -179,6 +184,23 @@ module Session = {
     handles |> List.for_all(handle => IntMap.mem(handle, results));
   };
 
+  let applyAction = (~editorId, ~positionOrSelection, codeAction: CodeAction.t) => {
+    Exthost.CodeAction.(
+
+    switch (codeAction.action.edit) {
+    // Got everything we need - so let's apply the edit now
+    | Some(edit) => (Idle, Outmsg.ApplyWorkspaceEdit(edit))
+
+    
+    // Need to go back to the extension host to get the edit
+    | None => 
+      let eff = Isolinear.Effect.none;
+      (Resolving({ positionOrSelection, editorId, codeAction: codeAction }), Outmsg.NotifyFailure("error no edit available"))
+      // (Resolving({ positionOrSelection, editorId, codeAction: codeAction }), Outmsg.Effect(eff))
+    }
+    );
+  };
+
   let doFix = (~editorId, ~positionOrSelection, results) => {
     let allFixes = IntMap.fold((_key, a, b) => {a @ b}, results, []);
     let len = List.length(allFixes);
@@ -216,6 +238,7 @@ module Session = {
   let addToResults = (~handle, codeActions) =>
     fun
     | Idle => (Idle, Outmsg.Nothing)
+    | Resolving(_) as resolving => (resolving, Outmsg.Nothing)
     | ApplyingFixes(_) as af => (af, Outmsg.Nothing)
     | QueryingForFixes({results, _} as orig) => (
         QueryingForFixes({
@@ -248,7 +271,7 @@ module Session = {
 
     | ContextMenu(contextMenuMsg) =>
       switch (model) {
-      | ApplyingFixes({contextMenu, _} as orig) =>
+      | ApplyingFixes({contextMenu, editorId, positionOrSelection, _} as orig) =>
         let (contextMenu, outmsg) =
           Component_EditorContextMenu.update(contextMenuMsg, contextMenu);
 
@@ -256,12 +279,7 @@ module Session = {
         switch (outmsg) {
         | Nothing => (model', Outmsg.Nothing)
         | Cancelled => (Idle, Outmsg.Nothing)
-        | Selected(item) => (
-            Idle,
-            Exthost.CodeAction.(item.action.edit)
-            |> Option.map(edit => {Outmsg.ApplyWorkspaceEdit(edit)})
-            |> Option.value(~default=Outmsg.Nothing),
-          )
+        | Selected(item) => applyAction(~positionOrSelection, ~editorId, item)
         };
       | other => (other, Outmsg.Nothing)
       }
@@ -273,7 +291,8 @@ module Session = {
     | Idle => None
     | ApplyingFixes({editorId, _})
     | GatheringFixes({editorId, _})
-    | QueryingForFixes({editorId, _}) => Some(editorId);
+    | QueryingForFixes({editorId, _})
+    | Resolving({editorId, _}) => Some(editorId);
 
   let stop = _session => Idle;
 
@@ -346,18 +365,11 @@ module Session = {
 
   let select =
     fun
-    | ApplyingFixes({contextMenu, _}) => {
+    | ApplyingFixes({contextMenu, editorId, positionOrSelection, _}) => {
         let maybeSelected = Component_EditorContextMenu.selected(contextMenu);
         switch (maybeSelected) {
         | None => (Idle, Outmsg.Nothing)
-        | Some(item: CodeAction.t) =>
-          let maybeEdit = Exthost.CodeAction.(item.action.edit);
-
-          let outmsg =
-            maybeEdit
-            |> Option.map(edit => Outmsg.ApplyWorkspaceEdit(edit))
-            |> Option.value(~default=Outmsg.Nothing);
-          (Idle, outmsg);
+        | Some(item) => applyAction(~editorId, ~positionOrSelection, item)
         };
       }
     | model => (model, Outmsg.Nothing);
