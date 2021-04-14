@@ -37,9 +37,9 @@ let getDefaultConfigString = configName =>
   "workbench.sideBar.visible": true,
   "workbench.statusBar.visible": true,
   "workbench.statusBar.items": {
-    "left": ["notificationCount", "macro", "leftItems", "diagnosticCount", "git"],
+    "start": ["notificationCount", "macro", "...", "diagnosticCount", "git"],
     "showOnNotification": ["modeIndicator", "notificationCount"],
-    "rigth": ["rightItems", "lineEndings", "indentation", "fileType", "position", "modeIndicator"],
+    "end": ["...", "lineEndings", "indentation", "fileType", "position", "modeIndicator"],
     "hidden": [],
   },
   "workbench.tree.indent": 2,

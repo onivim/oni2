@@ -18,12 +18,19 @@ module Item: {
 };
 
 module ConfigurationItems: {
+
+  type notificationMode = 
+    | Default
+    | KeepPosition
+    | Compact
+    | CompactPlus;
+
   type t = {
-    leftItems: list(string),
-    rightItems: list(string),
+    startItems: list(string),
+    endItems: list(string),
     hidden: list(string),
     showOnNotification: list(string),
-    notificationMode: string,
+    notificationMode: notificationMode,
   };
 };
 // MODEL

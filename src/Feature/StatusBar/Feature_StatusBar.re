@@ -4,6 +4,8 @@ open Exthost.Msg.StatusBar;
 
 // MODEL
 
+module Log = (val Log.withNamespace("TESTE"));
+
 module Item = {
   [@deriving show]
   type t = {
@@ -42,21 +44,27 @@ module Item = {
 
 module ConfigurationItems = {
   [@deriving show]
+  type notificationMode =
+    | Default
+    | KeepPosition
+    | Compact
+    | CompactPlus;
+
+  [@deriving show]
   type t = {
-    leftItems: list(string),
-    rightItems: list(string),
+    startItems: list(string),
+    endItems: list(string),
     hidden: list(string),
     showOnNotification: list(string),
-    notificationMode: string,
+    notificationMode,
   };
 
   let decode =
     Json.Decode.(
       obj(({field, _}) =>
         {
-          leftItems: field.withDefault("left", ["..."], list(string)),
-          rightItems: field.withDefault("right", ["..."], list(string)),
-
+          startItems: field.withDefault("left", ["..."], list(string)),
+          endItems: field.withDefault("right", ["..."], list(string)),
           hidden: field.withDefault("hidden", [], list(string)),
           showOnNotification:
             field.withDefault(
@@ -65,7 +73,21 @@ module ConfigurationItems = {
               list(string),
             ),
           notificationMode:
-            field.withDefault("notificationMode", "default", string),
+            field.withDefault(
+              "notificationMode",
+              Default,
+              string
+              |> map(String.lowercase_ascii)
+              |> and_then(
+                   fun
+                   | "default" => succeed(Default)
+                   | "keepposition" => succeed(KeepPosition)
+                   | "compact" => succeed(Compact)
+                   | "compact+" => succeed(CompactPlus)
+                   | invalid =>
+                     fail("Invalid notification mode: " ++ invalid),
+                 ),
+            ),
         }
       )
     );
@@ -73,14 +95,25 @@ module ConfigurationItems = {
   let encode = configurationItems =>
     Json.Encode.(
       obj([
-        ("right", configurationItems.rightItems |> list(string)),
+        ("start", configurationItems.startItems |> list(string)),
         (
           "showOnNotification",
           configurationItems.showOnNotification |> list(string),
         ),
-        ("left", configurationItems.leftItems |> list(string)),
+        ("end", configurationItems.endItems |> list(string)),
         ("hidden", configurationItems.hidden |> list(string)),
-        ("notificationMode", configurationItems.notificationMode |> string),
+        (
+          "notificationMode",
+          configurationItems.notificationMode
+          |> (
+            fun
+            | Default => "default"
+            | Compact => "compact"
+            | CompactPlus => "compact+"
+            | KeepPosition => "keepPosition"
+          )
+          |> string,
+        ),
       ])
     );
 
@@ -107,11 +140,14 @@ module ConfigurationItems = {
   let extendItem = "...";
 
   let preProcess = (t, statusBarItems) => {
+
+    Log.error("MODE KEEP:" ++ string_of_bool(t.notificationMode == KeepPosition))
+
     //Helper funcions
     let removeFromList = (listToRemove, list) =>
       list |> List.filter(a => !List.mem(a, listToRemove));
 
-    let process = (def, list) =>
+    let process = (def, alignment, list) =>
       list
       |> List.map(str =>
            if (str == extendItem) {
@@ -124,38 +160,63 @@ module ConfigurationItems = {
       |> List.map(str =>
            (
              str,
-             t.notificationMode == "default"
+             (
+               t.notificationMode == Default
+               || t.notificationMode == KeepPosition
+             )
              && !List.mem(str, t.showOnNotification),
            )
          )
-      |> List.fold_left(
+      |>  (t.notificationMode != Default ?
+
+          List.fold_left(
            (a, item) => {
              let (toAdd, notificationToAdd) = item;
              let (head, notification) = a |> List.hd;
 
              notificationToAdd == notification
-               ? List.append(
-                   [(List.append(head, [toAdd]), notification)],
-                   a |> List.tl,
-                 )
-               : List.append([([toAdd], notificationToAdd)], a);
+               ? [(head @ [toAdd], notification)] @ (a |> List.tl)
+               : [([toAdd], notificationToAdd)] @ a;
            },
            [([], false)],
-         );
+         ) :
+         //Merge all Items that are to be hidden notificaion and those that arent into
+         //separate positions
+         List.fold_left(
+           (a, item) => {
+             let (toAdd, notificationToAdd) = item;
+             let (head, _)  = a |> List.hd;
+             let (tail, _) = a |> List.tl |> List.hd;
+             
+             let isRight = alignment == Right;
+
+             if (isRight) {
+               !notificationToAdd
+                 ? [(head, true), (tail @ [toAdd], false)]
+                 : [(head @ [toAdd], true), (tail, false)]
+             } else {
+               notificationToAdd
+                 ? [(head, false), (tail @ [toAdd], true)]
+                 : [(head @ [toAdd], false), (tail, true)]
+             }
+
+           },
+           [([], false), ([], false)],
+         ));
 
     let allItems =
-      t.rightItems @ t.leftItems |> List.filter(a => a != extendItem);
+      t.startItems @ t.endItems |> List.filter(a => a != extendItem);
 
     //Get if `...` if its, on the rigth and left
-    let extendRight = List.mem(extendItem, t.rightItems);
-    let extendLeft = List.mem(extendItem, t.leftItems);
+    let extendRight = List.mem(extendItem, t.startItems);
+    let extendLeft = List.mem(extendItem, t.endItems);
 
     /*
        if x has `...` and !x doesn't then add them all
        else if x can extended then do
        else then no default
      */
-    let leftItemsPDef =
+    let startItemsPDef =
       (
         if (extendLeft && !extendRight) {
           leftItemsDef @ rightItemsDef;
@@ -167,7 +228,7 @@ module ConfigurationItems = {
       )
       |> removeFromList(allItems @ t.hidden);
 
-    let rightItemsPDef =
+    let endItemsPDef =
       (
         if (extendRight && !extendLeft) {
           leftItemsDef @ rightItemsDef;
@@ -195,10 +256,10 @@ module ConfigurationItems = {
          );
 
     (
-      process(leftItemsPDef, t.leftItems),
-      process(rightItemsPDef, t.rightItems),
+      process(startItemsPDef, Right, t.startItems),
+      process(endItemsPDef, Left, t.endItems),
       List.mem("center", t.showOnNotification)
-      || t.notificationMode != "default",
+      || (t.notificationMode != Default && t.notificationMode != KeepPosition),
       getItemsFromAlign(Right),
       getItemsFromAlign(Left),
       t.notificationMode,
@@ -360,7 +421,8 @@ module Styles = {
     transform(Transform.[TranslateY(yOffset)]),
   ];
 
-  let sectionGroup = () => [
+  let sectionGroup = (background) => [
+    backgroundColor(background),
     position(`Relative),
     flexDirection(`Row),
     justifyContent(`SpaceBetween),
@@ -398,7 +460,7 @@ let positionToString =
     )
   | None => "";
 
-let sectionGroup = (~children, ()) => <View> children </View>;
+let sectionGroup = (~background, ~children, ()) => <View style={Styles.sectionGroup(background)} > children </View>;
 
 let section = (~children=React.empty, ~align, ()) =>
   <View style={Styles.section(align)}> children </View>;
@@ -539,6 +601,8 @@ let indentationToString = (indentation: IndentationSettings.t) => {
   };
 };
 
+module Log1 = (val Log.withNamespace("TESTE"));
+
 module View = {
   let make =
       (
@@ -567,6 +631,8 @@ module View = {
       Feature_Notification.statusBarForeground(~theme, notifications);
 
     let defaultForeground = Colors.StatusBar.foreground.from(theme);
+    let defaultBackground =
+      Feature_Theme.Colors.StatusBar.background.from(theme);
 
     let yOffset = 0.;
 
@@ -708,7 +774,7 @@ module View = {
       |> (
         list =>
           (
-            notificationMode == "compact+" && list |> List.length > 0
+            notificationMode == CompactPlus && list |> List.length > 0
               ? [list |> List.hd] : list
           )
           |> List.map(model =>
@@ -743,6 +809,7 @@ module View = {
       |> List.rev_map(item => {
            let (list, noti) = item;
            let onlyAnimation = !List.mem("notificationPopup", list);
+           Log1.error("Noti:" ++ string_of_bool(noti));
            let list =
              list
              |> List.map(str =>
@@ -769,7 +836,7 @@ module View = {
                   | "git" => scmItems
                   | "rightItems" => rightItems
                   | "notificationPopup" =>
-                    notificationMode != "default"
+                    notificationMode != Default
                       ? <notificationPopups onlyAnimation compact=true />
                       : React.empty
                   | str =>
@@ -794,15 +861,18 @@ module View = {
                        )
                     |> React.listToElement
                   }
-                )
-             |> React.listToElement;
-           if (noti) {
-             <sectionGroup>
-               <section align=`Center> list </section>
+                ) ;
+            let reactList = list |> React.listToElement;
+
+           if (noti && list |> List.length > 0 ) {
+             <sectionGroup background>
+               <section align=`Center> reactList </section>
                <notificationPopups onlyAnimation compact=false />
              </sectionGroup>;
-           } else {
-             list;
+           } else { 
+             <sectionGroup background={defaultBackground}>
+               <section align=`Center> reactList </section>
+             </sectionGroup>;
            };
          })
       |> React.listToElement;
@@ -812,11 +882,11 @@ module View = {
     let center =
       center
         ? React.empty : <notificationPopups onlyAnimation=true compact=false />;
-
+      //Feature_Theme.Colors.StatusBar.background.from(theme)
     <View
       ?key
       style={Styles.view(
-        Feature_Theme.Colors.StatusBar.background.from(theme),
+        notificationMode == CompactPlus || notificationMode == Compact ? defaultBackground : background,
         yOffset,
       )}>
       <section align=`FlexStart> startItems </section>
@@ -834,11 +904,11 @@ module Configuration = {
       "workbench.statusBar.items",
       ConfigurationItems.codec,
       ~default={
-        rightItems: ["..."],
-        leftItems: ["..."],
+        startItems: ["..."],
+        endItems: ["..."],
         showOnNotification: ["notificationCount", "modeIndicator"],
         hidden: [],
-        notificationMode: "default",
+        notificationMode: Default,
       },
     );
 };
