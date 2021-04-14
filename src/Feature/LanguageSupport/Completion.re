@@ -1368,7 +1368,7 @@ module View = {
           <detailView
             uiFont=Oni_Core.UiFont.default
             text
-            documentation={focused.item.documentation}
+            documentation={focused.documentation}
             width
             lineHeight
             colorTheme=theme
