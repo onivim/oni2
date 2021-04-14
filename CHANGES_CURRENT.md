@@ -48,6 +48,7 @@
 - #3396 - Code Actions: Fix some issues around light bulb rendering
 - #3404 - UX - Explorer: Fix text overflow in explorer (fixes #3362)
 - #3414 - Code Actions: Fix regression in control-p binding
+- #3416 - Editor: Fix word-wrap calculation with tab characters (fixes #3372)
 
 ### Performance
 
