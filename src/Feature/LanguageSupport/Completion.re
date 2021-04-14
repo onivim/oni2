@@ -1189,12 +1189,13 @@ module View = {
       justifyContent(`Center),
       alignItems(`Center),
       flexGrow(0),
+      flexShrink(0),
       backgroundColor(color),
       width(25),
       padding(4),
     ];
 
-    let label = [flexGrow(1), margin(4)];
+    let label = [flexGrow(1), flexShrink(0), margin(4)];
 
     let text = (~highlighted=false, ~colors: Colors.t, ()) => [
       textOverflow(`Ellipsis),
@@ -1216,11 +1217,10 @@ module View = {
     ];
 
     let detailText = (~tokenTheme: TokenTheme.t) => [
-      //      overflow(`Hidden),
-      textWrap(Revery.TextWrapping.Wrap),
-      //      textOverflow(`Ellipsis),
+      textOverflow(`Ellipsis),
+      textWrap(Revery.TextWrapping.NoWrap),
+      marginHorizontal(8),
       color(tokenTheme.commentColor),
-      margin(3),
     ];
   };
 
@@ -1230,6 +1230,8 @@ module View = {
         ~text,
         ~kind,
         ~highlight,
+        ~detail: option(string),
+        ~tokenTheme,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~colors: Colors.t,
         ~editorFont: Service_Font.font,
@@ -1238,6 +1240,20 @@ module View = {
     let icon = kind |> kindToIcon;
 
     let iconColor = kind |> kindToColor(theme);
+
+    let maybeDetail =
+      switch (detail) {
+      | Some(detail) when isFocused =>
+        <View style=Styles.[Style.alignItems(`FlexEnd), ...label]>
+          <Text
+            style={Styles.detailText(~tokenTheme)}
+            fontFamily={editorFont.fontFamily}
+            fontSize={editorFont.fontSize}
+            text=detail
+          />
+        </View>
+      | _ => React.empty
+      };
 
     <View style={Styles.item(~isFocused, ~colors)}>
       <View style={Styles.icon(~color=iconColor)}>
@@ -1258,12 +1274,12 @@ module View = {
           text
         />
       </View>
+      maybeDetail
     </View>;
   };
 
   let detailView =
       (
-        ~text,
         ~documentation,
         ~width,
         ~lineHeight,
@@ -1275,32 +1291,22 @@ module View = {
         (),
       ) => {
     let documentationElement =
-      switch (documentation) {
-      | None => React.empty
-      | Some(markdownString) =>
-        Markdown.make(
-          ~markdown=Exthost.MarkdownString.toString(markdownString),
-          ~fontFamily=uiFont.family,
-          ~colorTheme,
-          ~tokenTheme,
-          ~languageInfo=Exthost.LanguageInfo.initial,
-          ~defaultLanguage="reason",
-          ~codeFontFamily=editorFont.fontFamily,
-          ~grammars=Oni_Syntax.GrammarRepository.empty,
-          ~baseFontSize=10.,
-          ~codeBlockFontSize=editorFont.fontSize,
-          (),
-        )
-      };
+      Markdown.make(
+        ~markdown=Exthost.MarkdownString.toString(documentation),
+        ~fontFamily=uiFont.family,
+        ~colorTheme,
+        ~tokenTheme,
+        ~languageInfo=Exthost.LanguageInfo.initial,
+        ~defaultLanguage="reason",
+        ~codeFontFamily=editorFont.fontFamily,
+        ~grammars=Oni_Syntax.GrammarRepository.empty,
+        ~baseFontSize=10.,
+        ~codeBlockFontSize=editorFont.fontSize,
+        (),
+      );
 
     <View style={Styles.detail(~width, ~lineHeight, ~colors)}>
       <View style=Style.[flexGrow(1), flexDirection(`Column)]>
-        <Text
-          style={Styles.detailText(~tokenTheme)}
-          fontFamily={editorFont.fontFamily}
-          fontSize={editorFont.fontSize}
-          text
-        />
         documentationElement
       </View>
     </View>;
@@ -1364,12 +1370,11 @@ module View = {
       switch (focused) {
       | Some(index) =>
         let focused: CompletionItem.t = items[index];
-        switch (focused.detail) {
-        | Some(text) =>
+        switch (focused.documentation) {
+        | Some(documentation) =>
           <detailView
             uiFont=Oni_Core.UiFont.default
-            text
-            documentation={focused.documentation}
+            documentation
             width
             lineHeight
             colorTheme=theme
@@ -1406,9 +1411,11 @@ module View = {
               <itemView
                 isFocused={Some(index) == focused}
                 text
+                detail={item.detail}
                 kind
                 highlight
                 theme
+                tokenTheme
                 colors
                 editorFont
               />;
