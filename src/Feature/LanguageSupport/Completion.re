@@ -1342,20 +1342,21 @@ module View = {
 
     let focused = completions.selection;
 
-    let maxWidth =
-      items
-      |> Array.fold_left(
-           (maxWidth, this: CompletionItem.t) => {
-             let textWidth =
-               Service_Font.measure(~text=this.label, editorFont);
-             let thisWidth =
-               int_of_float(textWidth +. 0.5) + Constants.padding;
-             max(maxWidth, thisWidth);
-           },
-           Constants.maxCompletionWidth,
-         );
+    // let maxWidth =
+    //   items
+    //   |> Array.fold_left(
+    //        (maxWidth, this: CompletionItem.t) => {
+    //          let textWidth =
+    //            Service_Font.measure(~text=this.label, editorFont);
+    //          let thisWidth =
+    //            int_of_float(textWidth +. 0.5) + Constants.padding;
+    //          max(maxWidth, thisWidth);
+    //        },
+    //        Constants.maxCompletionWidth,
+    //      );
 
-    let width = maxWidth + Constants.padding * 2;
+    // let width = maxWidth + Constants.padding * 2;
+    let width = 400;
     let height =
       min(Constants.maxHeight, Array.length(items) * Constants.itemHeight);
 
