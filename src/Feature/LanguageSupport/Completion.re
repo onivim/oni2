@@ -1182,6 +1182,7 @@ module View = {
         ? backgroundColor(colors.suggestWidgetSelectedBackground)
         : backgroundColor(colors.suggestWidgetBackground),
       flexDirection(`Row),
+      width(300),
     ];
 
     let icon = (~color) => [
@@ -1197,6 +1198,8 @@ module View = {
 
     let label = [flexGrow(1), flexShrink(0), margin(4)];
 
+    let detail = [flexGrow(1), flexShrink(1), margin(4)];
+
     let text = (~highlighted=false, ~colors: Colors.t, ()) => [
       textOverflow(`Ellipsis),
       textWrap(Revery.TextWrapping.NoWrap),
@@ -1207,7 +1210,7 @@ module View = {
 
     let highlightedText = (~colors) => text(~highlighted=true, ~colors, ());
 
-    let detail = (~width, ~lineHeight, ~colors: Colors.t) => [
+    let documentation = (~width, ~lineHeight, ~colors: Colors.t) => [
       position(`Absolute),
       left(width),
       top(int_of_float(lineHeight +. 0.5)),
@@ -1219,7 +1222,6 @@ module View = {
     let detailText = (~tokenTheme: TokenTheme.t) => [
       textOverflow(`Ellipsis),
       textWrap(Revery.TextWrapping.NoWrap),
-      marginHorizontal(8),
       color(tokenTheme.commentColor),
     ];
   };
@@ -1244,7 +1246,7 @@ module View = {
     let maybeDetail =
       switch (detail) {
       | Some(detail) when isFocused =>
-        <View style=Styles.[Style.alignItems(`FlexEnd), ...label]>
+        <View style=Styles.[Style.alignItems(`FlexEnd), ...detail]>
           <Text
             style={Styles.detailText(~tokenTheme)}
             fontFamily={editorFont.fontFamily}
@@ -1305,7 +1307,7 @@ module View = {
         (),
       );
 
-    <View style={Styles.detail(~width, ~lineHeight, ~colors)}>
+    <View style={Styles.documentation(~width, ~lineHeight, ~colors)}>
       <View style=Style.[flexGrow(1), flexDirection(`Column)]>
         documentationElement
       </View>
