@@ -1182,7 +1182,7 @@ module View = {
         ? backgroundColor(colors.suggestWidgetSelectedBackground)
         : backgroundColor(colors.suggestWidgetBackground),
       flexDirection(`Row),
-      width(300),
+      //width(300),
     ];
 
     let icon = (~color) => [
@@ -1198,10 +1198,10 @@ module View = {
 
     let label = [flexGrow(1), flexShrink(0), margin(4)];
 
-    let detail = [flexGrow(1), flexShrink(1), margin(4)];
+    let detail = [flexGrow(2), flexShrink(1), margin(4)];
 
     let text = (~highlighted=false, ~colors: Colors.t, ()) => [
-      textOverflow(`Ellipsis),
+      //textOverflow(`Ellipsis),
       textWrap(Revery.TextWrapping.NoWrap),
       color(
         highlighted ? colors.normalModeBackground : colors.editorForeground,
@@ -1246,13 +1246,16 @@ module View = {
     let maybeDetail =
       switch (detail) {
       | Some(detail) when isFocused =>
-        <View style=Styles.[Style.alignItems(`FlexEnd), ...detail]>
-          <Text
-            style={Styles.detailText(~tokenTheme)}
-            fontFamily={editorFont.fontFamily}
-            fontSize={editorFont.fontSize}
-            text=detail
-          />
+        <View style=Styles.[Style.flexDirection(`Row), ...detail]>
+          <View style=Styles.[Style.flexGrow(1), Style.flexShrink(1)] />
+          <View style=Styles.[Style.flexGrow(0), Style.flexShrink(1)]>
+            <Text
+              style={Styles.detailText(~tokenTheme)}
+              fontFamily={editorFont.fontFamily}
+              fontSize={editorFont.fontSize}
+              text=detail
+            />
+          </View>
         </View>
       | _ => React.empty
       };
@@ -1350,44 +1353,34 @@ module View = {
 
     let focused = completions.selection;
 
-    // let maxWidth =
-    //   items
-    //   |> Array.fold_left(
-    //        (maxWidth, this: CompletionItem.t) => {
-    //          let textWidth =
-    //            Service_Font.measure(~text=this.label, editorFont);
-    //          let thisWidth =
-    //            int_of_float(textWidth +. 0.5) + Constants.padding;
-    //          max(maxWidth, thisWidth);
-    //        },
-    //        Constants.maxCompletionWidth,
-    //      );
-
-    // let width = maxWidth + Constants.padding * 2;
-    let width = 400;
+    let width = 500;
     let height =
       min(Constants.maxHeight, Array.length(items) * Constants.itemHeight);
 
-    let detail =
-      switch (focused) {
-      | Some(index) =>
-        let focused: CompletionItem.t = items[index];
-        switch (focused.documentation) {
-        | Some(documentation) =>
-          <detailView
-            uiFont=Oni_Core.UiFont.default
-            documentation
-            width
-            lineHeight
-            colorTheme=theme
-            colors
-            tokenTheme
-            editorFont
-          />
-        | None => React.empty
-        };
-      | None => React.empty
-      };
+    // TODO: Bring back detail view:
+    // 1) Align underneath completion
+    // 2) Test with providers that have large details (like Python)
+    let detail = React.empty;
+    // let detail =
+    //   switch (focused) {
+    //   | Some(index) =>
+    //     let focused: CompletionItem.t = items[index];
+    //     switch (focused.documentation) {
+    //     | Some(documentation) =>
+    //       <detailView
+    //         uiFont=Oni_Core.UiFont.default
+    //         documentation
+    //         width
+    //         lineHeight
+    //         colorTheme=theme
+    //         colors
+    //         tokenTheme
+    //         editorFont
+    //       />
+    //     | None => React.empty
+    //     };
+    //   | None => React.empty
+    //   };
 
     <View style={Styles.outerPosition(~x, ~y)}>
       <Opacity opacity=Constants.opacity>
