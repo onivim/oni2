@@ -234,6 +234,29 @@ describe("Editor", ({describe, _}) => {
     });
   });
 
+  describe("setMode", ({test, _}) => {
+    test(
+      "#3405: Moving cursor in insert mode to edge shouldn't cause scroll",
+      ({expect, _}) => {
+      let editor = createThreeWideWithWrapping([|"aaaaaa"|]);
+
+      let position = b => {
+        BytePosition.{line: LineNumber.zero, byte: ByteIndex.ofInt(b)};
+      };
+
+      // Simulate 'typing' in insert mode across the word wrap boundary -
+      // the same case that occurred in #3405
+      let editor' =
+        editor
+        |> Editor.setMode(Vim.Mode.Insert({cursors: [position(0)]}))
+        |> Editor.setMode(Vim.Mode.Insert({cursors: [position(1)]}))
+        |> Editor.setMode(Vim.Mode.Insert({cursors: [position(2)]}))
+        |> Editor.setMode(Vim.Mode.Insert({cursors: [position(3)]}));
+
+      expect.float(Editor.scrollX(editor')).toBeCloseTo(0.0);
+    })
+  });
+
   describe("bufferLineByteToPixel", ({test, _}) => {
     test("first line, byte should be at position (nowrap)", ({expect, _}) => {
       let (editor, _buffer) = create([|"aaaaaa"|]);
