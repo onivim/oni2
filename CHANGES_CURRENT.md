@@ -5,6 +5,7 @@
 - #3348 - Code Actions: Implement extension host protocol for quick fix / code actions
 - #3352 - Keybindings: Add default keybinding for open configuration (related #1423, thanks @LiHRaM !)
 - #3381 - Language Support: Symbols - implement go-to buffer symbol menu
+- #3387 - Code Actions: Implement context menu for quick fixes
 
 ### Bug Fixes
 
@@ -40,6 +41,12 @@
 - #3376 - Vim: Missing Control+W,W bindings (related #1721)
 - #3379 - Rename: Handle parsing 'rejectReason'
 - #3382 - Input: Handle `<capslock>` key
+- #3389 - Editor: Render diagnostics with squiggly lines (fixes #2827)
+- #3394 - Extensions: Fix error parsing extension manifest with boolean when express (related #3388)
+- #3390 - Diagnostics: Some diagnostics wouldn't show in hover UI (related #3231)
+- #3403 - Code Actions: Add 'editor.lightBulb.enabled' configuration setting
+- #3396 - Code Actions: Fix some issues around light bulb rendering
+- #3404 - UX - Explorer: Fix text overflow in explorer (fixes #3362)
 
 ### Performance
 
@@ -51,6 +58,7 @@
 
 - #3293 - Formatting: Initial formatting documentation
 - #3296 - Emmet: Add documentation on using Emmet for tsx/jsx files (fixes #3283)
+- #3411 - Vim Tips: Fix missing links (fixes #3407)
 
 ### Refactoring
 
@@ -58,6 +66,7 @@
 - #3330 - Diagnostics: Add regression test for #3233
 - #3334 - Dependency: Revery -> b746d68 (thanks @timbertson !)
 - #3385 - Dependency: Revery -> 4337e2c
+- #3408 - Dependency: Revery -> 373b087
 
 ### Infrastructure
 

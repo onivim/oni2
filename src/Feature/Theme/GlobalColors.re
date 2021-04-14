@@ -522,6 +522,12 @@ module List = {
 
   let focusForeground =
     define("list.focusForeground", all(ref(foreground))); // actually: unspecified
+
+  let focusOutline = define("list.focusOutline", all(ref(focusBorder)));
+
+  let inactiveFocusOutline =
+    define("list.inactiveFocusOutline", all(ref(inactiveFocusBackground)));
+
   let activeSelectionBackground =
     define(
       "list.activeSelectionBackground",
@@ -580,6 +586,7 @@ module List = {
   let defaults = [
     focusBackground,
     focusForeground,
+    focusOutline,
     activeSelectionBackground,
     activeSelectionForeground,
     hoverBackground,
@@ -588,6 +595,7 @@ module List = {
     deemphasizedForeground,
     activeIndentGuide,
     inactiveIndentGuide,
+    inactiveFocusOutline,
     filterMatchBackground,
     filterMatchBorder,
   ];
@@ -600,9 +608,9 @@ module EditorSuggestWidget = {
       all(ref(EditorWidget.background)),
     );
   let border =
-    define("editorSuggestWidget,border", all(ref(EditorWidget.border)));
+    define("editorSuggestWidget.border", all(ref(EditorWidget.border)));
   let foreground =
-    define("editorSuggestWidget.background", all(ref(Editor.foreground)));
+    define("editorSuggestWidget.foreground", all(ref(Editor.foreground)));
   let highlightForeground =
     define(
       "editorSuggestWidget.highlightForeground",
@@ -617,6 +625,7 @@ module EditorSuggestWidget = {
   let defaults = [
     background,
     border,
+    foreground,
     highlightForeground,
     selectedBackground,
   ];

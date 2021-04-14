@@ -145,9 +145,12 @@ type t = {
 };
 
 let setBoundingBox = (bbox, editor) => {
-  let (top, left, _, _) = Revery.Math.BoundingBox2d.getBounds(bbox);
+  let (left, top, _, _) = Revery.Math.BoundingBox2d.getBounds(bbox);
   {...editor, pixelY: top, pixelX: left};
 };
+
+let pixelX = ({pixelX, _}) => pixelX;
+let pixelY = ({pixelY, _}) => pixelY;
 
 let verticalScrollbarThickness = ({scrollbarVerticalWidth, _}) => scrollbarVerticalWidth;
 let horizontalScrollbarThickness = ({scrollbarHorizontalWidth, _}) => scrollbarHorizontalWidth;
@@ -1222,7 +1225,13 @@ let exposePrimaryCursor = (~disableAnimation=false, editor) =>
           editor,
         );
 
-      let scrollOffX = getCharacterWidth(editor) *. 2.;
+      // #3405 - When we're wrapping, don't consider horizontal scroll-off, otherwise
+      // the editor will seem to have less available width than it does in actuality,
+      // which could cause the editor to scroll even without wrapping.
+      let scrollOffX =
+        editor.wrapMode == WrapMode.Viewport
+          ? 0. : getCharacterWidth(editor) *. 2.;
+
       let scrollOffY =
         lineHeightInPixels(editor)
         *. float(max(editor.verticalScrollMargin, 0));
@@ -1338,39 +1347,8 @@ let getLeftVisibleColumn = view => {
 };
 
 let getTokenAt =
-    (~languageConfiguration, {line, character}: CharacterPosition.t, editor) => {
-  let lineNumber = line |> EditorCoreTypes.LineNumber.toZeroBased;
-
-  if (lineNumber < 0
-      || lineNumber >= EditorBuffer.numberOfLines(editor.buffer)) {
-    None;
-  } else {
-    let bufferLine = EditorBuffer.line(lineNumber, editor.buffer);
-    let f = uchar =>
-      LanguageConfiguration.isWordCharacter(uchar, languageConfiguration);
-    let startIndex =
-      BufferLine.traverse(
-        ~f,
-        ~direction=`Backwards,
-        ~index=character,
-        bufferLine,
-      )
-      |> Option.value(~default=character);
-    let stopIndex =
-      BufferLine.traverse(
-        ~f,
-        ~direction=`Forwards,
-        ~index=character,
-        bufferLine,
-      )
-      |> Option.value(~default=character);
-    Some(
-      CharacterRange.{
-        start: CharacterPosition.{line, character: startIndex},
-        stop: CharacterPosition.{line, character: stopIndex},
-      },
-    );
-  };
+    (~languageConfiguration, position: CharacterPosition.t, editor) => {
+  EditorBuffer.tokenAt(~languageConfiguration, position, editor.buffer);
 };
 
 let getContentPixelWidth = editor => {

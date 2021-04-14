@@ -15,3 +15,5 @@ let hasLine = (lineNumber, buffer) => {
   let lineCount = numberOfLines(buffer);
   lineIdx >= 0 && lineIdx < lineCount;
 };
+
+let tokenAt = Oni_Core.Buffer.tokenAt;

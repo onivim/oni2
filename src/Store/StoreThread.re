@@ -370,6 +370,7 @@ let start =
              ~isInsertMode=isInsertOrSelectMode,
              ~isAnimatingScroll,
              ~activeBuffer,
+             ~activeEditor=activeEditorId,
              ~activePosition,
              ~lineHeightInPixels,
              ~positionToRelativePixel,
@@ -597,8 +598,6 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Clipboard(msg))),
     Feature_Registers.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
-    Feature_LanguageSupport.Contributions.commands
-    |> List.map(Core.Command.map(msg => Model.Actions.LanguageSupport(msg))),
     Feature_Input.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Input(msg))),
     Feature_AutoUpdate.Contributions.commands

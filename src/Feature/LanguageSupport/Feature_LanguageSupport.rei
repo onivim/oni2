@@ -96,6 +96,7 @@ type outmsg =
 let update:
   (
     ~config: Oni_Core.Config.resolver,
+    ~diagnostics: Feature_Diagnostics.model,
     ~extensions: Feature_Extensions.model,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~maybeSelection: option(CharacterRange.t),
@@ -135,6 +136,7 @@ let configurationChanged: (~config: Config.resolver, model) => model;
 
 let cursorMoved:
   (
+    ~editorId: int,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~buffer: Oni_Core.Buffer.t,
     ~previous: CharacterPosition.t,
@@ -170,6 +172,7 @@ let sub:
     ~isInsertMode: bool,
     ~isAnimatingScroll: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
+    ~activeEditor: int,
     ~activePosition: CharacterPosition.t,
     ~lineHeightInPixels: float,
     ~positionToRelativePixel: CharacterPosition.t => PixelPosition.t,
@@ -250,6 +253,22 @@ module View: {
       (
         ~x: int,
         ~y: int,
+        ~editorId: int,
+        ~theme: ColorTheme.Colors.t,
+        ~model: model,
+        ~editorFont: Service_Font.font,
+        ~uiFont: UiFont.t,
+        ~dispatch: msg => unit,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+
+  module Overlay: {
+    let make:
+      (
+        ~toPixel: (~editorId: int, CharacterPosition.t) =>
+                  option(PixelPosition.t),
         ~theme: ColorTheme.Colors.t,
         ~model: model,
         ~editorFont: Service_Font.font,
@@ -283,7 +302,6 @@ module Hover: {
   module Popup: {
     let make:
       (
-        ~diagnostics: Feature_Diagnostics.model,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~languageInfo: Exthost.LanguageInfo.t,
@@ -292,7 +310,7 @@ module Hover: {
         ~grammars: Oni_Syntax.GrammarRepository.t,
         ~model: model,
         ~buffer: Oni_Core.Buffer.t,
-        ~editorId: option(int)
+        ~editorId: int
       ) =>
       option((CharacterPosition.t, list(Oni_Components.Popup.Section.t)));
   };
@@ -300,9 +318,9 @@ module Hover: {
 
 module Contributions: {
   let colors: list(ColorTheme.Schema.definition);
-  let commands: list(Command.t(msg));
+  let commands: model => list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
-  let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
+  let contextKeys: model => WhenExpr.ContextKeys.t;
   let keybindings: list(Feature_Input.Schema.keybinding);
   let menuGroups: list(MenuBar.Schema.group);
 };

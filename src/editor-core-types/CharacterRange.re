@@ -63,6 +63,16 @@ let containsRange = (~query, range) => {
   contains(start, range) && contains(stop, range);
 };
 
+let intersects = (a, b) => {
+  // A intersects with b
+  contains(a.start, b)
+  || contains(a.stop, b)
+  // or, b totally contains a
+  // or, a totally contains b
+  || containsRange(~query=a, b)
+  || containsRange(~query=b, a);
+};
+
 let shiftLine = (~afterLine: LineNumber.t, ~delta, range) => {
   LineNumber.(
     {

@@ -24,172 +24,333 @@
       {
         "name": "Plain text",
         "role": "Editor",
-        "icon": { "mac": "plaintext.icns" },
-        "ext": [ ".txt", ".README", ".LICENSE" ]
+        "icon": {
+          "mac": "plaintext.icns"
+        },
+        "ext": [
+          ".txt",
+          ".README",
+          ".LICENSE"
+        ]
       },
       {
         "name": "YAML document",
         "role": "Editor",
-        "icon": { "mac": "yaml.icns" },
-        "ext": [ ".yml", ".yaml" ]
+        "icon": {
+          "mac": "yaml.icns"
+        },
+        "ext": [
+          ".yml",
+          ".yaml"
+        ]
       },
       {
         "name": "Git configuration",
         "role": "Editor",
-        "icon": { "mac": "git.icns" },
-        "ext": [ ".gitignore", ".gitconfig", ".gitattributes" ]
+        "icon": {
+          "mac": "git.icns"
+        },
+        "ext": [
+          ".gitignore",
+          ".gitconfig",
+          ".gitattributes"
+        ]
       },
       {
         "name": "Docker configuration",
         "role": "Editor",
-        "icon": { "mac": "docker.icns" },
-        "ext": [ ".Dockerfile" ]
+        "icon": {
+          "mac": "docker.icns"
+        },
+        "ext": [
+          ".Dockerfile"
+        ]
       },
       {
         "name": "OPAM configuration",
         "role": "Editor",
-        "icon": { "mac": "opam.icns" },
-        "ext": [ ".opam" ]
+        "icon": {
+          "mac": "opam.icns"
+        },
+        "ext": [
+          ".opam"
+        ]
       },
       {
         "name": "Dune configuration",
         "role": "Editor",
-        "icon": { "mac": "dune.icns" },
-        "ext": [ ".dune", ".dune-project" ]
+        "icon": {
+          "mac": "dune.icns"
+        },
+        "ext": [
+          ".dune",
+          ".dune-project"
+        ]
       },
       {
         "name": "ReasonML source",
         "role": "Editor",
-        "icon": { "mac": "reasonml.icns" },
-        "ext": [ ".re", ".rei" ]
+        "icon": {
+          "mac": "reasonml.icns"
+        },
+        "ext": [
+          ".re",
+          ".rei"
+        ]
       },
       {
         "name": "OCaml source",
         "role": "Editor",
-        "icon": { "mac": "ocaml.icns" },
-        "ext": [ ".ml", ".mli" ]
+        "icon": {
+          "mac": "ocaml.icns"
+        },
+        "ext": [
+          ".ml",
+          ".mli"
+        ]
       },
       {
         "name": "C source",
         "role": "Editor",
-        "icon": { "mac": "c.icns" },
-        "ext": [ ".c" ]
+        "icon": {
+          "mac": "c.icns"
+        },
+        "ext": [
+          ".c"
+        ]
       },
       {
         "name": "C++ source",
-        "icon": { "mac": "cpp.icns" },
+        "icon": {
+          "mac": "cpp.icns"
+        },
         "role": "Editor",
         "ext": [
-          ".cpp", ".cc", ".cxx", ".hpp", ".hh", ".hxx", ".h", ".ino", ".inl",
+          ".cpp",
+          ".cc",
+          ".cxx",
+          ".hpp",
+          ".hh",
+          ".hxx",
+          ".h",
+          ".ino",
+          ".inl",
           ".ipp"
         ]
       },
       {
         "name": "Make configuration",
         "role": "Editor",
-        "icon": { "mac": "makefile.icns" },
-        "ext": [ ".Makefile" ]
+        "icon": {
+          "mac": "makefile.icns"
+        },
+        "ext": [
+          ".Makefile"
+        ]
       },
       {
         "name": "Cascading style sheet",
         "role": "Editor",
-        "icon": { "mac": "css.icns" },
-        "ext": [ ".css" ]
+        "icon": {
+          "mac": "css.icns"
+        },
+        "ext": [
+          ".css"
+        ]
       },
       {
         "name": "HTML document",
         "role": "Editor",
-        "icon": { "mac": "html.icns" },
+        "icon": {
+          "mac": "html.icns"
+        },
         "ext": [
-          ".html", ".htm", ".shtml", ".xhtml", ".mdoc", ".jsp", ".asp",
-          ".aspx", ".jshtm", ".volt", ".ejs", ".rhtml"
+          ".html",
+          ".htm",
+          ".shtml",
+          ".xhtml",
+          ".mdoc",
+          ".jsp",
+          ".asp",
+          ".aspx",
+          ".jshtm",
+          ".volt",
+          ".ejs",
+          ".rhtml"
         ]
       },
       {
         "name": "PHP source",
         "role": "Editor",
-        "icon": { "mac": "php.icns" },
-        "ext": [ ".php", ".php5", ".php7" ]
+        "icon": {
+          "mac": "php.icns"
+        },
+        "ext": [
+          ".php",
+          ".php5",
+          ".php7"
+        ]
       },
       {
         "name": "XML document",
         "role": "Editor",
-        "icon": { "mac": "xml.icns" },
-        "ext": [ ".xml", ".xaml" ]
+        "icon": {
+          "mac": "xml.icns"
+        },
+        "ext": [
+          ".xml",
+          ".xaml"
+        ]
       },
       {
         "name": "SVG image",
         "role": "Editor",
-        "icon": { "mac": "svg.icns" },
-        "ext": [ ".svg", ".svgz" ]
+        "icon": {
+          "mac": "svg.icns"
+        },
+        "ext": [
+          ".svg",
+          ".svgz"
+        ]
       },
       {
         "name": "Java source",
         "role": "Editor",
-        "icon": { "mac": "java.icns" },
-        "ext": [ ".java", ".jav" ]
+        "icon": {
+          "mac": "java.icns"
+        },
+        "ext": [
+          ".java",
+          ".jav"
+        ]
       },
       {
         "name": "Javascript source",
         "role": "Editor",
-        "icon": { "mac": "javascript.icns" },
-        "ext": [ ".js", ".es6", ".mjs", ".pac" ]
+        "icon": {
+          "mac": "javascript.icns"
+        },
+        "ext": [
+          ".js",
+          ".es6",
+          ".mjs",
+          ".pac"
+        ]
       },
       {
         "name": "JSON",
         "role": "Editor",
-        "icon": { "mac": "json.icns" },
+        "icon": {
+          "mac": "json.icns"
+        },
         "ext": [
-          ".json", ".bowerrc", ".jshintrc", ".jscsrc", ".eslintrc", ".swcrc",
-          ".webmanifest", ".js.map", ".css.map"
+          ".json",
+          ".bowerrc",
+          ".jshintrc",
+          ".jscsrc",
+          ".eslintrc",
+          ".swcrc",
+          ".webmanifest",
+          ".js.map",
+          ".css.map"
         ]
       },
       {
         "name": "JSON with Comments",
         "role": "Editor",
-        "icon": { "mac": "json.icns" },
-        "ext": [ ".hintrc", ".babelrc", ".jsonc" ]
+        "icon": {
+          "mac": "json.icns"
+        },
+        "ext": [
+          ".hintrc",
+          ".babelrc",
+          ".jsonc"
+        ]
       },
       {
         "name": "Markdown Source",
-        "icon": { "mac": "markdown.icns" },
+        "icon": {
+          "mac": "markdown.icns"
+        },
         "role": "Editor",
         "ext": [
-          ".md", ".mkd", ".mdwn", ".mdown", ".markdown", ".markdn", ".mdtxt",
-          ".mdtext", ".workbook"
+          ".md",
+          ".mkd",
+          ".mdwn",
+          ".mdown",
+          ".markdown",
+          ".markdn",
+          ".mdtxt",
+          ".mdtext",
+          ".workbook"
         ]
       },
       {
         "name": "Python Source",
-        "icon": { "mac": "python.icns" },
+        "icon": {
+          "mac": "python.icns"
+        },
         "role": "Editor",
         "ext": [
-          ".py", ".rpy", ".pyw", ".cpy", ".gyp", ".gypi", ".snakefile",
-          ".smk", ".pyi", ".ipy"
+          ".py",
+          ".rpy",
+          ".pyw",
+          ".cpy",
+          ".gyp",
+          ".gypi",
+          ".snakefile",
+          ".smk",
+          ".pyi",
+          ".ipy"
         ]
       },
       {
         "name": "Shell source",
         "role": "Editor",
-        "icon": { "mac": "shell.icns" },
+        "icon": {
+          "mac": "shell.icns"
+        },
         "ext": [
-          ".sh", ".bash", ".bashrc", ".bash_aliases", ".bash_profile",
-          ".bash_login", ".ebuild", ".install", ".profile", ".bash_logout",
-          ".zsh", ".zshrc", ".zprofile", ".zlogin", ".zlogout", ".zshenv",
-          ".zsh-theme", ".ksh", ".command"
+          ".sh",
+          ".bash",
+          ".bashrc",
+          ".bash_aliases",
+          ".bash_profile",
+          ".bash_login",
+          ".ebuild",
+          ".install",
+          ".profile",
+          ".bash_logout",
+          ".zsh",
+          ".zshrc",
+          ".zprofile",
+          ".zlogin",
+          ".zlogout",
+          ".zshenv",
+          ".zsh-theme",
+          ".ksh",
+          ".command"
         ]
       },
       {
         "name": "Typescript",
         "role": "Editor",
-        "icon": { "mac": "typescript.icns" },
-        "ext": [ ".ts" ]
+        "icon": {
+          "mac": "typescript.icns"
+        },
+        "ext": [
+          ".ts"
+        ]
       },
       {
         "name": "Typescript React",
         "role": "Editor",
-        "icon": { "mac": "typescript.icns" },
-        "ext": [ ".tsx" ]
+        "icon": {
+          "mac": "typescript.icns"
+        },
+        "ext": [
+          ".tsx"
+        ]
       }
     ]
   },
@@ -253,7 +414,7 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#4337e2c",
+    "revery": "revery-ui/revery#373b087",
     "esy-skia": "revery-ui/esy-skia#91c98f6",
     "isolinear": "revery-ui/isolinear#53fc4eb",
     "revery-terminal": "revery-ui/revery-terminal#a9cb168",
