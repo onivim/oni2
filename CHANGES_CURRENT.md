@@ -46,6 +46,7 @@
 - #3390 - Diagnostics: Some diagnostics wouldn't show in hover UI (related #3231)
 - #3403 - Code Actions: Add 'editor.lightBulb.enabled' configuration setting
 - #3396 - Code Actions: Fix some issues around light bulb rendering
+- #3404 - UX - Explorer: Fix text overflow in explorer (fixes #3362)
 
 ### Performance
 
