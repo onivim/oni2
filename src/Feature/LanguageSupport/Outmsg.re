@@ -42,7 +42,22 @@ type internalMsg('a) =
   | TransformConfiguration(Oni_Core.ConfigurationTransformer.t)
   | Effect(Isolinear.Effect.t('a));
 
-let map = f =>
-  fun
-  | Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
-  | outmsg => outmsg;
+let map: ('a => 'b, internalMsg('a)) => internalMsg('b) =
+  f =>
+    fun
+    // These are the polymorphic items...
+    | ShowMenu(menu) => ShowMenu(menu |> Feature_Quickmenu.Schema.map(f))
+    | Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
+    // ...and for some reason the remaining have to be explicitly specified
+    | Nothing => Nothing
+    | ApplyCompletion(orig) => ApplyCompletion(orig)
+    | FormattingApplied(orig) => FormattingApplied(orig)
+    | ApplyWorkspaceEdit(edit) => ApplyWorkspaceEdit(edit)
+    | InsertSnippet(edit) => InsertSnippet(edit)
+    | OpenFile(orig) => OpenFile(orig)
+    | ReferencesAvailable => ReferencesAvailable
+    | NotifySuccess(str) => NotifySuccess(str)
+    | NotifyFailure(str) => NotifyFailure(str)
+    | CodeLensesChanged(orig) => CodeLensesChanged(orig)
+    | SetSelections(orig) => SetSelections(orig)
+    | TransformConfiguration(orig) => TransformConfiguration(orig);

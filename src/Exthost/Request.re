@@ -285,6 +285,8 @@ module LanguageFeatures = {
 
   let resolveCodeAction = (~handle, ~id, client) => {
     let decoder = Json.Decode.(nullable(WorkspaceEdit.decode));
+    prerr_endline("handle: " ++ string_of_int(handle));
+    prerr_endline("chained cache id: " ++ ChainedCacheId.show(id));
     Client.request(
       ~decoder,
       ~usesCancellationToken=true,

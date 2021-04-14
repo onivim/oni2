@@ -298,6 +298,26 @@ module Effects = {
       });
     };
 
+    let resolveCodeAction = (~handle, ~id, client, toMsg) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="language.resolveCodeAction", dispatch => {
+        let promise =
+          Exthost.Request.LanguageFeatures.resolveCodeAction(
+            ~handle,
+            ~id,
+            client,
+          );
+
+        Lwt.on_success(promise, maybeEdit =>
+          dispatch(toMsg(Ok(maybeEdit)))
+        );
+
+        Lwt.on_failure(promise, err =>
+          dispatch(toMsg(Error(Printexc.to_string(err))))
+        );
+      });
+    }
+
     let provideRenameEdits =
         (~handle, ~uri, ~position, ~newName, client, toMsg) => {
       Isolinear.Effect.createWithDispatch(

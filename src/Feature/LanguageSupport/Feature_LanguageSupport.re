@@ -356,6 +356,7 @@ let update =
     |> Option.map(buffer => {
          let (codeActions', outmsg) =
            CodeActions.update(
+             ~client,
              ~buffer,
              ~editorId,
              ~cursorLocation,

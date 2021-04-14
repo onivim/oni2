@@ -61,11 +61,17 @@ module Session = {
         results: IntMap.t(list(CodeAction.t)),
       })
     | ApplyingFixes({
+        handles: list(int),
         editorId: int,
         positionOrSelection,
         contextMenu: Component_EditorContextMenu.model(CodeAction.t),
       })
-    | Resolving({ editorId: int, codeAction: CodeAction.t, positionOrSelection });
+    | Resolving({
+        handles: list(int),
+        editorId: int,
+        codeAction: CodeAction.t,
+        positionOrSelection,
+      });
 
   let initial = Idle;
 
@@ -80,15 +86,21 @@ module Session = {
     | ErrorRetrievingCodeActions({
         handle: int,
         msg: string,
-      });
+      })
+    | ResolvedCodeAction({
+        codeAction: [@opaque] CodeAction.t,
+        edit: option(WorkspaceEdit.t),
+      })
+    | ResolvedWorkspaceEditNotAvailable([@opaque] CodeAction.t)
+    | ResolveCodeActionFailed(string);
 
   let handles =
     fun
     | Idle => []
     | GatheringFixes({handles, _}) => handles
     | QueryingForFixes({handles, _}) => handles
-    | Resolving(_) => []
-    | ApplyingFixes(_) => [];
+    | Resolving({handles, _}) => handles
+    | ApplyingFixes({handles, _}) => handles;
 
   let buffer =
     fun
@@ -184,24 +196,71 @@ module Session = {
     handles |> List.for_all(handle => IntMap.mem(handle, results));
   };
 
-  let applyAction = (~editorId, ~positionOrSelection, codeAction: CodeAction.t) => {
+  let applyAction =
+      (
+        ~handles,
+        ~editorId,
+        ~positionOrSelection,
+        ~client,
+        codeAction: CodeAction.t,
+      ) => {
     Exthost.CodeAction.(
+      switch (codeAction.action.edit) {
+      // Got everything we need - so let's apply the edit now
+      | Some(edit) => (Idle, Outmsg.ApplyWorkspaceEdit(edit))
 
-    switch (codeAction.action.edit) {
-    // Got everything we need - so let's apply the edit now
-    | Some(edit) => (Idle, Outmsg.ApplyWorkspaceEdit(edit))
+      // Need to go back to the extension host to get the edit
+      | None =>
+        let toMsg = (
+          fun
+          | Ok(edit) => {
+              prerr_endline("Got code action!");
+              ResolvedCodeAction({codeAction, edit});
+            }
+          | Error(msg) => {
+              prerr_endline("Resolve failed...");
+              ResolveCodeActionFailed(msg);
+            }
+        );
 
-    
-    // Need to go back to the extension host to get the edit
-    | None => 
-      let eff = Isolinear.Effect.none;
-      (Resolving({ positionOrSelection, editorId, codeAction: codeAction }), Outmsg.NotifyFailure("error no edit available"))
-      // (Resolving({ positionOrSelection, editorId, codeAction: codeAction }), Outmsg.Effect(eff))
-    }
+        // switch (codeAction.action.chainedCacheId) {
+        // Can the chained cache id ever be empty?
+        // | None =>
+        //   prerr_endline("Chained cache id empty?");
+        //   prerr_endline(Exthost.CodeAction.show(codeAction.action));
+        // Try and execute contributed command?
+
+        switch (codeAction.action.command) {
+        | Some({id: Some(id), arguments}) =>
+          prerr_endline("Executing contributed command: " ++ id);
+          let eff =
+            Service_Exthost.Effects.Commands.executeContributedCommand(
+              ~command=id,
+              ~arguments,
+              client,
+            );
+          (Idle, Outmsg.Effect(eff));
+        | _ => (Idle, Outmsg.Nothing)
+        };
+      // | Some(id) =>
+      //   prerr_endline("Resolving!");
+      //   let eff =
+      //     Service_Exthost.Effects.LanguageFeatures.resolveCodeAction(
+      //       ~handle=codeAction.handle,
+      //       ~id,
+      //       client,
+      //       toMsg,
+      //     );
+      //   (
+      //     Resolving({handles, positionOrSelection, editorId, codeAction}),
+      //     Outmsg.Effect(eff),
+      //   );
+      // };
+      }
     );
   };
 
-  let doFix = (~editorId, ~positionOrSelection, results) => {
+  let doFix = (~handles, ~editorId, ~positionOrSelection, results) => {
     let allFixes = IntMap.fold((_key, a, b) => {a @ b}, results, []);
     let len = List.length(allFixes);
     if (len == 0) {
@@ -229,7 +288,7 @@ module Session = {
       let schema = Component_EditorContextMenu.Schema.contextMenu(~renderer);
       let contextMenu = Component_EditorContextMenu.create(~schema, allFixes);
       (
-        ApplyingFixes({positionOrSelection, editorId, contextMenu}),
+        ApplyingFixes({handles, positionOrSelection, editorId, contextMenu}),
         Outmsg.Nothing,
       );
     };
@@ -253,13 +312,13 @@ module Session = {
         let results' = IntMap.add(handle, codeActions, results);
 
         if (allFixesAreAvailable(handles, results')) {
-          doFix(~editorId, ~positionOrSelection, results');
+          doFix(~handles, ~editorId, ~positionOrSelection, results');
         } else {
           (GatheringFixes({...orig, results: results'}), Outmsg.Nothing);
         };
       };
 
-  let update = (msg, model) => {
+  let update = (~client, msg, model) => {
     switch (msg) {
     | CodeActionsAvailable({handle, codeActions}) =>
       addToResults(~handle, codeActions, model)
@@ -271,7 +330,9 @@ module Session = {
 
     | ContextMenu(contextMenuMsg) =>
       switch (model) {
-      | ApplyingFixes({contextMenu, editorId, positionOrSelection, _} as orig) =>
+      | ApplyingFixes(
+          {contextMenu, editorId, positionOrSelection, handles, _} as orig,
+        ) =>
         let (contextMenu, outmsg) =
           Component_EditorContextMenu.update(contextMenuMsg, contextMenu);
 
@@ -279,7 +340,14 @@ module Session = {
         switch (outmsg) {
         | Nothing => (model', Outmsg.Nothing)
         | Cancelled => (Idle, Outmsg.Nothing)
-        | Selected(item) => applyAction(~positionOrSelection, ~editorId, item)
+        | Selected(item) =>
+          applyAction(
+            ~handles,
+            ~client,
+            ~positionOrSelection,
+            ~editorId,
+            item,
+          )
         };
       | other => (other, Outmsg.Nothing)
       }
@@ -326,7 +394,7 @@ module Session = {
       };
 
     if (allFixesAreAvailable(handles, results)) {
-      doFix(~editorId, ~positionOrSelection, results);
+      doFix(~handles, ~editorId, ~positionOrSelection, results);
     } else {
       (
         GatheringFixes({
@@ -363,13 +431,20 @@ module Session = {
       }
     | model => (model, Outmsg.Nothing);
 
-  let select =
+  let select = (~client) =>
     fun
-    | ApplyingFixes({contextMenu, editorId, positionOrSelection, _}) => {
+    | ApplyingFixes({contextMenu, editorId, positionOrSelection, handles, _}) => {
         let maybeSelected = Component_EditorContextMenu.selected(contextMenu);
         switch (maybeSelected) {
         | None => (Idle, Outmsg.Nothing)
-        | Some(item) => applyAction(~editorId, ~positionOrSelection, item)
+        | Some(item) =>
+          applyAction(
+            ~handles,
+            ~client,
+            ~editorId,
+            ~positionOrSelection,
+            item,
+          )
         };
       }
     | model => (model, Outmsg.Nothing);
@@ -444,30 +519,43 @@ let unregister = (~handle, model) => {
   providers:
     model.providers |> List.filter(provider => {provider.handle != handle}),
 };
+let f: Session.msg => msg = {
+  m => Session(m);
+};
 
-let update = (~editorId, ~buffer, ~cursorLocation, msg, model) => {
+// let mapMsg: Outmsg.internalMsg(Session.msg) => Outmsg.internalMsg(msg) =
+//   outmsg => {
+//     switch (outmsg) {
+//     | Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
+//     | outmsg => outmsg
+//     };
+//   };
+
+let update = (~client, ~editorId, ~buffer, ~cursorLocation, msg, model) => {
+  let f: Session.msg => msg = {
+    m => Session(m);
+  };
+  let mapSessionMsg = outmsg => outmsg |> Outmsg.map(f);
+
   switch (msg) {
   | Session(sessionMsg) =>
-    let (session', outmsg) = Session.update(sessionMsg, model.session);
-    ({...model, session: session'}, outmsg);
+    let (session', outmsg) =
+      Session.update(~client, sessionMsg, model.session);
+    ({...model, session: session'}, outmsg |> mapSessionMsg);
 
   | Command(Cancel) => (
       {...model, session: Session.stop(model.session)},
-      Outmsg.Nothing,
+      Outmsg.Nothing: Outmsg.internalMsg(msg),
     )
-
   | Command(AcceptSelected) =>
-    let (session', outmsg) = Session.select(model.session);
-    ({...model, session: session'}, outmsg);
-
+    let (session', outmsg) = Session.select(~client, model.session);
+    ({...model, session: session'}, outmsg |> mapSessionMsg);
   | Command(SelectNext) =>
     let (session', outmsg) = Session.next(model.session);
-    ({...model, session: session'}, outmsg);
-
+    ({...model, session: session'}, outmsg |> mapSessionMsg);
   | Command(SelectPrevious) =>
     let (session', outmsg) = Session.previous(model.session);
-    ({...model, session: session'}, outmsg);
-
+    ({...model, session: session'}, outmsg |> mapSessionMsg);
   | Command(QuickFix) =>
     let handles =
       model.providers
@@ -475,8 +563,6 @@ let update = (~editorId, ~buffer, ~cursorLocation, msg, model) => {
            Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
          })
       |> List.map(({handle, _}) => handle);
-
-    // TODO: if handles are empty, show error
     let (session', outmsg) =
       Session.expandOrApply(
         ~editorId,
@@ -485,7 +571,7 @@ let update = (~editorId, ~buffer, ~cursorLocation, msg, model) => {
         ~positionOrSelection=Position(cursorLocation),
         model.session,
       );
-    ({...model, session: session'}, outmsg);
+    ({...model, session: session'}, outmsg |> mapSessionMsg);
   };
 };
 

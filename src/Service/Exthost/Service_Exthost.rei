@@ -133,6 +133,15 @@ module Effects: {
         result(option(Exthost.RenameLocation.t), string) => 'msg
       ) =>
       Isolinear.Effect.t('msg);
+
+    let resolveCodeAction:
+      (
+        ~handle: int,
+        ~id: Exthost.ChainedCacheId.t,
+        Exthost.Client.t,
+        result(option(Exthost.WorkspaceEdit.t), string) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
   };
 
   module Workspace: {

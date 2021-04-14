@@ -4,6 +4,7 @@ open Oni_Core;
 type t = {
   id: option(string),
   label: option(Label.t),
+  arguments: list(Yojson.Safe.t),
 };
 
 module Decode = {
@@ -13,6 +14,7 @@ module Decode = {
         {
           id: field.optional("id", string),
           label: field.optional("title", Label.decode),
+          arguments: field.withDefault("arguments", [], list(value)),
         }
       )
     );
@@ -25,6 +27,7 @@ module Encode = {
     obj([
       ("id", lens.id |> nullable(string)),
       ("title", lens.label |> nullable(Label.encode)),
+      ("arguments", lens.arguments |> list(value)),
     ]);
 };
 

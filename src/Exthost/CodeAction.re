@@ -17,8 +17,7 @@ module Decode = {
     Oni_Core.Json.Decode.(
       obj(({field, _}) =>
         {
-          chainedCacheId:
-            field.optional("chainedCacheId", ChainedCacheId.decode),
+          chainedCacheId: field.optional("cacheId", ChainedCacheId.decode),
           title: field.required("title", string),
           edit: field.optional("edit", WorkspaceEdit.decode),
           diagnostics:
