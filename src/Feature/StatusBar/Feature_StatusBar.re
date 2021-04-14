@@ -4,8 +4,6 @@ open Exthost.Msg.StatusBar;
 
 // MODEL
 
-module Log = (val Log.withNamespace("TESTE"));
-
 module Item = {
   [@deriving show]
   type t = {
@@ -140,9 +138,6 @@ module ConfigurationItems = {
   let extendItem = "...";
 
   let preProcess = (t, statusBarItems) => {
-
-    Log.error("MODE KEEP:" ++ string_of_bool(t.notificationMode == KeepPosition))
-
     //Helper funcions
     let removeFromList = (listToRemove, list) =>
       list |> List.filter(a => !List.mem(a, listToRemove));
@@ -167,42 +162,42 @@ module ConfigurationItems = {
              && !List.mem(str, t.showOnNotification),
            )
          )
-      |>  (t.notificationMode != Default ?
+      |> (
+        t.notificationMode != Default
+          ? List.fold_left(
+              (a, item) => {
+                let (toAdd, notificationToAdd) = item;
+                let (head, notification) = a |> List.hd;
 
-          List.fold_left(
-           (a, item) => {
-             let (toAdd, notificationToAdd) = item;
-             let (head, notification) = a |> List.hd;
+                notificationToAdd == notification
+                  ? [(head @ [toAdd], notification)] @ (a |> List.tl)
+                  : [([toAdd], notificationToAdd)] @ a;
+              },
+              [([], false)],
+            )
+          //Merge all Items that are to be hidden notificaion and those that arent into
+          //separate positions
+          : List.fold_left(
+              (a, item) => {
+                let (toAdd, notificationToAdd) = item;
+                let (head, _) = a |> List.hd;
+                let (tail, _) = a |> List.tl |> List.hd;
 
-             notificationToAdd == notification
-               ? [(head @ [toAdd], notification)] @ (a |> List.tl)
-               : [([toAdd], notificationToAdd)] @ a;
-           },
-           [([], false)],
-         ) :
-         //Merge all Items that are to be hidden notificaion and those that arent into
-         //separate positions
-         List.fold_left(
-           (a, item) => {
-             let (toAdd, notificationToAdd) = item;
-             let (head, _)  = a |> List.hd;
-             let (tail, _) = a |> List.tl |> List.hd;
-             
-             let isRight = alignment == Right;
+                let isRight = alignment == Right;
 
-             if (isRight) {
-               !notificationToAdd
-                 ? [(head, true), (tail @ [toAdd], false)]
-                 : [(head @ [toAdd], true), (tail, false)]
-             } else {
-               notificationToAdd
-                 ? [(head, false), (tail @ [toAdd], true)]
-                 : [(head @ [toAdd], false), (tail, true)]
-             }
-
-           },
-           [([], false), ([], false)],
-         ));
+                if (isRight) {
+                  !notificationToAdd
+                    ? [(head, true), (tail @ [toAdd], false)]
+                    : [(head @ [toAdd], true), (tail, false)];
+                } else {
+                  notificationToAdd
+                    ? [(head, false), (tail @ [toAdd], true)]
+                    : [(head @ [toAdd], false), (tail, true)];
+                };
+              },
+              [([], false), ([], false)],
+            )
+      );
 
     let allItems =
       t.startItems @ t.endItems |> List.filter(a => a != extendItem);
@@ -259,7 +254,8 @@ module ConfigurationItems = {
       process(startItemsPDef, Right, t.startItems),
       process(endItemsPDef, Left, t.endItems),
       List.mem("center", t.showOnNotification)
-      || (t.notificationMode != Default && t.notificationMode != KeepPosition),
+      || t.notificationMode != Default
+      && t.notificationMode != KeepPosition,
       getItemsFromAlign(Right),
       getItemsFromAlign(Left),
       t.notificationMode,
@@ -421,7 +417,7 @@ module Styles = {
     transform(Transform.[TranslateY(yOffset)]),
   ];
 
-  let sectionGroup = (background) => [
+  let sectionGroup = background => [
     backgroundColor(background),
     position(`Relative),
     flexDirection(`Row),
@@ -460,7 +456,8 @@ let positionToString =
     )
   | None => "";
 
-let sectionGroup = (~background, ~children, ()) => <View style={Styles.sectionGroup(background)} > children </View>;
+let sectionGroup = (~background, ~children, ()) =>
+  <View style={Styles.sectionGroup(background)}> children </View>;
 
 let section = (~children=React.empty, ~align, ()) =>
   <View style={Styles.section(align)}> children </View>;
@@ -600,8 +597,6 @@ let indentationToString = (indentation: IndentationSettings.t) => {
   | Spaces => "Spaces: " ++ string_of_int(indentation.size)
   };
 };
-
-module Log1 = (val Log.withNamespace("TESTE"));
 
 module View = {
   let make =
@@ -809,7 +804,6 @@ module View = {
       |> List.rev_map(item => {
            let (list, noti) = item;
            let onlyAnimation = !List.mem("notificationPopup", list);
-           Log1.error("Noti:" ++ string_of_bool(noti));
            let list =
              list
              |> List.map(str =>
@@ -861,16 +855,16 @@ module View = {
                        )
                     |> React.listToElement
                   }
-                ) ;
-            let reactList = list |> React.listToElement;
+                );
+           let reactList = list |> React.listToElement;
 
-           if (noti && list |> List.length > 0 ) {
+           if (noti && list |> List.length > 0) {
              <sectionGroup background>
                <section align=`Center> reactList </section>
                <notificationPopups onlyAnimation compact=false />
              </sectionGroup>;
-           } else { 
-             <sectionGroup background={defaultBackground}>
+           } else {
+             <sectionGroup background=defaultBackground>
                <section align=`Center> reactList </section>
              </sectionGroup>;
            };
@@ -882,11 +876,12 @@ module View = {
     let center =
       center
         ? React.empty : <notificationPopups onlyAnimation=true compact=false />;
-      //Feature_Theme.Colors.StatusBar.background.from(theme)
+    //Feature_Theme.Colors.StatusBar.background.from(theme)
     <View
       ?key
       style={Styles.view(
-        notificationMode == CompactPlus || notificationMode == Compact ? defaultBackground : background,
+        notificationMode == CompactPlus || notificationMode == Compact
+          ? defaultBackground : background,
         yOffset,
       )}>
       <section align=`FlexStart> startItems </section>

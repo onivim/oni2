@@ -18,8 +18,7 @@ module Item: {
 };
 
 module ConfigurationItems: {
-
-  type notificationMode = 
+  type notificationMode =
     | Default
     | KeepPosition
     | Compact
@@ -30,7 +29,7 @@ module ConfigurationItems: {
     endItems: list(string),
     hidden: list(string),
     showOnNotification: list(string),
-    notificationMode: notificationMode,
+    notificationMode,
   };
 };
 // MODEL
