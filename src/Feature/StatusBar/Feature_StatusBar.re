@@ -61,8 +61,8 @@ module ConfigurationItems = {
     Json.Decode.(
       obj(({field, _}) =>
         {
-          startItems: field.withDefault("left", ["..."], list(string)),
-          endItems: field.withDefault("right", ["..."], list(string)),
+          startItems: field.withDefault("start", ["..."], list(string)),
+          endItems: field.withDefault("end", ["..."], list(string)),
           hidden: field.withDefault("hidden", [], list(string)),
           showOnNotification:
             field.withDefault(
@@ -117,7 +117,7 @@ module ConfigurationItems = {
 
   let codec = Config.Schema.DSL.custom(~decode, ~encode);
 
-  let leftItemsDef = [
+  let startItemsDef = [
     "notificationCount",
     "macro",
     "leftItems",
@@ -126,7 +126,7 @@ module ConfigurationItems = {
     "notificationPopup",
   ];
 
-  let rightItemsDef = [
+  let endItemsDef = [
     "rightItems",
     "lineEndings",
     "indentation",
@@ -203,8 +203,8 @@ module ConfigurationItems = {
       t.startItems @ t.endItems |> List.filter(a => a != extendItem);
 
     //Get if `...` if its, on the rigth and left
-    let extendRight = List.mem(extendItem, t.startItems);
-    let extendLeft = List.mem(extendItem, t.endItems);
+    let extendStart = List.mem(extendItem, t.startItems);
+    let extendEnd = List.mem(extendItem, t.endItems);
 
     /*
        if x has `...` and !x doesn't then add them all
@@ -213,10 +213,10 @@ module ConfigurationItems = {
      */
     let startItemsPDef =
       (
-        if (extendLeft && !extendRight) {
-          leftItemsDef @ rightItemsDef;
-        } else if (extendLeft) {
-          leftItemsDef;
+        if (extendStart && !extendEnd) {
+          endItemsDef @ startItemsDef;
+        } else if (extendStart) {
+          startItemsDef;
         } else {
           [];
         }
@@ -225,10 +225,10 @@ module ConfigurationItems = {
 
     let endItemsPDef =
       (
-        if (extendRight && !extendLeft) {
-          leftItemsDef @ rightItemsDef;
-        } else if (extendRight) {
-          rightItemsDef;
+        if (extendEnd && !extendStart) {
+          startItemsDef @ endItemsDef;
+        } else if (extendEnd) {
+          endItemsDef;
         } else {
           [];
         }
