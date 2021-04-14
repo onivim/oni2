@@ -47,6 +47,7 @@
 - #3403 - Code Actions: Add 'editor.lightBulb.enabled' configuration setting
 - #3396 - Code Actions: Fix some issues around light bulb rendering
 - #3404 - UX - Explorer: Fix text overflow in explorer (fixes #3362)
+- #3414 - Code Actions: Fix regression in control-p binding
 
 ### Performance
 
