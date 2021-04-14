@@ -1225,7 +1225,13 @@ let exposePrimaryCursor = (~disableAnimation=false, editor) =>
           editor,
         );
 
-      let scrollOffX = getCharacterWidth(editor) *. 2.;
+      // #3405 - When we're wrapping, don't consider horizontal scroll-off, otherwise
+      // the editor will seem to have less available width than it does in actuality,
+      // which could cause the editor to scroll even without wrapping.
+      let scrollOffX =
+        editor.wrapMode == WrapMode.Viewport
+          ? 0. : getCharacterWidth(editor) *. 2.;
+
       let scrollOffY =
         lineHeightInPixels(editor)
         *. float(max(editor.verticalScrollMargin, 0));
