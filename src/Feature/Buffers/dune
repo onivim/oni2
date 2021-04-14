@@ -3,8 +3,8 @@
  (public_name Oni2.feature.buffers)
  (inline_tests)
  (libraries Oni2.editor-core-types Oni2.core Oni2.exthost
-   Oni2.feature.commands Oni2.feature.configuration Oni2.service.exthost
-   Oni2.service.font Revery isolinear base)
+   Oni2.feature.commands Oni2.feature.configuration Oni2.feature.quickmenu
+   Oni2.service.exthost Oni2.service.font Revery isolinear base)
  (preprocess
   (pps ppx_let ppx_deriving_yojson ppx_deriving.show brisk-reconciler.ppx
     ppx_inline_test)))

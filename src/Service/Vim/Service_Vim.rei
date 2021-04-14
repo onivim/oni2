@@ -7,7 +7,9 @@ let saveAllAndQuit: unit => Isolinear.Effect.t(_);
 let quitAll: unit => Isolinear.Effect.t(_);
 
 module Effects: {
-  let paste: (~toMsg: Vim.Mode.t => 'msg, string) => Isolinear.Effect.t('msg);
+  let paste:
+    (~context: Vim.Context.t=?, ~toMsg: Vim.Mode.t => 'msg, string) =>
+    Isolinear.Effect.t('msg);
 
   let getRegisterValue:
     (~toMsg: option(array(string)) => 'msg, char) =>
@@ -15,6 +17,7 @@ module Effects: {
 
   let applyEdits:
     (
+      ~shouldAdjustCursors: bool,
       ~bufferId: int,
       ~version: int,
       ~edits: list(Vim.Edit.t),
@@ -24,6 +27,7 @@ module Effects: {
 
   let setLines:
     (
+      ~shouldAdjustCursors: bool,
       ~bufferId: int,
       ~start: LineNumber.t=?,
       ~stop: LineNumber.t=?,
@@ -37,7 +41,8 @@ module Effects: {
 
   let applyCompletion:
     (
-      ~meetColumn: CharacterIndex.t,
+      ~cursor: CharacterPosition.t,
+      ~replaceSpan: CharacterSpan.t,
       ~insertText: string,
       ~toMsg: Vim.Mode.t => 'msg,
       ~additionalEdits: list(Vim.Edit.t)
@@ -48,4 +53,15 @@ module Effects: {
 module Sub: {
   let eval:
     (~toMsg: result(string, string) => 'msg, string) => Isolinear.Sub.t('msg);
+
+  let searchHighlights:
+    (
+      ~bufferId: int,
+      ~version: int,
+      ~searchPattern: string,
+      ~topVisibleLine: LineNumber.t,
+      ~bottomVisibleLine: LineNumber.t,
+      array(ByteRange.t) => 'msg
+    ) =>
+    Isolinear.Sub.t('msg);
 };

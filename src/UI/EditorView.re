@@ -31,11 +31,13 @@ module Parts = {
           ~renderOverlays,
           (),
         ) => {
+      let languageInfo =
+        state.languageSupport |> Feature_LanguageSupport.languageInfo;
       let languageConfiguration =
         buffer
         |> Oni_Core.Buffer.getFileType
         |> Oni_Core.Buffer.FileType.toString
-        |> Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo)
+        |> Exthost.LanguageInfo.getLanguageConfiguration(languageInfo)
         |> Option.value(~default=LanguageConfiguration.default);
 
       let editorDispatch = msg =>
@@ -56,16 +58,16 @@ module Parts = {
         buffer
         uiFont={state.uiFont}
         languageConfiguration
-        languageInfo={state.languageInfo}
+        languageInfo
         grammarRepository={state.grammarRepository}
         onEditorSizeChanged
         theme
-        bufferHighlights={state.bufferHighlights}
+        vim={state.vim}
         bufferSyntaxHighlights={state.syntaxHighlights}
         diagnostics={state.diagnostics}
         buffers={state.buffers}
         snippets={state.snippets}
-        tokenTheme={state.tokenTheme}
+        tokenTheme={state.colorTheme |> Feature_Theme.tokenColors}
         languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}
         perFileTypeConfig={Feature_Configuration.resolver(
@@ -101,7 +103,46 @@ module Parts = {
         Selectors.getBufferForEditor(state.buffers, editor)
         |> OptionEx.value_or_lazy(() => Buffer.empty(~font=state.editorFont));
 
-      let renderOverlays = (~gutterWidth as _) => React.empty;
+      let renderOverlays = (~gutterWidth) => {
+        let activeCursor = Feature_Editor.Editor.getPrimaryCursor(editor);
+        let ({x: pixelX, y: pixelY}: EditorCoreTypes.PixelPosition.t, _) =
+          Feature_Editor.Editor.bufferCharacterPositionToPixel(
+            ~position=activeCursor,
+            editor,
+          );
+
+        let lineHeight = Feature_Editor.Editor.lineHeightInPixels(editor);
+        let cursorPixelY = pixelY +. lineHeight |> int_of_float;
+        let cursorPixelX = pixelX +. gutterWidth |> int_of_float;
+        [
+          <Feature_LanguageSupport.Rename.View
+            x=cursorPixelX
+            y=cursorPixelY
+            theme
+            font=uiFont
+            dispatch={msg => dispatch(LanguageSupport(msg))}
+            model={state.languageSupport}
+          />,
+          <View
+            style=Revery.UI.Style.[
+              position(`Absolute),
+              top(0),
+              left(int_of_float(gutterWidth)),
+            ]>
+            <Feature_LanguageSupport.View.EditorWidgets
+              x={int_of_float(float(cursorPixelX) -. gutterWidth)}
+              y=cursorPixelY
+              editorId={Feature_Editor.Editor.getId(editor)}
+              theme
+              uiFont
+              editorFont
+              dispatch={msg => dispatch(LanguageSupport(msg))}
+              model={state.languageSupport}
+            />
+          </View>,
+        ]
+        |> React.listToElement;
+      };
 
       let isDark =
         state.colorTheme |> Feature_Theme.variant != ColorTheme.Light;
@@ -163,7 +204,7 @@ module Parts = {
       | ExtensionDetails =>
         <Feature_Extensions.DetailsView
           model={state.extensions}
-          tokenTheme={state.tokenTheme}
+          tokenTheme={state.colorTheme |> Feature_Theme.tokenColors}
           theme
           font=uiFont
           dispatch={msg => dispatch(Actions.Extensions(msg))}
@@ -281,15 +322,17 @@ let make =
       <Parts.EditorContainer editor state theme isActive dispatch />;
   };
 
+  let config = Selectors.configResolver(state);
+
   let editorShowTabs =
-    state.configuration
-    |> Oni_Core.Configuration.getValue(c => c.workbenchEditorShowTabs);
+    Feature_Configuration.GlobalConfiguration.Workbench.editorShowTabs.get(
+      config,
+    );
 
-  let hideZenModeTabs =
-    state.configuration
-    |> Oni_Core.Configuration.getValue(c => c.zenModeHideTabs);
+  let hideZenModeTabs = !Feature_Zen.shouldShowTabsInZenMode(state.zen);
+  let isZenMode = Feature_Zen.isZen(state.zen);
 
-  let showTabs = editorShowTabs && (!state.zenMode || !hideZenModeTabs);
+  let showTabs = editorShowTabs && (!isZenMode || !hideZenModeTabs);
 
   let isFocused = FocusManager.current(state) |> Focus.isLayoutFocused;
 
@@ -298,10 +341,10 @@ let make =
       uiFont={state.uiFont}
       theme
       isFocused
-      isZenMode={state.zenMode}
+      isZenMode
       showTabs
       model={state.layout}
-      config={Selectors.configResolver(state)}
+      config
       dispatch={msg => dispatch(Actions.Layout(msg))}>
       ...(module ContentProvider)
     </Feature_Layout.View>

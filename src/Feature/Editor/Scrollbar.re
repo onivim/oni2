@@ -7,7 +7,6 @@ open Revery.UI;
 
 open Oni_Core;
 
-module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Styles = {
@@ -214,15 +213,8 @@ module Vertical = {
   };
 
   let matchingPairMarkers =
-      (
-        ~matchingPair,
-        ~bufferHighlights,
-        ~totalHeight,
-        ~editor,
-        ~colors: Colors.t,
-        (),
-      ) => {
-    ignore(bufferHighlights);
+      (~matchingPair, ~vim, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
+    ignore(vim);
     ignore(totalHeight);
     ignore(editor);
 
@@ -265,33 +257,6 @@ module Vertical = {
          ]);
        })
     |> Option.value(~default=React.empty);
-  };
-
-  let searchMarkers =
-      (~bufferHighlights, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
-    let searchMatches = t =>
-      Style.[
-        position(`Absolute),
-        top(t - 3),
-        left(4),
-        right(4),
-        height(8),
-        backgroundColor(colors.findMatchBackground),
-      ];
-
-    let searchHighlightToElement = line => {
-      let position =
-        Editor.projectLine(~line, ~pixelHeight=totalHeight, editor)
-        |> int_of_float;
-      <View style={searchMatches(position)} />;
-    };
-
-    BufferHighlights.getHighlights(
-      ~bufferId=Editor.getBufferId(editor),
-      bufferHighlights,
-    )
-    |> List.map(searchHighlightToElement)
-    |> React.listToElement;
   };
 
   let documentHighlightMarkers =
@@ -370,7 +335,7 @@ module Vertical = {
         ~width as totalWidth,
         ~diagnostics: IntMap.t(list(Diagnostic.t)),
         ~colors: Colors.t,
-        ~bufferHighlights,
+        ~vim,
         ~languageSupport,
         (),
       ) => {
@@ -460,14 +425,7 @@ module Vertical = {
               diagnostics
               colors
             />
-            <matchingPairMarkers
-              matchingPair
-              bufferHighlights
-              editor
-              totalHeight
-              colors
-            />
-            <searchMarkers bufferHighlights editor totalHeight colors />
+            <matchingPairMarkers matchingPair vim editor totalHeight colors />
             <documentHighlightMarkers
               languageSupport
               editor

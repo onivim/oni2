@@ -1,4 +1,6 @@
 open EditorCoreTypes;
+open Oni_Core;
+
 // EFFECTS
 module Effects: {
   module Commands: {
@@ -28,6 +30,7 @@ module Effects: {
       (
         ~previousBuffer: Oni_Core.Buffer.t,
         ~buffer: Oni_Core.Buffer.t,
+        ~minimalUpdate: Oni_Core.MinimalUpdate.t,
         ~update: Oni_Core.BufferUpdate.t,
         Exthost.Client.t,
         unit => 'msg
@@ -40,8 +43,15 @@ module Effects: {
   };
 
   module FileSystemEventService: {
-    let onFileEvent:
-      (~events: Exthost.Files.FileSystemEvents.t, Exthost.Client.t) =>
+    let onBufferChanged:
+      (~buffer: Oni_Core.Buffer.t, Exthost.Client.t) => Isolinear.Effect.t(_);
+
+    let onPathChanged:
+      (
+        ~path: FpExp.t(FpExp.absolute),
+        ~maybeStat: option(Luv.File.Stat.t),
+        Exthost.Client.t
+      ) =>
       Isolinear.Effect.t(_);
   };
 
@@ -102,6 +112,27 @@ module Effects: {
         result(list(Exthost.Location.t), string) => 'msg
       ) =>
       Isolinear.Effect.t('msg);
+
+    let provideRenameEdits:
+      (
+        ~handle: int,
+        ~uri: Oni_Core.Uri.t,
+        ~position: EditorCoreTypes.CharacterPosition.t,
+        ~newName: string,
+        Exthost.Client.t,
+        result(option(Exthost.WorkspaceEdit.t), string) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
+
+    let resolveRenameLocation:
+      (
+        ~handle: int,
+        ~uri: Oni_Core.Uri.t,
+        ~position: EditorCoreTypes.CharacterPosition.t,
+        Exthost.Client.t,
+        result(option(Exthost.RenameLocation.t), string) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
   };
 
   module Workspace: {
@@ -128,6 +159,28 @@ module Sub: {
     (~activeEditorId: string, ~client: Exthost.Client.t) =>
     Isolinear.Sub.t(unit);
 
+  // let codeActionsBySelection:
+  //   (
+  //     ~handle: int,
+  //     ~context: Exthost.CodeAction.Context.t,
+  //     ~buffer: Oni_Core.Buffer.t,
+  //     ~range: CharacterRange.t,
+  //     ~toMsg: result(option(Exthost.CodeAction.List.t), string) => 'msg,
+  //     Exthost.Client.t
+  //   ) =>
+  //   Isolinear.Sub.t('msg);
+
+  let codeActionsByRange:
+    (
+      ~handle: int,
+      ~context: Exthost.CodeAction.Context.t,
+      ~buffer: Oni_Core.Buffer.t,
+      ~range: CharacterRange.t,
+      ~toMsg: result(option(Exthost.CodeAction.List.t), string) => 'msg,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('msg);
+
   let codeLenses:
     (
       ~handle: int,
@@ -141,7 +194,6 @@ module Sub: {
     Isolinear.Sub.t('a);
 
   let completionItems:
-    // TODO: ~base: option(string),
     (
       ~handle: int,
       ~context: Exthost.CompletionContext.t,
@@ -156,6 +208,7 @@ module Sub: {
     (
       ~handle: int,
       ~chainedCacheId: Exthost.ChainedCacheId.t,
+      ~defaultRange: Exthost.SuggestItem.SuggestRange.t,
       ~toMsg: result(Exthost.SuggestItem.t, string) => 'a,
       Exthost.Client.t
     ) =>
@@ -189,6 +242,17 @@ module Sub: {
       Exthost.Client.t
     ) =>
     Isolinear.Sub.t('a);
+
+  let renameEdits:
+    (
+      ~handle: int,
+      ~buffer: Oni_Core.Buffer.t,
+      ~position: EditorCoreTypes.CharacterPosition.t,
+      ~newName: string,
+      ~toMsg: result(option(Exthost.WorkspaceEdit.t), string) => 'msg,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('msg);
 
   let signatureHelp:
     (

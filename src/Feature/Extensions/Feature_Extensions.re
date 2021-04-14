@@ -83,9 +83,15 @@ let snippetFilePaths = (~fileType, model) => {
          }
        })
     |> List.filter_map(({path, _}: Contributions.Snippet.t) =>
-         Fp.absoluteCurrentPlatform(path)
+         FpExp.absoluteCurrentPlatform(path)
        )
   );
+};
+
+let hasCompletedDiscovery = ({extensions, _}) => {
+  // TODO: This logic will need to be updated when async
+  // discovery is implemented
+  extensions != [];
 };
 
 module ListView = ListView;

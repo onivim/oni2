@@ -11,7 +11,9 @@ runTest(
 
   let testFile = getAssetPath("some-test-file.txt");
   // Open an erroneous CSS file - verify we get some diagnostics
-  dispatch(Actions.OpenFileByPath(testFile, None, None));
+  dispatch(
+    Actions.OpenFileByPath(testFile, Oni_Core.SplitDirection.Current, None),
+  );
 
   wait(~name="buffer load", (state: State.t) => {
     switch (Selectors.getActiveBuffer(state)) {

@@ -55,21 +55,9 @@ let create =
         dispatch(Actions.CommandInvoked({command, arguments: `List(args)}));
         Lwt.return(Reply.okEmpty);
 
-      | Configuration(RemoveConfigurationOption({key, _})) =>
+      | Configuration(msg) =>
         dispatch(
-          Actions.ConfigurationTransform(
-            "configuration.json",
-            ConfigurationTransformer.removeField(key),
-          ),
-        );
-        Lwt.return(Reply.okEmpty);
-
-      | Configuration(UpdateConfigurationOption({key, value, _})) =>
-        dispatch(
-          Actions.ConfigurationTransform(
-            "configuration.json",
-            ConfigurationTransformer.setField(key, value),
-          ),
+          Actions.Configuration(Feature_Configuration.Msg.exthost(msg)),
         );
         Lwt.return(Reply.okEmpty);
 
@@ -182,7 +170,7 @@ let create =
           command |> OptionEx.flatMap(({id, _}: Exthost.Command.t) => id);
         dispatch(
           Actions.StatusBar(
-            Feature_StatusBar.ItemAdded(
+            Feature_StatusBar.Msg.itemAdded(
               Feature_StatusBar.Item.create(
                 ~command?,
                 ~color?,
@@ -200,7 +188,11 @@ let create =
         Lwt.return(Reply.okEmpty);
 
       | StatusBar(Dispose({id})) =>
-        dispatch(Actions.StatusBar(ItemDisposed(id |> string_of_int)));
+        dispatch(
+          Actions.StatusBar(
+            Feature_StatusBar.Msg.itemDisposed(id |> string_of_int),
+          ),
+        );
         Lwt.return(Reply.okEmpty);
 
       | TerminalService(msg) =>
@@ -212,8 +204,20 @@ let create =
           : Lwt.return(Reply.error("Unable to open URI"))
       | Window(GetWindowVisibility) =>
         Lwt.return(Reply.okJson(`Bool(true)))
-      | Workspace(StartFileSearch({includePattern, excludePattern, _})) =>
+
+      | Workspace(SaveAll({includeUntitled})) =>
+        ignore(includeUntitled);
+
+        dispatch(
+          Actions.VimExecuteCommand({command: "wa!", allowAnimation: false}),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | Workspace(
+          StartFileSearch({includePattern, excludePattern, maxResults}),
+        ) =>
         Service_OS.Api.glob(
+          ~maxCount=?maxResults,
           ~includeFiles=?includePattern,
           ~excludeDirectories=?excludePattern,
           // TODO: Pull from store
@@ -244,8 +248,8 @@ let create =
 
   let tempDir = Filename.get_temp_dir_name();
 
-  let logFile = tempDir |> Uri.fromPath;
-  let logsLocation =
+  let logsLocation = tempDir |> Uri.fromPath;
+  let logFile =
     Filename.temp_file(~temp_dir=tempDir, "onivim2", "exthost.log")
     |> Uri.fromPath;
 
@@ -299,9 +303,8 @@ let create =
     Exthost.Client.start(
       ~initialConfiguration=
         Feature_Configuration.toExtensionConfiguration(
+          ~additionalExtensions=extensions,
           config,
-          extensions,
-          setup,
         ),
       ~initialWorkspace,
       ~namedPipe,

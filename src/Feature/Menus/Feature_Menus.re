@@ -72,7 +72,7 @@ let commandPalette = (contextKeys, commands, menus: Menu.Lookup.t) => {
   StringMap.merge(
     (_id, commandItem, menuItem) =>
       switch (commandItem, menuItem) {
-      | (Some(_), Some((menuItem: Menu.item)))
+      | (Some(_), Some(menuItem: Menu.item))
           when
             WhenExpr.evaluate(
               menuItem.isVisibleWhen,
@@ -80,7 +80,7 @@ let commandPalette = (contextKeys, commands, menus: Menu.Lookup.t) => {
             ) =>
         None
 
-      | (Some(commandItem), Some((menuItem: Menu.item))) =>
+      | (Some(commandItem), Some(menuItem: Menu.item)) =>
         Some(
           Menu.{...commandItem, group: menuItem.group, index: menuItem.index},
         )

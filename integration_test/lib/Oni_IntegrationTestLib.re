@@ -1,4 +1,5 @@
 module Core = Oni_Core;
+module FpExp = Core.FpExp;
 module Utility = Core.Utility;
 
 module Model = Oni_Model;
@@ -60,7 +61,6 @@ let getAssetPath = path =>
   };
 
 let currentUserSettings = ref(Core.Config.Settings.empty);
-let setUserSettings = settings => currentUserSettings := settings;
 
 module Internal = {
   let prepareEnvironment = () => {
@@ -84,9 +84,9 @@ module Internal = {
 
 let runTest =
     (
+      ~cli=Oni_CLI.default,
       ~configuration=None,
       ~keybindings=None,
-      ~filesToOpen=[],
       ~name="AnonymousTest",
       ~onAfterDispatch=_ => (),
       test: testCallback,
@@ -122,8 +122,6 @@ let runTest =
       }
     );
 
-  let getUserSettings = () => Ok(currentUserSettings^);
-
   Vim.init();
   Oni2_KeyboardLayout.init();
   Log.infof(m =>
@@ -145,15 +143,41 @@ let runTest =
       ~modified,
     );
   };
+  let writeConfigurationFile = (name, jsonStringOpt) => {
+    let tempFilePath = Filename.temp_file(name, ".json");
+    let oc = open_out(tempFilePath);
+
+    InitLog.info("Writing configuration file: " ++ tempFilePath);
+
+    let () =
+      jsonStringOpt
+      |> Option.value(~default="{}")
+      |> Printf.fprintf(oc, "%s\n");
+
+    close_out(oc);
+    tempFilePath |> FpExp.absoluteCurrentPlatform |> Option.get;
+  };
+
+  let keybindingsFilePath =
+    writeConfigurationFile("keybindings", keybindings);
+
+  let configurationFilePath =
+    writeConfigurationFile("configuration", configuration);
+
+  let keybindingsLoader =
+    Feature_Input.KeybindingsLoader.file(keybindingsFilePath);
+
+  let configurationLoader =
+    Feature_Configuration.ConfigurationLoader.file(configurationFilePath);
 
   let currentState =
     ref(
       Model.State.initial(
-        ~cli=Oni_CLI.default,
+        ~cli,
         ~initialBuffer,
         ~initialBufferRenderers=Model.BufferRenderers.initial,
-        ~getUserSettings,
-        ~contributedCommands=[],
+        ~configurationLoader,
+        ~keybindingsLoader,
         ~maybeWorkspace=None,
         ~workingDirectory=Sys.getcwd(),
         ~extensionsFolder=None,
@@ -196,30 +220,9 @@ let runTest =
 
   InitLog.info("Starting store...");
 
-  let writeConfigurationFile = (name, jsonStringOpt) => {
-    let tempFilePath = Filename.temp_file(name, ".json");
-    let oc = open_out(tempFilePath);
-
-    InitLog.info("Writing configuration file: " ++ tempFilePath);
-
-    let () =
-      jsonStringOpt
-      |> Option.value(~default="{}")
-      |> Printf.fprintf(oc, "%s\n");
-
-    close_out(oc);
-    tempFilePath |> Fp.absoluteCurrentPlatform |> Option.get;
-  };
-
-  let configurationFilePath =
-    writeConfigurationFile("configuration", configuration);
-  let keybindingsFilePath =
-    writeConfigurationFile("keybindings", keybindings);
-
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~showUpdateChangelog=false,
-      ~getUserSettings,
       ~setup,
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
@@ -233,11 +236,8 @@ let runTest =
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~getState=() => currentState^,
       ~onStateChanged,
-      ~configurationFilePath=Some(configurationFilePath),
-      ~keybindingsFilePath=Some(keybindingsFilePath),
       ~quit,
       ~window=None,
-      ~filesToOpen,
       (),
     );
 

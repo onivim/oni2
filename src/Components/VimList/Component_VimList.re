@@ -89,12 +89,12 @@ type command =
   | CursorToBottom // G
   | CursorDown // j
   | CursorUp // k
+  | CursorDownWindow // control-d
+  | CursorUpWindow // control-u
   | Digit(int)
   | Select
   | ScrollDownLine
   | ScrollUpLine
-  | ScrollDownWindow
-  | ScrollUpWindow
   | ScrollCursorCenter // zz
   | ScrollCursorBottom // zb
   | ScrollCursorTop // zt
@@ -153,6 +153,21 @@ let ensureSelectedVisible = model =>
       };
     {...model, scrollY: scrollY'};
   };
+
+let tryToPreserveScroll = (f, model) => {
+  let previousDelta =
+    float(model.selected * model.rowHeight) -. model.scrollY;
+
+  let model' = f(model);
+
+  {
+    ...model',
+    scrollY:
+      max(0., float(model'.selected * model'.rowHeight) -. previousDelta),
+  }
+  |> ensureSelectedVisible;
+};
+
 let keyPress = (key, model) => {
   let (searchContext, maybeSelected) =
     SearchContext.keyPress(~index=model.selected, key, model.searchContext);
@@ -290,6 +305,8 @@ let scrollTo = (~index, ~alignment, model) => {
   };
 };
 
+let visibleRows = model => model.viewportHeight / model.rowHeight;
+
 let update = (msg, model) => {
   switch (msg) {
   | Command(CursorToTop) => (
@@ -358,17 +375,37 @@ let update = (msg, model) => {
       Nothing,
     )
 
-  | Command(ScrollDownWindow) => (
-      model |> scrollWindows(~count=getMultiplier(model)) |> resetMultiplier,
-      Nothing,
-    )
-
-  | Command(ScrollUpWindow) => (
+  | Command(CursorDownWindow) =>
+    let moveCursorDownByWindow = model =>
       model
-      |> scrollWindows(~count=- getMultiplier(model))
+      |> setSelected(
+           ~selected=
+             model.selected + visibleRows(model) * getMultiplier(model),
+         );
+
+    (
+      model
+      |> tryToPreserveScroll(moveCursorDownByWindow)
+      |> enableScrollAnimation
       |> resetMultiplier,
       Nothing,
-    )
+    );
+
+  | Command(CursorUpWindow) =>
+    let moveCursorUpByWindow = model =>
+      model
+      |> setSelected(
+           ~selected=
+             model.selected - visibleRows(model) * getMultiplier(model),
+         );
+
+    (
+      model
+      |> tryToPreserveScroll(moveCursorUpByWindow)
+      |> enableScrollAnimation
+      |> resetMultiplier,
+      Nothing,
+    );
 
   | Command(Select) =>
     let isValidFocus =
@@ -491,10 +528,10 @@ module Commands = {
   let scrollDownLine =
     define("vim.list.scrollDownLine", Command(ScrollDownLine));
   let scrollUpLine = define("vim.list.scrollUpLine", Command(ScrollUpLine));
-  let scrollDownWindow =
-    define("vim.list.scrollDownWindow", Command(ScrollDownWindow));
-  let scrollUpWindow =
-    define("vim.list.scrollUpWindow", Command(ScrollUpWindow));
+  let cursorDownWindow =
+    define("vim.list.cursorDownWindow", Command(CursorDownWindow));
+  let cursorUpWindow =
+    define("vim.list.cursorUpWindow", Command(CursorUpWindow));
 
   let digit0 = define("vim.list.0", Command(Digit(0)));
   let digit1 = define("vim.list.1", Command(Digit(1)));
@@ -557,22 +594,22 @@ module Keybindings = {
       ),
       bind(
         ~key="<C-d>",
-        ~command=Commands.scrollDownWindow.id,
+        ~command=Commands.cursorDownWindow.id,
         ~condition=commandCondition,
       ),
       bind(
         ~key="<S-DOWN>",
-        ~command=Commands.scrollDownWindow.id,
+        ~command=Commands.cursorDownWindow.id,
         ~condition=commandCondition,
       ),
       bind(
         ~key="<PageDown>",
-        ~command=Commands.scrollDownWindow.id,
+        ~command=Commands.cursorDownWindow.id,
         ~condition=commandCondition,
       ),
       bind(
         ~key="<C-f>",
-        ~command=Commands.scrollDownWindow.id,
+        ~command=Commands.cursorDownWindow.id,
         ~condition=commandCondition,
       ),
       // Scroll upwards
@@ -583,22 +620,22 @@ module Keybindings = {
       ),
       bind(
         ~key="<C-u>",
-        ~command=Commands.scrollUpWindow.id,
+        ~command=Commands.cursorUpWindow.id,
         ~condition=commandCondition,
       ),
       bind(
         ~key="<S-UP>",
-        ~command=Commands.scrollUpWindow.id,
+        ~command=Commands.cursorUpWindow.id,
         ~condition=commandCondition,
       ),
       bind(
         ~key="<PageUp>",
-        ~command=Commands.scrollUpWindow.id,
+        ~command=Commands.cursorUpWindow.id,
         ~condition=commandCondition,
       ),
       bind(
         ~key="<C-b>",
-        ~command=Commands.scrollUpWindow.id,
+        ~command=Commands.cursorUpWindow.id,
         ~condition=commandCondition,
       ),
       // MULTIPLIER
@@ -728,9 +765,9 @@ module Contributions = {
       digit8,
       digit9,
       scrollDownLine,
-      scrollDownWindow,
+      cursorDownWindow,
       scrollUpLine,
-      scrollUpWindow,
+      cursorUpWindow,
       previousSearchResult,
       nextSearchResult,
       searchForward,

@@ -67,16 +67,16 @@ module Internal = {
     );
   };
 
-  let autoClosingPairs = (~syntaxScope, ~maybeLanguageConfig, state: State.t) => {
+  let autoClosingPairs =
+      (~fileType, ~syntaxScope, ~maybeLanguageConfig, state: State.t) => {
+    let perFileTypeResolver =
+      Feature_Configuration.resolver(~fileType, state.config, state.vim);
     let acpEnabled =
-      Oni_Core.Configuration.getValue(
-        c => c.editorAutoClosingBrackets,
-        state.configuration,
-      )
+      Feature_Editor.Configuration.autoClosingPairs.get(perFileTypeResolver)
       |> (
         fun
-        | LanguageDefined => true
-        | Never => false
+        | `LanguageDefined => true
+        | `Never => false
       );
 
     if (acpEnabled) {
@@ -106,13 +106,20 @@ let current = (state: State.t) => {
   let mode = Editor.mode(editor);
 
   let editorBuffer = Selectors.getActiveBuffer(state);
+  let fileType =
+    editorBuffer
+    |> Option.map(buf => Buffer.getFileType(buf) |> Buffer.FileType.toString)
+    |> Option.value(~default=Buffer.FileType.default);
+
   let maybeLanguageConfig: option(LanguageConfiguration.t) =
     editorBuffer
     |> OptionEx.flatMap(buf =>
          Buffer.getFileType(buf) |> Buffer.FileType.toOption
        )
     |> OptionEx.flatMap(
-         Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+         Exthost.LanguageInfo.getLanguageConfiguration(
+           state.languageSupport |> Feature_LanguageSupport.languageInfo,
+         ),
        );
 
   let maybeCursor =
@@ -131,7 +138,12 @@ let current = (state: State.t) => {
 
   let syntaxScope = Internal.syntaxScope(~maybeCursor, state);
   let autoClosingPairs =
-    Internal.autoClosingPairs(~syntaxScope, ~maybeLanguageConfig, state);
+    Internal.autoClosingPairs(
+      ~fileType,
+      ~syntaxScope,
+      ~maybeLanguageConfig,
+      state,
+    );
 
   let Feature_Editor.EditorLayout.{bufferWidthInCharacters: width, _} =
     Editor.getLayout(editor);

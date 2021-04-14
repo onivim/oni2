@@ -21,6 +21,8 @@ let copyFilePath =
     CopyActiveFilepathToClipboard,
   );
 
+let noop = register("noop", Noop);
+
 let command = cmd => CommandInvoked({command: cmd, arguments: `Null});
 
 let undo = register("undo", command("undo"));
@@ -93,57 +95,10 @@ module Oni = {
         command("vim.tutor"),
       );
   };
-
-  module Workbench = {
-    module Action = {
-      let reloadSettings =
-        register(
-          ~category="Preferences",
-          ~title="Reload configuration",
-          "workbench.action.reloadSettings",
-          ConfigurationReload,
-        );
-
-      let enableZenMode =
-        register(
-          ~category="View",
-          ~title="Enable Zen Mode",
-          ~isEnabledWhen=WhenExpr.parse("!zenMode"),
-          "workbench.action.enableZenMode", // use workbench.action.toggleZenMode?
-          //~isEnabled=() => !getState().zenMode,
-          EnableZenMode,
-        );
-
-      let disableZenMode =
-        register(
-          ~category="View",
-          ~title="Disable Zen Mode",
-          ~isEnabledWhen=WhenExpr.parse("zenMode"),
-          "workbench.action.disableZenMode", // use workbench.action.toggleZenMode?
-          DisableZenMode,
-        );
-    };
-  };
 };
 
 module Workbench = {
   module Action = {
-    let openSettings =
-      register(
-        ~category="Preferences",
-        ~title="Open configuration file",
-        "workbench.action.openSettings",
-        OpenConfigFile("configuration.json"),
-      );
-
-    let openDefaultKeybindingsFile =
-      register(
-        ~category="Preferences",
-        ~title="Open keybindings file",
-        "workbench.action.openDefaultKeybindingsFile",
-        OpenConfigFile("keybindings.json"),
-      );
-
     let showCommands =
       register(
         ~title="Show All Commands",

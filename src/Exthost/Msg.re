@@ -1,5 +1,6 @@
 module ExtCommand = Command;
 module ExtConfig = Configuration;
+module ExtLanguageConfiguration = LanguageConfiguration;
 open Oni_Core;
 
 module Internal = {
@@ -767,6 +768,13 @@ module LanguageFeatures = {
         supportsResolveDetails: bool,
         extensionId: string,
       })
+    | RegisterQuickFixSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        metadata: CodeAction.ProviderMetadata.t,
+        displayName: string,
+        supportsResolve: bool,
+      })
     | RegisterReferenceSupport({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -793,6 +801,11 @@ module LanguageFeatures = {
         selector: DocumentSelector.t,
         autoFormatTriggerCharacters: list(string),
         extensionId: ExtensionId.t,
+      })
+    | SetLanguageConfiguration({
+        handle: int,
+        languageId: string,
+        configuration: ExtLanguageConfiguration.t,
       })
     | Unregister({handle: int});
 
@@ -922,6 +935,39 @@ module LanguageFeatures = {
         Ok(RegisterImplementationSupport({handle, selector}))
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
+
+    | (
+        "$registerQuickFixSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          metadataJson,
+          `String(displayName),
+          `Bool(supportsResolve),
+        ]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(DocumentSelector.decode);
+
+        let%bind metadata =
+          metadataJson |> decode_value(CodeAction.ProviderMetadata.decode);
+
+        Ok(
+          RegisterQuickFixSupport({
+            handle,
+            selector,
+            metadata,
+            displayName,
+            supportsResolve,
+          }),
+        );
+      };
+
+      ret |> Result.map_error(string_of_error);
 
     | ("$registerReferenceSupport", `List([`Int(handle), selectorJson])) =>
       switch (parseDocumentSelector(selectorJson)) {
@@ -1104,6 +1150,34 @@ module LanguageFeatures = {
         );
       };
       ret |> Result.map_error(string_of_error);
+
+    | (
+        "$setLanguageConfiguration",
+        `List([
+          `Int(handle),
+          `String(languageId),
+          languageConfigurationJson,
+        ]),
+      ) =>
+      open Json.Decode;
+      let ret = {
+        open Base.Result.Let_syntax;
+
+        let%bind languageConfiguration =
+          languageConfigurationJson
+          |> decode_value(ExtLanguageConfiguration.decode);
+
+        Ok(
+          SetLanguageConfiguration({
+            handle,
+            languageId,
+            configuration: languageConfiguration,
+          }),
+        );
+      };
+
+      ret |> Result.map_error(string_of_error);
+
     | _ =>
       Error(
         Printf.sprintf(
@@ -1699,6 +1773,7 @@ module Window = {
 module Workspace = {
   [@deriving show]
   type msg =
+    | SaveAll({includeUntitled: bool})
     | StartFileSearch({
         includePattern: option(string),
         //        includeFolder: option(Oni_Core.Uri.t),
@@ -1709,6 +1784,26 @@ module Workspace = {
   let handle = (method, args: Yojson.Safe.t) => {
     Base.Result.Let_syntax.(
       switch (method) {
+      | "$saveAll" =>
+        switch (args) {
+        | `List([]) => Ok(SaveAll({includeUntitled: false}))
+        | `List([includeUntitledJson]) =>
+          let%bind includeUntitled =
+            includeUntitledJson
+            |> Internal.decode_value(Json.Decode.nullable(Decode.bool));
+          Ok(
+            SaveAll({
+              includeUntitled:
+                includeUntitled |> Option.value(~default=false),
+            }),
+          );
+        | _ =>
+          Error(
+            "Unexpected arguments for $saveAll: "
+            ++ Yojson.Safe.to_string(args),
+          )
+        }
+
       | "$startFileSearch" =>
         switch (args) {
         | `List([

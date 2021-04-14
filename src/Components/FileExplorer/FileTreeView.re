@@ -72,9 +72,9 @@ let nodeView =
   let tooltipText = {
     let path = node.path;
     switch (decoration) {
-    | Some((decoration: Feature_Decorations.Decoration.t)) =>
-      path ++ " • " ++ decoration.tooltip
-    | None => path
+    | Some(decoration: Feature_Decorations.Decoration.t) =>
+      FpExp.toString(path) ++ " • " ++ decoration.tooltip
+    | None => FpExp.toString(path)
     };
   };
 
@@ -93,6 +93,7 @@ let getFileIcon = Model.getFileIcon;
 
 let make =
     (
+      ~config,
       ~rootName,
       ~isFocused,
       ~iconTheme,
@@ -100,7 +101,7 @@ let make =
       ~focusedIndex,
       ~treeView:
          Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
-      ~active: option(string),
+      ~active: option(FpExp.t(FpExp.absolute)),
       ~theme,
       ~decorations: Feature_Decorations.model,
       ~font: UiFont.t,
@@ -110,6 +111,7 @@ let make =
       (),
     ) => {
   <Component_Accordion.VimTree
+    config
     title=rootName
     showCount=false
     isFocused
@@ -136,13 +138,16 @@ let make =
               font
               iconTheme
               languageInfo
-              path={data.path}
+              path={FpExp.toString(data.path)}
             />,
             data,
           )
         };
       let decorations =
-        Feature_Decorations.getDecorations(~path=data.path, decorations);
+        Feature_Decorations.getDecorations(
+          ~path=FpExp.toString(data.path),
+          decorations,
+        );
       <nodeView
         icon
         isFocus=selected

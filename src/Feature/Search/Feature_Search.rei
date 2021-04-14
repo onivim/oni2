@@ -28,7 +28,7 @@ type outmsg =
 
 let update: (~previewEnabled: bool, model, msg) => (model, option(outmsg));
 
-let resetFocus: model => model;
+let resetFocus: (~query: option(string), model) => model;
 
 let subscriptions:
   (
@@ -42,6 +42,7 @@ let subscriptions:
 
 let make:
   (
+    ~config: Oni_Core.Config.resolver,
     ~theme: ColorTheme.Colors.t,
     ~uiFont: UiFont.t,
     ~iconTheme: IconTheme.t,

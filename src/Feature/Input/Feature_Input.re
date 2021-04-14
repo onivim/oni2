@@ -2,6 +2,9 @@ open Oni_Core;
 open Utility;
 module Log = (val Log.withNamespace("Oni2.Feature.Input"));
 
+module KeybindingsLoader = KeybindingsLoader;
+module Schema = Schema;
+
 // TODO: Move to Service_Input
 module ReveryKeyConverter = ReveryKeyConverter;
 
@@ -168,11 +171,13 @@ module Configuration = {
 type outmsg =
   | Nothing
   | DebugInputShown
+  | ErrorNotifications(list(string))
   | MapParseError({
       fromKeys: string,
       toKeys: string,
       error: string,
     })
+  | OpenFile(FpExp.t(FpExp.absolute))
   | TimedOut;
 
 type execute =
@@ -183,140 +188,21 @@ type execute =
       })
     | VimExCommand(string);
 
-module Schema = {
-  [@deriving show]
-  type keybinding =
-    | Binding({
-        key: string,
-        command: string,
-        arguments: Yojson.Safe.t,
-        condition: WhenExpr.t,
-      })
-    | Remap({
-        allowRecursive: bool,
-        fromKeys: string,
-        toKeys: string,
-        condition: WhenExpr.t,
-      });
-
-  type resolvedKeybinding =
-    | ResolvedBinding({
-        matcher: EditorInput.Matcher.t,
-        command: InputStateMachine.execute,
-        condition: WhenExpr.ContextKeys.t => bool,
-        rawCondition: WhenExpr.t,
-      })
-    | ResolvedRemap({
-        allowRecursive: bool,
-        matcher: EditorInput.Matcher.t,
-        toKeys: list(EditorInput.KeyPress.t),
-        condition: WhenExpr.ContextKeys.t => bool,
-        rawCondition: WhenExpr.t,
-      });
-
-  let resolvedToString =
-    fun
-    | ResolvedBinding({matcher, command, rawCondition, _}) => {
-        Printf.sprintf(
-          "Binding - command: %s matcher: %s when: %s",
-          InputStateMachine.executeToString(command),
-          EditorInput.Matcher.toString(matcher),
-          WhenExpr.show(rawCondition),
-        );
-      }
-    | ResolvedRemap({allowRecursive, matcher, toKeys, rawCondition, _}) => {
-        Printf.sprintf(
-          "Remap - rec: %b, matcher: %s to: %s when: %s",
-          allowRecursive,
-          EditorInput.Matcher.toString(matcher),
-          toKeys
-          |> List.map(EditorInput.KeyPress.toString)
-          |> String.concat(","),
-          WhenExpr.show(rawCondition),
-        );
-      };
-
-  let bind = (~key, ~command, ~condition) =>
-    Binding({key, command, arguments: `Null, condition});
-
-  let bindWithArgs = (~arguments, ~key, ~command, ~condition) =>
-    Binding({key, command, arguments, condition});
-
-  let mapCommand = (~f, keybinding: keybinding) => {
-    switch (keybinding) {
-    | Binding(binding) => Binding({...binding, command: f(binding.command)})
-    | Remap(_) as remap => remap
-    };
-  };
-
-  let clear = (~key as _) => failwith("Not implemented");
-
-  let remap = (~allowRecursive, ~fromKeys, ~toKeys, ~condition) =>
-    Remap({allowRecursive, fromKeys, toKeys, condition});
-
-  let resolve = keybinding => {
-    let evaluateCondition = (whenExpr, contextKeys) => {
-      WhenExpr.evaluate(
-        whenExpr,
-        WhenExpr.ContextKeys.getValue(contextKeys),
-      );
-    };
-
-    switch (keybinding) {
-    | Binding({key, command, arguments, condition}) =>
-      let maybeMatcher =
-        EditorInput.Matcher.parse(~explicitShiftKeyNeeded=true, key);
-      maybeMatcher
-      |> Stdlib.Result.map(matcher => {
-           ResolvedBinding({
-             matcher,
-             command: InputStateMachine.NamedCommand({command, arguments}),
-             condition: evaluateCondition(condition),
-             rawCondition: condition,
-           })
-         });
-
-    | Remap({allowRecursive, fromKeys, condition, toKeys}) =>
-      let evaluateCondition = (whenExpr, contextKeys) => {
-        WhenExpr.evaluate(
-          whenExpr,
-          WhenExpr.ContextKeys.getValue(contextKeys),
-        );
-      };
-
-      let maybeMatcher =
-        EditorInput.Matcher.parse(~explicitShiftKeyNeeded=true, fromKeys);
-
-      let maybeKeys =
-        EditorInput.KeyPress.parse(~explicitShiftKeyNeeded=true, toKeys);
-
-      ResultEx.map2(
-        (matcher, toKeys) => {
-          ResolvedRemap({
-            allowRecursive,
-            matcher,
-            condition: evaluateCondition(condition),
-            toKeys,
-            rawCondition: condition,
-          })
-        },
-        maybeMatcher,
-        maybeKeys,
-      );
-    };
-  };
-};
-
 [@deriving show]
 type command =
   | ShowDebugInput
   | EnableKeyDisplayer
-  | DisableKeyDisplayer;
+  | DisableKeyDisplayer
+  | OpenKeybindingsFile;
 
 [@deriving show]
 type msg =
   | Command(command)
   | KeybindingsUpdated([@opaque] list(Schema.resolvedKeybinding))
+  | KeybindingsReloaded({
+      bindings: [@opaque] list(Schema.resolvedKeybinding),
+      errors: list(string),
+    })
   | VimMap(Vim.Mapping.t)
   | VimUnmap({
       mode: Vim.Mapping.mode,
@@ -340,6 +226,7 @@ type model = {
   // Keep track of the input tick - an incrementing number on every input event -
   // such that we can provide a unique id for the timer to flush on timeout.
   inputTick: int,
+  keybindingLoader: KeybindingsLoader.t,
 };
 
 type uniqueId = InputStateMachine.uniqueId;
@@ -349,7 +236,7 @@ let incrementTick = ({inputTick, _} as model) => {
   inputTick: inputTick + 1,
 };
 
-let initial = keybindings => {
+let initial = (~loader, keybindings) => {
   open Schema;
   let inputStateMachine =
     keybindings
@@ -387,7 +274,13 @@ let initial = keybindings => {
          },
          InputStateMachine.empty,
        );
-  {inputStateMachine, userBindings: [], keyDisplayer: None, inputTick: 0};
+  {
+    inputStateMachine,
+    userBindings: [],
+    keyDisplayer: None,
+    inputTick: 0,
+    keybindingLoader: loader,
+  };
 };
 
 type effect =
@@ -448,6 +341,11 @@ let disable = ({inputStateMachine, _} as model) => {
 let enable = ({inputStateMachine, _} as model) => {
   ...model,
   inputStateMachine: InputStateMachine.enable(inputStateMachine),
+};
+
+let notifyFileSaved = (path, {keybindingLoader, _} as model) => {
+  ...model,
+  keybindingLoader: KeybindingsLoader.notifyFileSaved(path, keybindingLoader),
 };
 
 let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
@@ -647,6 +545,13 @@ module Internal = {
 
 let update = (msg, model) => {
   switch (msg) {
+  | Command(OpenKeybindingsFile) =>
+    let eff =
+      model.keybindingLoader
+      |> KeybindingsLoader.getFilePath
+      |> Option.map(path => OpenFile(path))
+      |> Option.value(~default=Nothing);
+    (model, eff);
   | Command(ShowDebugInput) => (model, DebugInputShown)
   | Command(DisableKeyDisplayer) => (
       {...model, keyDisplayer: None},
@@ -726,6 +631,14 @@ let update = (msg, model) => {
       Nothing,
     )
 
+  | KeybindingsReloaded({bindings, errors}) =>
+    let outmsg =
+      switch (errors) {
+      | [] => Nothing
+      | errors => ErrorNotifications(errors)
+      };
+    (Internal.updateKeybindings(bindings, model), outmsg);
+
   | Timeout => (model, TimedOut)
 
   | KeyDisplayer(msg) =>
@@ -739,6 +652,14 @@ let update = (msg, model) => {
 
 module Commands = {
   open Feature_Commands.Schema;
+
+  let openDefaultKeybindingsFile =
+    define(
+      ~category="Preferences",
+      ~title="Open keybindings file",
+      "workbench.action.openDefaultKeybindingsFile",
+      Command(OpenKeybindingsFile),
+    );
 
   let showInputState =
     define(
@@ -769,7 +690,11 @@ module Commands = {
 
 // SUBSCRIPTION
 
-let sub = (~config, {keyDisplayer, inputTick, inputStateMachine, _}) => {
+let sub =
+    (
+      ~config,
+      {keyDisplayer, inputTick, inputStateMachine, keybindingLoader, _},
+    ) => {
   let keyDisplayerSub =
     switch (keyDisplayer) {
     | None => Isolinear.Sub.none
@@ -793,7 +718,13 @@ let sub = (~config, {keyDisplayer, inputTick, inputStateMachine, _}) => {
       }
     };
 
-  [keyDisplayerSub, timeoutSub] |> Isolinear.Sub.batch;
+  let loaderSub =
+    KeybindingsLoader.sub(keybindingLoader)
+    |> Isolinear.Sub.map(((bindings, errors)) => {
+         KeybindingsReloaded({bindings, errors})
+       });
+
+  [keyDisplayerSub, timeoutSub, loaderSub] |> Isolinear.Sub.batch;
 };
 
 module ContextKeys = {
@@ -805,7 +736,12 @@ module ContextKeys = {
 
 module Contributions = {
   let commands =
-    Commands.[showInputState, enableKeyDisplayer, disableKeyDisplayer];
+    Commands.[
+      showInputState,
+      enableKeyDisplayer,
+      disableKeyDisplayer,
+      openDefaultKeybindingsFile,
+    ];
 
   let configuration = Configuration.[leaderKey.spec, timeout.spec];
 

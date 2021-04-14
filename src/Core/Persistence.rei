@@ -34,7 +34,7 @@ module Store: {
 
   let instantiate:
     (
-      ~storeFolder: Fp.t(Fp.absolute)=?,
+      ~storeFolder: FpExp.t(FpExp.absolute)=?,
       string,
       unit => list(entry('state))
     ) =>

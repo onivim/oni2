@@ -16,7 +16,6 @@ module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 module Config = EditorConfiguration;
 
 module FontIcon = Oni_Components.FontIcon;
-module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostics = Feature_Diagnostics;
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 
@@ -64,7 +63,7 @@ module Styles = {
 
 let minimap =
     (
-      ~bufferHighlights,
+      ~vim,
       ~cursorPosition: CharacterPosition.t,
       ~colors,
       ~config,
@@ -111,7 +110,7 @@ let minimap =
       diagnostics=diagnosticsMap
       getTokensForLine={getTokensForLine(
         ~editor,
-        ~bufferHighlights,
+        ~vim,
         ~cursorLine=
           EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
         ~colors,
@@ -122,7 +121,7 @@ let minimap =
       selection=selectionRanges
       showSlider=showMinimapSlider
       colors
-      bufferHighlights
+      vim
       diffMarkers
       languageSupport
     />
@@ -146,7 +145,7 @@ let%component make =
                 ~editor: Editor.t,
                 ~uiFont: Oni_Core.UiFont.t,
                 ~theme,
-                ~bufferHighlights,
+                ~vim,
                 ~bufferSyntaxHighlights,
                 ~diagnostics,
                 ~tokenTheme,
@@ -191,6 +190,10 @@ let%component make =
       ) => {
     lastDimensions := Some((width, height));
     onEditorSizeChanged(editorId, width, height);
+  };
+
+  let onBoundingBoxChanged = bbox => {
+    dispatch(Msg.BoundingBoxChanged({bbox: bbox}));
   };
 
   let showYankHighlightAnimation = Config.yankHighlightEnabled.get(config);
@@ -275,11 +278,10 @@ let%component make =
         ~uiFont,
         ~editorFont,
         ~model=languageSupport,
-        ~diagnostics,
         ~tokenTheme,
         ~grammars=grammarRepository,
         ~buffer,
-        ~editorId=Some(editorId),
+        ~editorId,
         ~languageInfo,
       );
 
@@ -322,7 +324,10 @@ let%component make =
   let horizontalScrollbarThickness =
     Editor.horizontalScrollbarThickness(editor);
 
-  <View style={Styles.container(~colors)} onDimensionsChanged>
+  <View
+    style={Styles.container(~colors)}
+    onDimensionsChanged
+    onBoundingBoxChanged>
     gutterView
     <SurfaceView
       buffer
@@ -335,7 +340,7 @@ let%component make =
       selectionRanges
       matchingPairs
       maybeYankHighlights
-      bufferHighlights
+      vim
       languageSupport
       languageConfiguration
       bufferSyntaxHighlights
@@ -353,7 +358,7 @@ let%component make =
        ? <minimap
            editor
            diagnosticsMap
-           bufferHighlights
+           vim
            cursorPosition
            colors
            config
@@ -395,7 +400,7 @@ let%component make =
         height=pixelHeight
         diagnostics=diagnosticsMap
         colors
-        bufferHighlights
+        vim
         languageSupport
       />
     </View>

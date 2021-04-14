@@ -64,12 +64,18 @@ let count: model => int;
 
 let maxSeverity: list(Diagnostic.t) => Severity.t;
 
+let moveMarkers:
+  (~newBuffer: Oni_Core.Buffer.t, ~markerUpdate: MarkerUpdate.t, model) =>
+  model;
+
 /*
  * Get all diagnostics for a buffer
  */
 let getDiagnostics: (model, Buffer.t) => list(Diagnostic.t);
 let getDiagnosticsAtPosition:
   (model, Buffer.t, CharacterPosition.t) => list(Diagnostic.t);
+let getDiagnosticsInRange:
+  (model, Buffer.t, CharacterRange.t) => list(Diagnostic.t);
 let getDiagnosticsMap: (model, Buffer.t) => IntMap.t(list(Diagnostic.t));
 
 let getAllDiagnostics: model => list((Uri.t, Diagnostic.t));

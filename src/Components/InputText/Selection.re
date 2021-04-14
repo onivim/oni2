@@ -17,6 +17,10 @@ let create = (~text: string, ~anchor: int, ~focus: int): t => {
   {anchor: safeAnchor, focus: safeFocus};
 };
 
+let all = text => {
+  create(~text, ~anchor=0, ~focus=String.length(text));
+};
+
 let length = (selection: t): int => {
   abs(selection.focus - selection.anchor);
 };

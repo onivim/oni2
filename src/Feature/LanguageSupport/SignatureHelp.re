@@ -215,9 +215,7 @@ module Session = {
           switch (msg) {
           | Ok(
               Some(
-                (
-                  {signatures, activeSignature, activeParameter, _}: Exthost.SignatureHelp.Response.t
-                ),
+                {signatures, activeSignature, activeParameter, _}: Exthost.SignatureHelp.Response.t,
               ),
             ) =>
             InfoReceived({signatures, activeSignature, activeParameter})

@@ -13,11 +13,11 @@
    Oni2.feature.logging Oni2.component.inputText Oni2.feature.search
    Oni2.feature.menubar Oni2.feature.sideBar Oni2.feature.syntax
    Oni2.feature.language_support Oni2.feature.editor Oni2.feature.fileSystem
-   Oni2.feature.pane Oni2.feature.registers Oni2.feature.scm
-   Oni2.feature.sneak Oni2.feature.snippets Oni2.feature.statusbar
-   Oni2.feature.terminal Oni2.feature.titlebar Oni2.feature.modals
-   Oni2.feature.layout Oni2.feature.vim Oni2.feature.workspace
-   Oni2.feature.autoupdate Oni2.feature.registration Oni2.feature.zoom Fzy
-   textmate Oni2.editor-core-types)
+   Oni2.feature.pane Oni2.feature.quickmenu Oni2.feature.registers
+   Oni2.feature.scm Oni2.feature.sneak Oni2.feature.snippets
+   Oni2.feature.statusbar Oni2.feature.terminal Oni2.feature.titlebar
+   Oni2.feature.modals Oni2.feature.layout Oni2.feature.vim Oni2.feature.zen
+   Oni2.feature.workspace Oni2.feature.autoupdate Oni2.feature.registration
+   Oni2.feature.zoom Fzy textmate Oni2.editor-core-types)
  (preprocess
   (pps lwt_ppx ppx_deriving_yojson ppx_deriving.show)))

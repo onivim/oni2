@@ -17,6 +17,7 @@ type msg;
 
 type outmsg =
   | Nothing
+  | PaneButton(pane)
   | OpenFile({
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
@@ -83,7 +84,6 @@ let setOutput: (string, option(string), model) => model;
 module View: {
   let make:
     (
-      ~key: Brisk_reconciler.Key.t=?,
       ~config: Config.resolver,
       ~isFocused: bool,
       ~theme: Oni_Core.ColorTheme.Colors.t,

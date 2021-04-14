@@ -187,6 +187,19 @@ module Editor = {
       "editor.findMatchHighlightBackground",
       {light: hex("#EA5C0055"), dark: hex("#EA5C0055"), hc: unspecified},
     );
+
+  let lightBulbForeground =
+    define(
+      "editorLightBulb.foreground",
+      {light: hex("#DDB100"), dark: hex("#FFCC00"), hc: hex("#FFCC00")},
+    );
+
+  let lightBulbAutoFixForeground =
+    define(
+      "editorLightBulbAutoFix.foreground",
+      {light: hex("#007ACC"), dark: hex("#75BEFF"), hc: hex("#75BEFF")},
+    );
+
   let lineHighlightBackground =
     define("editor.lineHighlightBackground", all(unspecified));
   let selectionBackground =
@@ -206,6 +219,8 @@ module Editor = {
     findMatchBackground,
     findMatchBorder,
     findMatchHighlightsBackground,
+    lightBulbForeground,
+    lightBulbAutoFixForeground,
     lineHighlightBackground,
     selectionBackground,
     wordHighlightBackground,
@@ -585,9 +600,9 @@ module EditorSuggestWidget = {
       all(ref(EditorWidget.background)),
     );
   let border =
-    define("editorSuggestWidget,border", all(ref(EditorWidget.border)));
+    define("editorSuggestWidget.border", all(ref(EditorWidget.border)));
   let foreground =
-    define("editorSuggestWidget.background", all(ref(Editor.foreground)));
+    define("editorSuggestWidget.foreground", all(ref(Editor.foreground)));
   let highlightForeground =
     define(
       "editorSuggestWidget.highlightForeground",
@@ -602,6 +617,7 @@ module EditorSuggestWidget = {
   let defaults = [
     background,
     border,
+    foreground,
     highlightForeground,
     selectedBackground,
   ];

@@ -25,6 +25,8 @@ let paste: (~text: string, model) => model;
 let set: (~cursor: int=?, ~text: string, model) => model;
 let setPlaceholder: (~placeholder: string, model) => model;
 
+let selectAll: model => model;
+
 let isCursorAtEnd: model => bool;
 
 let cursorPosition: model => int;
@@ -38,6 +40,7 @@ module View: {
       ~model: model,
       ~theme: ColorTheme.Colors.t,
       ~fontSize: float=?,
+      ~shadowOpacity: float=?,
       ~fontFamily: Revery.Font.Family.t=?,
       ~placeholderColor: Revery.Color.t=?,
       ~cursorColor: Revery.Color.t=?,

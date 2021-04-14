@@ -26,7 +26,14 @@ let visibleEditors: model => list(Editor.t);
 let editorById: (int, model) => option(Editor.t);
 let removeEditor: (int, model) => option(model);
 
-let split: (~editor: Editor.t, [ | `Horizontal | `Vertical], model) => model;
+let split:
+  (
+    ~shouldReuse: bool,
+    ~editor: Editor.t,
+    [ | `Horizontal | `Vertical],
+    model
+  ) =>
+  model;
 
 let activeEditor: model => Editor.t;
 let activeGroupEditors: model => list(Editor.t);
@@ -118,6 +125,10 @@ module Commands: {
   let moveRight: Command.t(msg);
   let moveUp: Command.t(msg);
   let moveDown: Command.t(msg);
+  let moveTopLeft: Command.t(msg);
+  let moveBottomRight: Command.t(msg);
+  let cycleForward: Command.t(msg);
+  let cycleBackward: Command.t(msg);
 
   let rotateForward: Command.t(msg);
   let rotateBackward: Command.t(msg);

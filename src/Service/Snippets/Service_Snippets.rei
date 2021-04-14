@@ -2,6 +2,7 @@
 // 1) Load snippets from path (implement snippetFromFiles)
 // 2) Add placeholder text for snippet file, chain up open
 // 3) Expand `snippetFromFiles` to include user snippets, too
+open Oni_Core;
 
 module SnippetWithMetadata: {
   [@deriving show]
@@ -17,7 +18,7 @@ module SnippetFileMetadata: {
   [@deriving show]
   type t = {
     language: option(string),
-    filePath: Fp.t(Fp.absolute),
+    filePath: FpExp.t(FpExp.absolute),
     isCreated: bool,
   };
 };
@@ -25,18 +26,18 @@ module SnippetFileMetadata: {
 module Effect: {
   let createSnippetFile:
     (
-      ~filePath: Fp.t(Fp.absolute),
-      result(Fp.t(Fp.absolute), string) => 'msg
+      ~filePath: FpExp.t(FpExp.absolute),
+      result(FpExp.t(FpExp.absolute), string) => 'msg
     ) =>
     Isolinear.Effect.t('msg);
 
   let clearCachedSnippets:
-    (~filePath: Fp.t(Fp.absolute)) => Isolinear.Effect.t(_);
+    (~filePath: FpExp.t(FpExp.absolute)) => Isolinear.Effect.t(_);
 
   let snippetFromFiles:
     (
       ~fileType: string,
-      ~filePaths: list(Fp.t(Fp.absolute)),
+      ~filePaths: list(FpExp.t(FpExp.absolute)),
       list(SnippetWithMetadata.t) => 'msg
     ) =>
     Isolinear.Effect.t('msg);
@@ -54,7 +55,7 @@ module Sub: {
     (
       ~uniqueId: string,
       ~fileType: string,
-      ~filePaths: list(Fp.t(Fp.absolute)),
+      ~filePaths: list(FpExp.t(FpExp.absolute)),
       list(SnippetWithMetadata.t) => 'msg
     ) =>
     Isolinear.Sub.t('msg);

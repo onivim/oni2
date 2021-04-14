@@ -13,6 +13,8 @@ let application = Revery.Environment.isMac ? OSX.application : file;
 
 let edit = menu(~order=200, ~uniqueId="edit", ~parent=None, "Edit");
 
+let go = menu(~order=250, ~uniqueId="go", ~parent=None, "Go");
+
 let view = menu(~order=300, ~uniqueId="view", ~parent=None, "View");
 
 let help = menu(~order=1000, ~uniqueId="help", ~parent=None, "Help");
@@ -105,7 +107,7 @@ module Items = {
 
 let menus =
   (Revery.Environment.isMac ? [OSX.application] : [])
-  @ [file, edit, view, help];
+  @ [file, edit, go, view, help];
 
 let groups = [
   group(~order=100, ~parent=file, Items.File.[newFile]),

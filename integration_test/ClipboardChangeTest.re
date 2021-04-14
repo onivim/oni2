@@ -1,26 +1,32 @@
+open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
 // Regression test for #2694
 runTest(~name="ClipboardChangeTest", ({dispatch, wait, runEffects, _}) => {
-  wait(
-    ~name="Set configuration to always yank to clipboard", (state: State.t) => {
-    let configuration = state.configuration;
+  wait(~name="Set configuration to always yank to clipboard", _ => {
+    let transformer =
+      ConfigurationTransformer.setField(
+        "vim.useSystemClipboard",
+        `List([`String("yank")]),
+      );
     dispatch(
-      ConfigurationSet({
-        ...configuration,
-        default: {
-          ...configuration.default,
-          vimUseSystemClipboard: {
-            yank: true,
-            delete: false,
-            paste: false,
-          },
-        },
-      }),
+      Configuration(Feature_Configuration.Testing.transform(transformer)),
     );
     runEffects();
     true;
+  });
+
+  wait(~name="Wait for configuration to update (1)", (state: State.t) => {
+    Feature_Configuration.Legacy.getValue(
+      c => c.vimUseSystemClipboard,
+      state.config,
+    )
+    == Feature_Configuration.LegacyConfigurationValues.{
+         yank: true,
+         delete: false,
+         paste: false,
+       }
   });
 
   dispatch(KeyboardInput({isText: true, input: "i"}));
@@ -70,23 +76,29 @@ runTest(~name="ClipboardChangeTest", ({dispatch, wait, runEffects, _}) => {
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
-  wait(~name="Set configuration to yank on deletes", (state: State.t) => {
-    let configuration = state.configuration;
+  wait(~name="Set configuration to yank on deletes", _ => {
+    let transformer =
+      ConfigurationTransformer.setField(
+        "vim.useSystemClipboard",
+        `List([`String("delete")]),
+      );
     dispatch(
-      ConfigurationSet({
-        ...configuration,
-        default: {
-          ...configuration.default,
-          vimUseSystemClipboard: {
-            yank: false,
-            delete: true,
-            paste: false,
-          },
-        },
-      }),
+      Configuration(Feature_Configuration.Testing.transform(transformer)),
     );
     runEffects();
     true;
+  });
+
+  wait(~name="Wait for configuration to update (2)", (state: State.t) => {
+    Feature_Configuration.Legacy.getValue(
+      c => c.vimUseSystemClipboard,
+      state.config,
+    )
+    == Feature_Configuration.LegacyConfigurationValues.{
+         yank: false,
+         delete: true,
+         paste: false,
+       }
   });
 
   setClipboard(None);

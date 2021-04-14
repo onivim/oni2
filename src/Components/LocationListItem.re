@@ -84,8 +84,9 @@ module View = {
             <unstyled
               text={Printf.sprintf(
                 " [%d, %d]",
-                item.location.line |> EditorCoreTypes.LineNumber.toZeroBased,
-                item.location.character |> CharacterIndex.toInt,
+                // For UI: We should be showing one-based locations
+                item.location.line |> EditorCoreTypes.LineNumber.toOneBased,
+                (item.location.character |> CharacterIndex.toInt) + 1,
               )}
             />
           </Opacity>

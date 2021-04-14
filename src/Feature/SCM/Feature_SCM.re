@@ -219,6 +219,14 @@ type model = {
   focus: Focus.t,
 };
 
+let count = ({providers, _}) => {
+  providers
+  |> List.fold_left(
+       (count, provider: Provider.t) => {count + provider.count},
+       0,
+     );
+};
+
 let resetFocus = model => {...model, focus: Focus.initial};
 
 let initial = {
@@ -404,7 +412,15 @@ module Effects = {
           resultLines =>
             switch (resultLines) {
             | Error(_) => GetOriginalContentFailed({bufferId: bufferId})
-            | Ok(lines) => GotOriginalContent({bufferId, lines})
+            | Ok(lines) =>
+              // If the file is empty, it's either untracked, ignored, or totally empty when adding -
+              // in any of these cases, we don't want to render diff markers.
+              // https://github.com/onivim/oni2/issues/3355
+              if (lines != [|""|]) {
+                GotOriginalContent({bufferId, lines});
+              } else {
+                GetOriginalContentFailed({bufferId: bufferId});
+              }
             },
         fileSystem,
         client,

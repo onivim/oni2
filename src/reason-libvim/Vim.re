@@ -183,6 +183,7 @@ let runWith = (~context: Context.t, f) => {
   Options.setTabSize(context.tabSize);
   Options.setInsertSpaces(context.insertSpaces);
 
+  let prevSearchString = Search.getSearchPattern();
   let oldBuf = Buffer.getCurrent();
   let prevMode = Mode.trySet(context.mode);
   let prevModified = Buffer.isModified(oldBuf);
@@ -206,6 +207,12 @@ let runWith = (~context: Context.t, f) => {
   //let newMode = Mode.current();
   let newModified = Buffer.isModified(newBuf);
   let newLineEndings = Buffer.getLineEndings(newBuf);
+
+  let newSearchString = Search.getSearchPattern();
+
+  if (newSearchString != prevSearchString) {
+    queueEffect(SearchStringChanged(newSearchString));
+  };
 
   // Apply additional cursors
   let mode =
@@ -266,8 +273,15 @@ let _onAutocommand = (autoCommand: Types.autocmd, buffer: Buffer.t) => {
 
 let _onBufferChanged =
     (buffer: Buffer.t, startLine: int, endLine: int, extra: int) => {
+  let shouldAdjustCursorPosition = BufferUpdateTracker.shouldAdjustCursors();
   let update =
-    BufferUpdate.createIncremental(~buffer, ~startLine, ~endLine, ~extra);
+    BufferUpdate.createIncremental(
+      ~shouldAdjustCursorPosition,
+      ~buffer,
+      ~startLine,
+      ~endLine,
+      ~extra,
+    );
 
   BufferInternal.notifyUpdate(buffer);
 
@@ -337,7 +351,7 @@ let _onWriteFailure = (reason, buffer) => {
 };
 
 let _onStopSearch = () => {
-  queue(() => Event.dispatch((), Listeners.stopSearchHighlight));
+  queueEffect(Effect.SearchClearHighlights);
 };
 
 let _onUnhandledEscape = () => {
@@ -888,6 +902,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
                Undo.saveRegion(lineNumber - 1, lineNumber + 1);
                // Clear out range, and replace with current line
                Buffer.setLines(
+                 ~shouldAdjustCursors=false,
                  ~start=range.start.line,
                  ~stop=EditorCoreTypes.LineNumber.(range.start.line + 1),
                  ~lines=[|updatedLine|],

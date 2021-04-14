@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 let isSpace =
   fun
   | ' '
@@ -7,16 +9,87 @@ let isSpace =
   | '\t' => true
   | _ => false;
 
-/** [contains(query, str)] returns true if [str] contains the substring [query], false otherwise. */
-let contains = (query, str) => {
+let findFirst = (~query, str) => {
   let re = Str.regexp_string(query);
-  try({
-    let _: int = Str.search_forward(re, str, 0);
-    true;
-  }) {
-  | Not_found => false
+  try(Some(Str.search_forward(re, str, 0))) {
+  | Not_found => None
   };
 };
+
+/** [contains(query, str)] returns true if [str] contains the substring [query], false otherwise. */
+let contains = (query, str) => {
+  findFirst(~query, str) != None;
+};
+
+let characterCount = (~startByte, ~endByte, str) => {
+  let len = String.length(str);
+
+  let rec loop = (count, idx) =>
+    if (idx >= endByte || idx >= len) {
+      count;
+    } else {
+      loop(count + 1, Zed_utf8.next(str, idx));
+    };
+
+  loop(0, startByte);
+};
+
+let characterToByte = (~index: EditorCoreTypes.CharacterIndex.t, str) => {
+  let idx = CharacterIndex.toInt(index);
+  let len = String.length(str);
+  let rec loop = (accBytes, count) =>
+    if (accBytes >= len) {
+      len;
+    } else if (count >= idx) {
+      accBytes;
+    } else {
+      let nextByte = Zed_utf8.next(str, accBytes);
+      loop(nextByte, count + 1);
+    };
+
+  loop(0, 0) |> ByteIndex.ofInt;
+};
+
+let firstDifference = (a, b) => {
+  let lenA = String.length(a);
+  let lenB = String.length(b);
+
+  let rec loop = idx =>
+    if (idx >= lenA || idx >= lenB) {
+      if (lenA == lenB) {
+        None;
+      } else {
+        Some(idx);
+      };
+    } else {
+      let (charA, idxA) = Zed_utf8.extract_next(a, idx);
+      let (charB, _) = Zed_utf8.extract_next(b, idx);
+
+      if (!Uchar.equal(charA, charB)) {
+        Some(idx);
+      } else {
+        loop(idxA);
+      };
+    };
+
+  loop(0);
+};
+
+let%test_module "splitAt" =
+  (module
+   {
+     let%test "no difference" = {
+       firstDifference("", "") == None;
+     };
+
+     let%test "difference at first byte" = {
+       firstDifference("a", "b") == Some(0);
+     };
+
+     let%test "unicode-aware difference" = {
+       firstDifference("κόσμε", "κόσε") == Some(7);
+     };
+   });
 
 let splitAt = (~byte: int, str) => {
   let len = String.length(str);
@@ -439,3 +512,7 @@ let escapeSpaces: string => string =
     List.init(String.length(s), String.get(s))
     |> List.map(c => (c == ' ' ? "\\" : "") ++ String.make(1, c))
     |> String.concat("");
+
+let replace = (~match, ~replace, str) => {
+  Str.global_replace(Str.regexp_string(match), replace, str);
+};

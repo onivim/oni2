@@ -171,7 +171,8 @@ module DocumentsAndEditors = {
 module ExtensionService = {
   open Json.Encode;
   let activateByEvent = (~event, client) => {
-    Client.notify(
+    Client.request(
+      ~decoder=Json.Decode.null,
       ~rpcName="ExtHostExtensionService",
       ~method="$activateByEvent",
       ~args=`List([`String(event)]),
@@ -238,6 +239,80 @@ module FileSystemEventService = {
 };
 
 module LanguageFeatures = {
+  let provideCodeActionsByRange =
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~range: OneBasedRange.t,
+        ~context: CodeAction.Context.t,
+        client,
+      ) => {
+    let decoder = Json.Decode.(nullable(CodeAction.List.decode));
+    Client.request(
+      ~decoder,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideCodeActions",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          range |> Json.Encode.encode_value(OneBasedRange.encode),
+          context |> Json.Encode.encode_value(CodeAction.Context.encode),
+        ]),
+      client,
+    );
+  };
+
+  let provideCodeActionsBySelection =
+      (~handle, ~resource, ~selection, ~context, client) => {
+    let decoder = Json.Decode.(nullable(CodeAction.List.decode));
+    Client.request(
+      ~decoder,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideCodeActions",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          selection |> Json.Encode.encode_value(Selection.encode),
+          context |> Json.Encode.encode_value(CodeAction.Context.encode),
+        ]),
+      client,
+    );
+  };
+
+  let resolveCodeAction = (~handle, ~id, client) => {
+    let decoder = Json.Decode.(nullable(WorkspaceEdit.decode));
+    Client.request(
+      ~decoder,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$resolveCodeAction",
+      ~args=
+        `List([
+          `Int(handle),
+          id |> Json.Encode.encode_value(ChainedCacheId.encode),
+        ]),
+      client,
+    );
+  };
+
+  let releaseCodeActions = (~handle, ~cacheId, client) => {
+    Client.notify(
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$releaseCodeActions",
+      ~args=
+        `List([
+          `Int(handle),
+          cacheId |> Json.Encode.encode_value(CacheId.encode),
+        ]),
+      client,
+    );
+  };
+
   let provideCodeLenses = (~handle: int, ~resource: Uri.t, client) => {
     let decoder = Json.Decode.(nullable(CodeLens.List.decode));
 
@@ -315,9 +390,14 @@ module LanguageFeatures = {
   };
 
   let resolveCompletionItem =
-      (~handle: int, ~chainedCacheId: ChainedCacheId.t, client) => {
+      (
+        ~handle: int,
+        ~chainedCacheId: ChainedCacheId.t,
+        ~defaultRange: SuggestItem.SuggestRange.t,
+        client,
+      ) => {
     Client.request(
-      ~decoder=SuggestItem.Dto.decode,
+      ~decoder=SuggestItem.Dto.decode(~defaultRange),
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$resolveCompletionItem",
@@ -553,8 +633,21 @@ module LanguageFeatures = {
   };
 
   let resolveRenameLocation = (~handle, ~resource, ~position) => {
+    let decoder =
+      Json.Decode.(
+        one_of([
+          (
+            "RenameLocation.ok",
+            nullable(RenameLocation.decode) |> map(rl => Ok(rl)),
+          ),
+          (
+            "RenameLocation.rejection",
+            RejectReason.decode |> map(Result.error),
+          ),
+        ])
+      );
     Client.request(
-      ~decoder=Json.Decode.(nullable(RenameLocation.decode)),
+      ~decoder,
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$resolveRenameLocation",

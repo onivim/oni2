@@ -15,3 +15,7 @@ let (<): (t, t) => bool;
 let (>): (t, t) => bool;
 let (<=): (t, t) => bool;
 let (>=): (t, t) => bool;
+
+let max: (t, t) => t;
+
+let compare: (t, t) => int;

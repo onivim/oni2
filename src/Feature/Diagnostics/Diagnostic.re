@@ -24,9 +24,10 @@ let create = (~range, ~message, ~severity) => {range, message, severity};
 let explode = (buffer, diagnostic) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
   let measure = n => {
-    EditorCoreTypes.LineNumber.toZeroBased(n) < lineCount
+    let lineIdx = EditorCoreTypes.LineNumber.toZeroBased(n);
+    lineIdx >= 0 && lineIdx < lineCount
       ? buffer
-        |> Buffer.getLine(EditorCoreTypes.LineNumber.toZeroBased(n))
+        |> Buffer.getLine(lineIdx)
         // TODO: Is this correct, for a character range?
         |> BufferLine.lengthInBytes
       : 0;

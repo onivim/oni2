@@ -1,16 +1,13 @@
+open Oni_Core;
+
 module Api: {
-  let fold:
+  let glob:
     (
-      ~includeFiles: string => bool,
-      ~excludeDirectory: string => bool,
-      ~initial: 'a,
-      ('a, string) => 'a,
+      ~maxCount: int=?,
+      ~includeFiles: string=?,
+      ~excludeDirectories: string=?,
       string
     ) =>
-    Lwt.t('a);
-
-  let glob:
-    (~includeFiles: string=?, ~excludeDirectories: string=?, string) =>
     Lwt.t(list(string));
 
   let rmdir: (~recursive: bool=?, string) => Lwt.t(unit);
@@ -38,7 +35,10 @@ module Effect: {
 
   module Dialog: {
     let openFolder:
-      (~initialDirectory: string=?, option(Fp.t(Fp.absolute)) => 'msg) =>
+      (
+        ~initialDirectory: string=?,
+        option(FpExp.t(FpExp.absolute)) => 'msg
+      ) =>
       Isolinear.Effect.t('msg);
   };
 };

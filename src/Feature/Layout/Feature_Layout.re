@@ -170,11 +170,11 @@ let update = (~focus, model, msg) => {
 
   | Command(SplitVertical) =>
     let editor = Feature_Editor.Editor.copy(activeEditor(model));
-    (split(~editor, `Vertical, model), SplitAdded);
+    (split(~shouldReuse=false, ~editor, `Vertical, model), SplitAdded);
 
   | Command(SplitHorizontal) =>
     let editor = Feature_Editor.Editor.copy(activeEditor(model));
-    (split(~editor, `Horizontal, model), SplitAdded);
+    (split(~shouldReuse=false, ~editor, `Horizontal, model), SplitAdded);
 
   | Command(CloseActiveEditor) =>
     switch (removeActiveEditor(model)) {
@@ -307,6 +307,69 @@ let update = (~focus, model, msg) => {
     | Some(Bottom)
     | None => (model, Nothing)
     }
+
+  | Command(MoveTopLeft) =>
+    switch (focus) {
+    | Some(Center) =>
+      let layout = model |> activeLayout;
+      let newActiveGroupId = layout |> activeTree |> Layout.topLeft;
+      (
+        updateActiveLayout(
+          layout => {...layout, activeGroupId: newActiveGroupId},
+          model,
+        ),
+        Nothing,
+      );
+
+    | Some(Left)
+    | Some(Right)
+    | Some(Bottom)
+    | None => (model, Nothing)
+    }
+  | Command(MoveBottomRight) =>
+    switch (focus) {
+    | Some(Center) =>
+      let layout = model |> activeLayout;
+      let newActiveGroupId = layout |> activeTree |> Layout.bottomRight;
+      (
+        updateActiveLayout(
+          layout => {...layout, activeGroupId: newActiveGroupId},
+          model,
+        ),
+        Nothing,
+      );
+
+    | Some(Left)
+    | Some(Right)
+    | Some(Bottom)
+    | None => (model, Nothing)
+    }
+  | Command(CycleForward) =>
+    let layout = model |> activeLayout;
+    let newActiveGroupId =
+      layout
+      |> activeTree
+      |> Layout.cycle(~direction=`Forward, ~activeId=layout.activeGroupId);
+    (
+      updateActiveLayout(
+        layout => {...layout, activeGroupId: newActiveGroupId},
+        model,
+      ),
+      Nothing,
+    );
+  | Command(CycleBackward) =>
+    let layout = model |> activeLayout;
+    let newActiveGroupId =
+      layout
+      |> activeTree
+      |> Layout.cycle(~direction=`Backward, ~activeId=layout.activeGroupId);
+    (
+      updateActiveLayout(
+        layout => {...layout, activeGroupId: newActiveGroupId},
+        model,
+      ),
+      Nothing,
+    );
 
   | Command(RotateForward) =>
     switch (focus) {
@@ -608,6 +671,26 @@ module Commands = {
       Command(MoveDown),
     );
 
+  let moveTopLeft =
+    define(
+      ~category="View",
+      ~title="Focus Top Left Window",
+      "window.moveTopLeft",
+      Command(MoveTopLeft),
+    );
+
+  let moveBottomRight =
+    define(
+      ~category="View",
+      ~title="Focus Bottom Right Window",
+      "window.moveBottomRight",
+      Command(MoveBottomRight),
+    );
+
+  let cycleForward = define("window.cycleForward", Command(CycleForward));
+
+  let cycleBackward = define("window.cycleBackward", Command(CycleBackward));
+
   let decreaseSize =
     define(
       ~category="View",
@@ -785,6 +868,10 @@ module Contributions = {
       moveRight,
       moveUp,
       moveDown,
+      moveTopLeft,
+      moveBottomRight,
+      cycleForward,
+      cycleBackward,
       increaseSize,
       decreaseSize,
       increaseHorizontalSize,

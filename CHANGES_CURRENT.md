@@ -1,57 +1,73 @@
 ### Features 
 
-- #3024 - Snippet Support - Multi-select handler
-- #3047, #3052, #3056, #3059, #3061, #3064, #3105 - Snippets: Core Feature Work
-- #3067 - Snippets: Integrate snippets provided by extensions
-- #3090 - Snippets: Add insert snippet command
-- #3105 - Snippets: Implement configuration setting
-- #3132 - Snippets: User snippet editing
+- #3284 - Definition: Add 'editor.action.revealDefinitionAside' command (fixes #3261)
+- #2881 - Extensions: Initial rename support
+- #3348 - Code Actions: Implement extension host protocol for quick fix / code actions
+- #3352 - Keybindings: Add default keybinding for open configuration (related #1423, thanks @LiHRaM !)
+- #3381 - Language Support: Symbols - implement go-to buffer symbol menu
+- #3387 - Code Actions: Implement context menu for quick fixes
 
 ### Bug Fixes
 
-- #3008 - SCM: Fix index-out-of-bound exception when rendering diff markers
-- #3007 - Extensions: Show 'missing dependency' activation error to user
-- #3011 - Vim: Visual Block - Handle 'I' and 'A' in visual block mode (fixes #1633)
-- #3016 - Extensions: Fix memory leak in extension host language features (fixes #3009)
-- #3019 - Extensions: Fix activation error for Ionide.Ionide-fsharp extension (fixes #2974)
-- #3020 - Vim: Fix incsearch cursor movement (fixes #2968)
-- #3023 - Keybindings: Fix default - add quotes around "when" (thanks @noahhaasis!)
-- #3027 - Vim: Command-line completion - fix 'set no' completion
-- #3029 - Editor: Fix rubber-banding while scrolling with high key-repeat set
-- #3021 - Configuration: Fix zoom being reset when saving configuration (fixes #2294)
-- #3051 - Editor: Make horizontal / vertical scrollbars on editor surface configurable (fixes #3036)
-- #3030 - Extensions: Implement workspace storage (related #2676)
-- #3052 - Input: Fix key being 'eaten' after executing remapped key (fixes #3048)
-- #3060 - Snippets: Fix parser handling of stand-alone curly braces
-- #3044 - Search: Add `search.exclude` configuration option (fixes #2115 - thanks @joseeMDS!)
-- #3066 - Vim / Input: Fix ':map' condition (fixes #3049)
-- #3055, #3088 - Extensions: Implement 'vscode.openFolder' handler (related #3042)
-- #3076 - Terminal: Add `ONIVIM_TERMINAL` environment variable (fixes #3068)
-- #3078 - Auto-Update: Notify user when update fails due to missing key (fixes #3070)
-- #3086 - Snippets: Fix clash with completion / document highlights feature
-- #3085 - Snippets: Fix drop-shadow calculation at end of buffer
-- #3091 - Snippets: Fix auto-closing pairs when placeholders are on same line
-- #3102 - Vim / Input: Implement mapping timeout (fixes #2850)
-- #3121 - Snippets: Add support for the $TM_SELECTED_TEXT snippet variable
-- #3122 - Signature Help: Close signature help when traversing snippet placeholders
-- #3123 - Extensions: Fix failure to install extensions over 10MB from open-vsx
-- #3054 - Extensions: Completion - Implement 'isIncomplete' handler (fixes #3022, #2359)
-- #3129 - Snippets: Replace visual/select range on insert
-- #3057 - Theming: Turn down shadow intensity for light themes (related #3095)
-- #3133 - Completion: Implement shift+escape to close all popups w/o switching modes (fixes #3120)
-- #3134 - Snippets: Only show snippet visualizer for active editor
-- #3135 - Snippets: Convert choices to placeholders
-- #3137 - Snippets: Fix error parsing some snippets in the React TS/JS extensions
+- #3289 - Extensions: Fix logs location path provided to extension (related #3268)
+- #3290 - Symbols: Fix issues focusing nodes in symbol outline view (fixes #2002)
+- #3292 - Vim: Fix control+d/control+u behavior in explorer
+- #3295 - Formatting: Make formatting notifications ephemeral
+- #3297 - Diagnostics: Fix potential crash when deleting lines with diagnostics
+- #3298 - Completion: Sort ordering improvements (related #3283)
+- #3301 - Formatting: Fix crash in default formatter with negative indentation levels
+- #3302 - Auto-Indent: Implement $setLanguageConfiguration handler (related to #3288)
+- #3300 - Formatting: Fix format edits containing a trailing newline (related to #3288)
+- #3307 - UX: Bring back 'workbench.tree.indent' configuration setting (fixes #3305)
+- #3309 - Completion: Fix off-by-one keyword / snippet completion
+- #3310 - Snippets: Fix parse error for printf/sprintf snippets
+- #3287 - Search: Initiate search automatically when text is selected (fixes #3277)
+- #3308 - Completion: Allow case-insensitive matches in scoring (fixes #3136)
+- #3317 - Extensions: Fix haskell files at root not loading language integration (related #2380)
+- #3318 - Completion: Show full incomplete results list (fixes #2583)
+- #3329 - Formatting: Fix trailing newline being introduced by some providers (fixes #3320)
+- #3331 - Editor: Fix crash when manipulating Unicode characters
+- #3327, #3329 - Formatting: Fix trailing newline being introduced by some providers (fixes #3320)
+- #3338 - SCM: Show changes badge in dock (fixes #3315)
+- #3341 - Diagnostics: Use one-based positions in UI
+- #3342 - Completion: Use completion kind instead of insert text rules for sorting
+- #3346 - Extensions: Fix parse errors for progress and updateConfigurationOption APIs (related #3321)
+- #3326 - Lifecycle: Delay process termination until cleanup actions have run (fixes #3270, thanks @timbertson !)
+- #3359 - SCM: Don't show diffs for untracked or ignored files (fixes #3355)
+- #3361 - Clipboard: Add command+v binding for paste in normal mode (fixes #3353)
+- #3364 - Input: Add context key to differentiate sidebar panels
+- #3365 - Explorer: Add manual refresh command and experimental `files.useExperimentalFileWatcher` setting (fixes #3350)
+- #3371 - Explorer: Fix regression in auto-focus behavior
+- #3376 - Vim: Missing Control+W,W bindings (related #1721)
+- #3379 - Rename: Handle parsing 'rejectReason'
+- #3382 - Input: Handle `<capslock>` key
+- #3389 - Editor: Render diagnostics with squiggly lines (fixes #2827)
+- #3394 - Extensions: Fix error parsing extension manifest with boolean when express (related #3388)
+- #3390 - Diagnostics: Some diagnostics wouldn't show in hover UI (related #3231)
+- #3403 - Code Actions: Add 'editor.lightBulb.enabled' configuration setting
+- #3396 - Code Actions: Fix some issues around light bulb rendering
 
 ### Performance
 
-- #3116 - SCM: Recalculate diff markers less frequently (only on buffer updates)
+- #3316 - Transport: Re-use Luv.Buffer.t when possible for reads
+- #3374 - FileWatcher: Don't stat on file changes (related #3373)
+- #3378 - libuv: Run event loop once each Revery iteration
 
 ### Documentation
 
-### Infrastructure / Refactoring
+- #3293 - Formatting: Initial formatting documentation
+- #3296 - Emmet: Add documentation on using Emmet for tsx/jsx files (fixes #3283)
 
-- #3101 - Dependency: reason-fzy -> 485cae1
-- #3096 - OS: Add logging for `readdir` path (related #3092)
-- #3097 - Configuration: Remove unused `workbench.tree.indent` setting
-- #3115 - Dependency: vscode-exthost -> 1.53.0
+### Refactoring
+
+- #3303 - Language Support: Move language metadata into Feature_LanguageSupport (related #3288)
+- #3330 - Diagnostics: Add regression test for #3233
+- #3334 - Dependency: Revery -> b746d68 (thanks @timbertson !)
+- #3385 - Dependency: Revery -> 4337e2c
+- #3408 - Dependency: Revery -> 373b087
+
+### Infrastructure
+
+- #3319 - Dependency: esy-macdylibbundler -> 0.4.5001 to support Big Sur (thanks @brdoney !)
+- #3313 - Packaging: Fix macOS Big Sur release bundling issues (fixes #2813, thanks @brdoney !)
+- #3369 - CI: Install python3 on CentOS dockerfile

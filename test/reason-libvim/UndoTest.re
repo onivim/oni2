@@ -12,7 +12,11 @@ describe("Undo", ({describe, _}) => {
       let buffer = resetBuffer();
 
       Vim.Testing.Undo.saveRegion(0, 4);
-      Buffer.setLines(~lines=[|"a", "b", "c"|], buffer);
+      Buffer.setLines(
+        ~shouldAdjustCursors=false,
+        ~lines=[|"a", "b", "c"|],
+        buffer,
+      );
 
       let index0 = LineNumber.zero;
       let index1 = LineNumber.(zero + 1);
@@ -40,10 +44,18 @@ describe("Undo", ({describe, _}) => {
 
     test("undo is clamped to buffer size", ({expect, _}) => {
       let buffer = resetBuffer();
-      Buffer.setLines(~lines=[|"d", "e", "f"|], buffer);
+      Buffer.setLines(
+        ~shouldAdjustCursors=false,
+        ~lines=[|"d", "e", "f"|],
+        buffer,
+      );
 
       Vim.Testing.Undo.saveRegion(-1, 5);
-      Buffer.setLines(~lines=[|"a", "b", "c"|], buffer);
+      Buffer.setLines(
+        ~shouldAdjustCursors=false,
+        ~lines=[|"a", "b", "c"|],
+        buffer,
+      );
 
       let index0 = LineNumber.zero;
       let index1 = LineNumber.(zero + 1);
@@ -63,9 +75,17 @@ describe("Undo", ({describe, _}) => {
     test("undo partial buffer", ({expect, _}) => {
       let buffer = resetBuffer();
 
-      Buffer.setLines(~lines=[|"0", "1", "2"|], buffer);
+      Buffer.setLines(
+        ~shouldAdjustCursors=false,
+        ~lines=[|"0", "1", "2"|],
+        buffer,
+      );
       Vim.Testing.Undo.saveRegion(0, 2);
-      Buffer.setLines(~lines=[|"a", "b", "c"|], buffer);
+      Buffer.setLines(
+        ~shouldAdjustCursors=false,
+        ~lines=[|"a", "b", "c"|],
+        buffer,
+      );
 
       let index0 = LineNumber.zero;
       let index1 = LineNumber.(zero + 1);

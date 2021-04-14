@@ -2,6 +2,22 @@ let safeConcat = lists => lists |> List.fold_left(List.append, []);
 
 let safeMap = (f, list) => list |> List.rev |> List.rev_map(f);
 
+let boundedLength = (~max, list) => {
+  let rec loop = (count, remaining) =>
+    if (count == max) {
+      max;
+    } else {
+      switch (remaining) {
+      | [] => count
+      | [_hd, ...tail] => loop(count + 1, tail)
+      };
+    };
+
+  loop(0, list);
+};
+
+let nth_opt = (idx, list) => List.nth_opt(list, idx);
+
 /**
  * Return the last element in a list.
  */
