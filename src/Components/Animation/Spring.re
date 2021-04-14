@@ -101,7 +101,12 @@ let getTarget = ({target, _}) => target;
 
 let set = (~instant: bool, ~position: float, model) => {
   switch (model.startTime) {
-  | None => {...model, target: position, tick: model.tick + 1}
+  | None => {
+      ...model,
+      spring: PhysicalSpring.create(position),
+      target: position,
+      tick: model.tick + 1,
+    }
   | Some(_) when instant => {
       ...model,
       target: position,
