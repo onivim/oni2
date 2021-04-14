@@ -143,6 +143,15 @@ let%component make =
 
   let scrollbar = {
     let maxHeight = count * rowHeight - viewportHeight;
+    prerr_endline(
+      Printf.sprintf(
+        "COUNT: %d ROWHEIGHT: %d VIEWPORT HEIGHT: %d maxHeight: %d",
+        count,
+        rowHeight,
+        viewportHeight,
+        maxHeight,
+      ),
+    );
     let thumbHeight =
       viewportHeight
       * viewportHeight

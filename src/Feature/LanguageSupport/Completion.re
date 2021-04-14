@@ -1172,7 +1172,7 @@ module View = {
       top(int_of_float(lineHeight +. 0.5)),
       left(0),
       Style.width(width),
-      Style.height(height),
+      Style.height(height + 2), // Add 2 to account for border!
       border(~color=colors.suggestWidgetBorder, ~width=1),
       backgroundColor(colors.suggestWidgetBackground),
     ];
@@ -1182,7 +1182,6 @@ module View = {
         ? backgroundColor(colors.suggestWidgetSelectedBackground)
         : backgroundColor(colors.suggestWidgetBackground),
       flexDirection(`Row),
-      //width(300),
     ];
 
     let icon = (~color) => [
