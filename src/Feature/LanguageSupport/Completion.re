@@ -1084,8 +1084,6 @@ module View = {
   module Constants = {
     let maxCompletionWidth = 225;
     let maxDetailWidth = 225;
-    let itemHeight = 22;
-    let maxHeight = itemHeight * 5;
     let opacity = 1.0;
     let padding = 8;
   };
@@ -1185,27 +1183,39 @@ module View = {
       backgroundColor(colors.suggestWidgetBackground),
     ];
 
-    let item = (~isFocused, ~colors: Colors.t) => [
+    let item = (~rowHeight, ~isFocused, ~colors: Colors.t) => [
       isFocused
         ? backgroundColor(colors.suggestWidgetSelectedBackground)
         : backgroundColor(colors.suggestWidgetBackground),
       flexDirection(`Row),
+      height(rowHeight),
+      justifyContent(`Center),
     ];
 
-    let icon = (~color) => [
+    let icon = (~size, ~color) => [
       flexDirection(`Row),
       justifyContent(`Center),
       alignItems(`Center),
       flexGrow(0),
       flexShrink(0),
       backgroundColor(color),
-      width(25),
-      padding(4),
+      width(size),
+      height(size),
     ];
 
-    let label = [flexGrow(1), flexShrink(0), margin(4)];
+    let label = [
+      flexGrow(1),
+      flexShrink(1),
+      marginTop(2),
+      marginHorizontal(4),
+    ];
 
-    let detail = [flexGrow(2), flexShrink(1), margin(4)];
+    let detail = [
+      flexGrow(2),
+      flexShrink(2),
+      marginTop(2),
+      marginHorizontal(4),
+    ];
 
     let text = (~highlighted=false, ~colors: Colors.t, ()) => [
       //textOverflow(`Ellipsis),
@@ -1241,6 +1251,7 @@ module View = {
         ~highlight,
         ~detail: option(string),
         ~tokenTheme,
+        ~rowHeight,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~colors: Colors.t,
         ~editorFont: Service_Font.font,
@@ -1267,8 +1278,8 @@ module View = {
       | _ => React.empty
       };
 
-    <View style={Styles.item(~isFocused, ~colors)}>
-      <View style={Styles.icon(~color=iconColor)}>
+    <View style={Styles.item(~rowHeight, ~isFocused, ~colors)}>
+      <View style={Styles.icon(~size=rowHeight, ~color=iconColor)}>
         <Codicon
           icon
           color={colors.suggestWidgetBackground}
@@ -1361,8 +1372,9 @@ module View = {
     let focused = completions.selection;
 
     let width = 500;
-    let height =
-      min(Constants.maxHeight, Array.length(items) * Constants.itemHeight);
+    let itemHeight = int_of_float(ceil(lineHeight));
+    let maxHeight = itemHeight * 5;
+    let height = min(maxHeight, Array.length(items) * itemHeight);
 
     // TODO: Bring back detail view:
     // 1) Align underneath completion
@@ -1413,7 +1425,7 @@ module View = {
       <Opacity opacity=Constants.opacity>
         <View style=innerStyleWithShadow>
           <FlatList
-            rowHeight=Constants.itemHeight
+            rowHeight=itemHeight
             initialRowsToRender=5
             count={Array.length(items)}
             theme
@@ -1431,6 +1443,7 @@ module View = {
 
               <itemView
                 isFocused={Some(index) == focused}
+                rowHeight=itemHeight
                 text
                 detail={item.detail}
                 kind
