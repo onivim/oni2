@@ -1254,8 +1254,8 @@ module View = {
       switch (detail) {
       | Some(detail) when isFocused =>
         <View style=Styles.[Style.flexDirection(`Row), ...detail]>
-          <View style=Styles.[Style.flexGrow(1), Style.flexShrink(1)] />
-          <View style=Styles.[Style.flexGrow(0), Style.flexShrink(1)]>
+          <View style=[Style.flexGrow(1), Style.flexShrink(1)] />
+          <View style=[Style.flexGrow(0), Style.flexShrink(1)]>
             <Text
               style={Styles.detailText(~tokenTheme)}
               fontFamily={editorFont.fontFamily}
