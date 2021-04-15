@@ -1259,6 +1259,11 @@ let update =
     switch (outmsg) {
     | Nothing => (state, Effect.none)
 
+    | Effect(eff) => (
+        state,
+        eff |> Isolinear.Effect.map(msg => Buffers(msg)),
+      )
+
     | ShowMenu(menuFn) =>
       let languageInfo =
         state.languageSupport |> Feature_LanguageSupport.languageInfo;

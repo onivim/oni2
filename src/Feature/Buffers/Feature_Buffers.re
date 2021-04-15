@@ -11,6 +11,7 @@ open Utility;
 module Log = (val Log.withNamespace("Oni2.Model.Buffers"));
 
 type model = {
+  autoSave: AutoSave.model,
   buffers: IntMap.t(Buffer.t),
   originalLines: IntMap.t(array(string)),
   computedDiffs: IntMap.t(DiffMarkers.t),
@@ -18,6 +19,7 @@ type model = {
 };
 
 let empty = {
+  autoSave: AutoSave.initial,
   buffers: IntMap.empty,
   originalLines: IntMap.empty,
   computedDiffs: IntMap.empty,
@@ -78,6 +80,7 @@ let configurationChanged = (~config, model) => {
     Feature_Configuration.GlobalConfiguration.Editor.largeFileOptimizations.get(
       config,
     ),
+  autoSave: AutoSave.configurationChanged(~config, model),
 };
 
 let anyModified = ({buffers, _}: model) => {
@@ -149,6 +152,7 @@ type command =
 
 [@deriving show({with_path: false})]
 type msg =
+  | AutoSave(AutoSave.msg)
   | Command(command)
   | EditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
@@ -252,7 +256,8 @@ type outmsg =
       (Exthost.LanguageInfo.t, IconTheme.t) =>
       Feature_Quickmenu.Schema.menu(msg),
     )
-  | NotifyInfo(string);
+  | NotifyInfo(string)
+  | Effect(Isolinear.Effect.t(msg));
 
 module Configuration = {
   open Config.Schema;
@@ -303,6 +308,17 @@ let guessIndentation = (~config, buffer) => {
 
 let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   switch (msg) {
+  | AutoSave(msg) =>
+    let (autoSave', outmsg) = AutoSave.update(msg, model.autoSave);
+
+    let outmsg' =
+      switch (outmsg) {
+      | AutoSave.Nothing => Nothing
+      | AutoSave.Effect(eff) =>
+        Effect(eff |> Isolinear.Effect.map(msg => AutoSave(msg)))
+      };
+    ({...model, autoSave: autoSave'}, outmsg');
+
   | EditorRequested({buffer, split, position, grabFocus, preview}) => (
       add(buffer, model),
       CreateEditor({
@@ -659,24 +675,30 @@ module Commands = {
     );
 };
 
-let sub = model =>
-  if (!model.checkForLargeFiles) {
-    Isolinear.Sub.none;
-  } else {
-    model.buffers
-    |> IntMap.bindings
-    |> List.map(snd)
-    |> List.filter((buffer: Buffer.t) => isLargeFile(model, buffer))
-    |> List.map(buffer =>
-         SubEx.value(
-           ~uniqueId=
-             "Feature_Buffers.largeFile:"
-             ++ string_of_int(Buffer.getId(buffer)),
-           LargeFileOptimizationsApplied({buffer: buffer}),
+let sub = model => {
+  let buffers = model.buffers |> IntMap.bindings |> List.map(snd);
+  let largeFileSub =
+    if (!model.checkForLargeFiles) {
+      Isolinear.Sub.none;
+    } else {
+      buffers
+      |> List.filter((buffer: Buffer.t) => isLargeFile(model, buffer))
+      |> List.map(buffer =>
+           SubEx.value(
+             ~uniqueId=
+               "Feature_Buffers.largeFile:"
+               ++ string_of_int(Buffer.getId(buffer)),
+             LargeFileOptimizationsApplied({buffer: buffer}),
+           )
          )
-       )
-    |> Isolinear.Sub.batch;
-  };
+      |> Isolinear.Sub.batch;
+    };
+
+  let autoSaveSub =
+    AutoSave.sub(~buffers, model.autoSave)
+    |> Isolinear.Sub.map(msg => AutoSave(msg));
+  [largeFileSub, autoSaveSub] |> Isolinear.Sub.batch;
+};
 
 module Contributions = {
   let configuration =
@@ -685,7 +707,8 @@ module Contributions = {
       insertSpaces.spec,
       tabSize.spec,
       indentSize.spec,
-    ];
+    ]
+    @ AutoSave.Contributions.configuration;
 
   let commands =
     Commands.[changeFiletype, detectIndentation] |> Command.Lookup.fromList;

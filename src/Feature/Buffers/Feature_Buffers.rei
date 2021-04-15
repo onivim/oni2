@@ -87,7 +87,8 @@ type outmsg =
       (Exthost.LanguageInfo.t, IconTheme.t) =>
       Feature_Quickmenu.Schema.menu(msg),
     )
-  | NotifyInfo(string);
+  | NotifyInfo(string)
+  | Effect(Isolinear.Effect.t(msg));
 
 // UPDATE
 
