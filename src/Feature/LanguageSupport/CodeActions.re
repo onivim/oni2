@@ -525,8 +525,14 @@ module Keybindings = {
   let condition = "editorTextFocus && normalMode" |> WhenExpr.parse;
 
   let contextMenuCondition =
-    "normalMode || visualMode && editorTextFocus && quickFixWidgetVisible"
-    |> WhenExpr.parse;
+    WhenExpr.And([
+      WhenExpr.Defined("editorTextFocus"),
+      WhenExpr.Defined("quickFixWidgetVisible"),
+      WhenExpr.Or([
+        WhenExpr.Defined("normalMode"),
+        WhenExpr.Defined("visualMode"),
+      ]),
+    ]);
 
   let quickFix =
     bind(
