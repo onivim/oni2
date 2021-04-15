@@ -387,8 +387,7 @@ let start =
 
   let _: unit => unit =
     Vim.Buffer.onWrite(id => {
-      prerr_endline("WRITING: " ++ string_of_int(id));
-      dispatch(Actions.Buffers(Feature_Buffers.Msg.saved(~bufferId=id)));
+      dispatch(Actions.Buffers(Feature_Buffers.Msg.saved(~bufferId=id)))
     });
 
   let _: unit => unit =
