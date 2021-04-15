@@ -1218,7 +1218,6 @@ module View = {
     ];
 
     let text = (~highlighted=false, ~colors: Colors.t, ()) => [
-      //textOverflow(`Ellipsis),
       textWrap(Revery.TextWrapping.NoWrap),
       color(
         highlighted ? colors.normalModeBackground : colors.editorForeground,
@@ -1269,16 +1268,18 @@ module View = {
     let availableWidth = width - rowHeight - padding - labelWidth;
     let remainingWidth = availableWidth > 50 ? availableWidth : 0;
 
+    let textMarginTop = 2;
+
     let maybeDetail =
       switch (detail) {
       | Some(detail) when isFocused && remainingWidth > 0 =>
         <View
           style=Style.[
             position(`Absolute),
-            top(0),
+            top(textMarginTop),
             bottom(0),
-            right(0),
-            width(remainingWidth),
+            right(8),
+            width(remainingWidth - 8),
             flexDirection(`Row),
           ]>
           <View style=Style.[flexGrow(1), flexShrink(1)] />
@@ -1321,7 +1322,7 @@ module View = {
       <View
         style=Style.[
           position(`Absolute),
-          top(0),
+          top(textMarginTop),
           bottom(0),
           left(rowHeight + 8),
           right(remainingWidth - rowHeight - 16),
