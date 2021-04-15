@@ -152,7 +152,7 @@ let reveryKeyToKeyPress =
       || name == "Right Shift"
       || name == "Left Ctrl"
       || name == "Right Ctrl") {
-    {};
+    None;
   } else {
     let shift = Revery.Key.Keymod.isShiftDown(keymod);
     let control = Revery.Key.Keymod.isControlDown(keymod);
