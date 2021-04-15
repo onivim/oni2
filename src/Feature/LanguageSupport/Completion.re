@@ -448,6 +448,8 @@ type model = {
   isSnippetMode: bool,
   acceptOnEnter: bool,
   snippetSortOrder: [ | `Bottom | `Hidden | `Inline | `Top],
+  isShadowEnabled: bool,
+  isAnimationEnabled: bool,
 };
 
 let initial = {
@@ -477,6 +479,8 @@ let initial = {
   allItems: [||],
   selection: Selection.initial,
   snippetSortOrder: `Inline,
+  isAnimationEnabled: true,
+  isShadowEnabled: true,
 };
 
 let configurationChanged = (~config, model) => {
@@ -484,6 +488,10 @@ let configurationChanged = (~config, model) => {
     ...model,
     acceptOnEnter: CompletionConfig.acceptSuggestionOnEnter.get(config),
     snippetSortOrder: CompletionConfig.snippetSuggestions.get(config),
+    isAnimationEnabled:
+      Feature_Configuration.GlobalConfiguration.animation.get(config),
+    isShadowEnabled:
+      Feature_Configuration.GlobalConfiguration.shadows.get(config),
   };
 };
 
@@ -1381,10 +1389,29 @@ module View = {
     //   | None => React.empty
     //   };
 
+    let innerStyle =
+      Styles.innerPosition(~height, ~width, ~lineHeight, ~colors);
+
+    let innerStyleWithShadow =
+      if (completions.isShadowEnabled) {
+        let color = Feature_Theme.Colors.shadow.from(theme);
+        [
+          Style.boxShadow(
+            ~xOffset=4.,
+            ~yOffset=4.,
+            ~blurRadius=12.,
+            ~spreadRadius=0.,
+            ~color,
+          ),
+          ...innerStyle,
+        ];
+      } else {
+        innerStyle;
+      };
+
     <View style={Styles.outerPosition(~x, ~y)}>
       <Opacity opacity=Constants.opacity>
-        <View
-          style={Styles.innerPosition(~height, ~width, ~lineHeight, ~colors)}>
+        <View style=innerStyleWithShadow>
           <FlatList
             rowHeight=Constants.itemHeight
             initialRowsToRender=5
