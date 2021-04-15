@@ -435,6 +435,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
     )
 
   | Saved(bufferId) =>
+    prerr_endline("Feature_buffers - saved: " ++ string_of_int(bufferId));
     let model' =
       update(bufferId, Option.map(Buffer.incrementSaveTick), model);
     let eff =
@@ -675,7 +676,7 @@ module Commands = {
     );
 };
 
-let sub = model => {
+let sub = (~isWindowFocused, model) => {
   let buffers = model.buffers |> IntMap.bindings |> List.map(snd);
   let largeFileSub =
     if (!model.checkForLargeFiles) {
@@ -695,7 +696,7 @@ let sub = model => {
     };
 
   let autoSaveSub =
-    AutoSave.sub(~buffers, model.autoSave)
+    AutoSave.sub(~isWindowFocused, ~buffers, model.autoSave)
     |> Isolinear.Sub.map(msg => AutoSave(msg));
   [largeFileSub, autoSaveSub] |> Isolinear.Sub.batch;
 };

@@ -473,7 +473,7 @@ let start =
 
     let bufferSub =
       state.buffers
-      |> Feature_Buffers.sub
+      |> Feature_Buffers.sub(~isWindowFocused=state.windowIsFocused)
       |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
 
     let quickmenuSub =

@@ -144,7 +144,7 @@ module Effects: {
     Isolinear.Effect.t(msg);
 };
 
-let sub: model => Isolinear.Sub.t(msg);
+let sub: (~isWindowFocused: bool, model) => Isolinear.Sub.t(msg);
 
 module Contributions: {
   let commands: Command.Lookup.t(msg);
