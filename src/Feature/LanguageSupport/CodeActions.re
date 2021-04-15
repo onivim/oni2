@@ -363,10 +363,58 @@ module Session = {
     | model => (model, Outmsg.Nothing);
 };
 
+module ViewModel = {
+  open Component_Animation;
+  type t = {
+    popupAnimation: Animator.t(Session.t, [ | `PopupOpen | `PopupClosed]),
+  };
+
+  let initial = {
+    popupAnimation:
+      Animator.create(~initial=`PopupClosed, session => {
+        switch (Session.lightBulb(session)) {
+        | None => `PopupClosed
+        | Some(_) => `PopupOpen
+        }
+      }),
+  };
+
+  type msg =
+    | PopupAnimation(Animator.msg);
+
+  let sub = ({popupAnimation}) => {
+    popupAnimation
+    |> Animator.sub
+    |> Isolinear.Sub.map(msg => PopupAnimation(msg));
+  };
+
+  let sync = (~isAnimationEnabled, session, viewModel) => {
+    {
+      popupAnimation:
+        Animator.set(
+          ~instant=!isAnimationEnabled,
+          session,
+          viewModel.popupAnimation,
+        ),
+    };
+  };
+
+  let update = (msg, viewModel) => {
+    switch (msg) {
+    | PopupAnimation(popupAnimationMsg) => {
+        popupAnimation:
+          Animator.update(popupAnimationMsg, viewModel.popupAnimation),
+      }
+    };
+  };
+};
+
 type model = {
   providers: list(provider),
   session: Session.t,
+  isAnimationEnabled: bool,
   isLightBulbEnabled: bool,
+  viewModel: ViewModel.t,
 };
 
 [@deriving show]
@@ -380,17 +428,22 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
-  | Session(Session.msg);
+  | Session(Session.msg)
+  | ViewModel([@opaque] ViewModel.msg);
 
 let initial = {
   providers: [],
   session: Session.initial,
   isLightBulbEnabled: true,
+  isAnimationEnabled: true,
+  viewModel: ViewModel.initial,
 };
 
 let configurationChanged = (~config, model) => {
   ...model,
   isLightBulbEnabled: Configuration.enabled.get(config),
+  isAnimationEnabled:
+    Feature_Configuration.GlobalConfiguration.animation.get(config),
 };
 
 let register =
@@ -412,15 +465,23 @@ let cursorMoved = (~editorId, ~buffer, ~cursor, model) =>
            Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
          })
       |> List.map(({handle, _}) => handle);
+
+    let session' =
+      Session.checkLightBulb(
+        ~editorId,
+        ~buffer,
+        ~positionOrSelection=Position(cursor),
+        ~handles,
+        model.session,
+      );
     {
       ...model,
-      session:
-        Session.checkLightBulb(
-          ~editorId,
-          ~buffer,
-          ~positionOrSelection=Position(cursor),
-          ~handles,
-          model.session,
+      session: session',
+      viewModel:
+        ViewModel.sync(
+          ~isAnimationEnabled=model.isAnimationEnabled,
+          session',
+          model.viewModel,
         ),
     };
   } else {
@@ -434,47 +495,66 @@ let unregister = (~handle, model) => {
 };
 
 let update = (~editorId, ~buffer, ~cursorLocation, msg, model) => {
-  switch (msg) {
-  | Session(sessionMsg) =>
-    let (session', outmsg) = Session.update(sessionMsg, model.session);
-    ({...model, session: session'}, outmsg);
+  let (model', outmsg) =
+    switch (msg) {
+    | ViewModel(msg) => (
+        {...model, viewModel: ViewModel.update(msg, model.viewModel)},
+        Outmsg.Nothing,
+      )
 
-  | Command(Cancel) => (
-      {...model, session: Session.stop(model.session)},
-      Outmsg.Nothing,
-    )
+    | Session(sessionMsg) =>
+      let (session', outmsg) = Session.update(sessionMsg, model.session);
+      ({...model, session: session'}, outmsg);
 
-  | Command(AcceptSelected) =>
-    let (session', outmsg) = Session.select(model.session);
-    ({...model, session: session'}, outmsg);
+    | Command(Cancel) => (
+        {...model, session: Session.stop(model.session)},
+        Outmsg.Nothing,
+      )
 
-  | Command(SelectNext) =>
-    let (session', outmsg) = Session.next(model.session);
-    ({...model, session: session'}, outmsg);
+    | Command(AcceptSelected) =>
+      let (session', outmsg) = Session.select(model.session);
+      ({...model, session: session'}, outmsg);
 
-  | Command(SelectPrevious) =>
-    let (session', outmsg) = Session.previous(model.session);
-    ({...model, session: session'}, outmsg);
+    | Command(SelectNext) =>
+      let (session', outmsg) = Session.next(model.session);
+      ({...model, session: session'}, outmsg);
 
-  | Command(QuickFix) =>
-    let handles =
-      model.providers
-      |> List.filter(({selector, _}) => {
-           Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
-         })
-      |> List.map(({handle, _}) => handle);
+    | Command(SelectPrevious) =>
+      let (session', outmsg) = Session.previous(model.session);
+      ({...model, session: session'}, outmsg);
 
-    // TODO: if handles are empty, show error
-    let (session', outmsg) =
-      Session.expandOrApply(
-        ~editorId,
-        ~buffer,
-        ~handles,
-        ~positionOrSelection=Position(cursorLocation),
-        model.session,
-      );
-    ({...model, session: session'}, outmsg);
-  };
+    | Command(QuickFix) =>
+      let handles =
+        model.providers
+        |> List.filter(({selector, _}) => {
+             Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
+           })
+        |> List.map(({handle, _}) => handle);
+
+      // TODO: if handles are empty, show error
+      let (session', outmsg) =
+        Session.expandOrApply(
+          ~editorId,
+          ~buffer,
+          ~handles,
+          ~positionOrSelection=Position(cursorLocation),
+          model.session,
+        );
+      ({...model, session: session'}, outmsg);
+    };
+
+  (
+    {
+      ...model',
+      viewModel:
+        ViewModel.sync(
+          ~isAnimationEnabled=model.isAnimationEnabled,
+          model'.session,
+          model'.viewModel,
+        ),
+    },
+    outmsg,
+  );
 };
 
 let sub =
@@ -490,9 +570,15 @@ let sub =
       ~client,
       codeActions,
     ) => {
-  // TODO:
-  Session.sub(~client, codeActions.session)
-  |> Isolinear.Sub.map(msg => Session(msg));
+  let viewModelSub =
+    ViewModel.sub(codeActions.viewModel)
+    |> Isolinear.Sub.map(msg => ViewModel(msg));
+
+  let sessionSub =
+    Session.sub(~client, codeActions.session)
+    |> Isolinear.Sub.map(msg => Session(msg));
+
+  [viewModelSub, sessionSub] |> Isolinear.Sub.batch;
 };
 
 module Commands = {
@@ -641,25 +727,47 @@ module View = {
           (),
         ) =>
       if (Some(editorId) == Session.editorId(model.session)) {
-        switch (Session.lightBulb(model.session)) {
-        | None => Revery.UI.React.empty
-        | Some(_pos) =>
-          let foregroundColor =
-            Feature_Theme.Colors.Editor.lightBulbForeground.from(theme);
+        model.viewModel.popupAnimation
+        |> Component_Animation.Animator.render((~prev, ~next, v) => {
+             let render = opac =>
+               if (opac < 0.1) {
+                 Revery.UI.React.empty;
+               } else {
+                 let foregroundColor =
+                   Feature_Theme.Colors.Editor.lightBulbForeground.from(theme)
+                   |> Revery.Color.multiplyAlpha(opac);
 
-          let fontSize = editorFont.fontSize;
-          <Revery.UI.View
-            style=Revery.UI.Style.[position(`Absolute), top(y), left(x)]>
-            <Revery.UI.Components.Container
-              width=24 height=24 color=Revery.Colors.transparentWhite>
-              <Oni_Core.Codicon
-                fontSize
-                color=foregroundColor
-                icon=Codicon.lightbulb
-              />
-            </Revery.UI.Components.Container>
-          </Revery.UI.View>;
-        };
+                 let fontSize = editorFont.fontSize;
+                 <Revery.UI.View
+                   style=Revery.UI.Style.[
+                     position(`Absolute),
+                     top(y),
+                     left(x),
+                     transform([
+                       Revery.UI.Transform.TranslateY(8.0 *. (1.0 -. opac)),
+                       Revery.UI.Transform.RotateX(
+                         Revery.Math.Angle.Degrees((-60.0) *. (1.0 -. opac)),
+                       ),
+                     ]),
+                   ]>
+                   <Revery.UI.Components.Container
+                     width=24 height=24 color=Revery.Colors.transparentWhite>
+                     <Oni_Core.Codicon
+                       fontSize
+                       color=foregroundColor
+                       icon=Codicon.lightbulb
+                     />
+                   </Revery.UI.Components.Container>
+                 </Revery.UI.View>;
+               };
+
+             switch (prev, next) {
+             | (`PopupOpen, `PopupOpen) => render(1.0)
+             | (`PopupClosed, `PopupClosed) => render(0.0)
+             | (`PopupOpen, `PopupClosed) => render(1.0 -. v)
+             | (`PopupClosed, `PopupOpen) => render(v)
+             };
+           });
       } else {
         Revery.UI.React.empty;
       };
