@@ -50,6 +50,7 @@
 - #3414 - Code Actions: Fix regression in control-p binding
 - #3416 - Editor: Fix word-wrap calculation with tab characters (fixes #3372)
 - #2329 - UX - Completion: Fix overflowing detail text (fixes #2264)
+- #3420 - Vim: Implement C-W, C-Q binding (related #1721)
 
 ### Performance
 
