@@ -1252,6 +1252,7 @@ module View = {
         ~detail: option(string),
         ~tokenTheme,
         ~rowHeight,
+        ~width,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~colors: Colors.t,
         ~editorFont: Service_Font.font,
@@ -1261,12 +1262,32 @@ module View = {
 
     let iconColor = kind |> kindToColor(theme);
 
+    let textWidth = Service_Font.measure(~text, editorFont);
+    let labelWidth = int_of_float(ceil(textWidth +. 0.5));
+
+    let padding = rowHeight;
+    let availableWidth = width - rowHeight - padding - labelWidth;
+    let remainingWidth = availableWidth > 50 ? availableWidth : 0;
+
     let maybeDetail =
       switch (detail) {
-      | Some(detail) when isFocused =>
-        <View style=Styles.[Style.flexDirection(`Row), ...detail]>
-          <View style=[Style.flexGrow(1), Style.flexShrink(1)] />
-          <View style=[Style.flexGrow(0), Style.flexShrink(1)]>
+      | Some(detail) when isFocused && remainingWidth > 0 =>
+        <View
+          style=Style.[
+            position(`Absolute),
+            top(0),
+            bottom(0),
+            right(0),
+            width(remainingWidth),
+            flexDirection(`Row),
+          ]>
+          <View style=Style.[flexGrow(1), flexShrink(1)] />
+          <View
+            style=Style.[
+              flexGrow(0),
+              flexShrink(0),
+              justifyContent(`Center),
+            ]>
             <Text
               style={Styles.detailText(~tokenTheme)}
               fontFamily={editorFont.fontFamily}
@@ -1279,7 +1300,17 @@ module View = {
       };
 
     <View style={Styles.item(~rowHeight, ~isFocused, ~colors)}>
-      <View style={Styles.icon(~size=rowHeight, ~color=iconColor)}>
+      <View
+        style=Style.[
+          backgroundColor(iconColor),
+          position(`Absolute),
+          top(0),
+          left(0),
+          width(rowHeight),
+          height(rowHeight),
+          justifyContent(`Center),
+          alignItems(`Center),
+        ]>
         <Codicon
           icon
           color={colors.suggestWidgetBackground}
@@ -1287,7 +1318,15 @@ module View = {
           // Might be a bug with Revery font loading / re - rendering in this case?
         />
       </View>
-      <View style=Styles.label>
+      <View
+        style=Style.[
+          position(`Absolute),
+          top(0),
+          bottom(0),
+          left(rowHeight + 8),
+          right(remainingWidth - rowHeight - 16),
+          justifyContent(`Center),
+        ]>
         <HighlightText
           highlights=highlight
           style={Styles.text(~colors, ())}
@@ -1450,6 +1489,7 @@ module View = {
                 highlight
                 theme
                 tokenTheme
+                width
                 colors
                 editorFont
               />;
