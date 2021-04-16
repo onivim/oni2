@@ -212,7 +212,51 @@ module Api = {
     copy(~source, ~target, ~overwrite) |> bind(() => unlink(source));
   };
   let mkdir = path => {
+    Log.tracef(m => m("Calling mkdirf for path: %s", path));
     path |> wrap(Luv.File.mkdir);
+  };
+
+  let mkdirp = (path: FpExp.t(FpExp.absolute)) => {
+    let rec loop = path =>
+      if (FpExp.eq(path, FpExp.root)) {
+        Lwt.return();
+      } else {
+        let parent = FpExp.dirName(path);
+        let pathStr = FpExp.toString(path);
+
+        let maybeStat = str => {
+          Lwt.catch(
+            () => stat(str) |> Lwt.map(stat => Some(stat)),
+            _exn => Lwt.return(None),
+          );
+        };
+
+        let isDirectory = (stat: Luv.File.Stat.t) => {
+          Luv.File.Mode.test([`IFDIR], stat.mode);
+        };
+
+        parent
+        |> loop
+        |> LwtEx.flatMap(() => {
+             // Does the directory already exist?
+             maybeStat(pathStr)
+           })
+        |> LwtEx.flatMap(maybeStatResult => {
+             switch (maybeStatResult) {
+             | None => mkdir(pathStr)
+             | Some(stat) when isDirectory(stat) => Lwt.return()
+             | Some(stat) =>
+               Lwt.fail_with(
+                 Printf.sprintf(
+                   "mkdirp: Path %s exists but is not a directory",
+                   pathStr,
+                 ),
+               )
+             }
+           });
+      };
+
+    loop(path);
   };
 
   let rmdir = (~recursive=true, path) => {

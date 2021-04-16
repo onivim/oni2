@@ -198,10 +198,18 @@ let update = (msg, model) => {
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(Mkdir({uri}), resolver) =>
+    let maybePath =
+      uri |> Uri.toFileSystemPath |> FpExp.absoluteCurrentPlatform;
+
     let promise =
-      uri
-      |> Uri.toFileSystemPath
-      |> Service_OS.Api.mkdir
+      maybePath
+      |> Option.map(Service_OS.Api.mkdirp)
+      |> Option.value(
+           ~default=
+             Lwt.fail_with(
+               "Exthost.mkdir - invalid path: " ++ Uri.toString(uri),
+             ),
+         )
       |> Lwt.map(() => Reply.okEmpty);
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 

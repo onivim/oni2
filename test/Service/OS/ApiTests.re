@@ -1,3 +1,4 @@
+open Oni_Core;
 open Oni_Core.Utility;
 open TestFramework;
 
@@ -37,6 +38,31 @@ describe("Service.OS.Api", ({describe, _}) => {
 
       expect.result(test).toBeOk();
     })
+  });
+  describe("mkdirp", ({test, _}) => {
+    let toFp = pathStr => {
+      switch (FpExp.absoluteCurrentPlatform(pathStr)) {
+      | Some(fp) => Lwt.return(fp)
+      | None => Lwt.fail_with("Invalid path: " ++ pathStr)
+      };
+    };
+    test("creates a directory successfully", ({expect, _}) => {
+      let test =
+        mktempdir()
+        |> bind(toFp)
+        |> bind(tempDir => {
+             let nestedDir = FpExp.At.(tempDir / "a-new-dir" / "a-nested-dir");
+             mkdirp(nestedDir) |> Lwt.map(_ => nestedDir |> FpExp.toString);
+           })
+        |> bind(stat)
+        |> Lwt.map((statResult: Luv.File.Stat.t) => {
+             expect.equal(Mode.test([`IFDIR], statResult.mode), true);
+             ();
+           })
+        |> LwtEx.sync;
+
+      expect.result(test).toBeOk();
+    });
   });
   describe("rmdir", ({test, _}) => {
     test("removes a directory successfully", ({expect, _}) => {
