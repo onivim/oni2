@@ -91,11 +91,23 @@ let update = (msg, model) => {
   switch (msg) {
   | Exthost(Stat({uri}), resolver) =>
     let promise =
-      uri
-      |> Uri.toFileSystemPath
-      |> Service_OS.Api.stat
-      |> Lwt.map(Internal.statToExthostStat)
-      |> Lwt.map(Internal.mapEncoder(Files.StatResult.encode));
+      Lwt.catch(
+        () => {
+          uri
+          |> Uri.toFileSystemPath
+          |> Service_OS.Api.stat
+          |> Lwt.map(Internal.statToExthostStat)
+          |> Lwt.map(Internal.mapEncoder(Files.StatResult.encode))
+        },
+        _exn => {
+          prerr_endline("Got failure...");
+          Exthost.Files.FileSystemError.(
+            make(Code.fileNotFound)
+            |> Lwt.return
+            |> Lwt.map(Internal.mapEncoder(encode))
+          );
+        },
+      );
 
     Lwt.on_failure(promise, _ => {
       prerr_endline("FAILED FOR: " ++ Uri.toFileSystemPath(uri))
@@ -105,24 +117,46 @@ let update = (msg, model) => {
 
   | Exthost(ReadDir({uri}), resolver) =>
     let promise =
-      uri
-      |> Uri.toFileSystemPath
-      |> Service_OS.Api.readdir
-      |> Lwt.map(List.map(Internal.dirEntryToExthostDirEntry))
-      |> Lwt.map(
-           Internal.mapEncoder(
-             Json.Encode.list(Exthost.Files.ReadDirResult.encode),
-           ),
-         );
+      Lwt.catch(
+        () => {
+          uri
+          |> Uri.toFileSystemPath
+          |> Service_OS.Api.readdir
+          |> Lwt.map(List.map(Internal.dirEntryToExthostDirEntry))
+          |> Lwt.map(
+               Internal.mapEncoder(
+                 Json.Encode.list(Exthost.Files.ReadDirResult.encode),
+               ),
+             )
+        },
+        _exn => {
+          Exthost.Files.FileSystemError.(
+            make(Code.fileNotFound)
+            |> Lwt.return
+            |> Lwt.map(Internal.mapEncoder(encode))
+          )
+        },
+      );
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(ReadFile({uri}), resolver) =>
     let promise =
-      uri
-      |> Uri.toFileSystemPath
-      |> Service_OS.Api.readFile
-      |> Lwt.map(Reply.okBuffer);
+      Lwt.catch(
+        () => {
+          uri
+          |> Uri.toFileSystemPath
+          |> Service_OS.Api.readFile
+          |> Lwt.map(Reply.okBuffer)
+        },
+        _exn => {
+          Exthost.Files.FileSystemError.(
+            make(Code.fileNotFound)
+            |> Lwt.return
+            |> Lwt.map(Internal.mapEncoder(encode))
+          )
+        },
+      );
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
