@@ -97,6 +97,10 @@ let update = (msg, model) => {
       |> Lwt.map(Internal.statToExthostStat)
       |> Lwt.map(Internal.mapEncoder(Files.StatResult.encode));
 
+    Lwt.on_failure(promise, _ => {
+      prerr_endline("FAILED FOR: " ++ Uri.toFileSystemPath(uri))
+    });
+
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(ReadDir({uri}), resolver) =>

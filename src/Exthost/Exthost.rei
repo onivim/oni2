@@ -6,6 +6,19 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module Error: {
+  // Compatible error type for us with the extension host - must be in sync with the deserialization schema:
+  // https://github.com/onivim/vscode-exthost/blob/0d6b39803352369daaa97a444ff76352d8452be2/src/vs/workbench/services/extensions/common/rpcProtocol.ts#L380
+  [@deriving show]
+  type t = {
+    name: string,
+    message: string,
+    stack: string,
+  };
+
+  let encode: Json.encoder(t);
+};
+
 module CacheId: {
   [@deriving show]
   type t;
@@ -958,6 +971,27 @@ module Files: {
       changed: list(Oni_Core.Uri.t),
       deleted: list(Oni_Core.Uri.t),
     };
+
+    let encode: Json.encoder(t);
+  };
+
+  module FileSystemError: {
+    module Code: {
+      type t;
+      let fileExists: t;
+      let fileNotFound: t;
+      let fileNotADirectory: t;
+      let fileIsADirectory: t;
+      let fileExceedsMemoryLimit: t;
+      let fileTooLarge: t;
+      let noPermissions: t;
+      let unavailable: t;
+      let unknown: t;
+    };
+
+    type t;
+
+    let make: (~message: string=?, ~stack: string=?, Code.t) => t;
 
     let encode: Json.encoder(t);
   };

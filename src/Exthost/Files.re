@@ -254,3 +254,29 @@ module FileSystemEvents = {
     );
   };
 };
+
+module FileSystemError = {
+  // File system provider error codes. Must be in sync with:
+  // https://github.com/onivim/vscode-exthost/blob/0d6b39803352369daaa97a444ff76352d8452be2/src/vs/platform/files/common/files.ts#L341
+  module Code = {
+    type t = string;
+
+    let fileExists = "EntryExists";
+    let fileNotFound = "EntryNotFound";
+    let fileNotADirectory = "EntryNotADirectory";
+    let fileIsADirectory = "EntryIsADirectory";
+    let fileExceedsMemoryLimit = "EntryExceedsMemoryLimit";
+    let fileTooLarge = "EntryTooLarge";
+    let noPermissions = "NoPermissions";
+    let unavailable = "Unavailable";
+    let unknown = "Unknown";
+  };
+
+  type t = Error.t;
+
+  let make = (~message="", ~stack="", code: Code.t) => {
+    Error.{name: code, message, stack};
+  };
+
+  let encode = Error.encode;
+};
