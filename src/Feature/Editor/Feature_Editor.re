@@ -99,12 +99,12 @@ let update = (editor, msg) => {
   | HorizontalScrollbarMouseRelease
   | VerticalScrollbarMouseRelease
   | VerticalScrollbarMouseDown => (editor, Nothing)
-  | EditorMouseDown({time, pixelX, pixelY}) => (
-      editor |> Editor.mouseDown(~time, ~pixelX, ~pixelY),
+  | EditorMouseDown({altKey, time, pixelX, pixelY}) => (
+      editor |> Editor.mouseDown(~altKey, ~time, ~pixelX, ~pixelY),
       Nothing,
     )
-  | EditorMouseUp({time, pixelX, pixelY}) => (
-      editor |> Editor.mouseUp(~time, ~pixelX, ~pixelY),
+  | EditorMouseUp({altKey, time, pixelX, pixelY}) => (
+      editor |> Editor.mouseUp(~altKey, ~time, ~pixelX, ~pixelY),
       Nothing,
     )
   | InlineElementSizeChanged({key, line, uniqueId, height}) => (
@@ -127,6 +127,10 @@ let update = (editor, msg) => {
   | MouseHovered =>
     let maybeCharacter = Editor.getCharacterUnderMouse(editor);
     (editor, MouseHovered(maybeCharacter));
+
+  | BoundingBoxChanged({bbox}) =>
+    let editor' = Editor.setBoundingBox(bbox, editor);
+    (editor', Nothing);
 
   | ModeChanged({allowAnimation, mode, effects}) =>
     let handleScrollEffect = (~count, ~direction, editor) => {

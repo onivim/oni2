@@ -22,6 +22,18 @@ let update:
   ) =>
   (model, outmsg);
 
+// SUBSCRIPTION
+
+let sub:
+  (
+    ~config: Config.resolver,
+    ~contextKeys: WhenExpr.ContextKeys.t,
+    ~commands: Command.Lookup.t(_),
+    ~input: Feature_Input.model,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
+
 module Global = Global;
 
 module View: {
@@ -39,3 +51,13 @@ module View: {
     ) =>
     Revery.UI.element;
 };
+
+// CONFIGURATION
+
+module Configuration: {
+  let visibility: Config.Schema.setting([ | `visible | `hidden]);
+};
+
+// CONTRIBUTIONS
+
+module Contributions: {let configuration: list(Config.Schema.spec);};

@@ -12,13 +12,14 @@ type t = {
 let create =
     (
       ~fontFamily: Revery.Font.Family.t,
+      ~fontWeight: Revery.Font.Weight.t,
       ~fontSize: float,
       ~features: list(Harfbuzz.feature),
       ~smoothing: Revery.Font.Smoothing.t,
     ) => {
   let loadedFont =
     fontFamily
-    |> Revery.Font.Family.toSkia(Revery.Font.Weight.Normal)
+    |> Revery.Font.Family.toSkia(fontWeight)
     |> Revery.Font.load
     |> Result.to_option
     |> OptionEx.lazyDefault(() => {

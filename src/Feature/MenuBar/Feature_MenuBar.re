@@ -3,12 +3,63 @@ open MenuBar;
 
 module Colors = Feature_Theme.Colors;
 
+module Configuration = {
+  open Config.Schema;
+
+  module Codec: {
+    let menuBarVisibility:
+      Config.Schema.codec(
+        [
+          // | `default
+          | `visible
+          // | `toggle
+          | `hidden
+          // | `compact
+        ],
+      );
+  } = {
+    let menuBarVisibility =
+      custom(
+        ~decode=
+          Json.Decode.(
+            string
+            |> map(
+                 fun
+                 | "default" => `visible
+                 | "visible" => `visible
+                 | "toggle" => `visible
+                 | "hidden" => `hidden
+                 | "compact" => `visible
+                 | _ => `visible,
+               )
+          ),
+        ~encode=
+          Json.Encode.(
+            fun
+            // | `default => string("default")
+            | `visible => string("visible")
+            // | `toggle => string("toggle")
+            | `hidden => string("hidden")
+          ),
+        // | `compact => string("compact")
+      );
+  };
+
+  let visibility =
+    setting(
+      "window.menuBarVisibility",
+      Codec.menuBarVisibility,
+      ~default=`visible,
+    );
+};
+
 [@deriving show]
 type msg =
   | MouseClicked({uniqueId: string})
   | MouseOver({uniqueId: string})
   | MouseOut({uniqueId: string})
-  | ContextMenu(Component_ContextMenu.msg(string));
+  | ContextMenu(Component_ContextMenu.msg(string))
+  | NativeMenu({command: string});
 
 type session = {
   activePath: string,
@@ -91,6 +142,8 @@ let update = (~contextKeys, ~commands, msg, model) => {
         model;
       };
     (model', Nothing);
+
+  | NativeMenu({command}) => (model, ExecuteCommand({command: command}))
 
   | ContextMenu(contextMenuMsg) =>
     let (activeSession', eff) =
@@ -326,4 +379,23 @@ module View = {
 
     <View style={Styles.container(bgColor)}> menuItems </View>;
   };
+};
+
+// SUBSCRIPTIOn
+
+let sub = (~config, ~contextKeys, ~commands, ~input, model) => {
+  let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
+  NativeMenu.sub(
+    ~config,
+    ~context=contextKeys,
+    ~input,
+    ~toMsg=command => NativeMenu({command: command}),
+    ~builtMenu,
+  );
+};
+
+// CONTRIBUTIONS
+
+module Contributions = {
+  let configuration = Configuration.[visibility.spec];
 };

@@ -4,12 +4,12 @@ open Oni_Core.Utility;
 open Config.Schema;
 
 module CustomDecoders: {
+  let autoClosingPairs: Config.Schema.codec([ | `LanguageDefined | `Never]);
   let whitespace:
     Config.Schema.codec([ | `All | `Boundary | `Selection | `None]);
   let lineNumbers:
     Config.Schema.codec([ | `On | `Relative | `RelativeOnly | `Off]);
   let time: Config.Schema.codec(Time.t);
-  let fontSize: Config.Schema.codec(float);
   let color: Config.Schema.codec(Revery.Color.t);
   let wordWrap: Config.Schema.codec([ | `Off | `On]);
 } = {
@@ -75,6 +75,41 @@ module CustomDecoders: {
         ),
     );
 
+  let autoClosingPairs =
+    custom(
+      ~decode=
+        Json.Decode.(
+          one_of([
+            (
+              "autoClosingPairs.bool",
+              bool
+              |> map(
+                   fun
+                   | false => `Never
+                   | true => `LanguageDefined,
+                 ),
+            ),
+            (
+              "autoClosingPairs.string",
+              string
+              |> map(str => {
+                   switch (String.lowercase_ascii(str)) {
+                   | "never" => `Never
+                   | "languagedefined" => `LanguageDefined
+                   | _ => `Never
+                   }
+                 }),
+            ),
+          ])
+        ),
+      ~encode=
+        Json.Encode.(
+          fun
+          | `Never => string("never")
+          | `LanguageDefined => string("languagedefined")
+        ),
+    );
+
   let whitespace =
     custom(
       ~decode=
@@ -97,19 +132,6 @@ module CustomDecoders: {
           | `Selection => string("selection")
           | `All => string("all")
         ),
-    );
-
-  let fontSize =
-    custom(
-      ~decode=
-        Json.Decode.(
-          float
-          |> map(size => {
-               size < Constants.minimumFontSize
-                 ? Constants.minimumFontSize : size
-             })
-        ),
-      ~encode=Json.Encode.float,
     );
 
   let lineNumbers =
@@ -239,6 +261,15 @@ module VimSettings = {
 
 open CustomDecoders;
 
+module Codecs = Feature_Configuration.GlobalConfiguration.Codecs;
+
+let autoClosingPairs =
+  setting(
+    "editor.autoClosingBrackets",
+    CustomDecoders.autoClosingPairs,
+    ~default=`LanguageDefined,
+  );
+
 let detectIndentation =
   setting("editor.detectIndentation", bool, ~default=true);
 
@@ -247,10 +278,29 @@ let fontFamily =
     ~vim=VimSettings.guifont,
     "editor.fontFamily",
     string,
-    ~default="JetBrainsMono-Regular.ttf",
+    ~default=Constants.defaultFontFile,
   );
-let fontLigatures = setting("editor.fontLigatures", bool, ~default=true);
-let fontSize = setting("editor.fontSize", fontSize, ~default=14.);
+
+let fontSmoothing =
+  setting(
+    "editor.fontSmoothing",
+    custom(~encode=FontSmoothing.encode, ~decode=FontSmoothing.decode),
+    ~default=FontSmoothing.Default,
+  );
+
+let fontLigatures =
+  setting(
+    "editor.fontLigatures",
+    Codecs.fontLigatures,
+    ~default=FontLigatures.enabled,
+  );
+let fontSize = setting("editor.fontSize", Codecs.fontSize, ~default=14.);
+let fontWeight =
+  setting(
+    "editor.fontWeight",
+    Codecs.fontWeight,
+    ~default=Revery.Font.Weight.Normal,
+  );
 let lineHeight =
   setting(
     ~vim=VimSettings.lineSpace,
@@ -258,8 +308,6 @@ let lineHeight =
     custom(~decode=LineHeight.decode, ~encode=LineHeight.encode),
     ~default=LineHeight.default,
   );
-let largeFileOptimization =
-  setting("editor.largeFileOptimizations", bool, ~default=true);
 let enablePreview =
   setting("workbench.editor.enablePreview", bool, ~default=true);
 let highlightActiveIndentGuide =
@@ -279,6 +327,13 @@ let renderIndentGuides =
 let renderWhitespace =
   setting("editor.renderWhitespace", whitespace, ~default=`Selection);
 let rulers = setting("editor.rulers", list(int), ~default=[]);
+
+let verticalScrollbarSize =
+  setting("editor.scrollbar.verticalScrollbarSize", int, ~default=15);
+
+let horizontalScrollbarSize =
+  setting("editor.scrollbar.horizontalScrollbarSize", int, ~default=8);
+
 let scrolloff =
   setting(
     "editor.cursorSurroundingLines",
@@ -298,7 +353,7 @@ let smoothScroll =
 let tabSize = setting("editor.tabSize", int, ~default=4);
 
 let wordWrap =
-  setting("editor.wordWrap", ~vim=VimSettings.wrap, wordWrap, ~default=`Off);
+  setting("editor.wordWrap", ~vim=VimSettings.wrap, wordWrap, ~default=`On);
 
 let wordWrapColumn = setting("editor.wordWrapColumn", int, ~default=80);
 
@@ -346,14 +401,17 @@ module Experimental = {
 };
 
 let contributions = [
+  autoClosingPairs.spec,
   detectIndentation.spec,
   fontFamily.spec,
   fontLigatures.spec,
   fontSize.spec,
+  fontSmoothing.spec,
+  fontWeight.spec,
   lineHeight.spec,
-  largeFileOptimization.spec,
   enablePreview.spec,
   highlightActiveIndentGuide.spec,
+  horizontalScrollbarSize.spec,
   indentSize.spec,
   insertSpaces.spec,
   lineNumbers.spec,
@@ -367,6 +425,7 @@ let contributions = [
   tabSize.spec,
   wordWrap.spec,
   wordWrapColumn.spec,
+  verticalScrollbarSize.spec,
   yankHighlightColor.spec,
   yankHighlightDuration.spec,
   yankHighlightEnabled.spec,

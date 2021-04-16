@@ -25,7 +25,12 @@ module Styles = {
   // Minor adjustment to align with text
   let folder = [marginTop(4)];
 
-  let item = [flexDirection(`Row), flexGrow(1), alignItems(`Center)];
+  let item = [
+    flexDirection(`Row),
+    flexGrow(1),
+    flexShrink(1),
+    alignItems(`Center),
+  ];
 
   let text = (~isFocus, ~isActive, ~decoration, ~theme) => [
     color(
@@ -49,6 +54,7 @@ module Styles = {
     // Minor adjustment to align with seti-icon
     marginTop(4),
     textWrap(TextWrapping.NoWrap),
+    textOverflow(`Ellipsis),
   ];
 };
 
@@ -72,20 +78,22 @@ let nodeView =
   let tooltipText = {
     let path = node.path;
     switch (decoration) {
-    | Some((decoration: Feature_Decorations.Decoration.t)) =>
-      path ++ " • " ++ decoration.tooltip
-    | None => path
+    | Some(decoration: Feature_Decorations.Decoration.t) =>
+      FpExp.toString(path) ++ " • " ++ decoration.tooltip
+    | None => FpExp.toString(path)
     };
   };
 
   <Tooltip text=tooltipText style=Styles.item>
-    icon
-    <Text
-      text={node.displayName}
-      style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme)}
-      fontFamily={font.family}
-      fontSize=12.
-    />
+    <View style=Revery.UI.Style.[flexGrow(0), flexShrink(0)]> icon </View>
+    <View style=Revery.UI.Style.[flexGrow(1), flexShrink(1)]>
+      <Text
+        text={node.displayName}
+        style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme)}
+        fontFamily={font.family}
+        fontSize=12.
+      />
+    </View>
   </Tooltip>;
 };
 
@@ -93,6 +101,7 @@ let getFileIcon = Model.getFileIcon;
 
 let make =
     (
+      ~config,
       ~rootName,
       ~isFocused,
       ~iconTheme,
@@ -100,7 +109,7 @@ let make =
       ~focusedIndex,
       ~treeView:
          Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
-      ~active: option(string),
+      ~active: option(FpExp.t(FpExp.absolute)),
       ~theme,
       ~decorations: Feature_Decorations.model,
       ~font: UiFont.t,
@@ -110,6 +119,7 @@ let make =
       (),
     ) => {
   <Component_Accordion.VimTree
+    config
     title=rootName
     showCount=false
     isFocused
@@ -136,13 +146,16 @@ let make =
               font
               iconTheme
               languageInfo
-              path={data.path}
+              path={FpExp.toString(data.path)}
             />,
             data,
           )
         };
       let decorations =
-        Feature_Decorations.getDecorations(~path=data.path, decorations);
+        Feature_Decorations.getDecorations(
+          ~path=FpExp.toString(data.path),
+          decorations,
+        );
       <nodeView
         icon
         isFocus=selected

@@ -80,7 +80,12 @@ describe("Buffer", ({describe, _}) => {
       let updates: ref(list(BufferUpdate.t)) = ref([]);
       let dispose = Buffer.onUpdate(upd => updates := [upd, ...updates^]);
 
-      Buffer.setLines(~stop=LineNumber.zero, ~lines=[|"abc"|], buffer);
+      Buffer.setLines(
+        ~shouldAdjustCursors=false,
+        ~stop=LineNumber.zero,
+        ~lines=[|"abc"|],
+        buffer,
+      );
       let line0 = Buffer.getLine(buffer, LineNumber.zero);
       let line1 = Buffer.getLine(buffer, LineNumber.(zero + 1));
       let lineCount = Buffer.getLineCount(buffer);
@@ -105,7 +110,13 @@ describe("Buffer", ({describe, _}) => {
       let line2Index = LineNumber.(zero + 2);
 
       let lines = [|"abc"|];
-      Buffer.setLines(~start=line1Index, ~stop=line2Index, ~lines, buffer);
+      Buffer.setLines(
+        ~shouldAdjustCursors=false,
+        ~start=line1Index,
+        ~stop=line2Index,
+        ~lines,
+        buffer,
+      );
       let lineCount = Buffer.getLineCount(buffer);
       let line0 = Buffer.getLine(buffer, LineNumber.zero);
       let line1 = Buffer.getLine(buffer, LineNumber.(zero + 1));
@@ -124,7 +135,13 @@ describe("Buffer", ({describe, _}) => {
       let startVersion = Buffer.getVersion(buffer);
 
       let lines = [|"abc"|];
-      Buffer.setLines(~start=line1Index, ~stop=line2Index, ~lines, buffer);
+      Buffer.setLines(
+        ~shouldAdjustCursors=false,
+        ~start=line1Index,
+        ~stop=line2Index,
+        ~lines,
+        buffer,
+      );
       let newVersion = Buffer.getVersion(buffer);
       expect.equal(newVersion > startVersion, true);
     });
@@ -137,13 +154,20 @@ describe("Buffer", ({describe, _}) => {
       let line2Index = LineNumber.(zero + 2);
 
       let lines = [|"abc"|];
-      Buffer.setLines(~start=line1Index, ~stop=line2Index, ~lines, buffer);
+      Buffer.setLines(
+        ~shouldAdjustCursors=false,
+        ~start=line1Index,
+        ~stop=line2Index,
+        ~lines,
+        buffer,
+      );
       expect.bool(Buffer.isModified(buffer)).toBe(true);
     });
     test("replace whole buffer - set both start / stop", ({expect, _}) => {
       let buffer = resetBuffer();
 
       Buffer.setLines(
+        ~shouldAdjustCursors=false,
         ~start=LineNumber.zero,
         ~stop=LineNumber.(zero + 4),
         ~lines=[|"abc"|],
@@ -157,7 +181,12 @@ describe("Buffer", ({describe, _}) => {
     test("replace whole buffer - set just start", ({expect, _}) => {
       let buffer = resetBuffer();
 
-      Buffer.setLines(~start=LineNumber.zero, ~lines=[|"abc"|], buffer);
+      Buffer.setLines(
+        ~shouldAdjustCursors=false,
+        ~start=LineNumber.zero,
+        ~lines=[|"abc"|],
+        buffer,
+      );
       let lineCount = Buffer.getLineCount(buffer);
       let line0 = Buffer.getLine(buffer, LineNumber.zero);
       expect.int(lineCount).toBe(1);
@@ -169,7 +198,7 @@ describe("Buffer", ({describe, _}) => {
       let updates: ref(list(BufferUpdate.t)) = ref([]);
       let dispose = Buffer.onUpdate(upd => updates := [upd, ...updates^]);
 
-      Buffer.setLines(~lines=[|"abc"|], buffer);
+      Buffer.setLines(~shouldAdjustCursors=false, ~lines=[|"abc"|], buffer);
       let lineCount = Buffer.getLineCount(buffer);
       let line0 = Buffer.getLine(buffer, LineNumber.zero);
       expect.int(lineCount).toBe(1);
@@ -190,7 +219,12 @@ describe("Buffer", ({describe, _}) => {
 
       let endPoint = Buffer.getLineCount(buffer) |> LineNumber.ofZeroBased;
 
-      Buffer.setLines(~start=endPoint, ~lines=[|"abc"|], buffer);
+      Buffer.setLines(
+        ~shouldAdjustCursors=false,
+        ~start=endPoint,
+        ~lines=[|"abc"|],
+        buffer,
+      );
       let line3 = Buffer.getLine(buffer, LineNumber.(zero + 2));
       let line4 = Buffer.getLine(buffer, LineNumber.(zero + 3));
       let lineCount = Buffer.getLineCount(buffer);
@@ -220,7 +254,9 @@ describe("Buffer", ({describe, _}) => {
 
       let edit = Edit.{range: range(0, 1, 0, 1), text: [|"a"|]};
 
-      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+      let () =
+        Buffer.applyEdits(~shouldAdjustCursors=false, ~edits=[edit], buffer)
+        |> Result.get_ok;
 
       let line = Buffer.getLine(buffer, LineNumber.ofOneBased(1));
       expect.string(line).toEqual("Tahis is the first line of a test file");
@@ -236,7 +272,9 @@ describe("Buffer", ({describe, _}) => {
           text: [|"his is a whole new line", "T"|],
         };
 
-      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+      let () =
+        Buffer.applyEdits(~shouldAdjustCursors=false, ~edits=[edit], buffer)
+        |> Result.get_ok;
 
       let line = Buffer.getLine(buffer, LineNumber.ofOneBased(1));
       expect.string(line).toEqual("This is a whole new line");
@@ -260,7 +298,9 @@ describe("Buffer", ({describe, _}) => {
           text: [|"his is a whole new line", "T"|],
         };
 
-      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+      let () =
+        Buffer.applyEdits(~shouldAdjustCursors=false, ~edits=[edit], buffer)
+        |> Result.get_ok;
 
       expect.int(modifiedEvents^ |> List.length).toBe(1);
 
@@ -272,7 +312,9 @@ describe("Buffer", ({describe, _}) => {
 
       let edit = Edit.{range: range(0, 0, 1, 0), text: [||]};
 
-      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+      let () =
+        Buffer.applyEdits(~shouldAdjustCursors=false, ~edits=[edit], buffer)
+        |> Result.get_ok;
 
       let line = Buffer.getLine(buffer, LineNumber.ofOneBased(1));
       expect.string(line).toEqual("This is the second line of a test file");
@@ -285,7 +327,9 @@ describe("Buffer", ({describe, _}) => {
 
       let edit = Edit.{range: range(0, 0, 2, 0), text: [||]};
 
-      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+      let () =
+        Buffer.applyEdits(~shouldAdjustCursors=false, ~edits=[edit], buffer)
+        |> Result.get_ok;
 
       let line = Buffer.getLine(buffer, LineNumber.ofOneBased(1));
       expect.string(line).toEqual("This is the third line of a test file");
@@ -298,7 +342,9 @@ describe("Buffer", ({describe, _}) => {
 
       let edit = Edit.{range: range(0, 14, 0, 15), text: [||]};
 
-      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+      let () =
+        Buffer.applyEdits(~shouldAdjustCursors=false, ~edits=[edit], buffer)
+        |> Result.get_ok;
 
       let line = Buffer.getLine(buffer, LineNumber.ofOneBased(1));
       expect.string(line).toEqual("import 'κόσμε'");

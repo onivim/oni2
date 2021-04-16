@@ -6,7 +6,6 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Syntax;
 
 [@deriving show({with_path: false})]
 type t =
@@ -16,17 +15,13 @@ type t =
   | Clipboard(Feature_Clipboard.msg)
   | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
-  | SignatureHelp(Feature_SignatureHelp.msg)
   | Changelog(Feature_Changelog.msg)
-  | Command(string)
+  | CommandInvoked({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   | Commands(Feature_Commands.msg(t))
   | Configuration(Feature_Configuration.msg)
-  | ConfigurationParseError(string)
-  | ConfigurationReload
-  | ConfigurationSet([@opaque] Configuration.t)
-  // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
-  // opens the file [fileName] and applies [f] to the loaded JSON.
-  | ConfigurationTransform(string, configurationTransformer)
   | Decorations(Feature_Decorations.msg)
   | Diagnostics(Feature_Diagnostics.msg)
   | EditorFont(Service_Font.msg)
@@ -37,15 +32,22 @@ type t =
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
   | FileSystem(Feature_FileSystem.msg)
-  | KeyBindingsSet([@opaque] list(Feature_Input.Schema.resolvedKeybinding))
-  // Reload keybindings from configuration
-  | KeyBindingsReload
-  | KeyBindingsParseError(string)
-  | KeybindingInvoked({command: string})
-  | KeyDown(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
-  | KeyUp(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
-  | Logging(Feature_Logging.msg)
+  | KeybindingInvoked({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
+  | KeyDown({
+      key: EditorInput.KeyCandidate.t,
+      scancode: int,
+      time: [@opaque] Revery.Time.t,
+    })
   | TextInput(string, [@opaque] Revery.Time.t)
+  | KeyUp({
+      scancode: int,
+      time: [@opaque] Revery.Time.t,
+    })
+  | KeyTimeout
+  | Logging(Feature_Logging.msg)
   // TODO: This should be a function call - wired up from an input feature
   // directly to the consumer of the keyboard action.
   // In addition, in the 'not-is-text' case, we should strongly type the keys.
@@ -74,6 +76,7 @@ type t =
   | FileExplorer(Feature_Explorer.msg)
   | LanguageSupport(Feature_LanguageSupport.msg)
   | MenuBar(Feature_MenuBar.msg)
+  | Quickmenu(Feature_Quickmenu.msg)
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
@@ -92,22 +95,13 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | NewBuffer({direction: [ | `Current | `Horizontal | `Vertical | `NewTab]})
+  | NewBuffer({direction: SplitDirection.t})
   | OpenBufferById({
       bufferId: int,
-      direction: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      direction: SplitDirection.t,
     })
-  | OpenFileByPath(
-      string,
-      option([ | `Current | `Horizontal | `Vertical | `NewTab]),
-      option(CharacterPosition.t),
-    )
-  | PreviewFileByPath(
-      string,
-      option([ | `Horizontal | `Vertical | `NewTab]),
-      option(CharacterPosition.t),
-    )
-  | OpenConfigFile(string)
+  | OpenFileByPath(string, SplitDirection.t, option(CharacterPosition.t))
+  | PreviewFileByPath(string, SplitDirection.t, option(CharacterPosition.t))
   | Pasted({
       rawText: string,
       isMultiLine: bool,
@@ -121,24 +115,16 @@ type t =
   // to quit the app. This gives subscriptions the chance to clean up.
   | ReallyQuitting
   | RegisterQuitCleanup(unit => unit)
-  | SearchSetHighlights(int, list(ByteRange.t))
   | SearchClearHighlights(int)
-  | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
-  | ThemeLoadByPath(string, string)
-  | ThemeLoadById(string)
-  | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBar(Feature_StatusBar.msg)
-  | TokenThemeLoaded([@opaque] TokenTheme.t)
-  | ThemeLoadError(string)
-  | EnableZenMode
-  | DisableZenMode
   | CopyActiveFilepathToClipboard
   | SCM(Feature_SCM.msg)
   | Search(Feature_Search.msg)
   | SideBar(Feature_SideBar.msg)
   | Sneak(Feature_Sneak.msg)
+  | Snippets(Feature_Snippets.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
@@ -166,6 +152,10 @@ type t =
   | Vim(Feature_Vim.msg)
   | TabPage(Vim.TabPage.effect)
   | Yank({range: [@opaque] VisualRange.t})
+  | Zen(Feature_Zen.msg)
+  | Zoom(Feature_Zoom.msg)
+  // TEMPORARY imperative actions
+  | SynchronizeExperimentalViml(list(string))
   | Noop
 and command = {
   commandCategory: option(string),
@@ -194,12 +184,6 @@ and quickmenuVariant =
   | FilesPicker
   | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
-  | ThemesPicker([@opaque] list(Feature_Theme.theme))
-  | FileTypesPicker({
-      bufferId: int,
-      languages:
-        list((string, option(Oni_Core.IconTheme.IconDefinition.t))),
-    })
   | Extension({
       id: int,
       hasItems: bool,

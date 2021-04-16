@@ -14,7 +14,7 @@ let configuration = {|{ "editor.fontFamily": "|} ++ font ++ {|"}|};
 runTest(
   ~configuration=Some(configuration),
   ~name="EditorFontFromPath",
-  (_, wait, _) => {
+  ({wait, _}) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
       Selectors.mode(state) |> Vim.Mode.isNormal
     );

@@ -38,8 +38,8 @@ let shadow =
   define(
     "shadow",
     {
-      light: transparent(0.1, hex("#000F")),
-      dark: transparent(0.20, hex("#000F")),
+      light: transparent(0.16, hex("#000F")),
+      dark: transparent(0.4, hex("#000F")),
       hc: unspecified,
     },
   );
@@ -113,7 +113,36 @@ module Button = {
       {dark: ref(background), light: ref(background), hc: unspecified},
     );
 
-  let defaults = [background, foreground, hoverBackground];
+  let secondaryForeground =
+    define(
+      "button.secondaryForeground",
+      {dark: hex("#FFF"), light: hex("#FFF"), hc: hex("#FFF")},
+    );
+
+  let secondaryBackground =
+    define(
+      "button.secondaryBackground",
+      {dark: hex("#0E639C"), light: hex("#007ACC"), hc: unspecified},
+    );
+
+  let secondaryHoverBackground =
+    define(
+      "button.secondaryHoverBackground",
+      {
+        dark: ref(secondaryBackground),
+        light: ref(secondaryBackground),
+        hc: unspecified,
+      },
+    );
+
+  let defaults = [
+    background,
+    foreground,
+    hoverBackground,
+    secondaryForeground,
+    secondaryBackground,
+    secondaryHoverBackground,
+  ];
 };
 
 module Dropdown = {
@@ -158,6 +187,19 @@ module Editor = {
       "editor.findMatchHighlightBackground",
       {light: hex("#EA5C0055"), dark: hex("#EA5C0055"), hc: unspecified},
     );
+
+  let lightBulbForeground =
+    define(
+      "editorLightBulb.foreground",
+      {light: hex("#DDB100"), dark: hex("#FFCC00"), hc: hex("#FFCC00")},
+    );
+
+  let lightBulbAutoFixForeground =
+    define(
+      "editorLightBulbAutoFix.foreground",
+      {light: hex("#007ACC"), dark: hex("#75BEFF"), hc: hex("#75BEFF")},
+    );
+
   let lineHighlightBackground =
     define("editor.lineHighlightBackground", all(unspecified));
   let selectionBackground =
@@ -166,14 +208,22 @@ module Editor = {
       {light: hex("#ADD6FF"), dark: hex("#264F78"), hc: hex("#f3f518")},
     );
 
+  let wordHighlightBackground =
+    define(
+      "editor.wordHighlightBackground",
+      {light: hex("#57575740"), dark: hex("#575757B8"), hc: unspecified},
+    );
   let defaults = [
     background,
     foreground,
     findMatchBackground,
     findMatchBorder,
     findMatchHighlightsBackground,
+    lightBulbForeground,
+    lightBulbAutoFixForeground,
     lineHighlightBackground,
     selectionBackground,
+    wordHighlightBackground,
   ];
 };
 
@@ -472,6 +522,12 @@ module List = {
 
   let focusForeground =
     define("list.focusForeground", all(ref(foreground))); // actually: unspecified
+
+  let focusOutline = define("list.focusOutline", all(ref(focusBorder)));
+
+  let inactiveFocusOutline =
+    define("list.inactiveFocusOutline", all(ref(inactiveFocusBackground)));
+
   let activeSelectionBackground =
     define(
       "list.activeSelectionBackground",
@@ -530,6 +586,7 @@ module List = {
   let defaults = [
     focusBackground,
     focusForeground,
+    focusOutline,
     activeSelectionBackground,
     activeSelectionForeground,
     hoverBackground,
@@ -538,6 +595,7 @@ module List = {
     deemphasizedForeground,
     activeIndentGuide,
     inactiveIndentGuide,
+    inactiveFocusOutline,
     filterMatchBackground,
     filterMatchBorder,
   ];
@@ -550,9 +608,9 @@ module EditorSuggestWidget = {
       all(ref(EditorWidget.background)),
     );
   let border =
-    define("editorSuggestWidget,border", all(ref(EditorWidget.border)));
+    define("editorSuggestWidget.border", all(ref(EditorWidget.border)));
   let foreground =
-    define("editorSuggestWidget.background", all(ref(Editor.foreground)));
+    define("editorSuggestWidget.foreground", all(ref(Editor.foreground)));
   let highlightForeground =
     define(
       "editorSuggestWidget.highlightForeground",
@@ -567,6 +625,7 @@ module EditorSuggestWidget = {
   let defaults = [
     background,
     border,
+    foreground,
     highlightForeground,
     selectedBackground,
   ];
@@ -657,6 +716,7 @@ module Oni = {
     | Visual(_) => visualModeBackground
     | CommandLine => commandlineModeBackground
     | Operator(_) => operatorModeBackground
+    | Snippet
     | TerminalInsert
     | Insert(_) => insertModeBackground
     | Replace(_) => replaceModeBackground
@@ -671,6 +731,7 @@ module Oni = {
     | Visual(_) => visualModeForeground
     | CommandLine => commandlineModeForeground
     | Operator(_) => operatorModeForeground
+    | Snippet
     | TerminalInsert
     | Insert(_) => insertModeForeground
     | Replace(_) => replaceModeForeground

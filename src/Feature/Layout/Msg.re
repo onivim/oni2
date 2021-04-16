@@ -9,6 +9,10 @@ type command =
   | MoveRight
   | MoveUp
   | MoveDown
+  | MoveTopLeft
+  | MoveBottomRight
+  | CycleForward
+  | CycleBackward
   | RotateForward
   | RotateBackward
   | DecreaseSize

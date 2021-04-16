@@ -1,6 +1,6 @@
 (library
  (name Exthost_Transport)
  (public_name Oni2.exthost.transport)
- (libraries timber luv yojson decoders-yojson)
+ (libraries timber luv yojson decoders-yojson Oni2.core)
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson)))

@@ -14,6 +14,7 @@ describe("Buffer", ({describe, _}) =>
       let buffer = makeBuffer([||]);
       let update =
         BufferUpdate.create(
+          ~shouldAdjustCursorPosition=false,
           ~startLine=LineNumber.zero,
           ~endLine=LineNumber.ofZeroBased(1),
           ~lines=[|"a"|],
@@ -28,6 +29,7 @@ describe("Buffer", ({describe, _}) =>
       let buffer = makeBuffer([|"a", "d", "e", "f", "c"|]);
       let update =
         BufferUpdate.create(
+          ~shouldAdjustCursorPosition=false,
           ~isFull=true,
           ~startLine=LineNumber.zero,
           ~endLine=LineNumber.ofZeroBased(-1),
@@ -45,6 +47,7 @@ describe("Buffer", ({describe, _}) =>
       let buffer = makeBuffer([|"a", "d", "e", "f", "c"|]);
       let update =
         BufferUpdate.create(
+          ~shouldAdjustCursorPosition=false,
           ~isFull=true,
           ~startLine=LineNumber.ofZeroBased(1),
           ~endLine=LineNumber.ofZeroBased(-1),
@@ -60,6 +63,7 @@ describe("Buffer", ({describe, _}) =>
       let buffer = makeBuffer([|"a"|]);
       let update =
         BufferUpdate.create(
+          ~shouldAdjustCursorPosition=false,
           ~startLine=LineNumber.zero,
           ~endLine=LineNumber.ofZeroBased(1),
           ~lines=[|"abc"|],
@@ -74,6 +78,7 @@ describe("Buffer", ({describe, _}) =>
       let buffer = makeBuffer([|"a"|]);
       let update =
         BufferUpdate.create(
+          ~shouldAdjustCursorPosition=false,
           ~startLine=LineNumber.zero,
           ~endLine=LineNumber.ofZeroBased(1),
           ~lines=[||],
@@ -88,6 +93,7 @@ describe("Buffer", ({describe, _}) =>
       let buffer = makeBuffer([|"a", "b", "c"|]);
       let update =
         BufferUpdate.create(
+          ~shouldAdjustCursorPosition=false,
           ~startLine=LineNumber.ofZeroBased(1),
           ~endLine=LineNumber.ofZeroBased(2),
           ~lines=[|"d", "e", "f"|],
@@ -102,6 +108,7 @@ describe("Buffer", ({describe, _}) =>
       let buffer = makeBuffer([|"a", "b", "c"|]);
       let update =
         BufferUpdate.create(
+          ~shouldAdjustCursorPosition=false,
           ~startLine=LineNumber.ofZeroBased(3),
           ~endLine=LineNumber.ofZeroBased(3),
           ~lines=[|"d"|],
@@ -116,6 +123,7 @@ describe("Buffer", ({describe, _}) =>
       let buffer = makeBuffer([|"a", "b", "c"|]);
       let update =
         BufferUpdate.create(
+          ~shouldAdjustCursorPosition=false,
           ~startLine=LineNumber.ofZeroBased(3),
           ~endLine=LineNumber.ofZeroBased(3),
           ~lines=[|"d"|],
@@ -131,6 +139,7 @@ describe("Buffer", ({describe, _}) =>
       let buffer = makeBuffer([||]);
       let update =
         BufferUpdate.create(
+          ~shouldAdjustCursorPosition=false,
           ~startLine=LineNumber.ofZeroBased(3),
           ~endLine=LineNumber.ofZeroBased(3),
           ~lines=[|"d"|],
@@ -141,6 +150,7 @@ describe("Buffer", ({describe, _}) =>
 
       let update =
         BufferUpdate.create(
+          ~shouldAdjustCursorPosition=false,
           ~startLine=LineNumber.ofZeroBased(3),
           ~endLine=LineNumber.ofZeroBased(3),
           ~lines=[|"e"|],

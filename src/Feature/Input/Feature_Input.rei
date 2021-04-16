@@ -1,14 +1,20 @@
 open Oni_Core;
 open EditorInput;
 
+// TODO: Move to Service_Input
+module ReveryKeyConverter = ReveryKeyConverter;
+
 type outmsg =
   | Nothing
   | DebugInputShown
+  | ErrorNotifications(list(string))
   | MapParseError({
       fromKeys: string,
       toKeys: string,
       error: string,
-    });
+    })
+  | OpenFile(FpExp.t(FpExp.absolute))
+  | TimedOut;
 
 [@deriving show]
 type command;
@@ -22,18 +28,46 @@ module Schema: {
   let bind:
     (~key: string, ~command: string, ~condition: WhenExpr.t) => keybinding;
 
+  // Bind a key to a command, with arguments
+  let bindWithArgs:
+    (
+      ~arguments: Yojson.Safe.t,
+      ~key: string,
+      ~command: string,
+      ~condition: WhenExpr.t
+    ) =>
+    keybinding;
+
   // Clear all bindings for a key
   let clear: (~key: string) => keybinding;
 
   // Remap a key -> to another key
   let remap:
-    (~fromKeys: string, ~toKeys: string, ~condition: WhenExpr.t) => keybinding;
+    (
+      ~allowRecursive: bool,
+      ~fromKeys: string,
+      ~toKeys: string,
+      ~condition: WhenExpr.t
+    ) =>
+    keybinding;
 
   let mapCommand: (~f: string => string, keybinding) => keybinding;
 
   type resolvedKeybinding;
 
+  let resolvedToString: resolvedKeybinding => string;
+
   let resolve: keybinding => result(resolvedKeybinding, string);
+};
+
+// LOADER
+
+module KeybindingsLoader: {
+  type t;
+
+  let none: t;
+
+  let file: FpExp.t(FpExp.absolute) => t;
 };
 
 [@deriving show]
@@ -47,27 +81,37 @@ module Msg: {
 
 type model;
 
-let initial: list(Schema.keybinding) => model;
+let initial: (~loader: KeybindingsLoader.t, list(Schema.keybinding)) => model;
 
 type execute =
-  | NamedCommand(string)
+  | NamedCommand({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   | VimExCommand(string);
 
 type effect =
   | Execute(execute)
   | Text(string)
-  | Unhandled(KeyPress.t)
+  | Unhandled({
+      key: KeyCandidate.t,
+      isProducedByRemap: bool,
+    })
   | RemapRecursionLimitHit;
 
 let keyDown:
   (
     ~config: Config.resolver,
-    ~key: KeyPress.t,
+    ~scancode: int,
+    ~key: KeyCandidate.t,
     ~context: WhenExpr.ContextKeys.t,
     ~time: Revery.Time.t,
     model
   ) =>
   (model, list(effect));
+
+let timeout:
+  (~context: WhenExpr.ContextKeys.t, model) => (model, list(effect));
 
 let text:
   (~text: string, ~time: Revery.Time.t, model) => (model, list(effect));
@@ -86,13 +130,14 @@ let commandToAvailableBindings:
   list(list(EditorInput.KeyPress.t));
 
 let keyPressToString: EditorInput.KeyPress.t => string;
+let keyCandidateToString: EditorInput.KeyCandidate.t => string;
 
-let consumedKeys: model => list(EditorInput.KeyPress.t);
+let consumedKeys: model => list(EditorInput.KeyCandidate.t);
 
 let keyUp:
   (
     ~config: Config.resolver,
-    ~key: KeyPress.t,
+    ~scancode: int,
     ~context: WhenExpr.ContextKeys.t,
     model
   ) =>
@@ -108,13 +153,15 @@ let remove: (uniqueId, model) => model;
 let enable: model => model;
 let disable: model => model;
 
+let notifyFileSaved: (FpExp.t(FpExp.absolute), model) => model;
+
 // UPDATE
 
 let update: (msg, model) => (model, outmsg);
 
 // SUBSCRIPTION
 
-let sub: model => Isolinear.Sub.t(msg);
+let sub: (~config: Config.resolver, model) => Isolinear.Sub.t(msg);
 
 // CONTRIBUTIONS
 

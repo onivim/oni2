@@ -3,7 +3,7 @@ open Utility;
 
 [@deriving show({with_path: false})]
 type metadata = {
-  path: string,
+  path: [@opaque] FpExp.t(FpExp.absolute),
   displayName: string,
   hash: int // hash of basename, so only comparable locally
 };
@@ -11,23 +11,46 @@ type metadata = {
 [@deriving show({with_path: false})]
 type t = Tree.t(metadata, metadata);
 
-let _hash = Hashtbl.hash;
-let _pathHashes = (~base, path) =>
-  path |> Path.toRelative(~base) |> Path.explode |> List.map(_hash);
+module PathHasher = {
+  let hash = Hashtbl.hash;
+
+  // type t = list(string);
+
+  let make = (~base, path) => {
+    switch (FpExp.relativize(~source=base, ~dest=path)) {
+    | Ok(relativePath) => FpEx.explode(relativePath) |> List.map(hash)
+    | Error(_) => []
+    };
+  };
+
+  let%test "equivalent paths" = {
+    // TODO: Is this case even correct?
+    make(~base=FpExp.(root), FpExp.(root)) == [];
+  };
+
+  let%test "simple path" = {
+    make(~base=FpExp.(root), FpExp.(At.(root / "abc"))) == [hash("abc")];
+  };
+
+  let%test "multiple paths" = {
+    make(~base=FpExp.(root), FpExp.(At.(root / "abc" / "def")))
+    == [hash("abc"), hash("def")];
+  };
+};
 
 let file = path => {
-  let basename = Filename.basename(path);
+  let basename = FpExp.baseName(path) |> Option.value(~default="(empty)");
 
-  Tree.leaf({path, hash: _hash(basename), displayName: basename});
+  Tree.leaf({path, hash: PathHasher.hash(basename), displayName: basename});
 };
 
 let directory = (~isOpen=false, path, ~children) => {
-  let basename = Filename.basename(path);
+  let basename = FpExp.baseName(path) |> Option.value(~default="(empty)");
 
   Tree.node(
     ~expanded=isOpen,
     ~children,
-    {path, hash: _hash(basename), displayName: basename},
+    {path, hash: PathHasher.hash(basename), displayName: basename},
   );
 };
 
@@ -69,7 +92,7 @@ let findNodesByPath = (path, tree) => {
 
   switch (tree) {
   | Node({children, _}) =>
-    loop([tree], children, _pathHashes(~base=getPath(tree), path))
+    loop([tree], children, PathHasher.make(~base=getPath(tree), path))
   | Leaf(_) => `Failed
   };
 };
@@ -94,15 +117,58 @@ let findByPath = (path, tree) => {
 
   switch (tree) {
   | Tree.Node({children, _}) =>
-    loop(tree, children, _pathHashes(~base=getPath(tree), path))
+    loop(tree, children, PathHasher.make(~base=getPath(tree), path))
   | Tree.Leaf(_) => None
   };
 };
 
 let replace = (~replacement, tree) => {
+  let merge = (originalNode, newNode) =>
+    switch (originalNode, newNode) {
+    | (Tree.Leaf(_), _) => newNode
+    | (_, Tree.Leaf(_)) => newNode
+    // Merge the 'old' children with the 'new' children, so that we don't have to recursively
+    // refresh if we don't have to.
+    | (
+        Tree.Node({children: oldChildren, expanded, _}),
+        Tree.Node({children: newChildren, data, _}),
+      ) =>
+      // Grab a map of previous children. For any that were existing, use the old metadata - some children might be expanded, for example.
+      let previousMap =
+        oldChildren
+        |> List.fold_left(
+             (
+               acc: IntMap.t(Tree.t(metadata, metadata)),
+               child: Tree.t(metadata, metadata),
+             ) => {
+               switch (child) {
+               | Tree.Leaf(_) => acc
+               | Tree.Node({data, _}) => IntMap.add(data.hash, child, acc)
+               }
+             },
+             IntMap.empty,
+           );
+
+      // Now, go through the new children - see if any were around previously.
+      // If so, use the previous tree.
+
+      let children =
+        newChildren
+        |> List.map(child => {
+             switch (child) {
+             | Tree.Leaf(_) => child
+             | Tree.Node({data, _}) =>
+               IntMap.find_opt(data.hash, previousMap)
+               |> Option.value(~default=child)
+             }
+           });
+
+      Tree.Node({children, expanded, data});
+    };
+
   let rec loop = (pathHashes, node) =>
     switch (pathHashes) {
-    | [hash] when hash == getHash(node) => replacement
+    | [hash] when hash == getHash(node) => merge(node, replacement)
 
     | [hash, ...rest] when hash == getHash(node) =>
       switch (node) {
@@ -116,8 +182,8 @@ let replace = (~replacement, tree) => {
     };
 
   loop(
-    _pathHashes(
-      ~base=Filename.dirname(getPath(tree)),
+    PathHasher.make(
+      ~base=FpExp.dirName(getPath(tree)),
       getPath(replacement),
     ),
     tree,
@@ -147,7 +213,7 @@ let updateNodesInPath =
     | _ => node
     };
 
-  loop(_pathHashes(~base=Filename.dirname(getPath(tree)), path), tree);
+  loop(PathHasher.make(~base=FpExp.dirName(getPath(tree)), path), tree);
 };
 
 let toggleOpen =

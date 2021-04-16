@@ -125,6 +125,7 @@ type outmsg =
   | Nothing
   | Focus
   | Effect(Isolinear.Effect.t(msg))
+  | NewExtensions(list(Scanner.ScanResult.t))
   | InstallSucceeded({
       extensionId: string,
       contributions: Exthost.Extension.Contributions.t,
@@ -256,7 +257,7 @@ type model = {
   extensions: list(Scanner.ScanResult.t),
   searchText: Component_InputText.model,
   latestQuery: option(Service_Extensions.Query.t),
-  extensionsFolder: option(Fp.t(Fp.absolute)),
+  extensionsFolder: option(FpExp.t(FpExp.absolute)),
   pendingInstalls: list(string),
   pendingUninstalls: list(string),
   globalValues: Yojson.Safe.t,
@@ -434,8 +435,7 @@ module Internal = {
     || name == "arcticicestudio.nord-visual-studio-code";
   };
   let markActivated = (id: string, model) => {
-    ...model,
-    activatedIds: [id, ...model.activatedIds],
+    {...model, activatedIds: [id, ...model.activatedIds]};
   };
 
   let getExtensions = (~category, model) => {
@@ -608,15 +608,32 @@ let getExtensions = Internal.getExtensions;
 
 let update = (~extHostClient, msg, model) => {
   switch (msg) {
-  | Exthost(WillActivateExtension(_))
-  | Exthost(ExtensionRuntimeError(_)) => (model, Nothing)
+  | Exthost(WillActivateExtension(_)) => (model, Nothing)
+
+  | Exthost(ExtensionRuntimeError({extensionId, errorsJson})) => (
+      model,
+      NotifyFailure(
+        Printf.sprintf(
+          "Extension runtime error %s:%s",
+          Exthost.ExtensionId.toString(extensionId),
+          Yojson.Safe.to_string(`List(errorsJson)),
+        ),
+      ),
+    )
+
   | Exthost(ActivateExtension({extensionId, _})) => (
       Internal.markActivated(extensionId, model),
       Nothing,
     )
-  | Exthost(ExtensionActivationError({errorMessage, _})) => (
+  | Exthost(ExtensionActivationError({error, extensionId})) => (
       model,
-      NotifyFailure(Printf.sprintf("Error: %s", errorMessage)),
+      NotifyFailure(
+        Printf.sprintf(
+          "Error activating extension %s: %s",
+          Exthost.ExtensionId.toString(extensionId),
+          Exthost.ExtensionActivationError.toString(error),
+        ),
+      ),
     )
   | Exthost(DidActivateExtension({extensionId, _})) => (
       Internal.markActivated(extensionId, model),
@@ -659,7 +676,10 @@ let update = (~extHostClient, msg, model) => {
       (model', Effect(eff));
     }
 
-  | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
+  | Discovered(extensions) => (
+      Internal.add(extensions, model),
+      NewExtensions(extensions),
+    )
 
   | ExecuteCommand({command, arguments}) => (
       model,

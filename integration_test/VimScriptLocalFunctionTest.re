@@ -1,7 +1,9 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="VimScriptLocalFunctionTest", (dispatch, wait, runEffects) => {
+runTest(
+  ~name="VimScriptLocalFunctionTest",
+  ({dispatch, wait, runEffects, input, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
@@ -24,20 +26,6 @@ runTest(~name="VimScriptLocalFunctionTest", (dispatch, wait, runEffects) => {
     }),
   );
   runEffects();
-
-  let input = key => {
-    let scancode = Sdl2.Scancode.ofName(key);
-    let keycode = Sdl2.Keycode.ofName(key);
-    let modifiers = EditorInput.Modifiers.none;
-
-    let keyPress: EditorInput.KeyPress.t =
-      EditorInput.KeyPress.physicalKey(~scancode, ~keycode, ~modifiers);
-    let time = Revery.Time.now();
-
-    dispatch(Model.Actions.KeyDown(keyPress, time));
-    dispatch(Model.Actions.KeyUp(keyPress, time));
-    runEffects();
-  };
 
   input("j");
 

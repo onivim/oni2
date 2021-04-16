@@ -1,13 +1,16 @@
+open Oni_Core;
+
 type t = {
   gpuAcceleration: [ | `Auto | `ForceSoftware | `ForceHardware],
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
-  overriddenExtensionsDir: option(Fp.t(Fp.absolute)),
+  overriddenExtensionsDir: option(FpExp.t(FpExp.absolute)),
   shouldLoadExtensions: bool,
   shouldLoadConfiguration: bool,
   shouldSyntaxHighlight: bool,
   attachToForeground: bool,
+  logExthost: bool,
   logLevel: option(Timber.Level.t),
   logFile: option(string),
   logFilter: option(string),

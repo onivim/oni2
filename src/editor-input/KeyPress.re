@@ -4,8 +4,8 @@ type t =
   | PhysicalKey(PhysicalKey.t)
   | SpecialKey(SpecialKey.t);
 
-let physicalKey = (~keycode, ~scancode, ~modifiers) =>
-  PhysicalKey(PhysicalKey.{scancode, keycode, modifiers});
+let physicalKey = (~key, ~modifiers) =>
+  PhysicalKey(PhysicalKey.{key, modifiers});
 
 let specialKey = special => SpecialKey(special);
 
@@ -19,7 +19,7 @@ let equals = (keyA, keyB) => {
   | (SpecialKey(specialKeyA), SpecialKey(specialKeyB)) =>
     specialKeyA == specialKeyB
   | (PhysicalKey(physicalKeyA), PhysicalKey(physicalKeyB)) =>
-    physicalKeyA.keycode == physicalKeyB.keycode
+    physicalKeyA.key == physicalKeyB.key
     && Modifiers.equals(physicalKeyA.modifiers, physicalKeyB.modifiers)
   | (SpecialKey(_), PhysicalKey(_))
   | (PhysicalKey(_), SpecialKey(_)) => false
@@ -29,25 +29,18 @@ let equals = (keyA, keyB) => {
 let ofInternal =
     (
       ~addShiftKeyToCapital,
-      ~getKeycode,
-      ~getScancode,
       (
         key: Matcher_internal.keyPress,
         mods: list(Matcher_internal.modifier),
       ),
     ) => {
   let keyToKeyPress = (~mods=mods, key) => {
-    switch (getKeycode(key), getScancode(key)) {
-    | (Some(keycode), Some(scancode)) =>
-      Ok(
-        PhysicalKey({
-          modifiers: Matcher_internal.Helpers.internalModsToMods(mods),
-          scancode,
-          keycode,
-        }),
-      )
-    | _ => Error("Unrecognized key: " ++ Key.toString(key))
-    };
+    Ok(
+      PhysicalKey({
+        key,
+        modifiers: Matcher_internal.Helpers.internalModsToMods(mods),
+      }),
+    );
   };
   switch (key) {
   | Matcher_internal.UnmatchedString(str) =>
@@ -60,16 +53,13 @@ let ofInternal =
            if (isCapitalized && addShiftKeyToCapital) {
              keyToKeyPress(
                ~mods=[Shift, ...mods],
-               Key.Character(lowercaseChar),
+               Key.Character(Uchar.of_char(lowercaseChar)),
              );
            } else {
-             keyToKeyPress(Key.Character(lowercaseChar));
+             keyToKeyPress(Key.Character(Uchar.of_char(lowercaseChar)));
            };
          } else {
-           Error(
-             "Unicode characters not yet supported in bindings: "
-             ++ ZedBundled.make(1, uchar),
-           );
+           keyToKeyPress(Key.Character(uchar));
          }
        )
   | Matcher_internal.Special(special) => [Ok(SpecialKey(special))]
@@ -77,7 +67,54 @@ let ofInternal =
   };
 };
 
-let parse = (~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, str) => {
+let combineUnmatchedStrings = (keys: list(Matcher_internal.keyMatcher)) => {
+  let rec combine = (acc, current, keys) => {
+    Matcher_internal.(
+      {
+        switch (keys) {
+        | [hd, ...tail] =>
+          switch (hd) {
+          | (UnmatchedString(str), mods) =>
+            switch (current) {
+            // No accumulated string yet - might need to track it to combine later.
+            | None => combine(acc, Some((str, mods)), tail)
+
+            // Might be able to accumulate, check if the modifiers match (#2980)
+            | Some((prev, prevMods)) when prevMods == mods =>
+              combine(acc, Some((prev ++ str, mods)), tail)
+
+            // Modifiers don't match, so append the current to the key sequence,
+            // and start a new sequence to track.
+            | Some((prev, prevMods)) =>
+              combine(
+                [(UnmatchedString(prev), prevMods), ...acc],
+                Some((str, mods)),
+                tail,
+              )
+            }
+
+          | key =>
+            let acc' =
+              switch (current) {
+              | None => acc
+              | Some((str, mods)) => [(UnmatchedString(str), mods), ...acc]
+              };
+            combine([key, ...acc'], None, tail);
+          }
+        | [] =>
+          switch (current) {
+          | None => acc
+          | Some((str, mods)) => [(UnmatchedString(str), mods), ...acc]
+          }
+        };
+      }
+    );
+  };
+
+  combine([], None, keys) |> List.rev;
+};
+
+let parse = (~explicitShiftKeyNeeded, str) => {
   let parse = lexbuf =>
     switch (Matcher_parser.keys(Matcher_lexer.token, lexbuf)) {
     | exception Matcher_lexer.Error => Error("Error parsing binding: " ++ str)
@@ -94,9 +131,8 @@ let parse = (~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, str) => {
 
   let finish = r => {
     r
-    |> List.map(
-         ofInternal(~addShiftKeyToCapital, ~getKeycode, ~getScancode),
-       )
+    |> combineUnmatchedStrings
+    |> List.map(ofInternal(~addShiftKeyToCapital))
     |> List.flatten
     |> Base.Result.all;
   };
@@ -104,28 +140,36 @@ let parse = (~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, str) => {
   str |> Lexing.from_string |> parse |> flatMap(finish);
 };
 
-let toString = (~meta="Meta", ~keyCodeToString, key) => {
+let defaultSuper =
+  switch (Revery.Environment.os) {
+  | Mac(_) => "Cmd"
+  | Windows(_) => "Win"
+  | Linux(_) => "Meta"
+  | _ => "Super"
+  };
+
+let toString = (~super=defaultSuper, ~keyToString=Key.toString, key) => {
   switch (key) {
   | SpecialKey(special) =>
     Printf.sprintf("Special(%s)", SpecialKey.show(special))
-  | PhysicalKey({keycode, modifiers, _}) =>
+  | PhysicalKey({key, modifiers, _}) =>
     let buffer = Buffer.create(16);
     let separator = "+";
 
-    let keyString = keyCodeToString(keycode);
+    let keyString = keyToString(key);
 
     let onlyShiftPressed =
       modifiers.shift
       && !modifiers.control
-      && !modifiers.meta
+      && !modifiers.super
       && !modifiers.alt;
 
     let keyString =
       String.length(keyString) == 1 && !onlyShiftPressed
         ? String.lowercase_ascii(keyString) : keyString;
 
-    if (modifiers.meta) {
-      Buffer.add_string(buffer, meta ++ separator);
+    if (modifiers.super) {
+      Buffer.add_string(buffer, super ++ separator);
     };
 
     if (modifiers.control) {
@@ -138,7 +182,7 @@ let toString = (~meta="Meta", ~keyCodeToString, key) => {
       Buffer.add_string(buffer, "Alt" ++ separator);
     };
 
-    if ((modifiers.meta || modifiers.control || modifiers.alt)
+    if ((modifiers.super || modifiers.control || modifiers.alt)
         && modifiers.shift) {
       Buffer.add_string(buffer, "Shift" ++ separator);
     };

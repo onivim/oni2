@@ -144,7 +144,7 @@ let fromPath = path => {
 };
 
 let fromFilePath = fp => {
-  fp |> Fp.toString |> fromPath;
+  fp |> FpExp.toString |> fromPath;
 };
 
 let toString = ({scheme, authority, path, query}: t) => {
@@ -180,6 +180,10 @@ let toFileSystemPath = (uri: t) => {
     };
   | _ => uri.path
   };
+};
+
+let equals = (a, b) => {
+  String.equal(a |> toFileSystemPath, b |> toFileSystemPath);
 };
 
 let getScheme = (uri: t) => uri.scheme;

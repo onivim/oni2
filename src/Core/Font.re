@@ -1,6 +1,7 @@
 [@deriving show({with_path: false})]
 type t = {
   fontFamily: [@opaque] Revery.Font.Family.t,
+  fontWeight: [@opaque] Revery.Font.Weight.t,
   fontSize: float,
   spaceWidth: float,
   underscoreWidth: float,
@@ -15,11 +16,13 @@ type t = {
 
 let default = () => {
   let fontFamily = Revery.Font.Family.fromFile(Constants.defaultFontFile);
+  let fontWeight = Revery.Font.Weight.Normal;
   let fontSize = Constants.defaultFontSize;
   let smoothing = Revery.Font.Smoothing.default;
   let features = [];
   {
     fontFamily,
+    fontWeight,
     fontSize,
     spaceWidth: 8.4,
     underscoreWidth: 8.4,
@@ -32,6 +35,7 @@ let default = () => {
     measurementCache:
       FontMeasurementCache.create(
         ~fontFamily,
+        ~fontWeight,
         ~fontSize,
         ~smoothing,
         ~features,
@@ -41,3 +45,18 @@ let default = () => {
 
 let measure = (uchar, {measurementCache, _}) =>
   FontMeasurementCache.measure(uchar, measurementCache);
+
+let bolder =
+  Revery.Font.Weight.(
+    fun
+    | Thin => UltraLight
+    | UltraLight => Light
+    | Light => Normal
+    | Normal => Medium
+    | Medium => SemiBold
+    | SemiBold => Bold
+    | Bold => UltraBold
+    | UltraBold => Heavy
+    | Heavy => Heavy // Can't go beyond !
+    | _ => Normal
+  ); // For exhaustivity.

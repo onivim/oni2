@@ -41,10 +41,10 @@ module Settings = {
   };
 
   let fromFile = path =>
-    try(path |> Fp.toString |> Yojson.Safe.from_file |> fromJson) {
+    try(path |> FpExp.toString |> Yojson.Safe.from_file |> fromJson) {
     | Yojson.Json_error(message) =>
       Log.errorf(m =>
-        m("Failed to read file %s: %s", path |> Fp.toString, message)
+        m("Failed to read file %s: %s", path |> FpExp.toString, message)
       );
       empty;
     };
@@ -139,6 +139,11 @@ module Schema = {
     let list = valueCodec => {
       decode: Json.Decode.list(valueCodec.decode),
       encode: Json.Encode.list(valueCodec.encode),
+    };
+
+    let nullable = valueCodec => {
+      decode: Json.Decode.nullable(valueCodec.decode),
+      encode: Json.Encode.nullable(valueCodec.encode),
     };
 
     let custom = (~decode, ~encode) => {decode, encode};

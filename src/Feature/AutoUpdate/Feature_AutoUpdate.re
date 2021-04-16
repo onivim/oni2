@@ -1,4 +1,15 @@
 open Oni_Core;
+open Utility;
+
+let defaultUpdateChannel =
+  if (Oni_Core.BuildInfo.version |> StringEx.endsWith(~postfix="-staging")) {
+    "staging";
+  } else if (Oni_Core.BuildInfo.version
+             |> StringEx.endsWith(~postfix="-nightly")) {
+    "master";
+  } else {
+    "stable";
+  };
 
 type model = {
   automaticallyChecksForUpdates: bool,
@@ -7,7 +18,7 @@ type model = {
 
 let initial = {
   automaticallyChecksForUpdates: true,
-  releaseChannel: Oni_Core.BuildInfo.defaultUpdateChannel,
+  releaseChannel: defaultUpdateChannel,
 };
 
 [@deriving show({with_path: false})]
@@ -21,7 +32,8 @@ type msg =
 
 type outmsg =
   | Nothing
-  | Effect(Isolinear.Effect.t(msg));
+  | Effect(Isolinear.Effect.t(msg))
+  | ErrorMessage(string);
 
 let platformStr =
   switch (Revery.Environment.os) {
@@ -44,7 +56,7 @@ module Configuration = {
     setting(
       "oni.app.updateReleaseChannel",
       releaseChannelCodec,
-      ~default=Oni_Core.BuildInfo.defaultUpdateChannel,
+      ~default=defaultUpdateChannel,
     );
 };
 
@@ -117,12 +129,22 @@ let update = (~getLicenseKey, model, msg) =>
         ),
       ),
     )
-  | Command(CheckForUpdates) => (
-      model,
-      Effect(
-        Service_AutoUpdate.Effect.checkForUpdates(
-          ~updater=Oni2_Sparkle.Updater.getInstance(),
+  | Command(CheckForUpdates) =>
+    if (StringEx.isEmpty(getLicenseKey())) {
+      (
+        model,
+        ErrorMessage(
+          "A valid license key is needed to check for updates. Please register and try again.",
         ),
-      ),
-    )
+      );
+    } else {
+      (
+        model,
+        Effect(
+          Service_AutoUpdate.Effect.checkForUpdates(
+            ~updater=Oni2_Sparkle.Updater.getInstance(),
+          ),
+        ),
+      );
+    }
   };

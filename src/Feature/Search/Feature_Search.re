@@ -17,7 +17,18 @@ type model = {
   resultsTree: Component_VimTree.model(string, LocationListItem.t),
 };
 
-let resetFocus = model => {...model, focus: FindInput};
+let resetFocus = (~query: option(string), model) => {
+  switch (query) {
+  | None => {...model, focus: FindInput}
+  | Some(query) => {
+      ...model,
+      query,
+      focus: FindInput,
+      findInput: Component_InputText.set(~text=query, model.findInput),
+      hits: query != model.query ? [] : model.hits,
+    }
+  };
+};
 
 let initial = {
   findInput: Component_InputText.create(~placeholder="Search"),
@@ -27,6 +38,17 @@ let initial = {
 
   vimWindowNavigation: Component_VimWindows.initial,
   resultsTree: Component_VimTree.create(~rowHeight=25),
+};
+
+module Configuration = {
+  open Config.Schema;
+  let searchExclude = setting("search.exclude", list(string), ~default=[]);
+  let filesExclude =
+    setting(
+      "files.exclude",
+      list(string),
+      ~default=["_esy", ".git", "node_modules"],
+    );
 };
 
 let matchToLocListItem = (hit: Ripgrep.Match.t) =>
@@ -190,6 +212,7 @@ let update = (~previewEnabled, model, msg) => {
       | Component_VimTree.Selected(item) =>
         Some(OpenFile({filePath: item.file, location: item.location}))
       // TODO
+      | Component_VimTree.SelectedNode(_) => None
       | Component_VimTree.Collapsed(_) => None
       | Component_VimTree.Expanded(_) => None
       };
@@ -209,11 +232,17 @@ module SearchSubscription =
     type action = msg;
   });
 
-let subscriptions = (~workingDirectory, ripgrep, dispatch) => {
+let subscriptions =
+    (~config: Oni_Core.Config.resolver, ~workingDirectory, ripgrep, dispatch) => {
+  let searchExclude =
+    Configuration.searchExclude.get(config)
+    |> List.append(Configuration.filesExclude.get(config));
+
   let search = query => {
     SearchSubscription.create(
       ~id="workspace-search",
       ~query,
+      ~searchExclude,
       ~directory=workingDirectory,
       ~ripgrep,
       ~onUpdate=items => dispatch(Update(items)),
@@ -265,6 +294,7 @@ module Styles = {
 
 let make =
     (
+      ~config,
       ~theme,
       ~uiFont: UiFont.t,
       ~iconTheme,
@@ -310,6 +340,7 @@ let make =
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
       <Component_VimTree.View
+        config
         isActive={isFocused && model.focus == ResultsPane}
         font=uiFont
         focusedIndex=None
@@ -381,4 +412,5 @@ module Contributions = {
 
     [inputTextKeys, vimNavKeys, vimTreeKeys] |> unionMany;
   };
+  let configuration = Configuration.[searchExclude.spec, filesExclude.spec];
 };

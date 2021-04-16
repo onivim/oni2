@@ -6,6 +6,13 @@ module Log = (val Log.withNamespace("Oni2.Feature.Explorer"));
 
 include Model;
 
+module Configuration = {
+  open Config.Schema;
+
+  let useFileWatcher =
+    setting("files.useExperimentalFileWatcher", bool, ~default=false);
+};
+
 module Internal = {
   let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
     switch (a, b) {
@@ -21,17 +28,21 @@ module Internal = {
   };
 
   let luvDirentToFsTree = (~cwd, {name, kind}: Luv.File.Dirent.t) => {
-    let path = Filename.concat(cwd, name);
+    let path = FpExp.At.(cwd / name);
+
     if (kind == `FILE || kind == `LINK) {
       Some(FsTreeNode.file(path));
     } else if (kind == `DIR) {
-      Some(FsTreeNode.directory(path, ~children=[]));
+      //let isOpen = expandedPaths |> List.exists(FpExp.eq(path));
+      Some(
+        FsTreeNode.directory(path, ~children=[]),
+      );
     } else {
       None;
     };
   };
 
-  let luvDirentsToFsTree = (~cwd, ~ignored, dirents) => {
+  let luvDirentsToFsTree = (~cwd: FpExp.t(FpExp.absolute), ~ignored, dirents) => {
     dirents
     |> List.filter(({name, _}: Luv.File.Dirent.t) =>
          name != ".." && name != "." && !List.mem(name, ignored)
@@ -52,11 +63,12 @@ module Internal = {
    */
   let getFilesAndFolders = (~ignored, cwd) => {
     cwd
+    |> FpExp.toString
     |> Service_OS.Api.readdir
     |> Lwt.map(luvDirentsToFsTree(~ignored, ~cwd));
   };
 
-  let getDirectoryTree = (cwd, ignored) => {
+  let getDirectoryTree = (cwd: FpExp.t(FpExp.absolute), ignored) => {
     let childrenPromise = getFilesAndFolders(~ignored, cwd);
 
     childrenPromise
@@ -69,11 +81,34 @@ module Internal = {
 module Effects = {
   let load = (directory, configuration, ~onComplete) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.load", dispatch => {
+      let directoryStr = FpExp.toString(directory);
+      Log.infof(m => m("Loading nodes for directory: %s", directoryStr));
       let ignored =
-        Configuration.getValue(c => c.filesExclude, configuration);
+        Feature_Configuration.Legacy.getValue(
+          c => c.filesExclude,
+          configuration,
+        );
       let promise = Internal.getDirectoryTree(directory, ignored);
 
-      Lwt.on_success(promise, tree => {dispatch(onComplete(tree))});
+      Lwt.on_success(
+        promise,
+        tree => {
+          Log.infof(m =>
+            m("Successfully loaded nodes for directory: %s", directoryStr)
+          );
+          dispatch(onComplete(tree));
+        },
+      );
+
+      Lwt.on_failure(promise, exn => {
+        Log.errorf(m =>
+          m(
+            "Error loading directory %s: %s",
+            directoryStr,
+            Printexc.to_string(exn),
+          )
+        )
+      });
     });
   };
 };
@@ -85,10 +120,14 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
   | PreviewFile(string)
-  | GrabFocus;
+  | GrabFocus
+  | WatchedPathChanged({
+      path: FpExp.t(FpExp.absolute),
+      stat: option(Luv.File.Stat.t),
+    });
 
 let setTree = (tree, model) => {
-  let uniqueId = (data: FsTreeNode.metadata) => data.path;
+  let uniqueId = (data: FsTreeNode.metadata) => FpExp.toString(data.path);
   let (rootName, firstLevelChildren) =
     switch (tree) {
     | Tree.Leaf(_) => ("", [])
@@ -149,7 +188,7 @@ let replaceNode = (node, model: model) =>
   switch (model.tree) {
   | Some(tree) =>
     setTree(FsTreeNode.replace(~replacement=node, tree), model)
-  | None => model
+  | None => setTree(node, model)
   };
 
 let revealAndFocusPath = (~configuration, path, model: model) => {
@@ -175,9 +214,8 @@ let revealAndFocusPath = (~configuration, path, model: model) => {
     | `Success(_) =>
       let tree = FsTreeNode.updateNodesInPath(FsTreeNode.setOpen, path, tree);
 
-      let maybePathIndex = getIndex(path, model);
-
       let model = model |> setFocus(Some(path)) |> setTree(tree);
+      let maybePathIndex = getIndex(path, model);
 
       let scrolledModel =
         maybePathIndex
@@ -191,17 +229,45 @@ let revealAndFocusPath = (~configuration, path, model: model) => {
   };
 };
 
-let update = (~configuration, msg, model) => {
+let expand = (path, model) => {
+  let expandedPaths =
+    [path, ...model.expandedPaths]
+    |> Base.List.dedup_and_sort(~compare=FpExp.compare);
+
+  let pathsToLoad =
+    [path, ...model.pathsToLoad]
+    |> Base.List.dedup_and_sort(~compare=FpExp.compare);
+  {...model, expandedPaths, pathsToLoad};
+};
+
+let collapse = (path, model) => {
+  let expandedPaths = model.expandedPaths |> List.filter(p => p != path);
+  {...model, expandedPaths};
+};
+
+let markNodeAsLoaded = (node, model) => {
+  let pathsToLoad =
+    model.pathsToLoad
+    |> List.filter(p => !FpExp.eq(FsTreeNode.getPath(node), p));
+  {...model, pathsToLoad};
+};
+
+let reload = model => {...model, pathsToLoad: model.expandedPaths};
+
+let update = (~config, ~configuration, msg, model) => {
   switch (msg) {
+  | FileWatcherEvent({path, event}) => (
+      model |> expand(path),
+      WatchedPathChanged({path, stat: event.stat}),
+    )
   | ActiveFilePathChanged(maybeFilePath) =>
     switch (model) {
     | {active, _} when active != maybeFilePath =>
       switch (maybeFilePath) {
       | Some(path) =>
         let autoReveal =
-          Oni_Core.Configuration.getValue(
-            c => c.explorerAutoReveal,
-            configuration,
+          Feature_Configuration.GlobalConfiguration.Explorer.autoReveal.get(
+            config,
           );
         switch (autoReveal) {
         | `HighlightAndScroll =>
@@ -217,25 +283,26 @@ let update = (~configuration, msg, model) => {
     | _ => (model, Nothing)
     }
 
-  | TreeLoaded(tree) => (setTree(tree, model), Nothing)
+  | NodeLoadError(_msg) => (model, Nothing)
 
-  | TreeLoadError(_msg) => (model, Nothing)
-
-  | NodeLoaded(node) => (replaceNode(node, model), Nothing)
+  | NodeLoaded(node) => (
+      model |> replaceNode(node) |> markNodeAsLoaded(node),
+      Nothing,
+    )
 
   | FocusNodeLoaded(node) =>
     switch (model.active) {
     | Some(activePath) =>
       model
+      |> expand(FsTreeNode.getPath(node))
       |> replaceNode(node)
+      |> markNodeAsLoaded(node)
       |> revealAndFocusPath(~configuration, activePath)
 
     | None => (model, Nothing)
     }
 
-  | KeyboardInput(_) =>
-    // Anything to be brought back here?
-    (model, Nothing)
+  | Command(Reload) => (reload(model), Nothing)
 
   | Tree(treeMsg) =>
     let (treeView, outmsg) =
@@ -244,27 +311,31 @@ let update = (~configuration, msg, model) => {
     let model = {...model, treeView};
     switch (outmsg) {
     | Component_VimTree.Expanded(node) => (
-        model,
-        Effect(
-          Effects.load(node.path, configuration, ~onComplete=newNode =>
-            NodeLoaded(newNode)
-          ),
-        ),
+        model |> expand(node.path),
+        Nothing,
       )
-    | Component_VimTree.Collapsed(_) => (model, Nothing)
+    | Component_VimTree.Collapsed(node) => (
+        model |> collapse(node.path),
+        Nothing,
+      )
     | Component_VimTree.Touched(node) =>
       // Set active here to avoid scrolling in BufferEnter
       (
         model |> setActive(Some(node.path)),
-        Oni_Core.Configuration.getValue(
-          c => c.workbenchEditorEnablePreview,
-          configuration,
+        Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+          get(
+          config,
         )
-          ? PreviewFile(node.path) : OpenFile(node.path),
+          ? PreviewFile(FpExp.toString(node.path))
+          : OpenFile(FpExp.toString(node.path)),
       )
     | Component_VimTree.Selected(node) =>
       // Set active here to avoid scrolling in BufferEnter
-      (model |> setActive(Some(node.path)), OpenFile(node.path))
+      (
+        model |> setActive(Some(node.path)),
+        OpenFile(FpExp.toString(node.path)),
+      )
+    | Component_VimTree.SelectedNode(_) => (model, Nothing)
     | Component_VimTree.Nothing => (model, Nothing)
     };
   };
@@ -272,28 +343,93 @@ let update = (~configuration, msg, model) => {
 
 module View = View;
 
-let sub = (~configuration, {rootPath, _}) => {
-  let ignored = Configuration.getValue(c => c.filesExclude, configuration);
+let sub =
+    (
+      ~config,
+      ~configuration,
+      {fileWatcherKey, expandedPaths, pathsToLoad, _},
+    ) => {
+  let ignored =
+    Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
 
-  let toMsg =
+  let toMsg = path =>
     fun
     | Ok(dirents) => {
         let children =
-          dirents |> Internal.luvDirentsToFsTree(~ignored, ~cwd=rootPath);
-        TreeLoaded(FsTreeNode.directory(rootPath, ~children, ~isOpen=true));
+          dirents |> Internal.luvDirentsToFsTree(~ignored, ~cwd=path);
+        NodeLoaded(FsTreeNode.directory(path, ~children, ~isOpen=true));
       }
-    | Error(msg) => TreeLoadError(msg);
+    | Error(msg) => NodeLoadError(msg);
 
-  Service_OS.Sub.dir(~uniqueId="FileExplorerSideBar", ~toMsg, rootPath);
+  let allPathsToLoad = pathsToLoad;
+
+  // Sort expanded paths so we load the root first, then subdirs, etc.
+  let expandedPathSubs =
+    allPathsToLoad
+    |> List.sort((a, b) => {
+         String.length(FpExp.toString(a))
+         - String.length(FpExp.toString(b))
+       })
+    |> (
+      l =>
+        List.nth_opt(l, 0)
+        |> Option.map(path => {
+             Service_OS.Sub.dir(
+               ~uniqueId="FileExplorer:Sub" ++ FpExp.toString(path),
+               ~toMsg=toMsg(path),
+               FpExp.toString(path),
+             )
+           })
+        |> Option.value(~default=Isolinear.Sub.none)
+    );
+
+  let onEvent = (path, evt: Service_FileWatcher.event) => {
+    FileWatcherEvent({path, event: evt});
+  };
+
+  let allPathsToWatch = expandedPaths;
+
+  let useFileWatcher = Configuration.useFileWatcher.get(config);
+  let watchers =
+    !useFileWatcher
+      ? [Isolinear.Sub.none]
+      : allPathsToWatch
+        |> List.map(path => {
+             Service_FileWatcher.watch(
+               ~watchChanges=false,
+               ~key=fileWatcherKey,
+               ~path,
+               ~onEvent=onEvent(path),
+             )
+           });
+
+  [expandedPathSubs, ...watchers] |> Isolinear.Sub.batch;
+};
+
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let reload =
+    define(
+      ~category="Explorer",
+      ~title="Reload",
+      "workbench.todo.explorer-reload",
+      Command(Reload),
+    );
 };
 
 module Contributions = {
   let commands = (~isFocused) => {
     !isFocused
       ? []
-      : Component_VimTree.Contributions.commands
-        |> List.map(Oni_Core.Command.map(msg => Tree(msg)));
+      : [Commands.reload]
+        @ (
+          Component_VimTree.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => Tree(msg)))
+        );
   };
+
+  let configuration = Configuration.[useFileWatcher.spec];
 
   let contextKeys = (~isFocused, model) => {
     open WhenExpr.ContextKeys;

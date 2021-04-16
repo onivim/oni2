@@ -4,6 +4,7 @@ open Oni_Core;
 type font =
   Oni_Core.Font.t = {
     fontFamily: [@opaque] Revery.Font.Family.t,
+    fontWeight: [@opaque] Revery.Font.Weight.t,
     fontSize: float,
     spaceWidth: float,
     underscoreWidth: float,
@@ -39,8 +40,9 @@ module Sub: {
       ~uniqueId: string,
       ~fontFamily: string,
       ~fontSize: float,
-      ~fontLigatures: ConfigurationValues.fontLigatures,
-      ~fontSmoothing: ConfigurationValues.fontSmoothing
+      ~fontWeight: Revery.Font.Weight.t,
+      ~fontLigatures: FontLigatures.t,
+      ~fontSmoothing: FontSmoothing.t
     ) =>
     Isolinear.Sub.t(msg);
 };

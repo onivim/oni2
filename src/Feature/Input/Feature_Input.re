@@ -1,13 +1,58 @@
-open KeyResolver;
-
 open Oni_Core;
 open Utility;
 module Log = (val Log.withNamespace("Oni2.Feature.Input"));
 
-let keyCodeToString = Sdl2.Keycode.getName;
+module KeybindingsLoader = KeybindingsLoader;
+module Schema = Schema;
 
-let keyPressToString =
-  EditorInput.KeyPress.toString(~meta="Meta", ~keyCodeToString);
+// TODO: Move to Service_Input
+module ReveryKeyConverter = ReveryKeyConverter;
+
+let keyPressToString = key => {
+  key |> EditorInput.KeyPress.toString(~keyToString=EditorInput.Key.toString);
+};
+
+let keyCandidateToString = keyCandidate => {
+  keyCandidate
+  |> EditorInput.KeyCandidate.toList
+  // TODO: Alternate strategy - maybe choose shortest option from list?
+  |> (
+    list =>
+      List.nth_opt(list, 0)
+      |> Option.map(keyPressToString)
+      |> Option.value(~default="?Unknown key?")
+  );
+};
+
+type timeout =
+  | NoTimeout
+  | Timeout(Revery.Time.t);
+
+// VIM SETTINGS
+
+module VimSettings = {
+  open Config.Schema;
+  open VimSetting.Schema;
+
+  let timeout =
+    vim2("timeout", "timeoutlen", (maybeTimeout, maybeTimeoutLen) => {
+      let maybeTimeoutBool =
+        maybeTimeout |> OptionEx.flatMap(VimSetting.decode_value_opt(bool));
+      let maybeTimeoutLenInt =
+        maybeTimeoutLen |> OptionEx.flatMap(VimSetting.decode_value_opt(int));
+      switch (maybeTimeoutBool, maybeTimeoutLenInt) {
+      | (None, Some(timeoutLength))
+      | (Some(true), Some(timeoutLength)) =>
+        Some(Timeout(Revery.Time.milliseconds(timeoutLength)))
+
+      | (Some(true), None) => Some(Timeout(Revery.Time.seconds(1)))
+
+      | (Some(false), _) => Some(NoTimeout)
+
+      | (None, None) => None
+      };
+    });
+};
 
 // CONFIGURATION
 module Configuration = {
@@ -29,8 +74,6 @@ module Configuration = {
                        // When parsing from JSON - use VSCode style parsing
                        // where an explicit shift key is required.
                        ~explicitShiftKeyNeeded=true,
-                       ~getKeycode,
-                       ~getScancode,
                        keyString,
                      )
                    ) {
@@ -58,7 +101,7 @@ module Configuration = {
               switch (maybeKey) {
               | Some(key) =>
                 EditorInput.KeyPress.toString(
-                  ~keyCodeToString=Sdl2.Keycode.getName,
+                  //~keyCodeToString=Sdl2.Keycode.getName,
                   EditorInput.KeyPress.PhysicalKey(key),
                 )
                 |> string
@@ -67,10 +110,60 @@ module Configuration = {
             }
           ),
       );
+
+    module Timeout = {
+      let decode =
+        Json.Decode.(
+          one_of([
+            (
+              "bool",
+              bool
+              |> map(
+                   fun
+                   | true => Timeout(Revery.Time.seconds(1))
+                   | false => NoTimeout,
+                 ),
+            ),
+            (
+              "int",
+              int
+              |> map(
+                   fun
+                   | 0 => NoTimeout
+                   | milliseconds =>
+                     Timeout(Revery.Time.milliseconds(milliseconds)),
+                 ),
+            ),
+          ])
+        );
+
+      let encode =
+        Json.Encode.(
+          fun
+          | NoTimeout => bool(false)
+          | Timeout(time) =>
+            int(
+              time
+              |> Revery.Time.toFloatSeconds
+              |> (t => t *. 1000.)
+              |> int_of_float,
+            )
+        );
+    };
+
+    let timeout = custom(~decode=Timeout.decode, ~encode=Timeout.encode);
   };
 
   let leaderKey =
     setting("vim.leader", CustomDecoders.physicalKey, ~default=None);
+
+  let timeout =
+    setting(
+      ~vim=VimSettings.timeout,
+      "vim.timeout",
+      CustomDecoders.timeout,
+      ~default=Timeout(Revery.Time.seconds(1)),
+    );
 };
 
 // MSG
@@ -78,137 +171,45 @@ module Configuration = {
 type outmsg =
   | Nothing
   | DebugInputShown
+  | ErrorNotifications(list(string))
   | MapParseError({
       fromKeys: string,
       toKeys: string,
       error: string,
-    });
+    })
+  | OpenFile(FpExp.t(FpExp.absolute))
+  | TimedOut;
 
 type execute =
-  InputStateMachine.execute = | NamedCommand(string) | VimExCommand(string);
-
-module Schema = {
-  [@deriving show]
-  type keybinding =
-    | Binding({
-        key: string,
+  InputStateMachine.execute =
+    | NamedCommand({
         command: string,
-        condition: WhenExpr.t,
+        arguments: Yojson.Safe.t,
       })
-    | Remap({
-        fromKeys: string,
-        toKeys: string,
-        condition: WhenExpr.t,
-      });
-
-  type resolvedKeybinding =
-    | ResolvedBinding({
-        matcher: EditorInput.Matcher.t,
-        command: InputStateMachine.execute,
-        condition: WhenExpr.ContextKeys.t => bool,
-      })
-    | ResolvedRemap({
-        matcher: EditorInput.Matcher.t,
-        toKeys: list(EditorInput.KeyPress.t),
-        condition: WhenExpr.ContextKeys.t => bool,
-      });
-
-  let bind = (~key, ~command, ~condition) =>
-    Binding({key, command, condition});
-
-  let mapCommand = (~f, keybinding: keybinding) => {
-    switch (keybinding) {
-    | Binding(binding) => Binding({...binding, command: f(binding.command)})
-    | Remap(_) as remap => remap
-    };
-  };
-
-  let clear = (~key as _) => failwith("Not implemented");
-
-  let remap = (~fromKeys, ~toKeys, ~condition) =>
-    Remap({fromKeys, toKeys, condition});
-
-  let resolve = keybinding => {
-    let evaluateCondition = (whenExpr, contextKeys) => {
-      WhenExpr.evaluate(
-        whenExpr,
-        WhenExpr.ContextKeys.getValue(contextKeys),
-      );
-    };
-
-    switch (keybinding) {
-    | Binding({key, command, condition}) =>
-      let maybeMatcher =
-        EditorInput.Matcher.parse(
-          ~explicitShiftKeyNeeded=true,
-          ~getKeycode,
-          ~getScancode,
-          key,
-        );
-      maybeMatcher
-      |> Stdlib.Result.map(matcher => {
-           ResolvedBinding({
-             matcher,
-             command: InputStateMachine.NamedCommand(command),
-             condition: evaluateCondition(condition),
-           })
-         });
-
-    | Remap({fromKeys, condition, toKeys}) =>
-      let evaluateCondition = (whenExpr, contextKeys) => {
-        WhenExpr.evaluate(
-          whenExpr,
-          WhenExpr.ContextKeys.getValue(contextKeys),
-        );
-      };
-
-      let maybeMatcher =
-        EditorInput.Matcher.parse(
-          ~explicitShiftKeyNeeded=true,
-          ~getKeycode,
-          ~getScancode,
-          fromKeys,
-        );
-
-      let maybeKeys =
-        EditorInput.KeyPress.parse(
-          ~explicitShiftKeyNeeded=true,
-          ~getKeycode,
-          ~getScancode,
-          toKeys,
-        );
-
-      ResultEx.map2(
-        (matcher, toKeys) => {
-          ResolvedRemap({
-            matcher,
-            condition: evaluateCondition(condition),
-            toKeys,
-          })
-        },
-        maybeMatcher,
-        maybeKeys,
-      );
-    };
-  };
-};
+    | VimExCommand(string);
 
 [@deriving show]
 type command =
   | ShowDebugInput
   | EnableKeyDisplayer
-  | DisableKeyDisplayer;
+  | DisableKeyDisplayer
+  | OpenKeybindingsFile;
 
 [@deriving show]
 type msg =
   | Command(command)
   | KeybindingsUpdated([@opaque] list(Schema.resolvedKeybinding))
+  | KeybindingsReloaded({
+      bindings: [@opaque] list(Schema.resolvedKeybinding),
+      errors: list(string),
+    })
   | VimMap(Vim.Mapping.t)
   | VimUnmap({
       mode: Vim.Mapping.mode,
       maybeKeys: option(string),
     })
-  | KeyDisplayer([@opaque] KeyDisplayer.msg);
+  | KeyDisplayer([@opaque] KeyDisplayer.msg)
+  | Timeout;
 
 module Msg = {
   let keybindingsUpdated = keybindings => KeybindingsUpdated(keybindings);
@@ -222,11 +223,20 @@ type model = {
   userBindings: list(InputStateMachine.uniqueId),
   inputStateMachine: InputStateMachine.t,
   keyDisplayer: option(KeyDisplayer.t),
+  // Keep track of the input tick - an incrementing number on every input event -
+  // such that we can provide a unique id for the timer to flush on timeout.
+  inputTick: int,
+  keybindingLoader: KeybindingsLoader.t,
 };
 
 type uniqueId = InputStateMachine.uniqueId;
 
-let initial = keybindings => {
+let incrementTick = ({inputTick, _} as model) => {
+  ...model,
+  inputTick: inputTick + 1,
+};
+
+let initial = (~loader, keybindings) => {
   open Schema;
   let inputStateMachine =
     keybindings
@@ -243,49 +253,72 @@ let initial = keybindings => {
              );
              ism;
 
-           | Ok(ResolvedBinding({matcher, condition, command})) =>
+           | Ok(ResolvedBinding({matcher, condition, command, _})) =>
              let (ism, _bindingId) =
                InputStateMachine.addBinding(matcher, condition, command, ism);
              ism;
 
-           | Ok(ResolvedRemap({matcher, condition, toKeys})) =>
+           | Ok(
+               ResolvedRemap({allowRecursive, matcher, condition, toKeys, _}),
+             ) =>
              let (ism, _bindingId) =
-               InputStateMachine.addMapping(matcher, condition, toKeys, ism);
+               InputStateMachine.addMapping(
+                 ~allowRecursive,
+                 matcher,
+                 condition,
+                 toKeys,
+                 ism,
+               );
              ism;
            }
          },
          InputStateMachine.empty,
        );
-  {inputStateMachine, userBindings: [], keyDisplayer: None};
+  {
+    inputStateMachine,
+    userBindings: [],
+    keyDisplayer: None,
+    inputTick: 0,
+    keybindingLoader: loader,
+  };
 };
 
 type effect =
   InputStateMachine.effect =
     | Execute(InputStateMachine.command)
     | Text(string)
-    | Unhandled(EditorInput.KeyPress.t)
+    | Unhandled({
+        key: EditorInput.KeyCandidate.t,
+        isProducedByRemap: bool,
+      })
     | RemapRecursionLimitHit;
-
-let keyCodeToString = Sdl2.Keycode.getName;
 
 let keyDown =
     (
       ~config,
+      ~scancode,
       ~key,
       ~context,
       ~time,
       {inputStateMachine, keyDisplayer, _} as model,
     ) => {
   let leaderKey = Configuration.leaderKey.get(config);
+
   let (inputStateMachine', effects) =
-    InputStateMachine.keyDown(~leaderKey, ~key, ~context, inputStateMachine);
+    InputStateMachine.keyDown(
+      ~leaderKey,
+      ~scancode,
+      ~key,
+      ~context,
+      inputStateMachine,
+    );
 
   let keyDisplayer' =
     keyDisplayer
     |> Option.map(kd => {
          KeyDisplayer.keyPress(
            ~time=Revery.Time.toFloatSeconds(time),
-           keyPressToString(key),
+           keyCandidateToString(key),
            kd,
          )
        });
@@ -294,7 +327,8 @@ let keyDown =
       ...model,
       inputStateMachine: inputStateMachine',
       keyDisplayer: keyDisplayer',
-    },
+    }
+    |> incrementTick,
     effects,
   );
 };
@@ -307,6 +341,11 @@ let disable = ({inputStateMachine, _} as model) => {
 let enable = ({inputStateMachine, _} as model) => {
   ...model,
   inputStateMachine: InputStateMachine.enable(inputStateMachine),
+};
+
+let notifyFileSaved = (path, {keybindingLoader, _} as model) => {
+  ...model,
+  keybindingLoader: KeybindingsLoader.notifyFileSaved(path, keybindingLoader),
 };
 
 let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
@@ -327,15 +366,30 @@ let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
       ...model,
       inputStateMachine: inputStateMachine',
       keyDisplayer: keyDisplayer',
-    },
+    }
+    |> incrementTick,
     effects,
   );
 };
 
-let keyUp = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
+let keyUp = (~config, ~scancode, ~context, {inputStateMachine, _} as model) => {
   let leaderKey = Configuration.leaderKey.get(config);
   let (inputStateMachine', effects) =
-    InputStateMachine.keyUp(~leaderKey, ~key, ~context, inputStateMachine);
+    InputStateMachine.keyUp(
+      ~leaderKey,
+      ~scancode,
+      ~context,
+      inputStateMachine,
+    );
+  (
+    {...model, inputStateMachine: inputStateMachine'} |> incrementTick,
+    effects,
+  );
+};
+
+let timeout = (~context, {inputStateMachine, _} as model) => {
+  let (inputStateMachine', effects) =
+    InputStateMachine.timeout(~context, inputStateMachine);
   ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
 
@@ -350,23 +404,16 @@ let commandToAvailableBindings = (~command, ~config, ~context, model) => {
   if (String.length(command) <= 0) {
     [];
   } else {
-    let firstChar = command.[0];
-    let execute =
-      if (firstChar == ':') {
-        VimExCommand(String.sub(command, 1, String.length(command) - 1));
-      } else {
-        NamedCommand(command);
-      };
-
     allCandidates
     |> List.filter_map(((matcher: EditorInput.Matcher.t, ex: execute)) =>
-         if (ex == execute) {
+         switch (ex) {
+         | NamedCommand({command: namedCommand, _})
+             when command == namedCommand =>
            switch (matcher) {
            | Sequence(keys) => Some(keys)
            | AllKeysReleased => None
-           };
-         } else {
-           None;
+           }
+         | _ => None
          }
        );
   };
@@ -391,6 +438,7 @@ let addKeyBinding = (~binding, {inputStateMachine, _} as model) => {
     | ResolvedRemap(remap) =>
       let (inputStateMachine', uniqueId) =
         InputStateMachine.addMapping(
+          ~allowRecursive=remap.allowRecursive,
           remap.matcher,
           remap.condition,
           remap.toKeys,
@@ -433,7 +481,9 @@ module Internal = {
              | Terminal => "terminalFocus" |> parse
              | InsertAndCommandLine =>
                "insertMode || commandLineFocus" |> parse
-             | All => WhenExpr.Value(True);
+             | NormalAndVisualAndSelectAndOperator =>
+               "selectMode || normalMode || visualMode || operatorPending"
+               |> parse;
            }
          );
 
@@ -457,7 +507,7 @@ module Internal = {
              let (ism, bindings) = acc;
              let (ism', bindingId) =
                switch (resolvedBinding) {
-               | ResolvedBinding({matcher, condition, command}) =>
+               | ResolvedBinding({matcher, condition, command, _}) =>
                  InputStateMachine.addBinding(
                    matcher,
                    condition,
@@ -465,8 +515,20 @@ module Internal = {
                    ism,
                  )
 
-               | ResolvedRemap({matcher, condition, toKeys}) =>
-                 InputStateMachine.addMapping(matcher, condition, toKeys, ism)
+               | ResolvedRemap({
+                   allowRecursive,
+                   matcher,
+                   condition,
+                   toKeys,
+                   _,
+                 }) =>
+                 InputStateMachine.addMapping(
+                   ~allowRecursive,
+                   matcher,
+                   condition,
+                   toKeys,
+                   ism,
+                 )
                };
              (ism', [bindingId, ...bindings]);
            },
@@ -483,6 +545,13 @@ module Internal = {
 
 let update = (msg, model) => {
   switch (msg) {
+  | Command(OpenKeybindingsFile) =>
+    let eff =
+      model.keybindingLoader
+      |> KeybindingsLoader.getFilePath
+      |> Option.map(path => OpenFile(path))
+      |> Option.value(~default=Nothing);
+    (model, eff);
   | Command(ShowDebugInput) => (model, DebugInputShown)
   | Command(DisableKeyDisplayer) => (
       {...model, keyDisplayer: None},
@@ -497,30 +566,21 @@ let update = (msg, model) => {
     // In other words - characters like 'J' should resolve to 'Shift+j'
     let explicitShiftKeyNeeded = false;
     let maybeMatcher =
-      EditorInput.Matcher.parse(
-        ~explicitShiftKeyNeeded,
-        ~getKeycode,
-        ~getScancode,
-        mapping.fromKeys,
-      );
+      EditorInput.Matcher.parse(~explicitShiftKeyNeeded, mapping.fromKeys);
     let (model, eff) =
       switch (
         VimCommandParser.parse(~scriptId=mapping.scriptId, mapping.toValue)
       ) {
       | KeySequence(toValue) =>
         let maybeKeys =
-          EditorInput.KeyPress.parse(
-            ~explicitShiftKeyNeeded,
-            ~getKeycode,
-            ~getScancode,
-            toValue,
-          );
+          EditorInput.KeyPress.parse(~explicitShiftKeyNeeded, toValue);
 
         let maybeModel =
           ResultEx.map2(
             (matcher, keys) => {
               let (inputStateMachine', _mappingId) =
                 InputStateMachine.addMapping(
+                  ~allowRecursive=mapping.recursive,
                   matcher,
                   Internal.vimMapModeToWhenExpr(mapping.mode),
                   keys,
@@ -571,6 +631,16 @@ let update = (msg, model) => {
       Nothing,
     )
 
+  | KeybindingsReloaded({bindings, errors}) =>
+    let outmsg =
+      switch (errors) {
+      | [] => Nothing
+      | errors => ErrorNotifications(errors)
+      };
+    (Internal.updateKeybindings(bindings, model), outmsg);
+
+  | Timeout => (model, TimedOut)
+
   | KeyDisplayer(msg) =>
     let keyDisplayer' =
       model.keyDisplayer |> Option.map(KeyDisplayer.update(msg));
@@ -582,6 +652,14 @@ let update = (msg, model) => {
 
 module Commands = {
   open Feature_Commands.Schema;
+
+  let openDefaultKeybindingsFile =
+    define(
+      ~category="Preferences",
+      ~title="Open keybindings file",
+      "workbench.action.openDefaultKeybindingsFile",
+      Command(OpenKeybindingsFile),
+    );
 
   let showInputState =
     define(
@@ -612,12 +690,41 @@ module Commands = {
 
 // SUBSCRIPTION
 
-let sub = ({keyDisplayer, _}) => {
-  switch (keyDisplayer) {
-  | None => Isolinear.Sub.none
-  | Some(kd) =>
-    KeyDisplayer.sub(kd) |> Isolinear.Sub.map(msg => KeyDisplayer(msg))
-  };
+let sub =
+    (
+      ~config,
+      {keyDisplayer, inputTick, inputStateMachine, keybindingLoader, _},
+    ) => {
+  let keyDisplayerSub =
+    switch (keyDisplayer) {
+    | None => Isolinear.Sub.none
+    | Some(kd) =>
+      KeyDisplayer.sub(kd) |> Isolinear.Sub.map(msg => KeyDisplayer(msg))
+    };
+
+  let timeoutSub =
+    switch (Configuration.timeout.get(config)) {
+    | NoTimeout => Isolinear.Sub.none
+    | Timeout(delay) =>
+      if (InputStateMachine.isPending(inputStateMachine)) {
+        Service_Time.Sub.once(
+          ~uniqueId="Feature_Input.keyExpirer:" ++ string_of_int(inputTick),
+          ~delay,
+          ~msg=(~current as _) => {
+          Timeout
+        });
+      } else {
+        Isolinear.Sub.none;
+      }
+    };
+
+  let loaderSub =
+    KeybindingsLoader.sub(keybindingLoader)
+    |> Isolinear.Sub.map(((bindings, errors)) => {
+         KeybindingsReloaded({bindings, errors})
+       });
+
+  [keyDisplayerSub, timeoutSub, loaderSub] |> Isolinear.Sub.batch;
 };
 
 module ContextKeys = {
@@ -629,9 +736,14 @@ module ContextKeys = {
 
 module Contributions = {
   let commands =
-    Commands.[showInputState, enableKeyDisplayer, disableKeyDisplayer];
+    Commands.[
+      showInputState,
+      enableKeyDisplayer,
+      disableKeyDisplayer,
+      openDefaultKeybindingsFile,
+    ];
 
-  let configuration = Configuration.[leaderKey.spec];
+  let configuration = Configuration.[leaderKey.spec, timeout.spec];
 
   let contextKeys = model => {
     WhenExpr.ContextKeys.(
@@ -665,9 +777,7 @@ module View = {
       | AllKeysReleased => React.empty
       | Sequence(matchers) =>
         let text =
-          matchers
-          |> List.map(KeyPress.toString(~keyCodeToString))
-          |> String.concat(", ");
+          matchers |> List.map(KeyPress.toString) |> String.concat(", ");
         <Text text fontFamily={font.family} fontSize={font.size} />;
       };
     };

@@ -25,7 +25,7 @@ let of_yojson: Yojson.Safe.t => result(t, string);
 
 let fromMemory: string => t;
 let fromPath: string => t;
-let fromFilePath: Fp.t(Fp.absolute) => t;
+let fromFilePath: FpExp.t(FpExp.absolute) => t;
 let fromScheme:
   (~scheme: Scheme.t, ~authority: string=?, ~query: string=?, string) => t;
 
@@ -34,6 +34,8 @@ let toFileSystemPath: t => string;
 let getScheme: t => Scheme.t;
 
 let pp: (Format.formatter, t) => unit;
+
+let equals: (t, t) => bool;
 
 let decode: Json.decoder(t);
 let encode: Json.encoder(t);

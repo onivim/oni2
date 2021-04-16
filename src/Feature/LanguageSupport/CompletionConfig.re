@@ -57,6 +57,76 @@ module QuickSuggestionsSetting = {
     );
 };
 
+module SnippetSuggestions = {
+  type t = [ | `Top | `Bottom | `Inline | `Hidden];
+
+  module Decode = {
+    open Json.Decode;
+
+    let decodeString =
+      string
+      |> map(
+           fun
+           | "hidden" => `Hidden
+           | "bottom" => `Bottom
+           | "inline" => `Inline
+           | "top" => `Top
+           | _ => `Inline,
+         );
+
+    let decodeBool =
+      bool
+      |> map(
+           fun
+           | true => `Inline
+           | false => `Hidden,
+         );
+
+    let decode =
+      one_of([
+        ("SnippetSuggestion.bool", decodeBool),
+        ("SnippetSuggestion.string", decodeString),
+      ]);
+  };
+
+  let decode = Decode.decode;
+
+  module Encode = {
+    open Json.Encode;
+
+    let encode =
+      fun
+      | `Top => string("top")
+      | `Hidden => string("hidden")
+      | `Inline => string("inline")
+      | `Bottom => string("bottom");
+  };
+
+  let encode = Encode.encode;
+};
+
+module Decode = {
+  open Json.Decode;
+
+  module AcceptSuggestionOnEnter = {
+    let decodeBool = bool;
+    let decodeString =
+      string
+      |> map(
+           fun
+           | "on" => true
+           // TODO: "smart" setting?
+           | _ => false,
+         );
+
+    let decode =
+      one_of([
+        ("acceptSuggestionOnEnter.bool", decodeBool),
+        ("acceptSuggestionOnEnter.string", decodeString),
+      ]);
+  };
+};
+
 // CONFIGURATION
 
 open Config.Schema;
@@ -73,3 +143,23 @@ let quickSuggestions =
 
 let wordBasedSuggestions =
   setting("editor.wordBasedSuggestions", bool, ~default=true);
+
+let acceptSuggestionOnEnter =
+  setting(
+    "editor.acceptSuggestionOnEnter",
+    custom(
+      ~decode=Decode.AcceptSuggestionOnEnter.decode,
+      ~encode=Json.Encode.bool,
+    ),
+    ~default=true,
+  );
+
+let snippetSuggestions =
+  setting(
+    "editor.snippetSuggestions",
+    custom(
+      ~decode=SnippetSuggestions.decode,
+      ~encode=SnippetSuggestions.encode,
+    ),
+    ~default=`Inline,
+  );
