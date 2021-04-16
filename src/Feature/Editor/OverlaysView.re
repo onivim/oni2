@@ -35,20 +35,20 @@ let completionsView =
       ~editorFont: Service_Font.font,
       (),
     ) =>
-  Feature_LanguageSupport.Completion.isActive(languageSupport)
-    ? <Feature_LanguageSupport.Completion.View
-        buffer
-        cursor
-        x=cursorPixelX
-        y=cursorPixelY
-        lineHeight
-        theme
-        tokenTheme
-        editorFont
-        //colors
-        model=languageSupport
-      />
-    : React.empty;
+  //Feature_LanguageSupport.Completion.isActive(languageSupport)
+  <Feature_LanguageSupport.Completion.View
+    buffer
+    cursor
+    x=cursorPixelX
+    y=cursorPixelY
+    lineHeight
+    theme
+    tokenTheme
+    editorFont
+    //colors
+    model=languageSupport
+  />;
+//: React.empty;
 
 let signatureHelpView =
     (
@@ -101,8 +101,20 @@ let make =
     Editor.bufferCharacterPositionToPixel(~position=cursorPosition, editor);
 
   let cursorPixelY = pixelY |> int_of_float;
-  let cursorPixelX = pixelX +. gutterWidth |> int_of_float;
+  let cursorPixelX = pixelX +. gutterWidth;
   let lineHeight = Editor.lineHeightInPixels(editor);
+
+  let mode = Editor.mode(editor);
+
+  let cursorPixelX =
+    (
+      if (!Vim.Mode.isInsert(mode)) {
+        cursorPixelX +. Editor.getCharacterWidth(editor);
+      } else {
+        cursorPixelX;
+      }
+    )
+    |> int_of_float;
 
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>

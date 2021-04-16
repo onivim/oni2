@@ -43,7 +43,11 @@ let set = (~instant, newModel, model) => {
       nextInterpolatedModel,
     };
   } else {
-    model;
+    {
+      ...model,
+      // Always pick up the newest interpolated model
+      nextInterpolatedModel,
+    };
   };
 };
 

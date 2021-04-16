@@ -59,10 +59,10 @@ module Animator: {
   let render:
     (
       (~prev: 'interpolatedModel, ~next: 'interpolatedModel, float) =>
-      Revery.UI.element,
+      'output,
       t('model, 'interpolatedModel)
     ) =>
-    Revery.UI.element;
+    'output;
 };
 
 type t('value);

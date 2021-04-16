@@ -15,10 +15,68 @@ type providerMsg =
   | Keyword(CompletionProvider.keywordMsg)
   | Snippet(CompletionProvider.snippetMsg);
 
+module ViewModel = {
+  open Component_Animation;
+  type t = {
+    showAnimation:
+      Animator.t(
+        (bool, array(CompletionItem.t)),
+        [ | `Open(array(CompletionItem.t)) | `Closed],
+      ),
+  };
+
+  [@deriving show]
+  type msg =
+    | ShowAnimator([@opaque] Animator.msg);
+
+  let update = (msg, model) =>
+    switch (msg) {
+    | ShowAnimator(showMsg) => {
+        showAnimation: Animator.update(showMsg, model.showAnimation),
+      }
+    };
+
+  let initial = {
+    let showAnimation =
+      Animator.create(
+        ~equals=
+          (a, b) => {
+            switch (a, b) {
+            | (`Closed, `Closed) => true
+            | (`Open(_), `Open(_)) => true
+            | (`Closed, `Open(_)) => false
+            | (`Open(_), `Closed) => false
+            }
+          },
+        ~initial=`Closed,
+        ((isActive, allItems)) => isActive ? `Open(allItems) : `Closed,
+      );
+
+    {showAnimation: showAnimation};
+  };
+
+  let sync = (~isActive, ~allItems, model) => {
+    {
+      showAnimation:
+        Animator.set(
+          ~instant=false,
+          (isActive, allItems),
+          model.showAnimation,
+        ),
+    };
+  };
+
+  let sub = model => {
+    Animator.sub(model.showAnimation)
+    |> Isolinear.Sub.map(msg => ShowAnimator(msg));
+  };
+};
+
 [@deriving show]
 type msg =
   | Command(command)
-  | Provider(providerMsg);
+  | Provider(providerMsg)
+  | ViewModel(ViewModel.msg);
 
 type exthostMsg;
 
@@ -450,6 +508,7 @@ type model = {
   snippetSortOrder: [ | `Bottom | `Hidden | `Inline | `Top],
   isShadowEnabled: bool,
   isAnimationEnabled: bool,
+  viewModel: ViewModel.t,
 };
 
 let initial = {
@@ -481,6 +540,7 @@ let initial = {
   snippetSortOrder: `Inline,
   isAnimationEnabled: true,
   isShadowEnabled: true,
+  viewModel: ViewModel.initial,
 };
 
 let configurationChanged = (~config, model) => {
@@ -594,20 +654,32 @@ let reset = model =>
       selection: None,
     };
   };
+let updateViewModel = model => {
+  let isActive = isActive(model);
+
+  {
+    ...model,
+    viewModel:
+      ViewModel.sync(~isActive, ~allItems=model.allItems, model.viewModel),
+  };
+};
 
 let startInsertMode = model => {
-  {...model, isInsertMode: true} |> reset;
+  {...model, isInsertMode: true} |> reset |> updateViewModel;
 };
 
 let stopInsertMode = model => {
-  {...model, isInsertMode: false} |> reset;
+  {...model, isInsertMode: false} |> reset |> updateViewModel;
 };
 
 let cancel = model => {
-  ...model,
-  providers: model.providers |> List.map(Session.cancel),
-  allItems: [||],
-  selection: None,
+  {
+    ...model,
+    providers: model.providers |> List.map(Session.cancel),
+    allItems: [||],
+    selection: None,
+  }
+  |> updateViewModel;
 };
 
 // There are some bugs with completion in snippet mode -
@@ -615,10 +687,10 @@ let cancel = model => {
 // these and gate with a configuration setting, like:
 // `editor.suggest.snippetsPreventQuickSuggestions`
 let startSnippet = model => {
-  {...model, isSnippetMode: true} |> reset;
+  {...model, isSnippetMode: true} |> reset |> updateViewModel;
 };
 let stopSnippet = model => {
-  {...model, isSnippetMode: false} |> reset;
+  {...model, isSnippetMode: false} |> reset |> updateViewModel;
 };
 
 let register =
@@ -676,7 +748,7 @@ let updateSessions = (~buffer, ~activeCursor, providers, model) => {
       ~count=Array.length(allItems),
       model.selection,
     );
-  {...model, providers, allItems, selection};
+  {...model, providers, allItems, selection} |> updateViewModel;
 };
 
 let cursorMoved =
@@ -880,6 +952,11 @@ let update =
       Nothing,
     );
 
+  | ViewModel(viewModelMsg) => (
+      {...model, viewModel: ViewModel.update(viewModelMsg, model.viewModel)},
+      Nothing,
+    )
+
   | Provider(msg) =>
     let providers =
       model.providers |> List.map(provider => Session.update(msg, provider));
@@ -897,25 +974,33 @@ let update =
         model.selection,
       );
 
-    let model' = {...model, providers, allItems, selection};
+    let model' =
+      {...model, providers, allItems, selection} |> updateViewModel;
 
     // If the current selection is different than the one we had before...
     (model', Nothing);
   };
 };
 
-let sub = (~activeBuffer, ~client, model) =>
+let sub = (~activeBuffer, ~client, model) => {
   // Subs for each pending handle..
-  if (model.isInsertMode) {
-    let selectedItem = selected(model);
-    model.providers
-    |> List.map((meet: Session.t) => {
-         Session.sub(~activeBuffer, ~client, ~selectedItem, meet)
-       })
-    |> Isolinear.Sub.batch;
-  } else {
-    Isolinear.Sub.none;
-  };
+  let providerSubs =
+    if (model.isInsertMode) {
+      let selectedItem = selected(model);
+      model.providers
+      |> List.map((meet: Session.t) => {
+           Session.sub(~activeBuffer, ~client, ~selectedItem, meet)
+         });
+    } else {
+      [];
+    };
+
+  let viewModelSub =
+    ViewModel.sub(model.viewModel)
+    |> Isolinear.Sub.map(msg => ViewModel(msg));
+
+  [viewModelSub, ...providerSubs] |> Isolinear.Sub.batch;
+};
 
 // COMMANDS
 
@@ -1167,10 +1252,16 @@ module View = {
   module Styles = {
     open Style;
 
-    let outerPosition = (~x, ~y) => [
+    let outerPosition = (~interp, ~x, ~y) => [
       position(`Absolute),
       top(y - 4),
       left(x + 4),
+      transform([
+        Transform.RotateX(
+          Revery.Math.Angle.from_degrees((1.0 -. interp) *. 25.),
+        ),
+        Transform.TranslateY((1.0 -. interp) *. 5.),
+      ]),
     ];
 
     let innerPosition = (~height, ~width, ~lineHeight, ~colors: Colors.t) => [
@@ -1389,9 +1480,6 @@ module View = {
         ~completions: model,
         (),
       ) => {
-    /*let hoverEnabled =
-      Configuration.getValue(c => c.editorHoverEnabled, state.configuration);*/
-    let items = completions |> allItems;
 
     let maybeLine = buffer |> Buffer.rawLine(cursor.line);
 
@@ -1410,11 +1498,6 @@ module View = {
     };
 
     let focused = completions.selection;
-
-    let width = 500;
-    let itemHeight = int_of_float(ceil(lineHeight));
-    let maxHeight = itemHeight * 5;
-    let height = min(maxHeight, Array.length(items) * itemHeight);
 
     // TODO: Bring back detail view:
     // 1) Align underneath completion
@@ -1441,64 +1524,80 @@ module View = {
     //   | None => React.empty
     //   };
 
-    let innerStyle =
-      Styles.innerPosition(~height, ~width, ~lineHeight, ~colors);
+    let render = (items, focused, interp) => {
+      let width = 500;
+      let itemHeight = int_of_float(ceil(lineHeight));
+      let maxHeight = itemHeight * 5;
+      let height = min(maxHeight, Array.length(items) * itemHeight);
+      let innerStyle =
+        Styles.innerPosition(~height, ~width, ~lineHeight, ~colors);
 
-    let innerStyleWithShadow =
-      if (completions.isShadowEnabled) {
-        let color = Feature_Theme.Colors.shadow.from(theme);
-        [
-          Style.boxShadow(
-            ~xOffset=4.,
-            ~yOffset=4.,
-            ~blurRadius=12.,
-            ~spreadRadius=0.,
-            ~color,
-          ),
-          ...innerStyle,
-        ];
-      } else {
-        innerStyle;
-      };
+      //let interp = interp *. 2.0 |> max(1.0);
+      let innerStyleWithShadow =
+        if (completions.isShadowEnabled) {
+          let color = Feature_Theme.Colors.shadow.from(theme);
+          [
+            Style.boxShadow(
+              ~xOffset=4.,
+              ~yOffset=4.,
+              ~blurRadius=12.,
+              ~spreadRadius=0.,
+              ~color,
+            ),
+            ...innerStyle,
+          ];
+        } else {
+          innerStyle;
+        };
+      <View style={Styles.outerPosition(~interp, ~x, ~y)}>
+        <Opacity opacity=interp>
+          <View style=innerStyleWithShadow>
+            <FlatList
+              rowHeight=itemHeight
+              initialRowsToRender=5
+              count={Array.length(items)}
+              theme
+              focused>
+              ...{index => {
+                let item = items[index];
+                let CompletionItem.{label: text, kind, _} = item;
 
-    <View style={Styles.outerPosition(~x, ~y)}>
-      <Opacity opacity=Constants.opacity>
-        <View style=innerStyleWithShadow>
-          <FlatList
-            rowHeight=itemHeight
-            initialRowsToRender=5
-            count={Array.length(items)}
-            theme
-            focused>
-            ...{index => {
-              let item = items[index];
-              let CompletionItem.{label: text, kind, _} = item;
+                let highlight =
+                  maybeLine
+                  |> Option.map(line => {
+                       CompletionItemScorer.highlights(line, item, cursor)
+                     })
+                  |> Option.value(~default=[]);
 
-              let highlight =
-                maybeLine
-                |> Option.map(line => {
-                     CompletionItemScorer.highlights(line, item, cursor)
-                   })
-                |> Option.value(~default=[]);
+                <itemView
+                  isFocused={Some(index) == focused}
+                  rowHeight=itemHeight
+                  text
+                  detail={item.detail}
+                  kind
+                  highlight
+                  theme
+                  tokenTheme
+                  width
+                  colors
+                  editorFont
+                />;
+              }}
+            </FlatList>
+          </View>
+          detail
+        </Opacity>
+      </View>;
+    };
 
-              <itemView
-                isFocused={Some(index) == focused}
-                rowHeight=itemHeight
-                text
-                detail={item.detail}
-                kind
-                highlight
-                theme
-                tokenTheme
-                width
-                colors
-                editorFont
-              />;
-            }}
-          </FlatList>
-        </View>
-        detail
-      </Opacity>
-    </View>;
+    completions.viewModel.showAnimation
+    |> Component_Animation.Animator.render((~prev, ~next, interp) => {
+         switch (prev, next) {
+         | (`Closed, `Closed) => React.empty
+         | (`Open(_), `Open(items)) => render(items, focused, 1.0)
+         | (`Closed, `Open(items)) => render(items, focused, interp)
+         | (`Open(items), `Closed) => render(items, None, 1.0 -. interp)
+         }
+       });
   };
 };

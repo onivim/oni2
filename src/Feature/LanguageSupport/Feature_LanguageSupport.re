@@ -1039,10 +1039,8 @@ let sub =
         |> Isolinear.Sub.map(msg => Definition(msg));
 
   let completionSub =
-    !isInsertMode
-      ? Isolinear.Sub.none
-      : OldCompletion.sub(~activeBuffer, ~client, completion)
-        |> Isolinear.Sub.map(msg => Completion(msg));
+    OldCompletion.sub(~activeBuffer, ~client, completion)
+    |> Isolinear.Sub.map(msg => Completion(msg));
 
   let documentSymbolsSub =
     DocumentSymbols.sub(~buffer=activeBuffer, ~client, documentSymbols)
