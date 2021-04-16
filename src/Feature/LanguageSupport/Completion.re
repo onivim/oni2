@@ -1480,7 +1480,6 @@ module View = {
         ~completions: model,
         (),
       ) => {
-
     let maybeLine = buffer |> Buffer.rawLine(cursor.line);
 
     let colors: Colors.t = {

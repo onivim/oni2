@@ -58,8 +58,7 @@ module Animator: {
 
   let render:
     (
-      (~prev: 'interpolatedModel, ~next: 'interpolatedModel, float) =>
-      'output,
+      (~prev: 'interpolatedModel, ~next: 'interpolatedModel, float) => 'output,
       t('model, 'interpolatedModel)
     ) =>
     'output;
