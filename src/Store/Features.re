@@ -1734,7 +1734,16 @@ let update =
         Effect.none,
       )
 
-    | RemoveLastWasBlocked => (state, Internal.quitEffect)
+    | RemoveLastWasBlocked =>
+      // #417: If there are any unsaved files... show a warning and give the user a chance to save.
+      if (Feature_Buffers.anyModified(state.buffers)) {
+        (
+          {...state, modal: Some(Feature_Modals.unsavedBuffersWarning)},
+          Isolinear.Effect.none,
+        );
+      } else {
+        (state, Internal.quitEffect);
+      }
 
     | Nothing => (state, Effect.none)
     };

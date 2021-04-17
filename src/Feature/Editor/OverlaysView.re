@@ -27,6 +27,7 @@ let completionsView =
       ~buffer,
       ~cursor,
       ~languageSupport,
+      ~lineHeight,
       ~cursorPixelX,
       ~cursorPixelY,
       ~theme,
@@ -40,7 +41,7 @@ let completionsView =
         cursor
         x=cursorPixelX
         y=cursorPixelY
-        lineHeight={editorFont.measuredHeight}
+        lineHeight
         theme
         tokenTheme
         editorFont
@@ -101,12 +102,14 @@ let make =
 
   let cursorPixelY = pixelY |> int_of_float;
   let cursorPixelX = pixelX +. gutterWidth |> int_of_float;
+  let lineHeight = Editor.lineHeightInPixels(editor);
 
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
         <completionsView
           cursor=cursorPosition
           buffer
+          lineHeight
           languageSupport
           cursorPixelX
           cursorPixelY

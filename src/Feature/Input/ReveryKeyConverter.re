@@ -146,7 +146,12 @@ let reveryKeyToKeyPress =
   ignore(repeat);
   let name = Sdl2.Scancode.ofInt(scancode) |> Sdl2.Scancode.getName;
 
-  if (name == "Left Shift" || name == "Right Shift") {
+  // Filter out some modifier keys. Otherwise, these keys will be treated as actual key presses,
+  // and can break mapping sequences.
+  if (name == "Left Shift"
+      || name == "Right Shift"
+      || name == "Left Ctrl"
+      || name == "Right Ctrl") {
     None;
   } else {
     let shift = Revery.Key.Keymod.isShiftDown(keymod);

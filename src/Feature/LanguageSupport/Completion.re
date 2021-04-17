@@ -448,6 +448,8 @@ type model = {
   isSnippetMode: bool,
   acceptOnEnter: bool,
   snippetSortOrder: [ | `Bottom | `Hidden | `Inline | `Top],
+  isShadowEnabled: bool,
+  isAnimationEnabled: bool,
 };
 
 let initial = {
@@ -477,6 +479,8 @@ let initial = {
   allItems: [||],
   selection: Selection.initial,
   snippetSortOrder: `Inline,
+  isAnimationEnabled: true,
+  isShadowEnabled: true,
 };
 
 let configurationChanged = (~config, model) => {
@@ -484,6 +488,10 @@ let configurationChanged = (~config, model) => {
     ...model,
     acceptOnEnter: CompletionConfig.acceptSuggestionOnEnter.get(config),
     snippetSortOrder: CompletionConfig.snippetSuggestions.get(config),
+    isAnimationEnabled:
+      Feature_Configuration.GlobalConfiguration.animation.get(config),
+    isShadowEnabled:
+      Feature_Configuration.GlobalConfiguration.shadows.get(config),
   };
 };
 
@@ -1076,8 +1084,6 @@ module View = {
   module Constants = {
     let maxCompletionWidth = 225;
     let maxDetailWidth = 225;
-    let itemHeight = 22;
-    let maxHeight = itemHeight * 5;
     let opacity = 1.0;
     let padding = 8;
   };
@@ -1172,32 +1178,46 @@ module View = {
       top(int_of_float(lineHeight +. 0.5)),
       left(0),
       Style.width(width),
-      Style.height(height),
+      Style.height(height + 2), // Add 2 to account for border!
       border(~color=colors.suggestWidgetBorder, ~width=1),
       backgroundColor(colors.suggestWidgetBackground),
     ];
 
-    let item = (~isFocused, ~colors: Colors.t) => [
+    let item = (~rowHeight, ~isFocused, ~colors: Colors.t) => [
       isFocused
         ? backgroundColor(colors.suggestWidgetSelectedBackground)
         : backgroundColor(colors.suggestWidgetBackground),
       flexDirection(`Row),
+      height(rowHeight),
+      justifyContent(`Center),
     ];
 
-    let icon = (~color) => [
+    let icon = (~size, ~color) => [
       flexDirection(`Row),
       justifyContent(`Center),
       alignItems(`Center),
       flexGrow(0),
+      flexShrink(0),
       backgroundColor(color),
-      width(25),
-      padding(4),
+      width(size),
+      height(size),
     ];
 
-    let label = [flexGrow(1), margin(4)];
+    let label = [
+      flexGrow(1),
+      flexShrink(1),
+      marginTop(2),
+      marginHorizontal(4),
+    ];
+
+    let detail = [
+      flexGrow(2),
+      flexShrink(2),
+      marginTop(2),
+      marginHorizontal(4),
+    ];
 
     let text = (~highlighted=false, ~colors: Colors.t, ()) => [
-      textOverflow(`Ellipsis),
       textWrap(Revery.TextWrapping.NoWrap),
       color(
         highlighted ? colors.normalModeBackground : colors.editorForeground,
@@ -1206,22 +1226,19 @@ module View = {
 
     let highlightedText = (~colors) => text(~highlighted=true, ~colors, ());
 
-    let detail = (~width, ~lineHeight, ~colors: Colors.t) => [
+    let documentation = (~width, ~lineHeight, ~colors: Colors.t) => [
       position(`Absolute),
       left(width),
       top(int_of_float(lineHeight +. 0.5)),
       Style.width(Constants.maxDetailWidth),
-      flexDirection(`Column),
-      alignItems(`FlexStart),
-      justifyContent(`Center),
       border(~color=colors.suggestWidgetBorder, ~width=1),
       backgroundColor(colors.suggestWidgetBackground),
     ];
 
     let detailText = (~tokenTheme: TokenTheme.t) => [
       textOverflow(`Ellipsis),
+      textWrap(Revery.TextWrapping.NoWrap),
       color(tokenTheme.commentColor),
-      margin(3),
     ];
   };
 
@@ -1231,6 +1248,10 @@ module View = {
         ~text,
         ~kind,
         ~highlight,
+        ~detail: option(string),
+        ~tokenTheme,
+        ~rowHeight,
+        ~width,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~colors: Colors.t,
         ~editorFont: Service_Font.font,
@@ -1240,8 +1261,57 @@ module View = {
 
     let iconColor = kind |> kindToColor(theme);
 
-    <View style={Styles.item(~isFocused, ~colors)}>
-      <View style={Styles.icon(~color=iconColor)}>
+    let textWidth = Service_Font.measure(~text, editorFont);
+    let labelWidth = int_of_float(ceil(textWidth +. 0.5));
+
+    let padding = rowHeight;
+    let availableWidth = width - rowHeight - padding - labelWidth;
+    let remainingWidth = availableWidth > 50 ? availableWidth : 0;
+
+    let textMarginTop = 2;
+
+    let maybeDetail =
+      switch (detail) {
+      | Some(detail) when isFocused && remainingWidth > 0 =>
+        <View
+          style=Style.[
+            position(`Absolute),
+            top(textMarginTop),
+            bottom(0),
+            right(8),
+            width(remainingWidth - 8),
+            flexDirection(`Row),
+          ]>
+          <View style=Style.[flexGrow(1), flexShrink(1)] />
+          <View
+            style=Style.[
+              flexGrow(0),
+              flexShrink(0),
+              justifyContent(`Center),
+            ]>
+            <Text
+              style={Styles.detailText(~tokenTheme)}
+              fontFamily={editorFont.fontFamily}
+              fontSize={editorFont.fontSize}
+              text=detail
+            />
+          </View>
+        </View>
+      | _ => React.empty
+      };
+
+    <View style={Styles.item(~rowHeight, ~isFocused, ~colors)}>
+      <View
+        style=Style.[
+          backgroundColor(iconColor),
+          position(`Absolute),
+          top(0),
+          left(0),
+          width(rowHeight),
+          height(rowHeight),
+          justifyContent(`Center),
+          alignItems(`Center),
+        ]>
         <Codicon
           icon
           color={colors.suggestWidgetBackground}
@@ -1249,7 +1319,15 @@ module View = {
           // Might be a bug with Revery font loading / re - rendering in this case?
         />
       </View>
-      <View style=Styles.label>
+      <View
+        style=Style.[
+          position(`Absolute),
+          top(textMarginTop),
+          bottom(0),
+          left(rowHeight + 8),
+          right(remainingWidth - rowHeight - 16),
+          justifyContent(`Center),
+        ]>
         <HighlightText
           highlights=highlight
           style={Styles.text(~colors, ())}
@@ -1259,27 +1337,43 @@ module View = {
           text
         />
       </View>
+      maybeDetail
     </View>;
   };
 
   let detailView =
       (
-        ~text,
+        ~documentation,
         ~width,
         ~lineHeight,
+        ~uiFont: Oni_Core.UiFont.t,
         ~editorFont: Service_Font.font,
         ~colors,
+        ~colorTheme,
         ~tokenTheme,
         (),
-      ) =>
-    <View style={Styles.detail(~width, ~lineHeight, ~colors)}>
-      <Text
-        style={Styles.detailText(~tokenTheme)}
-        fontFamily={editorFont.fontFamily}
-        fontSize={editorFont.fontSize}
-        text
-      />
+      ) => {
+    let documentationElement =
+      Markdown.make(
+        ~markdown=Exthost.MarkdownString.toString(documentation),
+        ~fontFamily=uiFont.family,
+        ~colorTheme,
+        ~tokenTheme,
+        ~languageInfo=Exthost.LanguageInfo.initial,
+        ~defaultLanguage="reason",
+        ~codeFontFamily=editorFont.fontFamily,
+        ~grammars=Oni_Syntax.GrammarRepository.empty,
+        ~baseFontSize=10.,
+        ~codeBlockFontSize=editorFont.fontSize,
+        (),
+      );
+
+    <View style={Styles.documentation(~width, ~lineHeight, ~colors)}>
+      <View style=Style.[flexGrow(1), flexDirection(`Column)]>
+        documentationElement
+      </View>
     </View>;
+  };
 
   let make =
       (
@@ -1317,41 +1411,61 @@ module View = {
 
     let focused = completions.selection;
 
-    let maxWidth =
-      items
-      |> Array.fold_left(
-           (maxWidth, this: CompletionItem.t) => {
-             let textWidth =
-               Service_Font.measure(~text=this.label, editorFont);
-             let thisWidth =
-               int_of_float(textWidth +. 0.5) + Constants.padding;
-             max(maxWidth, thisWidth);
-           },
-           Constants.maxCompletionWidth,
-         );
+    let width = 500;
+    let itemHeight = int_of_float(ceil(lineHeight));
+    let maxHeight = itemHeight * 5;
+    let height = min(maxHeight, Array.length(items) * itemHeight);
 
-    let width = maxWidth + Constants.padding * 2;
-    let height =
-      min(Constants.maxHeight, Array.length(items) * Constants.itemHeight);
+    // TODO: Bring back detail view:
+    // 1) Align underneath completion
+    // 2) Test with providers that have large details (like Python)
+    let detail = React.empty;
+    // let detail =
+    //   switch (focused) {
+    //   | Some(index) =>
+    //     let focused: CompletionItem.t = items[index];
+    //     switch (focused.documentation) {
+    //     | Some(documentation) =>
+    //       <detailView
+    //         uiFont=Oni_Core.UiFont.default
+    //         documentation
+    //         width
+    //         lineHeight
+    //         colorTheme=theme
+    //         colors
+    //         tokenTheme
+    //         editorFont
+    //       />
+    //     | None => React.empty
+    //     };
+    //   | None => React.empty
+    //   };
 
-    let detail =
-      switch (focused) {
-      | Some(index) =>
-        let focused: CompletionItem.t = items[index];
-        switch (focused.detail) {
-        | Some(text) =>
-          <detailView text width lineHeight colors tokenTheme editorFont />
-        | None => React.empty
-        };
-      | None => React.empty
+    let innerStyle =
+      Styles.innerPosition(~height, ~width, ~lineHeight, ~colors);
+
+    let innerStyleWithShadow =
+      if (completions.isShadowEnabled) {
+        let color = Feature_Theme.Colors.shadow.from(theme);
+        [
+          Style.boxShadow(
+            ~xOffset=4.,
+            ~yOffset=4.,
+            ~blurRadius=12.,
+            ~spreadRadius=0.,
+            ~color,
+          ),
+          ...innerStyle,
+        ];
+      } else {
+        innerStyle;
       };
 
     <View style={Styles.outerPosition(~x, ~y)}>
       <Opacity opacity=Constants.opacity>
-        <View
-          style={Styles.innerPosition(~height, ~width, ~lineHeight, ~colors)}>
+        <View style=innerStyleWithShadow>
           <FlatList
-            rowHeight=Constants.itemHeight
+            rowHeight=itemHeight
             initialRowsToRender=5
             count={Array.length(items)}
             theme
@@ -1369,10 +1483,14 @@ module View = {
 
               <itemView
                 isFocused={Some(index) == focused}
+                rowHeight=itemHeight
                 text
+                detail={item.detail}
                 kind
                 highlight
                 theme
+                tokenTheme
+                width
                 colors
                 editorFont
               />;

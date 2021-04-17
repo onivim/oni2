@@ -5,6 +5,7 @@ type command =
   | SplitVertical
   | SplitHorizontal
   | CloseActiveEditor
+  | CloseActiveGroup
   | MoveLeft
   | MoveRight
   | MoveUp
