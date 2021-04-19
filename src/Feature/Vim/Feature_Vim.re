@@ -85,7 +85,10 @@ type msg =
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | SettingsChanged
+  | SettingsChanged({
+      name: string,
+      value: Vim.Setting.value,
+    })
   | ModeDidChange({
       allowAnimation: bool,
       mode: Vim.Mode.t,
@@ -176,7 +179,7 @@ let update = (~vimContext, msg, model: model) => {
     )
   | SettingChanged({fullName, value, _}: Vim.Setting.t) => (
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
-      SettingsChanged,
+      SettingsChanged({name: fullName, value}),
     )
   | MacroRecordingStarted({register}) => (
       {...model, recordingMacro: Some(register)},

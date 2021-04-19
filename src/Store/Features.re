@@ -2335,7 +2335,11 @@ let update =
         state,
         e |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
       )
-    | SettingsChanged => state |> Internal.updateConfiguration
+    | SettingsChanged({name, value}) =>
+      prerr_endline(
+        Printf.sprintf("%s: %s", name, Vim.Setting.show_value(value)),
+      );
+      state |> Internal.updateConfiguration;
     | ModeDidChange({allowAnimation, mode, effects}) =>
       Internal.updateMode(~allowAnimation, state, mode, effects)
     | Output({cmd, output}) =>
