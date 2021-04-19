@@ -142,8 +142,58 @@ let modified = model => {
   |> List.of_seq;
 };
 
+let vimSettingChanged = (~activeBufferId, ~name, ~value, model) => {
+  let updateTabsOrSpaces = (mode, buffer) => {
+    let indentation = Buffer.getIndentation(buffer);
+    buffer
+    |> Buffer.setIndentation(
+         Inferred.explicit(IndentationSettings.{...indentation, mode}),
+       );
+  };
+
+  let updateShiftWidth = (size, buffer) => {
+    let indentation = Buffer.getIndentation(buffer);
+    buffer
+    |> Buffer.setIndentation(
+         Inferred.explicit(IndentationSettings.{...indentation, size}),
+       );
+  };
+
+  let maybeUpdater =
+    if (name == "expandtab") {
+      Vim.Setting.(
+        {
+          switch (value) {
+          | Int(0) => Some(updateTabsOrSpaces(IndentationSettings.Tabs))
+          | Int(1) => Some(updateTabsOrSpaces(IndentationSettings.Spaces))
+          | String(_)
+          | Int(_) => None
+          };
+        }
+      );
+    } else if (name == "shiftwidth") {
+      Vim.Setting.(
+        {
+          switch (value) {
+          | Int(size) => Some(updateShiftWidth(size))
+          | String(_) => None
+          };
+        }
+      );
+    } else {
+      None;
+    };
+
+  maybeUpdater
+  |> Option.map(updater => {
+       model |> update(activeBufferId, Option.map(updater))
+     })
+  |> Option.value(~default=model);
+};
+
 [@deriving show]
 type command =
+  | ChangeIndentation({mode: IndentationSettings.mode})
   | ChangeFiletype({maybeBufferId: option(int)})
   | DetectIndentation;
 
@@ -169,6 +219,11 @@ type msg =
       id: int,
       fileType: Oni_Core.Buffer.FileType.t,
     })
+  | IndentationChanged({
+      id: int,
+      size: int,
+      mode: IndentationSettings.mode,
+    })
   | FilenameChanged({
       id: int,
       newFilePath: option(string),
@@ -186,6 +241,7 @@ type msg =
       id: int,
       lineEndings: [@opaque] Vim.lineEnding,
     })
+  | StatusBarIndentationClicked
   | Saved(int)
   | ModifiedSet(int, bool)
   | LargeFileOptimizationsApplied({
@@ -227,6 +283,8 @@ module Msg = {
 
   let selectFileTypeClicked = (~bufferId: int) =>
     Command(ChangeFiletype({maybeBufferId: Some(bufferId)}));
+
+  let statusBarIndentationClicked = StatusBarIndentationClicked;
 };
 
 type outmsg =
@@ -418,6 +476,20 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       Nothing,
     )
 
+  | IndentationChanged({id, mode, size}) =>
+    let newSettings = IndentationSettings.{mode, size, tabSize: size};
+
+    (
+      model
+      |> update(
+           id,
+           Option.map(
+             Buffer.setIndentation(Inferred.explicit(newSettings)),
+           ),
+         ),
+      Nothing,
+    );
+
   | Saved(bufferId) =>
     let model' =
       update(bufferId, Option.map(Buffer.incrementSaveTick), model);
@@ -427,8 +499,44 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       |> Option.value(~default=Nothing);
     (model', eff);
 
+  | StatusBarIndentationClicked =>
+    let items = [
+      (
+        "Indent using spaces...",
+        Command(ChangeIndentation({mode: IndentationSettings.Spaces})),
+      ),
+      (
+        "Indent using tabs...",
+        Command(ChangeIndentation({mode: IndentationSettings.Tabs})),
+      ),
+      ("Auto-detect indentation", Command(DetectIndentation)),
+    ];
+
+    let menuFn =
+        (_languageInfo: Exthost.LanguageInfo.t, _iconTheme: IconTheme.t) => {
+      Feature_Quickmenu.Schema.menu(
+        ~onItemSelected=snd,
+        ~toString=fst,
+        items,
+      );
+    };
+    (model, ShowMenu(menuFn));
+
   | Command(command) =>
     switch (command) {
+    | ChangeIndentation({mode}) =>
+      let items = List.init(8, idx => idx + 1);
+      let menuFn =
+          (_languageInfo: Exthost.LanguageInfo.t, _iconTheme: IconTheme.t) => {
+        Feature_Quickmenu.Schema.menu(
+          ~onItemSelected=
+            size => IndentationChanged({id: activeBufferId, size, mode}),
+          ~toString=string_of_int,
+          items,
+        );
+      };
+      (model, ShowMenu(menuFn));
+
     | ChangeFiletype({maybeBufferId}) =>
       let menuFn =
           (languageInfo: Exthost.LanguageInfo.t, iconTheme: IconTheme.t) => {
@@ -642,6 +750,20 @@ module Effects = {
 module Commands = {
   open Feature_Commands.Schema;
 
+  let indentUsingTabs =
+    define(
+      ~title="Indent using tabs",
+      "editor.active.indentUsingTabs",
+      Command(ChangeIndentation({mode: IndentationSettings.Tabs})),
+    );
+
+  let indentUsingSpaces =
+    define(
+      ~title="Indent using spaces",
+      "editor.active.indentUsingSpaces",
+      Command(ChangeIndentation({mode: IndentationSettings.Spaces})),
+    );
+
   let detectIndentation =
     define(
       ~category="Editor",
@@ -688,7 +810,13 @@ module Contributions = {
     ];
 
   let commands =
-    Commands.[changeFiletype, detectIndentation] |> Command.Lookup.fromList;
+    Commands.[
+      changeFiletype,
+      detectIndentation,
+      indentUsingSpaces,
+      indentUsingTabs,
+    ]
+    |> Command.Lookup.fromList;
 
   let keybindings =
     Feature_Input.Schema.[

@@ -62,6 +62,7 @@ module Msg: {
     msg;
 
   let selectFileTypeClicked: (~bufferId: int) => msg;
+  let statusBarIndentationClicked: msg;
 };
 
 type outmsg =
@@ -142,6 +143,10 @@ module Effects: {
     ) =>
     Isolinear.Effect.t(msg);
 };
+
+let vimSettingChanged:
+  (~activeBufferId: int, ~name: string, ~value: Vim.Setting.value, model) =>
+  model;
 
 let sub: model => Isolinear.Sub.t(msg);
 

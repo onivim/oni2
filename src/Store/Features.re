@@ -1236,6 +1236,14 @@ let update =
           }),
         );
 
+      | ShowIndentationPicker => (
+          state',
+          EffectEx.value(
+            ~name="StatusBar.showIndentationPicker",
+            Actions.Buffers(Feature_Buffers.Msg.statusBarIndentationClicked),
+          ),
+        )
+
       | Effect(eff) => (
           state',
           eff |> Isolinear.Effect.map(msg => Actions.StatusBar(msg)),
@@ -2339,7 +2347,19 @@ let update =
       prerr_endline(
         Printf.sprintf("%s: %s", name, Vim.Setting.show_value(value)),
       );
-      state |> Internal.updateConfiguration;
+      let maybeActiveBuffer = Selectors.getActiveBuffer(state);
+      let buffers' =
+        maybeActiveBuffer
+        |> Option.map(activeBuffer => {
+             Feature_Buffers.vimSettingChanged(
+               ~activeBufferId=Buffer.getId(activeBuffer),
+               ~name,
+               ~value,
+               state.buffers,
+             )
+           })
+        |> Option.value(~default=state.buffers);
+      {...state, buffers: buffers'} |> Internal.updateConfiguration;
     | ModeDidChange({allowAnimation, mode, effects}) =>
       Internal.updateMode(~allowAnimation, state, mode, effects)
     | Output({cmd, output}) =>
