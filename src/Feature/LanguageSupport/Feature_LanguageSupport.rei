@@ -267,9 +267,14 @@ module View: {
   module Overlay: {
     let make:
       (
+        ~activeEditorId: int,
+        ~activeBuffer: Oni_Core.Buffer.t,
+        ~cursorPosition: CharacterPosition.t,
+        ~lineHeight: float,
         ~toPixel: (~editorId: int, CharacterPosition.t) =>
                   option(PixelPosition.t),
         ~theme: ColorTheme.Colors.t,
+        ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~model: model,
         ~editorFont: Service_Font.font,
         ~uiFont: UiFont.t,
