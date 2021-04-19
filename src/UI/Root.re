@@ -97,12 +97,14 @@ let make = (~dispatch, ~state: State.t, ()) => {
                let (pixelPosition, _) =
                  Editor.bufferCharacterPositionToPixel(~position, editor);
 
+               let gutterWidth = Editor.gutterWidth(~editorFont, editor);
+
                let offsetX = Editor.pixelX(editor);
                let offsetY = Editor.pixelY(editor);
                let lineHeight = Editor.lineHeightInPixels(editor);
 
                PixelPosition.{
-                 x: pixelPosition.x +. offsetX,
+                 x: pixelPosition.x +. offsetX +. gutterWidth,
                  y: pixelPosition.y +. offsetY +. lineHeight,
                };
              }

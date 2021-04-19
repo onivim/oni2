@@ -809,37 +809,6 @@ module Completion = {
 
   let availableCompletionCount = ({completion, _}: model) =>
     OldCompletion.availableCompletionCount(completion);
-
-  module View = {
-    let make =
-        (
-          ~buffer,
-          ~cursor,
-          ~x,
-          ~y,
-          ~lineHeight,
-          ~theme,
-          ~tokenTheme,
-          ~editorFont,
-          ~model,
-          (),
-        ) => {
-      Revery.UI.React.empty;
-      // OldCompletion.View.make(
-      //   ~buffer,
-      //   ~cursor,
-      //   ~x,
-      //   ~dispatch=_ => (),
-      //   ~y,
-      //   ~lineHeight,
-      //   ~theme,
-      //   ~tokenTheme,
-      //   ~editorFont,
-      //   ~completions=model.completion,
-      //   (),
-      // );
-    };
-  };
 };
 
 module SignatureHelp = {

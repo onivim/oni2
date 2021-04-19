@@ -873,7 +873,13 @@ let update =
       );
     };
 
-  | CompletionClickedOutside => (stop(model), Nothing)
+  | CompletionClickedOutside =>
+    let allItems = allItems(model);
+    if (allItems == [||]) {
+      (model, Nothing);
+    } else {
+      (stop(model), Nothing);
+    };
 
   | Command(AcceptSelected) =>
     let allItems = allItems(model);
@@ -1229,10 +1235,10 @@ module View = {
   module Styles = {
     open Style;
 
-    let outerPosition = (~x, ~y, ~width, ~height) => [
+    let outerPosition = (~x, ~y, ~fontSize, ~width, ~height) => [
       position(`Absolute),
       top(y),
-      left(x + 4),
+      left(x - int_of_float(fontSize +. 0.5) - 8),
       pointerEvents(`Allow),
       Style.width(width),
       Style.height(height + 2) // Add 2 to account for border!
@@ -1458,7 +1464,7 @@ module View = {
         ~dispatch,
         ~theme,
         ~tokenTheme,
-        ~editorFont,
+        ~editorFont: Service_Font.font,
         ~completions: model,
         (),
       ) => {
@@ -1533,10 +1539,8 @@ module View = {
         innerStyle;
       };
 
-    <View
-      style={Styles.outerPosition(~x, ~y, ~height, ~width)}
-      onMouseEnter={_ => prerr_endline("ENTER")}
-      onMouseLeave={_ => prerr_endline("Leave")}>
+    let fontSize = editorFont.fontSize;
+    <View style={Styles.outerPosition(~x, ~y, ~fontSize, ~height, ~width)}>
       <View style=innerStyleWithShadow>
         <FlatList
           rowHeight=itemHeight
