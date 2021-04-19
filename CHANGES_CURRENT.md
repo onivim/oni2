@@ -53,6 +53,7 @@
 - #3421 - Lifecycle: Show unsaved dialog when closing last editor via mouse (fixes #417)
 - #3420 - Vim: Implement C-W, C-Q binding (related #1721)
 - #3422 - Input: Fix terminal key binding not working as expected (fixes #2778)
+- #3435 - Completion: Fix various mouse interactions (fixes #3428)
 
 ### Performance
 

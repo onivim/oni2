@@ -177,6 +177,13 @@ let minimapScrollY: t => float;
 let pixelX: t => float;
 let pixelY: t => float;
 
+// `gutterWidth` returns the size of the gutter, which includes:
+// - Line number rendering
+// - Diff marker rendering
+// - Extra margin
+// (...later, vim signs & debugger breakpoints)
+let gutterWidth: (~editorFont: Service_Font.font, t) => float;
+
 let lineHeightInPixels: t => float;
 let linePaddingInPixels: t => float;
 let setLineHeight: (~lineHeight: LineHeight.t, t) => t;
