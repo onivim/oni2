@@ -18,7 +18,10 @@ type providerMsg =
 [@deriving show]
 type msg =
   | Command(command)
-  | Provider(providerMsg);
+  | Provider(providerMsg)
+  | CompletionItemClicked(CompletionItem.t)
+  | CompletionClickedOutside
+  | CompletionItemMouseEntered({index: int});
 
 type exthostMsg;
 
@@ -431,6 +434,10 @@ module Selection = {
       };
     };
 
+  let focus = (~index, ~count, _selection) => {
+    Some(index) |> ensureValidFocus(~count);
+  };
+
   let focusPrevious = (~count, selection) => {
     IndexEx.prevRollOverOpt(~last=count - 1, selection);
   };
@@ -578,21 +585,25 @@ let isActive = (model: model) => {
   |> Array.length > 0;
 };
 
+let start = model => {
+  ...model,
+  providers: model.providers |> List.map(Session.start),
+  allItems: [||],
+  selection: None,
+};
+
+let stop = model => {
+  ...model,
+  providers: model.providers |> List.map(Session.stop),
+  allItems: [||],
+  selection: None,
+};
+
 let reset = model =>
   if (model.isInsertMode && !model.isSnippetMode) {
-    {
-      ...model,
-      providers: model.providers |> List.map(Session.start),
-      allItems: [||],
-      selection: None,
-    };
+    start(model);
   } else {
-    {
-      ...model,
-      providers: model.providers |> List.map(Session.stop),
-      allItems: [||],
-      selection: None,
-    };
+    stop(model);
   };
 
 let startInsertMode = model => {
@@ -820,6 +831,56 @@ let update =
        })
     |> Option.value(~default)
 
+  | CompletionItemClicked(completionItem) =>
+    let allItems = allItems(model);
+
+    if (allItems == [||]) {
+      default;
+    } else {
+      let replaceSpan =
+        CompletionItem.replaceSpan(~activeCursor, completionItem);
+
+      let effect =
+        Exthost.SuggestItem.InsertTextRules.(
+          matches(~rule=InsertAsSnippet, completionItem.insertTextRules)
+        )
+          ? Outmsg.InsertSnippet({
+              replaceSpan,
+              snippet: completionItem.insertText,
+              additionalEdits: completionItem.additionalTextEdits,
+            })
+          : Outmsg.ApplyCompletion({
+              replaceSpan,
+              insertText: completionItem.insertText,
+              additionalEdits: completionItem.additionalTextEdits,
+            });
+
+      (
+        {
+          ...model,
+          providers:
+            List.map(
+              provider => {
+                provider
+                |> Session.complete(completionItem.additionalTextEdits)
+              },
+              model.providers,
+            ),
+          allItems: [||],
+          selection: None,
+        },
+        effect,
+      );
+    };
+
+  | CompletionClickedOutside =>
+    let allItems = allItems(model);
+    if (allItems == [||]) {
+      (model, Nothing);
+    } else {
+      (stop(model), Nothing);
+    };
+
   | Command(AcceptSelected) =>
     let allItems = allItems(model);
 
@@ -870,6 +931,13 @@ let update =
     let count = Array.length(model.allItems);
     (
       {...model, selection: Selection.focusNext(~count, model.selection)},
+      Nothing,
+    );
+
+  | CompletionItemMouseEntered({index}) =>
+    let count = Array.length(model.allItems);
+    (
+      {...model, selection: Selection.focus(~index, ~count, model.selection)},
       Nothing,
     );
 
@@ -1167,20 +1235,24 @@ module View = {
   module Styles = {
     open Style;
 
-    let outerPosition = (~x, ~y) => [
+    let outerPosition = (~x, ~y, ~fontSize, ~width, ~height) => [
       position(`Absolute),
-      top(y - 4),
-      left(x + 4),
+      top(y),
+      left(x - int_of_float(fontSize +. 0.5) - 8),
+      pointerEvents(`Allow),
+      Style.width(width),
+      Style.height(height + 2) // Add 2 to account for border!
     ];
 
-    let innerPosition = (~height, ~width, ~lineHeight, ~colors: Colors.t) => [
+    let innerPosition = (~height, ~width, ~colors: Colors.t) => [
       position(`Absolute),
-      top(int_of_float(lineHeight +. 0.5)),
+      top(0),
       left(0),
       Style.width(width),
       Style.height(height + 2), // Add 2 to account for border!
       border(~color=colors.suggestWidgetBorder, ~width=1),
       backgroundColor(colors.suggestWidgetBackground),
+      opacity(Constants.opacity),
     ];
 
     let item = (~rowHeight, ~isFocused, ~colors: Colors.t) => [
@@ -1190,6 +1262,7 @@ module View = {
       flexDirection(`Row),
       height(rowHeight),
       justifyContent(`Center),
+      cursor(Revery.MouseCursors.pointer),
     ];
 
     let icon = (~size, ~color) => [
@@ -1245,6 +1318,8 @@ module View = {
   let itemView =
       (
         ~isFocused,
+        ~onClick,
+        ~onMouseEnter,
         ~text,
         ~kind,
         ~highlight,
@@ -1300,7 +1375,10 @@ module View = {
       | _ => React.empty
       };
 
-    <View style={Styles.item(~rowHeight, ~isFocused, ~colors)}>
+    <Revery.UI.Components.Clickable
+      onClick
+      onMouseEnter
+      style={Styles.item(~rowHeight, ~isFocused, ~colors)}>
       <View
         style=Style.[
           backgroundColor(iconColor),
@@ -1338,7 +1416,7 @@ module View = {
         />
       </View>
       maybeDetail
-    </View>;
+    </Revery.UI.Components.Clickable>;
   };
 
   let detailView =
@@ -1383,9 +1461,10 @@ module View = {
         ~y: int,
         ~lineHeight: float,
         // TODO
+        ~dispatch,
         ~theme,
         ~tokenTheme,
-        ~editorFont,
+        ~editorFont: Service_Font.font,
         ~completions: model,
         (),
       ) => {
@@ -1441,8 +1520,7 @@ module View = {
     //   | None => React.empty
     //   };
 
-    let innerStyle =
-      Styles.innerPosition(~height, ~width, ~lineHeight, ~colors);
+    let innerStyle = Styles.innerPosition(~height, ~width, ~colors);
 
     let innerStyleWithShadow =
       if (completions.isShadowEnabled) {
@@ -1461,44 +1539,100 @@ module View = {
         innerStyle;
       };
 
-    <View style={Styles.outerPosition(~x, ~y)}>
-      <Opacity opacity=Constants.opacity>
-        <View style=innerStyleWithShadow>
-          <FlatList
-            rowHeight=itemHeight
-            initialRowsToRender=5
-            count={Array.length(items)}
-            theme
-            focused>
-            ...{index => {
-              let item = items[index];
-              let CompletionItem.{label: text, kind, _} = item;
+    let fontSize = editorFont.fontSize;
+    <View style={Styles.outerPosition(~x, ~y, ~fontSize, ~height, ~width)}>
+      <View style=innerStyleWithShadow>
+        <FlatList
+          rowHeight=itemHeight
+          initialRowsToRender=5
+          count={Array.length(items)}
+          theme
+          focused>
+          ...{index => {
+            let item = items[index];
+            let CompletionItem.{label: text, kind, _} = item;
 
-              let highlight =
-                maybeLine
-                |> Option.map(line => {
-                     CompletionItemScorer.highlights(line, item, cursor)
-                   })
-                |> Option.value(~default=[]);
+            let highlight =
+              maybeLine
+              |> Option.map(line => {
+                   CompletionItemScorer.highlights(line, item, cursor)
+                 })
+              |> Option.value(~default=[]);
 
-              <itemView
-                isFocused={Some(index) == focused}
-                rowHeight=itemHeight
-                text
-                detail={item.detail}
-                kind
-                highlight
-                theme
-                tokenTheme
-                width
-                colors
-                editorFont
-              />;
-            }}
-          </FlatList>
-        </View>
-        detail
-      </Opacity>
+            <itemView
+              isFocused={Some(index) == focused}
+              rowHeight=itemHeight
+              text
+              detail={item.detail}
+              kind
+              highlight
+              theme
+              tokenTheme
+              width
+              colors
+              editorFont
+              onMouseEnter={_ =>
+                dispatch(CompletionItemMouseEntered({index: index}))
+              }
+              onClick={_ => dispatch(CompletionItemClicked(item))}
+            />;
+          }}
+        </FlatList>
+      </View>
+      detail
     </View>;
+  };
+
+  module Overlay = {
+    let make =
+        (
+          ~activeEditorId,
+          ~buffer,
+          ~cursorPosition,
+          ~lineHeight,
+          ~toPixel,
+          ~theme,
+          ~tokenTheme,
+          ~model,
+          ~editorFont,
+          ~uiFont as _,
+          ~dispatch,
+          (),
+        ) =>
+      if (isActive(model)) {
+        let maybePixelPosition =
+          toPixel(~editorId=activeEditorId, cursorPosition);
+        maybePixelPosition
+        |> Option.map((pixelPosition: PixelPosition.t) => {
+             <View
+               onMouseUp={_ => dispatch(CompletionClickedOutside)}
+               style=Revery.UI.Style.[
+                 position(`Absolute),
+                 top(0),
+                 left(0),
+                 bottom(0),
+                 right(0),
+                 backgroundColor(Revery.Colors.transparentBlack),
+                 pointerEvents(`Allow),
+               ]>
+               {make(
+                  ~buffer,
+                  ~x=int_of_float(pixelPosition.x),
+                  ~y=int_of_float(pixelPosition.y),
+                  ~lineHeight,
+                  ~theme,
+                  ~tokenTheme,
+                  ~completions=model,
+                  ~editorFont,
+                  ~cursor=cursorPosition,
+                  ~dispatch,
+                  (),
+                )}
+             </View>
+           })
+        |> Option.value(~default=Revery.UI.React.empty);
+      } else {
+        Revery.UI.React.empty;
+      };
   };
 };
