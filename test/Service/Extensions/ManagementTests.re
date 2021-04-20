@@ -70,7 +70,7 @@ describe("Management", ({describe, _}) => {
 
       let result =
         ExtM.install(~proxy, ~setup, ~extensionsFolder, "redhat.java")
-        |> LwtEx.sync(~timeout=60.0);
+        |> LwtEx.sync(~timeout=300.0);
 
       expect.equal(Result.is_ok(result), true);
 
