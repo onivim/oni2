@@ -9,6 +9,8 @@ module Proxy: {
     httpsUrl: option(string),
     strictSSL: bool,
   };
+
+  let none: t;
 };
 
 module Request: {

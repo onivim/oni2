@@ -99,7 +99,11 @@ describe("CLI", ({describe, test, _}) => {
 
       expect.equal(
         options.proxyServer,
-        Some(Service_Net.Proxy.{url: "127.0.0.1:8001", strictSSL: true}),
+        Service_Net.Proxy.{
+          httpsUrl: Some("127.0.0.1:8001"),
+          httpUrl: Some("127.0.0.1:8001"),
+          strictSSL: true,
+        },
       );
     })
   });

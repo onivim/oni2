@@ -46,7 +46,7 @@ let reduce = (msg, model) =>
   | WidthChanged(width) => {...model, width}
   };
 
-let installButton = (~proxy, ~theme, ~font, ~extensionId, ~dispatch, ()) => {
+let installButton = (~theme, ~font, ~extensionId, ~dispatch, ()) => {
   let backgroundColor = Colors.Button.background.from(theme);
   let color = Colors.Button.foreground.from(theme);
   <ItemView.ActionButton
@@ -293,7 +293,6 @@ let%component make =
                       font
                     />
                   : <installButton
-                      proxy
                       theme
                       extensionId
                       dispatch

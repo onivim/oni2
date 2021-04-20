@@ -7,11 +7,12 @@ open TestFramework;
 
 describe("Catalog", ({describe, _}) => {
   let setup = Setup.init();
+  let proxy = Service_Net.Proxy.none;
 
   let searchSync = searchString => {
     let rec loop = (acc, offset) => {
       let {offset, totalSize, extensions}: Catalog.SearchResponse.t =
-        LwtEx.sync(Catalog.search(~offset, ~setup, searchString))
+        LwtEx.sync(Catalog.search(~proxy, ~offset, ~setup, searchString))
         |> Result.get_ok;
 
       let allExtensions = extensions @ acc;

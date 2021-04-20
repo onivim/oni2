@@ -31,7 +31,7 @@ module Contributions = {
     ];
 };
 
-let configurationChanged = (config, model) => {
+let configurationChanged = (config, _model) => {
   let maybeHttpUrl = Configuration.httpProxy.get(config);
   let maybeHttpsUrl = Configuration.httpsProxy.get(config);
   let strictSSL = Configuration.httpProxyStrictSSL.get(config);

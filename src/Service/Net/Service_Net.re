@@ -11,6 +11,8 @@ module Proxy = {
     httpsUrl: option(string),
     strictSSL: bool,
   };
+
+  let none = {httpUrl: None, httpsUrl: None, strictSSL: false};
 };
 
 module Internal = {
