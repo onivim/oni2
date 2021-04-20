@@ -61,6 +61,7 @@ module Effects = {
         (
           ~previousBuffer,
           ~buffer: Buffer.t,
+          ~minimalUpdate: MinimalUpdate.t,
           ~update: BufferUpdate.t,
           client,
           toMsg,
@@ -69,16 +70,17 @@ module Effects = {
         ~name="exthost.bufferUpdate", dispatch =>
         Oni_Core.Log.perf("exthost.bufferUpdate", () =>
           if (BufferTracker.isTracking(Buffer.getId(buffer))) {
-            let modelContentChange =
-              Exthost.ModelContentChange.ofBufferUpdate(
-                ~previousBuffer,
-                update,
-                Exthost.Eol.default,
-              );
+            let eol = Exthost.Eol.default;
+            let modelContentChanges =
+              minimalUpdate
+              |> Exthost.ModelContentChange.ofMinimalUpdates(
+                   ~previousBuffer,
+                   ~eol,
+                 );
             let modelChangedEvent =
               Exthost.ModelChangedEvent.{
-                changes: [modelContentChange],
-                eol: Exthost.Eol.default,
+                changes: modelContentChanges,
+                eol,
                 versionId: update.version,
               };
 
@@ -104,12 +106,48 @@ module Effects = {
     };
   };
   module FileSystemEventService = {
-    let onFileEvent = (~events, extHostClient) =>
-      Isolinear.Effect.create(~name="fileSystemEventService.onFileEvent", () => {
+    let onBufferChanged = (~buffer, extHostClient) =>
+      Isolinear.Effect.create(
+        ~name="fileSystemEventService.onBufferChanged", () => {
+        Exthost.Request.FileSystemEventService.onFileEvent(
+          ~events=
+            Exthost.Files.FileSystemEvents.{
+              created: [],
+              deleted: [],
+              changed: [buffer |> Oni_Core.Buffer.getUri],
+            },
+          extHostClient,
+        )
+      });
+
+    let onPathChanged =
+        (
+          ~path: FpExp.t(FpExp.absolute),
+          ~maybeStat: option(Luv.File.Stat.t),
+          extHostClient,
+        ) =>
+      Isolinear.Effect.create(~name="fileSystemEventService.onPathChanged", () => {
+        let fileUri = path |> Oni_Core.Uri.fromFilePath;
+        let events =
+          if (maybeStat == None) {
+            Exthost.Files.FileSystemEvents.{
+              created: [],
+              deleted: [fileUri],
+              changed: [],
+            };
+          } else {
+            // TODO: Differentiate between created and changed
+            Exthost.Files.FileSystemEvents.{
+              created: [],
+              deleted: [],
+              changed: [fileUri],
+            };
+          };
+
         Exthost.Request.FileSystemEventService.onFileEvent(
           ~events,
           extHostClient,
-        )
+        );
       });
   };
 
@@ -238,6 +276,50 @@ module Effects = {
         );
       });
     };
+
+    let resolveRenameLocation = (~handle, ~uri, ~position, client, toMsg) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="language.resolveRenameLocation", dispatch => {
+        let promise =
+          Exthost.Request.LanguageFeatures.resolveRenameLocation(
+            ~handle,
+            ~resource=uri,
+            ~position=Exthost.OneBasedPosition.ofPosition(position),
+            client,
+          );
+
+        Lwt.on_success(promise, maybeLocation =>
+          dispatch(toMsg(maybeLocation))
+        );
+
+        Lwt.on_failure(promise, err =>
+          dispatch(toMsg(Error(Printexc.to_string(err))))
+        );
+      });
+    };
+
+    let provideRenameEdits =
+        (~handle, ~uri, ~position, ~newName, client, toMsg) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="language.provideRenameEdits", dispatch => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideRenameEdits(
+            ~handle,
+            ~resource=uri,
+            ~position=Exthost.OneBasedPosition.ofPosition(position),
+            ~newName,
+            client,
+          );
+
+        Lwt.on_success(promise, maybeWorkspaceEdits =>
+          dispatch(toMsg(Ok(maybeWorkspaceEdits)))
+        );
+
+        Lwt.on_failure(promise, err =>
+          dispatch(toMsg(Error(Printexc.to_string(err))))
+        );
+      });
+    };
   };
 
   module Workspace = {
@@ -260,15 +342,15 @@ module Internal = {
 
     // The extension host does not like a completely empty buffer,
     // so at least send a single line with an empty string.
-    let lines =
-      if (lines == []) {
-        [""];
-      } else {
-        // There needs to be an empty line at the end of the buffer to sync changes at the end
-        // TODO: How does this compare with an alternative approach to the same ends, like
-        // converting from an array back to a list?
-        lines |> List.rev |> List.append([""]) |> List.rev;
-      };
+    // let lines =
+    //   if (lines == []) {
+    //     [""];
+    //   } else {
+    // There needs to be an empty line at the end of the buffer to sync changes at the end
+    // TODO: How does this compare with an alternative approach to the same ends, like
+    // converting from an array back to a list?
+    //     lines |> List.rev |> List.append([""]) |> List.rev;
+    //   };
 
     maybeFilePath
     |> Option.map(filePath => {
@@ -707,6 +789,122 @@ module Sub = {
     |> Isolinear.Sub.map(toMsg);
   };
 
+  type codeActionsSpanParams = {
+    handle: int,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+    context: Exthost.CodeAction.Context.t,
+    range: Exthost.OneBasedRange.t,
+  };
+
+  let idForOneBasedRange = (range: Exthost.OneBasedRange.t) => {
+    Printf.sprintf(
+      "r%d,%d-%d,%d",
+      range.startLineNumber,
+      range.startColumn,
+      range.endLineNumber,
+      range.endColumn,
+    );
+  };
+
+  let idForCodeActionRange = (~handle, ~buffer, ~range) => {
+    Printf.sprintf(
+      "%d-%d-%d:%s",
+      handle,
+      Oni_Core.Buffer.getId(buffer),
+      Oni_Core.Buffer.getVersion(buffer),
+      idForOneBasedRange(range),
+    );
+  };
+
+  module CodeActionSpanSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(option(Exthost.CodeAction.List.t), string);
+      type nonrec params = codeActionsSpanParams;
+
+      type state = {
+        disposeTimeout: unit => unit,
+        maybeCacheId: ref(option(Exthost.CacheId.t)),
+        isActive: ref(bool),
+      };
+
+      let name = "Service_Exthost.CodeActionsSpanSubscription";
+      let id = ({handle, buffer, range, _}: params) =>
+        idForCodeActionRange(~handle, ~buffer, ~range);
+
+      let cleanup = (~maybeCacheId, ~params) => {
+        maybeCacheId^
+        |> Option.iter(cacheId => {
+             Exthost.Request.LanguageFeatures.releaseCodeActions(
+               ~handle=params.handle,
+               ~cacheId,
+               params.client,
+             );
+
+             maybeCacheId := None;
+           });
+      };
+
+      let init = (~params, ~dispatch) => {
+        let maybeCacheId = ref(None);
+        let isActive = ref(true);
+        let disposeTimeout =
+          Revery.Tick.timeout(
+            ~name,
+            _ => {
+              let promise =
+                Exthost.Request.LanguageFeatures.provideCodeActionsByRange(
+                  ~handle=params.handle,
+                  ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                  ~range=params.range,
+                  ~context=params.context,
+                  params.client,
+                );
+
+              Lwt.on_success(
+                promise,
+                maybeCodeActions => {
+                  maybeCodeActions
+                  |> Option.iter(
+                       (codeActionResult: Exthost.CodeAction.List.t) => {
+                       maybeCacheId := Some(codeActionResult.cacheId)
+                     });
+
+                  if (isActive^) {
+                    dispatch(Ok(maybeCodeActions));
+                  } else {
+                    cleanup(~maybeCacheId, ~params);
+                  };
+                },
+              );
+
+              Lwt.on_failure(promise, exn => {
+                dispatch(Error(Printexc.to_string(exn)))
+              });
+            },
+            Constants.lowPriorityDebounceTime,
+          );
+        {isActive, disposeTimeout, maybeCacheId};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params, ~state) => {
+        cleanup(~params, ~maybeCacheId=state.maybeCacheId);
+        state.disposeTimeout();
+        state.isActive := false;
+      };
+    });
+
+  let codeActionsByRange =
+      (~handle, ~context, ~buffer, ~range, ~toMsg, client) => {
+    let range = Exthost.OneBasedRange.ofRange(range);
+    CodeActionSpanSubscription.create(
+      {handle, buffer, client, range, context}: codeActionsSpanParams,
+    )
+    |> Isolinear.Sub.map(toMsg);
+  };
+
   type codeLensesParams = {
     handle: int,
     eventTick: int,
@@ -1014,6 +1212,78 @@ module Sub = {
         ();
       };
     });
+
+  type renameEditParams = {
+    handle: int,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+    position: Exthost.OneBasedPosition.t,
+    newName: string,
+  };
+
+  module RenameEditsSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(option(Exthost.WorkspaceEdit.t), string);
+      type nonrec params = renameEditParams;
+
+      type state = unit => unit;
+
+      let name = "Service_Exthost.RenameEditsSubscription";
+      let id = ({handle, buffer, position, newName, _}: params) =>
+        idFromBufferPosition(
+          ~handle,
+          ~buffer,
+          ~position,
+          "Rename: " ++ newName,
+        );
+
+      let init = (~params, ~dispatch) => {
+        Revery.Tick.timeout(
+          ~name="Timeout.renameEdit",
+          _ => {
+            let promise =
+              Exthost.Request.LanguageFeatures.provideRenameEdits(
+                ~handle=params.handle,
+                ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                ~position=params.position,
+                ~newName=params.newName,
+                params.client,
+              );
+
+            Lwt.on_success(promise, maybeRenameEdits =>
+              maybeRenameEdits |> Result.ok |> dispatch
+            );
+
+            Lwt.on_failure(promise, err =>
+              err |> Printexc.to_string |> Result.error |> dispatch
+            );
+          },
+          Constants.mediumPriorityDebounceTime,
+        );
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state) => {
+        state();
+      };
+    });
+
+  let renameEdits =
+      (
+        ~handle,
+        ~buffer,
+        ~position,
+        ~newName,
+        ~toMsg: result(option(Exthost.WorkspaceEdit.t), string) => 'msg,
+        client,
+      ) => {
+    let position = position |> Exthost.OneBasedPosition.ofPosition;
+    RenameEditsSubscription.create(
+      {handle, buffer, position, newName, client}: renameEditParams,
+    )
+    |> Isolinear.Sub.map(toMsg);
+  };
 
   type signatureHelpParams = {
     handle: int,

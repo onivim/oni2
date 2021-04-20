@@ -15,6 +15,7 @@ module Internal = {
       | v when v == Revery.Key.Keycode.backspace => Some(Key.Backspace)
       | v when v == Revery.Key.Keycode.delete => Some(Key.Delete)
       | v when v == Revery.Key.Keycode.space => Some(Key.Space)
+      | v when v == 1073741881 => Some(Key.CapsLock)
       | v when v == 1073741897 => Some(Key.Insert)
       | v when v == 1073741898 => Some(Key.Home)
       | v when v == 1073741899 => Some(Key.PageUp)
@@ -145,7 +146,12 @@ let reveryKeyToKeyPress =
   ignore(repeat);
   let name = Sdl2.Scancode.ofInt(scancode) |> Sdl2.Scancode.getName;
 
-  if (name == "Left Shift" || name == "Right Shift") {
+  // Filter out some modifier keys. Otherwise, these keys will be treated as actual key presses,
+  // and can break mapping sequences.
+  if (name == "Left Shift"
+      || name == "Right Shift"
+      || name == "Left Ctrl"
+      || name == "Right Ctrl") {
     None;
   } else {
     let shift = Revery.Key.Keymod.isShiftDown(keymod);

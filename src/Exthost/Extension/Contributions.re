@@ -36,7 +36,18 @@ module Command = {
             field.withDefault(
               "when",
               WhenExpr.Value(True),
-              string |> map(WhenExpr.parse),
+              one_of([
+                ("when.string", string |> map(WhenExpr.parse)),
+                (
+                  "when.bool",
+                  bool
+                  |> map(
+                       fun
+                       | true => WhenExpr.Value(True)
+                       | false => WhenExpr.Value(False),
+                     ),
+                ),
+              ]),
             ),
         }
       )

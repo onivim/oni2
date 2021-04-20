@@ -123,9 +123,52 @@ let findByPath = (path, tree) => {
 };
 
 let replace = (~replacement, tree) => {
+  let merge = (originalNode, newNode) =>
+    switch (originalNode, newNode) {
+    | (Tree.Leaf(_), _) => newNode
+    | (_, Tree.Leaf(_)) => newNode
+    // Merge the 'old' children with the 'new' children, so that we don't have to recursively
+    // refresh if we don't have to.
+    | (
+        Tree.Node({children: oldChildren, expanded, _}),
+        Tree.Node({children: newChildren, data, _}),
+      ) =>
+      // Grab a map of previous children. For any that were existing, use the old metadata - some children might be expanded, for example.
+      let previousMap =
+        oldChildren
+        |> List.fold_left(
+             (
+               acc: IntMap.t(Tree.t(metadata, metadata)),
+               child: Tree.t(metadata, metadata),
+             ) => {
+               switch (child) {
+               | Tree.Leaf(_) => acc
+               | Tree.Node({data, _}) => IntMap.add(data.hash, child, acc)
+               }
+             },
+             IntMap.empty,
+           );
+
+      // Now, go through the new children - see if any were around previously.
+      // If so, use the previous tree.
+
+      let children =
+        newChildren
+        |> List.map(child => {
+             switch (child) {
+             | Tree.Leaf(_) => child
+             | Tree.Node({data, _}) =>
+               IntMap.find_opt(data.hash, previousMap)
+               |> Option.value(~default=child)
+             }
+           });
+
+      Tree.Node({children, expanded, data});
+    };
+
   let rec loop = (pathHashes, node) =>
     switch (pathHashes) {
-    | [hash] when hash == getHash(node) => replacement
+    | [hash] when hash == getHash(node) => merge(node, replacement)
 
     | [hash, ...rest] when hash == getHash(node) =>
       switch (node) {

@@ -18,7 +18,10 @@ type providerMsg =
 [@deriving show]
 type msg =
   | Command(command)
-  | Provider(providerMsg);
+  | Provider(providerMsg)
+  | CompletionItemClicked(CompletionItem.t)
+  | CompletionClickedOutside
+  | CompletionItemMouseEntered({index: int});
 
 type exthostMsg;
 
@@ -431,6 +434,10 @@ module Selection = {
       };
     };
 
+  let focus = (~index, ~count, _selection) => {
+    Some(index) |> ensureValidFocus(~count);
+  };
+
   let focusPrevious = (~count, selection) => {
     IndexEx.prevRollOverOpt(~last=count - 1, selection);
   };
@@ -448,6 +455,8 @@ type model = {
   isSnippetMode: bool,
   acceptOnEnter: bool,
   snippetSortOrder: [ | `Bottom | `Hidden | `Inline | `Top],
+  isShadowEnabled: bool,
+  isAnimationEnabled: bool,
 };
 
 let initial = {
@@ -477,6 +486,8 @@ let initial = {
   allItems: [||],
   selection: Selection.initial,
   snippetSortOrder: `Inline,
+  isAnimationEnabled: true,
+  isShadowEnabled: true,
 };
 
 let configurationChanged = (~config, model) => {
@@ -484,6 +495,10 @@ let configurationChanged = (~config, model) => {
     ...model,
     acceptOnEnter: CompletionConfig.acceptSuggestionOnEnter.get(config),
     snippetSortOrder: CompletionConfig.snippetSuggestions.get(config),
+    isAnimationEnabled:
+      Feature_Configuration.GlobalConfiguration.animation.get(config),
+    isShadowEnabled:
+      Feature_Configuration.GlobalConfiguration.shadows.get(config),
   };
 };
 
@@ -570,21 +585,25 @@ let isActive = (model: model) => {
   |> Array.length > 0;
 };
 
+let start = model => {
+  ...model,
+  providers: model.providers |> List.map(Session.start),
+  allItems: [||],
+  selection: None,
+};
+
+let stop = model => {
+  ...model,
+  providers: model.providers |> List.map(Session.stop),
+  allItems: [||],
+  selection: None,
+};
+
 let reset = model =>
   if (model.isInsertMode && !model.isSnippetMode) {
-    {
-      ...model,
-      providers: model.providers |> List.map(Session.start),
-      allItems: [||],
-      selection: None,
-    };
+    start(model);
   } else {
-    {
-      ...model,
-      providers: model.providers |> List.map(Session.stop),
-      allItems: [||],
-      selection: None,
-    };
+    stop(model);
   };
 
 let startInsertMode = model => {
@@ -812,6 +831,56 @@ let update =
        })
     |> Option.value(~default)
 
+  | CompletionItemClicked(completionItem) =>
+    let allItems = allItems(model);
+
+    if (allItems == [||]) {
+      default;
+    } else {
+      let replaceSpan =
+        CompletionItem.replaceSpan(~activeCursor, completionItem);
+
+      let effect =
+        Exthost.SuggestItem.InsertTextRules.(
+          matches(~rule=InsertAsSnippet, completionItem.insertTextRules)
+        )
+          ? Outmsg.InsertSnippet({
+              replaceSpan,
+              snippet: completionItem.insertText,
+              additionalEdits: completionItem.additionalTextEdits,
+            })
+          : Outmsg.ApplyCompletion({
+              replaceSpan,
+              insertText: completionItem.insertText,
+              additionalEdits: completionItem.additionalTextEdits,
+            });
+
+      (
+        {
+          ...model,
+          providers:
+            List.map(
+              provider => {
+                provider
+                |> Session.complete(completionItem.additionalTextEdits)
+              },
+              model.providers,
+            ),
+          allItems: [||],
+          selection: None,
+        },
+        effect,
+      );
+    };
+
+  | CompletionClickedOutside =>
+    let allItems = allItems(model);
+    if (allItems == [||]) {
+      (model, Nothing);
+    } else {
+      (stop(model), Nothing);
+    };
+
   | Command(AcceptSelected) =>
     let allItems = allItems(model);
 
@@ -862,6 +931,13 @@ let update =
     let count = Array.length(model.allItems);
     (
       {...model, selection: Selection.focusNext(~count, model.selection)},
+      Nothing,
+    );
+
+  | CompletionItemMouseEntered({index}) =>
+    let count = Array.length(model.allItems);
+    (
+      {...model, selection: Selection.focus(~index, ~count, model.selection)},
       Nothing,
     );
 
@@ -1076,8 +1152,6 @@ module View = {
   module Constants = {
     let maxCompletionWidth = 225;
     let maxDetailWidth = 225;
-    let itemHeight = 22;
-    let maxHeight = itemHeight * 5;
     let opacity = 1.0;
     let padding = 8;
   };
@@ -1161,43 +1235,62 @@ module View = {
   module Styles = {
     open Style;
 
-    let outerPosition = (~x, ~y) => [
+    let outerPosition = (~x, ~y, ~fontSize, ~width, ~height) => [
       position(`Absolute),
-      top(y - 4),
-      left(x + 4),
+      top(y),
+      left(x - int_of_float(fontSize +. 0.5) - 8),
+      pointerEvents(`Allow),
+      Style.width(width),
+      Style.height(height + 2) // Add 2 to account for border!
     ];
 
-    let innerPosition = (~height, ~width, ~lineHeight, ~colors: Colors.t) => [
+    let innerPosition = (~height, ~width, ~colors: Colors.t) => [
       position(`Absolute),
-      top(int_of_float(lineHeight +. 0.5)),
+      top(0),
       left(0),
       Style.width(width),
-      Style.height(height),
+      Style.height(height + 2), // Add 2 to account for border!
       border(~color=colors.suggestWidgetBorder, ~width=1),
       backgroundColor(colors.suggestWidgetBackground),
+      opacity(Constants.opacity),
     ];
 
-    let item = (~isFocused, ~colors: Colors.t) => [
+    let item = (~rowHeight, ~isFocused, ~colors: Colors.t) => [
       isFocused
         ? backgroundColor(colors.suggestWidgetSelectedBackground)
         : backgroundColor(colors.suggestWidgetBackground),
       flexDirection(`Row),
+      height(rowHeight),
+      justifyContent(`Center),
+      cursor(Revery.MouseCursors.pointer),
     ];
 
-    let icon = (~color) => [
+    let icon = (~size, ~color) => [
       flexDirection(`Row),
       justifyContent(`Center),
       alignItems(`Center),
       flexGrow(0),
+      flexShrink(0),
       backgroundColor(color),
-      width(25),
-      padding(4),
+      width(size),
+      height(size),
     ];
 
-    let label = [flexGrow(1), margin(4)];
+    let label = [
+      flexGrow(1),
+      flexShrink(1),
+      marginTop(2),
+      marginHorizontal(4),
+    ];
+
+    let detail = [
+      flexGrow(2),
+      flexShrink(2),
+      marginTop(2),
+      marginHorizontal(4),
+    ];
 
     let text = (~highlighted=false, ~colors: Colors.t, ()) => [
-      textOverflow(`Ellipsis),
       textWrap(Revery.TextWrapping.NoWrap),
       color(
         highlighted ? colors.normalModeBackground : colors.editorForeground,
@@ -1206,31 +1299,34 @@ module View = {
 
     let highlightedText = (~colors) => text(~highlighted=true, ~colors, ());
 
-    let detail = (~width, ~lineHeight, ~colors: Colors.t) => [
+    let documentation = (~width, ~lineHeight, ~colors: Colors.t) => [
       position(`Absolute),
       left(width),
       top(int_of_float(lineHeight +. 0.5)),
       Style.width(Constants.maxDetailWidth),
-      flexDirection(`Column),
-      alignItems(`FlexStart),
-      justifyContent(`Center),
       border(~color=colors.suggestWidgetBorder, ~width=1),
       backgroundColor(colors.suggestWidgetBackground),
     ];
 
     let detailText = (~tokenTheme: TokenTheme.t) => [
       textOverflow(`Ellipsis),
+      textWrap(Revery.TextWrapping.NoWrap),
       color(tokenTheme.commentColor),
-      margin(3),
     ];
   };
 
   let itemView =
       (
         ~isFocused,
+        ~onClick,
+        ~onMouseEnter,
         ~text,
         ~kind,
         ~highlight,
+        ~detail: option(string),
+        ~tokenTheme,
+        ~rowHeight,
+        ~width,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~colors: Colors.t,
         ~editorFont: Service_Font.font,
@@ -1240,8 +1336,60 @@ module View = {
 
     let iconColor = kind |> kindToColor(theme);
 
-    <View style={Styles.item(~isFocused, ~colors)}>
-      <View style={Styles.icon(~color=iconColor)}>
+    let textWidth = Service_Font.measure(~text, editorFont);
+    let labelWidth = int_of_float(ceil(textWidth +. 0.5));
+
+    let padding = rowHeight;
+    let availableWidth = width - rowHeight - padding - labelWidth;
+    let remainingWidth = availableWidth > 50 ? availableWidth : 0;
+
+    let textMarginTop = 2;
+
+    let maybeDetail =
+      switch (detail) {
+      | Some(detail) when isFocused && remainingWidth > 0 =>
+        <View
+          style=Style.[
+            position(`Absolute),
+            top(textMarginTop),
+            bottom(0),
+            right(8),
+            width(remainingWidth - 8),
+            flexDirection(`Row),
+          ]>
+          <View style=Style.[flexGrow(1), flexShrink(1)] />
+          <View
+            style=Style.[
+              flexGrow(0),
+              flexShrink(0),
+              justifyContent(`Center),
+            ]>
+            <Text
+              style={Styles.detailText(~tokenTheme)}
+              fontFamily={editorFont.fontFamily}
+              fontSize={editorFont.fontSize}
+              text=detail
+            />
+          </View>
+        </View>
+      | _ => React.empty
+      };
+
+    <Revery.UI.Components.Clickable
+      onClick
+      onMouseEnter
+      style={Styles.item(~rowHeight, ~isFocused, ~colors)}>
+      <View
+        style=Style.[
+          backgroundColor(iconColor),
+          position(`Absolute),
+          top(0),
+          left(0),
+          width(rowHeight),
+          height(rowHeight),
+          justifyContent(`Center),
+          alignItems(`Center),
+        ]>
         <Codicon
           icon
           color={colors.suggestWidgetBackground}
@@ -1249,7 +1397,15 @@ module View = {
           // Might be a bug with Revery font loading / re - rendering in this case?
         />
       </View>
-      <View style=Styles.label>
+      <View
+        style=Style.[
+          position(`Absolute),
+          top(textMarginTop),
+          bottom(0),
+          left(rowHeight + 8),
+          right(remainingWidth - rowHeight - 16),
+          justifyContent(`Center),
+        ]>
         <HighlightText
           highlights=highlight
           style={Styles.text(~colors, ())}
@@ -1259,27 +1415,43 @@ module View = {
           text
         />
       </View>
-    </View>;
+      maybeDetail
+    </Revery.UI.Components.Clickable>;
   };
 
   let detailView =
       (
-        ~text,
+        ~documentation,
         ~width,
         ~lineHeight,
+        ~uiFont: Oni_Core.UiFont.t,
         ~editorFont: Service_Font.font,
         ~colors,
+        ~colorTheme,
         ~tokenTheme,
         (),
-      ) =>
-    <View style={Styles.detail(~width, ~lineHeight, ~colors)}>
-      <Text
-        style={Styles.detailText(~tokenTheme)}
-        fontFamily={editorFont.fontFamily}
-        fontSize={editorFont.fontSize}
-        text
-      />
+      ) => {
+    let documentationElement =
+      Markdown.make(
+        ~markdown=Exthost.MarkdownString.toString(documentation),
+        ~fontFamily=uiFont.family,
+        ~colorTheme,
+        ~tokenTheme,
+        ~languageInfo=Exthost.LanguageInfo.initial,
+        ~defaultLanguage="reason",
+        ~codeFontFamily=editorFont.fontFamily,
+        ~grammars=Oni_Syntax.GrammarRepository.empty,
+        ~baseFontSize=10.,
+        ~codeBlockFontSize=editorFont.fontSize,
+        (),
+      );
+
+    <View style={Styles.documentation(~width, ~lineHeight, ~colors)}>
+      <View style=Style.[flexGrow(1), flexDirection(`Column)]>
+        documentationElement
+      </View>
     </View>;
+  };
 
   let make =
       (
@@ -1289,9 +1461,10 @@ module View = {
         ~y: int,
         ~lineHeight: float,
         // TODO
+        ~dispatch,
         ~theme,
         ~tokenTheme,
-        ~editorFont,
+        ~editorFont: Service_Font.font,
         ~completions: model,
         (),
       ) => {
@@ -1317,70 +1490,149 @@ module View = {
 
     let focused = completions.selection;
 
-    let maxWidth =
-      items
-      |> Array.fold_left(
-           (maxWidth, this: CompletionItem.t) => {
-             let textWidth =
-               Service_Font.measure(~text=this.label, editorFont);
-             let thisWidth =
-               int_of_float(textWidth +. 0.5) + Constants.padding;
-             max(maxWidth, thisWidth);
-           },
-           Constants.maxCompletionWidth,
-         );
+    let width = 500;
+    let itemHeight = int_of_float(ceil(lineHeight));
+    let maxHeight = itemHeight * 5;
+    let height = min(maxHeight, Array.length(items) * itemHeight);
 
-    let width = maxWidth + Constants.padding * 2;
-    let height =
-      min(Constants.maxHeight, Array.length(items) * Constants.itemHeight);
+    // TODO: Bring back detail view:
+    // 1) Align underneath completion
+    // 2) Test with providers that have large details (like Python)
+    let detail = React.empty;
+    // let detail =
+    //   switch (focused) {
+    //   | Some(index) =>
+    //     let focused: CompletionItem.t = items[index];
+    //     switch (focused.documentation) {
+    //     | Some(documentation) =>
+    //       <detailView
+    //         uiFont=Oni_Core.UiFont.default
+    //         documentation
+    //         width
+    //         lineHeight
+    //         colorTheme=theme
+    //         colors
+    //         tokenTheme
+    //         editorFont
+    //       />
+    //     | None => React.empty
+    //     };
+    //   | None => React.empty
+    //   };
 
-    let detail =
-      switch (focused) {
-      | Some(index) =>
-        let focused: CompletionItem.t = items[index];
-        switch (focused.detail) {
-        | Some(text) =>
-          <detailView text width lineHeight colors tokenTheme editorFont />
-        | None => React.empty
-        };
-      | None => React.empty
+    let innerStyle = Styles.innerPosition(~height, ~width, ~colors);
+
+    let innerStyleWithShadow =
+      if (completions.isShadowEnabled) {
+        let color = Feature_Theme.Colors.shadow.from(theme);
+        [
+          Style.boxShadow(
+            ~xOffset=4.,
+            ~yOffset=4.,
+            ~blurRadius=12.,
+            ~spreadRadius=0.,
+            ~color,
+          ),
+          ...innerStyle,
+        ];
+      } else {
+        innerStyle;
       };
 
-    <View style={Styles.outerPosition(~x, ~y)}>
-      <Opacity opacity=Constants.opacity>
-        <View
-          style={Styles.innerPosition(~height, ~width, ~lineHeight, ~colors)}>
-          <FlatList
-            rowHeight=Constants.itemHeight
-            initialRowsToRender=5
-            count={Array.length(items)}
-            theme
-            focused>
-            ...{index => {
-              let item = items[index];
-              let CompletionItem.{label: text, kind, _} = item;
+    let fontSize = editorFont.fontSize;
+    <View style={Styles.outerPosition(~x, ~y, ~fontSize, ~height, ~width)}>
+      <View style=innerStyleWithShadow>
+        <FlatList
+          rowHeight=itemHeight
+          initialRowsToRender=5
+          count={Array.length(items)}
+          theme
+          focused>
+          ...{index => {
+            let item = items[index];
+            let CompletionItem.{label: text, kind, _} = item;
 
-              let highlight =
-                maybeLine
-                |> Option.map(line => {
-                     CompletionItemScorer.highlights(line, item, cursor)
-                   })
-                |> Option.value(~default=[]);
+            let highlight =
+              maybeLine
+              |> Option.map(line => {
+                   CompletionItemScorer.highlights(line, item, cursor)
+                 })
+              |> Option.value(~default=[]);
 
-              <itemView
-                isFocused={Some(index) == focused}
-                text
-                kind
-                highlight
-                theme
-                colors
-                editorFont
-              />;
-            }}
-          </FlatList>
-        </View>
-        detail
-      </Opacity>
+            <itemView
+              isFocused={Some(index) == focused}
+              rowHeight=itemHeight
+              text
+              detail={item.detail}
+              kind
+              highlight
+              theme
+              tokenTheme
+              width
+              colors
+              editorFont
+              onMouseEnter={_ =>
+                dispatch(CompletionItemMouseEntered({index: index}))
+              }
+              onClick={_ => dispatch(CompletionItemClicked(item))}
+            />;
+          }}
+        </FlatList>
+      </View>
+      detail
     </View>;
+  };
+
+  module Overlay = {
+    let make =
+        (
+          ~activeEditorId,
+          ~buffer,
+          ~cursorPosition,
+          ~lineHeight,
+          ~toPixel,
+          ~theme,
+          ~tokenTheme,
+          ~model,
+          ~editorFont,
+          ~uiFont as _,
+          ~dispatch,
+          (),
+        ) =>
+      if (isActive(model)) {
+        let maybePixelPosition =
+          toPixel(~editorId=activeEditorId, cursorPosition);
+        maybePixelPosition
+        |> Option.map((pixelPosition: PixelPosition.t) => {
+             <View
+               onMouseUp={_ => dispatch(CompletionClickedOutside)}
+               style=Revery.UI.Style.[
+                 position(`Absolute),
+                 top(0),
+                 left(0),
+                 bottom(0),
+                 right(0),
+                 backgroundColor(Revery.Colors.transparentBlack),
+                 pointerEvents(`Allow),
+               ]>
+               {make(
+                  ~buffer,
+                  ~x=int_of_float(pixelPosition.x),
+                  ~y=int_of_float(pixelPosition.y),
+                  ~lineHeight,
+                  ~theme,
+                  ~tokenTheme,
+                  ~completions=model,
+                  ~editorFont,
+                  ~cursor=cursorPosition,
+                  ~dispatch,
+                  (),
+                )}
+             </View>
+           })
+        |> Option.value(~default=Revery.UI.React.empty);
+      } else {
+        Revery.UI.React.empty;
+      };
   };
 };

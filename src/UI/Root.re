@@ -87,6 +87,59 @@ let make = (~dispatch, ~state: State.t, ()) => {
     />;
   };
 
+  let editorToAbsolutePosition = (~editorId, position) => {
+    state.layout
+    |> Feature_Layout.editorById(editorId)
+    |> Option.map(editor => {
+         EditorCoreTypes.(
+           Feature_Editor.(
+             {
+               let (pixelPosition, _) =
+                 Editor.bufferCharacterPositionToPixel(~position, editor);
+
+               let gutterWidth = Editor.gutterWidth(~editorFont, editor);
+
+               let offsetX = Editor.pixelX(editor);
+               let offsetY = Editor.pixelY(editor);
+               let lineHeight = Editor.lineHeightInPixels(editor);
+
+               PixelPosition.{
+                 x: pixelPosition.x +. offsetX +. gutterWidth,
+                 y: pixelPosition.y +. offsetY +. lineHeight,
+               };
+             }
+           )
+         )
+       });
+  };
+
+  let languageSupportOverlay = () => {
+    let activeEditorId = Feature_Editor.Editor.getId(activeEditor);
+    maybeActiveBuffer
+    |> Option.map(activeBuffer => {
+         let cursorPosition =
+           Feature_Editor.Editor.getPrimaryCursor(activeEditor);
+         let lineHeight =
+           Feature_Editor.Editor.lineHeightInPixels(activeEditor);
+         let tokenTheme = Feature_Theme.tokenColors(state.colorTheme);
+
+         <Feature_LanguageSupport.View.Overlay
+           activeEditorId
+           activeBuffer
+           cursorPosition
+           lineHeight
+           toPixel=editorToAbsolutePosition
+           theme
+           tokenTheme
+           uiFont
+           editorFont={state.editorFont}
+           model={state.languageSupport}
+           dispatch={msg => dispatch(Actions.LanguageSupport(msg))}
+         />;
+       })
+    |> Option.value(~default=React.empty);
+  };
+
   let statusBar = () =>
     if (Feature_StatusBar.Configuration.visible.get(config) && !zenMode) {
       <View style=Styles.statusBar>
@@ -119,7 +172,13 @@ let make = (~dispatch, ~state: State.t, ()) => {
           config,
         )
         && !zenMode) {
-      <Dock font={state.uiFont} theme sideBar extensions={state.extensions} />;
+      <Dock
+        font={state.uiFont}
+        scm={state.scm}
+        theme
+        sideBar
+        extensions={state.extensions}
+      />;
     } else {
       React.empty;
     };
@@ -229,6 +288,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       />
     </View>
     <Overlay>
+      <languageSupportOverlay />
       {if (Feature_Quickmenu.isMenuOpen(state.newQuickmenu)) {
          <Feature_Quickmenu.View
            theme

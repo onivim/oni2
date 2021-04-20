@@ -31,6 +31,8 @@ let defaultKeyBindings =
     ),
   ]
   @ Feature_SideBar.Contributions.keybindings
+  @ Feature_Clipboard.Contributions.keybindings
+  @ Feature_Configuration.Contributions.keybindings
   @ Feature_Input.Schema.[
       bind(
         ~key="<C-TAB>",
@@ -57,29 +59,6 @@ let defaultKeyBindings =
         ~key="<D-S-P>",
         ~command=Commands.Workbench.Action.showCommands.id,
         ~condition="isMac" |> WhenExpr.parse,
-      ),
-      bind(
-        ~key="<C-V>",
-        ~command=Feature_Clipboard.Commands.paste.id,
-        // The WhenExpr parser doesn't support precedence, so we manually construct it here...
-        // It'd be nice to bring back explicit precedence via '(' and ')'
-        // Alternatively, a manual construction could be done with separate bindings for !isMac OR each condition
-        ~condition=
-          WhenExpr.(
-            And([
-              Not(Defined("isMac")),
-              Or([
-                And([Defined("editorTextFocus"), Defined("insertMode")]),
-                Defined("textInputFocus"),
-                Defined("commandLineFocus"),
-              ]),
-            ])
-          ),
-      ),
-      bind(
-        ~key="<D-V>",
-        ~command=Feature_Clipboard.Commands.paste.id,
-        ~condition=isMacCondition,
       ),
       bind(
         ~key="<ESC>",
@@ -264,6 +243,41 @@ let defaultKeyBindings =
         ~condition=windowCommandCondition,
       ),
       bind(
+        ~key="<C-W>T",
+        ~command=Feature_Layout.Commands.moveTopLeft.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-T>",
+        ~command=Feature_Layout.Commands.moveTopLeft.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>B",
+        ~command=Feature_Layout.Commands.moveBottomRight.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-B>",
+        ~command=Feature_Layout.Commands.moveBottomRight.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>W",
+        ~command=Feature_Layout.Commands.cycleForward.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-W>",
+        ~command=Feature_Layout.Commands.cycleForward.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><S-W>",
+        ~command=Feature_Layout.Commands.cycleBackward.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
         ~key="<C-W><C-S>",
         ~command=Feature_Layout.Commands.splitHorizontal.id,
         ~condition=windowCommandCondition,
@@ -373,6 +387,16 @@ let defaultKeyBindings =
         ~command=Feature_Layout.Commands.toggleMaximize.id,
         ~condition=windowCommandCondition,
       ),
+      bind(
+        ~key="<C-W><C-Q>",
+        ~command=Feature_Layout.Commands.closeActiveSplit.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>q",
+        ~command=Feature_Layout.Commands.closeActiveSplit.id,
+        ~condition=windowCommandCondition,
+      ),
     ]
   @ Component_VimWindows.Contributions.keybindings
   @ Component_VimList.Contributions.keybindings
@@ -465,6 +489,7 @@ let initial =
     Feature_Configuration.initial(
       ~loader=configurationLoader,
       [
+        Component_FileExplorer.Contributions.configuration,
         Feature_AutoUpdate.Contributions.configuration,
         Feature_Buffers.Contributions.configuration,
         Feature_Editor.Contributions.configuration,

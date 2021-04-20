@@ -32,6 +32,39 @@ module ColorTransition: {
   let get: t => Revery.Color.t;
 };
 
+module Animator: {
+  type t('model, 'interpolatedModel);
+
+  type msg;
+
+  let create:
+    (
+      ~equals: ('interpolatedModel, 'interpolatedModel) => bool=?,
+      ~initial: 'interpolatedModel,
+      'model => 'interpolatedModel
+    ) =>
+    t('model, 'interpolatedModel);
+
+  let get: t('model, 'interpolatedModel) => 'interpolatedModel;
+
+  let set:
+    (~instant: bool, 'model, t('model, 'interpolatedModel)) =>
+    t('model, 'interpolatedModel);
+
+  let sub: t('model, 'interpolatedModel) => Isolinear.Sub.t(msg);
+
+  let update:
+    (msg, t('model, 'interpolatedModel)) => t('model, 'interpolatedModel);
+
+  let render:
+    (
+      (~prev: 'interpolatedModel, ~next: 'interpolatedModel, float) =>
+      Revery.UI.element,
+      t('model, 'interpolatedModel)
+    ) =>
+    Revery.UI.element;
+};
+
 type t('value);
 
 let get: t('value) => 'value;

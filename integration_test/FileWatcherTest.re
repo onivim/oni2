@@ -1,3 +1,4 @@
+open Oni_Core;
 // Disable colors on windows to prevent hanging on CI
 
 Timber.App.enable(Timber.Reporter.console());
@@ -11,10 +12,14 @@ let oc = open_out(tempFilePath);
 Printf.fprintf(oc, "foo");
 close_out(oc);
 
+let key = Service_FileWatcher.Key.create(~friendlyName="FileWatcherTest");
+
 // System under test
 let sub =
   Service_FileWatcher.watch(
-    ~path=tempFilePath,
+    ~watchChanges=true,
+    ~key,
+    ~path=FpExp.absoluteCurrentPlatform(tempFilePath) |> Option.get,
     ~onEvent=_ => {
       print_endline("Success!");
       Luv.Loop.stop(Luv.Loop.default());

@@ -2,6 +2,7 @@ open Msg;
 type msg = Msg.t;
 
 module Spring = Spring;
+module Animator = Animator;
 
 open Revery;
 open Revery.UI;

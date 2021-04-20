@@ -1,6 +1,57 @@
 open Oni_Core;
 
+module EditType = {
+  type t =
+    | File
+    | Text;
+  // TODO:
+  // | Cell;
+
+  let ofInt =
+    fun
+    | 1 => Some(File)
+    | 2 => Some(Text)
+    | _ => None;
+
+  let toString =
+    fun
+    | File => "File"
+    | Text => "Text";
+
+  let decode =
+    Json.Decode.(
+      int
+      |> map(ofInt)
+      |> and_then(
+           fun
+           | Some(v) => succeed(v)
+           | None => fail("Unknown edit type"),
+         )
+    );
+
+  let decodeFile =
+    Json.Decode.(
+      decode
+      |> and_then(
+           fun
+           | File => succeed(File)
+           | _ => fail("Not a file type"),
+         )
+    );
+
+  let decodeText =
+    Json.Decode.(
+      decode
+      |> and_then(
+           fun
+           | Text => succeed(Text)
+           | _ => fail("Not a text type"),
+         )
+    );
+};
+
 module IconPath = {
+  [@deriving show]
   type t =
     | IconId({iconId: string})
     | Uri({uri: Oni_Core.Uri.t})
@@ -11,6 +62,7 @@ module IconPath = {
 };
 
 module EntryMetadata = {
+  [@deriving show]
   type t = {
     needsConfirmation: bool,
     label: string,
@@ -35,6 +87,7 @@ module EntryMetadata = {
 
 module FileEdit = {
   module Options = {
+    [@deriving show]
     type t = {
       overwrite: bool,
       ignoreIfNotExists: bool,
@@ -44,7 +97,7 @@ module FileEdit = {
 
     let decode =
       Json.Decode.(
-        obj(({field, _}) =>
+        obj(({field, _}) => {
           {
             overwrite: field.withDefault("overwrite", false, bool),
             ignoreIfNotExists:
@@ -52,7 +105,7 @@ module FileEdit = {
             ignoreIfExists: field.withDefault("ignoreIfExists", false, bool),
             recursive: field.withDefault("recursive", false, bool),
           }
-        )
+        })
       );
 
     let default = {
@@ -63,6 +116,7 @@ module FileEdit = {
     };
   };
 
+  [@deriving show]
   type t = {
     oldUri: option(Oni_Core.Uri.t),
     newUri: option(Oni_Core.Uri.t),
@@ -72,18 +126,20 @@ module FileEdit = {
 
   let decode =
     Json.Decode.(
-      obj(({field, _}) =>
+      obj(({field, _}) => {
+        let _type = field.required("_type", EditType.decodeFile);
         {
           oldUri: field.optional("oldUri", Oni_Core.Uri.decode),
           newUri: field.optional("newUri", Oni_Core.Uri.decode),
           options: field.optional("options", Options.decode),
           metadata: field.optional("metadata", EntryMetadata.decode),
-        }
-      )
+        };
+      })
     );
 };
 
 module SingleEdit = {
+  [@deriving show]
   type t = {
     range: OneBasedRange.t,
     text: string,
@@ -103,6 +159,7 @@ module SingleEdit = {
 };
 
 module TextEdit = {
+  [@deriving show]
   type t = {
     resource: Oni_Core.Uri.t,
     edit: SingleEdit.t,
@@ -112,21 +169,25 @@ module TextEdit = {
 
   let decode =
     Json.Decode.(
-      obj(({field, _}) =>
+      obj(({field, _}) => {
+        let _type = field.required("_type", EditType.decodeText);
+
         {
           resource: field.required("resource", Oni_Core.Uri.decode),
           edit: field.required("edit", SingleEdit.decode),
           modelVersionId: field.optional("modelVersionId", int),
           metadata: field.optional("metadata", EntryMetadata.decode),
-        }
-      )
+        };
+      })
     );
 };
 
+[@deriving show]
 type edit =
   | File(FileEdit.t)
   | Text(TextEdit.t);
 
+[@deriving show]
 type t = {
   edits: list(edit),
   rejectReason: option(string),

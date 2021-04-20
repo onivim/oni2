@@ -107,7 +107,7 @@ module Internal = {
 
   let quitEffect =
     Isolinear.Effect.createWithDispatch(~name="quit", dispatch =>
-      dispatch(Actions.Quit(true))
+      dispatch(Actions.ReallyQuitting)
     );
 
   let chdir = (path: FpExp.t(FpExp.absolute)) => {
@@ -298,6 +298,7 @@ module Internal = {
                |> Exthost.LanguageInfo.getLanguageConfiguration(languageInfo)
                |> Option.value(~default=LanguageConfiguration.default);
              Feature_LanguageSupport.cursorMoved(
+               ~editorId=activeEditorId,
                ~languageConfiguration,
                ~buffer,
                ~previous=prevCursor,
@@ -551,6 +552,15 @@ let update =
              })
           |> Option.value(~default=Isolinear.Effect.none);
         (state, eff);
+
+      | WatchedPathChanged({path, stat}) =>
+        let eff =
+          Service_Exthost.Effects.FileSystemEventService.onPathChanged(
+            ~path,
+            ~maybeStat=stat,
+            extHostClient,
+          );
+        (state, eff);
       }
     );
 
@@ -635,6 +645,7 @@ let update =
     let (languageSupport, outmsg) =
       Feature_LanguageSupport.update(
         ~config,
+        ~diagnostics=state.diagnostics,
         ~languageConfiguration,
         ~extensions=state.extensions,
         ~maybeBuffer,
@@ -679,6 +690,49 @@ let update =
           )
           |> Isolinear.Effect.map(msg => Vim(msg)),
         );
+
+      | ApplyWorkspaceEdit(workspaceEdit) =>
+        let toVimEdits = (~buffer, workspaceEdit: Exthost.WorkspaceEdit.t) => {
+          workspaceEdit.edits
+          |> List.filter_map(
+               fun
+               // TODO: Handle workspace edits
+               | Exthost.WorkspaceEdit.File(_) => None
+               | Exthost.WorkspaceEdit.Text(edit) => Some(edit),
+             )
+          |> List.filter((textEdit: Exthost.WorkspaceEdit.TextEdit.t) => {
+               let bufferUri = Buffer.getUri(buffer);
+               Uri.equals(bufferUri, textEdit.resource);
+             })
+          |> List.map((textEdit: Exthost.WorkspaceEdit.TextEdit.t) => {
+               let edit = textEdit.edit;
+               let text =
+                 edit.text
+                 |> Oni_Core.Utility.StringEx.removeWindowsNewLines
+                 |> Oni_Core.Utility.StringEx.splitNewLines;
+
+               Vim.Edit.{
+                 range: edit.range |> Exthost.OneBasedRange.toRange,
+                 text,
+               };
+             });
+        };
+        let eff =
+          switch (maybeBuffer) {
+          | Some(buffer) =>
+            let edits = toVimEdits(~buffer, workspaceEdit);
+
+            Service_Vim.Effects.applyEdits(
+              ~shouldAdjustCursors=true,
+              ~bufferId=buffer |> Oni_Core.Buffer.getId,
+              ~version=buffer |> Oni_Core.Buffer.getVersion,
+              ~edits,
+              fun
+              | _ => Noop,
+            );
+          | None => Isolinear.Effect.none
+          };
+        (state, eff);
 
       | FormattingApplied({displayName, editCount, needsToSave}) =>
         let (formatEffect, msg) =
@@ -1384,13 +1438,8 @@ let update =
       (state'', Effect.none);
     | BufferSaved(buffer) =>
       let eff =
-        Service_Exthost.Effects.FileSystemEventService.onFileEvent(
-          ~events=
-            Exthost.Files.FileSystemEvents.{
-              created: [],
-              deleted: [],
-              changed: [buffer |> Oni_Core.Buffer.getUri],
-            },
+        Service_Exthost.Effects.FileSystemEventService.onBufferChanged(
+          ~buffer,
           extHostClient,
         );
 
@@ -1462,7 +1511,14 @@ let update =
         ]),
       );
 
-    | BufferUpdated({update, newBuffer, oldBuffer, triggerKey, markerUpdate}) =>
+    | BufferUpdated({
+        update,
+        newBuffer,
+        oldBuffer,
+        triggerKey,
+        markerUpdate,
+        minimalUpdate,
+      }) =>
       let fileType =
         newBuffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
@@ -1526,6 +1582,7 @@ let update =
           ~previousBuffer=oldBuffer,
           ~buffer=newBuffer,
           ~update,
+          ~minimalUpdate,
           extHostClient,
           () =>
           Actions.ExtensionBufferUpdateQueued({triggerKey: triggerKey})
@@ -1688,7 +1745,16 @@ let update =
         Effect.none,
       )
 
-    | RemoveLastWasBlocked => (state, Internal.quitEffect)
+    | RemoveLastWasBlocked =>
+      // #417: If there are any unsaved files... show a warning and give the user a chance to save.
+      if (Feature_Buffers.anyModified(state.buffers)) {
+        (
+          {...state, modal: Some(Feature_Modals.unsavedBuffersWarning)},
+          Isolinear.Effect.none,
+        );
+      } else {
+        (state, Internal.quitEffect);
+      }
 
     | Nothing => (state, Effect.none)
     };
@@ -2011,6 +2077,7 @@ let update =
                     )
                  |> Option.value(~default=LanguageConfiguration.default);
                Feature_LanguageSupport.cursorMoved(
+                 ~editorId=Feature_Editor.Editor.getId(newEditor),
                  ~languageConfiguration,
                  ~buffer,
                  ~previous=originalCursor,
@@ -2254,7 +2321,8 @@ let update =
 
   | Vim(msg) =>
     let previousSubMode = state.vim |> Feature_Vim.subMode;
-    let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
+    let vimContext = VimContext.current(state);
+    let (vim, outmsg) = Feature_Vim.update(~vimContext, msg, state.vim);
     let newSubMode = state.vim |> Feature_Vim.subMode;
 
     // If we've switched to, or from, insert literal,

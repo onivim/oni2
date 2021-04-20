@@ -22,33 +22,6 @@ module Styles = {
   ];
 };
 
-let completionsView =
-    (
-      ~buffer,
-      ~cursor,
-      ~languageSupport,
-      ~cursorPixelX,
-      ~cursorPixelY,
-      ~theme,
-      ~tokenTheme,
-      ~editorFont: Service_Font.font,
-      (),
-    ) =>
-  Feature_LanguageSupport.Completion.isActive(languageSupport)
-    ? <Feature_LanguageSupport.Completion.View
-        buffer
-        cursor
-        x=cursorPixelX
-        y=cursorPixelY
-        lineHeight={editorFont.measuredHeight}
-        theme
-        tokenTheme
-        editorFont
-        //colors
-        model=languageSupport
-      />
-    : React.empty;
-
 let signatureHelpView =
     (
       ~cursorPixelX,
@@ -104,16 +77,6 @@ let make =
 
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
-        <completionsView
-          cursor=cursorPosition
-          buffer
-          languageSupport
-          cursorPixelX
-          cursorPixelY
-          theme
-          tokenTheme
-          editorFont
-        />
         <signatureHelpView
           languageSupport
           cursorPixelX

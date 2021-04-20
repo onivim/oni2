@@ -58,7 +58,7 @@ runTest(~name="ExtHostBufferUpdates", ({input, dispatch, wait, key, _}) => {
 
   // TODO: Do we need to wait to ensure the buffer update gets sent?
   TS.validateTextIsSynchronized(
-    ~expectedText=Some("a|b|c|"),
+    ~expectedText=Some("a|b|c"),
     ~description="after insert mode",
     dispatch,
     wait,
@@ -70,7 +70,7 @@ runTest(~name="ExtHostBufferUpdates", ({input, dispatch, wait, key, _}) => {
   input("dd");
 
   TS.validateTextIsSynchronized(
-    ~expectedText=Some("a|c|"),
+    ~expectedText=Some("a|c"),
     ~description="after deleting some lines",
     dispatch,
     wait,
@@ -80,7 +80,7 @@ runTest(~name="ExtHostBufferUpdates", ({input, dispatch, wait, key, _}) => {
   input("u");
 
   TS.validateTextIsSynchronized(
-    ~expectedText=Some("a|b|c|"),
+    ~expectedText=Some("a|b|c"),
     ~description="after undo",
     dispatch,
     wait,
@@ -92,7 +92,7 @@ runTest(~name="ExtHostBufferUpdates", ({input, dispatch, wait, key, _}) => {
   key(EditorInput.Key.Escape);
 
   TS.validateTextIsSynchronized(
-    ~expectedText=Some("abca|b|c|"),
+    ~expectedText=Some("abca|b|c"),
     ~description="after inserting some text in an existing line",
     dispatch,
     wait,
@@ -107,7 +107,7 @@ runTest(~name="ExtHostBufferUpdates", ({input, dispatch, wait, key, _}) => {
   key(EditorInput.Key.Escape);
 
   TS.validateTextIsSynchronized(
-    ~expectedText=Some("|||abca|b|c|"),
+    ~expectedText=Some("|||abca|b|c"),
     ~description="after inserting multiple lines",
     dispatch,
     wait,
@@ -116,8 +116,26 @@ runTest(~name="ExtHostBufferUpdates", ({input, dispatch, wait, key, _}) => {
   // Undo the change - we also had bugs here!
   input("u");
   TS.validateTextIsSynchronized(
-    ~expectedText=Some("abca|b|c|"),
+    ~expectedText=Some("abca|b|c"),
     ~description="after inserting multiple lines",
+    dispatch,
+    wait,
+  );
+
+  // Delete all lines
+  input("ggdG");
+  TS.validateTextIsSynchronized(
+    ~expectedText=Some(""),
+    ~description="after deleting all lines",
+    dispatch,
+    wait,
+  );
+
+  // Undo the deletion
+  input("u");
+  TS.validateTextIsSynchronized(
+    ~expectedText=Some("abca|b|c"),
+    ~description="after undoing delete-all-lines",
     dispatch,
     wait,
   );

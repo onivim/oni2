@@ -2,23 +2,32 @@ open Oni_Core;
 // MODEL
 
 [@deriving show]
+type command =
+  | Reload;
+
+[@deriving show]
 type msg =
   | ActiveFilePathChanged([@opaque] option(FpExp.t(FpExp.absolute)))
-  | TreeLoaded(FsTreeNode.t)
-  | TreeLoadError(string)
+  | Command(command)
+  | NodeLoadError(string)
   | NodeLoaded(FsTreeNode.t)
   | FocusNodeLoaded(FsTreeNode.t)
-  | KeyboardInput(string)
+  | FileWatcherEvent({
+      path: [@opaque] FpExp.t(FpExp.absolute),
+      event: Service_FileWatcher.event,
+    })
   | Tree(Component_VimTree.msg);
 
 module Msg = {
-  let keyPressed = key => KeyboardInput(key);
   let activeFileChanged = maybePath => ActiveFilePathChanged(maybePath);
 };
 
 type model = {
+  fileWatcherKey: Service_FileWatcher.Key.t,
   rootPath: FpExp.t(FpExp.absolute),
   rootName: string,
+  expandedPaths: list(FpExp.t(FpExp.absolute)),
+  pathsToLoad: list(FpExp.t(FpExp.absolute)),
   tree: option(FsTreeNode.t),
   treeView: Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
   isOpen: bool,
@@ -28,14 +37,22 @@ type model = {
 };
 
 let initial = (~rootPath) => {
-  rootPath,
-  rootName: "",
-  tree: None,
-  treeView: Component_VimTree.create(~rowHeight=20),
-  isOpen: true,
-  scrollOffset: `Start(0.),
-  active: None,
-  focus: None,
+  {
+    fileWatcherKey:
+      Service_FileWatcher.Key.create(
+        ~friendlyName="Explorer:" ++ FpExp.toString(rootPath),
+      ),
+    rootPath,
+    rootName: "",
+    expandedPaths: [rootPath],
+    pathsToLoad: [rootPath],
+    tree: None,
+    treeView: Component_VimTree.create(~rowHeight=20),
+    isOpen: true,
+    scrollOffset: `Start(0.),
+    active: None,
+    focus: None,
+  };
 };
 
 let setRoot = (~rootPath, model) => {
@@ -44,6 +61,8 @@ let setRoot = (~rootPath, model) => {
   tree: None,
   active: None,
   focus: None,
+  expandedPaths: [rootPath],
+  pathsToLoad: [rootPath],
 };
 
 let root = ({rootPath, _}) => rootPath;

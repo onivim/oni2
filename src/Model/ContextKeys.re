@@ -193,9 +193,7 @@ let all = (state: State.t) => {
       ~isFocused=focus == Focus.LicenseKey,
       state.registration,
     ),
-    Feature_LanguageSupport.Contributions.contextKeys
-    |> Schema.map(({languageSupport, _}: State.t) => languageSupport)
-    |> fromSchema(state),
+    Feature_LanguageSupport.Contributions.contextKeys(state.languageSupport),
     menus(
       ~isFocused=focus == Focus.Quickmenu || focus == Focus.Wildmenu,
       ~isNewQuickMenuOpen=focus == Focus.NewQuickmenu,

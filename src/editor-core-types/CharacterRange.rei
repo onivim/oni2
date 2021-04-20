@@ -17,6 +17,8 @@ let contains: (CharacterPosition.t, t) => bool;
 
 let containsRange: (~query: t, t) => bool;
 
+let intersects: (t, t) => bool;
+
 let shiftLine: (~afterLine: LineNumber.t, ~delta: int, t) => t;
 
 let shiftCharacters:
@@ -30,3 +32,4 @@ let shiftCharacters:
 let toHash: list(t) => Hashtbl.t(LineNumber.t, list(t));
 
 let equals: (t, t) => bool;
+let compare: (t, t) => int;

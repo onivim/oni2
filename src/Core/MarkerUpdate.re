@@ -80,19 +80,35 @@ module Internal = {
         }
       );
     };
+
+  let%test_module "minimalUpdateToMovement" =
+    (module
+     {
+       let%test "unicode characters get shifted properly" = {
+         let update =
+           MinimalUpdate.(
+             Modified({
+               line: LineNumber.zero,
+               original: "κόσμε",
+               updated: "κόσε",
+             })
+           );
+         let actual = minimalUpdateToMovement(update);
+
+         actual
+         == ShiftCharacters({
+              line: LineNumber.zero,
+              afterByte: ByteIndex.ofInt(7),
+              deltaBytes: (-2),
+              afterCharacter: CharacterIndex.ofInt(3),
+              deltaCharacters: (-1),
+            });
+       };
+     });
 };
 
-let create = (~update: BufferUpdate.t, ~original, ~updated) =>
-  if (update.isFull) {
-    let minimalUpdate = MinimalUpdate.fromBuffers(~original, ~updated);
-
-    MinimalUpdate.map(Internal.minimalUpdateToMovement, minimalUpdate);
-  } else {
-    let minimalUpdate =
-      MinimalUpdate.fromBufferUpdate(~buffer=original, ~update);
-
-    MinimalUpdate.map(Internal.minimalUpdateToMovement, minimalUpdate);
-  };
+let create = minimalUpdate =>
+  MinimalUpdate.map(Internal.minimalUpdateToMovement, minimalUpdate);
 
 let apply = (~clearLine, ~shiftLines, ~shiftCharacters, markerUpdate, target) => {
   markerUpdate

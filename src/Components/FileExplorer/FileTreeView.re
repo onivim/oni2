@@ -25,7 +25,12 @@ module Styles = {
   // Minor adjustment to align with text
   let folder = [marginTop(4)];
 
-  let item = [flexDirection(`Row), flexGrow(1), alignItems(`Center)];
+  let item = [
+    flexDirection(`Row),
+    flexGrow(1),
+    flexShrink(1),
+    alignItems(`Center),
+  ];
 
   let text = (~isFocus, ~isActive, ~decoration, ~theme) => [
     color(
@@ -49,6 +54,7 @@ module Styles = {
     // Minor adjustment to align with seti-icon
     marginTop(4),
     textWrap(TextWrapping.NoWrap),
+    textOverflow(`Ellipsis),
   ];
 };
 
@@ -79,13 +85,15 @@ let nodeView =
   };
 
   <Tooltip text=tooltipText style=Styles.item>
-    icon
-    <Text
-      text={node.displayName}
-      style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme)}
-      fontFamily={font.family}
-      fontSize=12.
-    />
+    <View style=Revery.UI.Style.[flexGrow(0), flexShrink(0)]> icon </View>
+    <View style=Revery.UI.Style.[flexGrow(1), flexShrink(1)]>
+      <Text
+        text={node.displayName}
+        style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme)}
+        fontFamily={font.family}
+        fontSize=12.
+      />
+    </View>
   </Tooltip>;
 };
 

@@ -68,6 +68,13 @@ let characterRange: t => CharacterRange.t;
 let hasTrailingNewLine: t => bool;
 
 let rawLine: (LineNumber.t, t) => option(string);
+let characterRangeAt: (LineNumber.t, t) => option(CharacterRange.t);
+
+let tokenAt:
+  (~languageConfiguration: LanguageConfiguration.t, CharacterPosition.t, t) =>
+  option(CharacterRange.t);
+
+let lastLine: t => LineNumber.t;
 
 let getVersion: t => int;
 let setVersion: (int, t) => t;

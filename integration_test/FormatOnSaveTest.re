@@ -93,7 +93,7 @@ runTest(
     });
 
     TS.validateTextIsSynchronized(
-      ~expectedText=Some("console.log|console.warn|console.error|"),
+      ~expectedText=Some("console.log|console.warn|console.error"),
       ~description="after formatting",
       dispatch,
       wait,

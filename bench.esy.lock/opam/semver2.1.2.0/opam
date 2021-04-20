@@ -1,10 +1,11 @@
 opam-version: "2.0"
-maintainer: "info@dividat.com"
-authors: ["Dividat AG"]
 synopsis: "Semantic version handling for OCaml"
+maintainer: "info@dividat.com"
+authors: "Dividat AG"
 license: "MIT"
 homepage: "https://github.com/dividat/ocaml-semver"
 bug-reports: "https://github.com/dividat/ocaml-semver/issues"
+dev-repo: "git+https://github.com/dividat/ocaml-semver.git"
 depends: [
   "ocaml" {>= "4.04.0"}
   "dune" {>= "1.2.0"}
@@ -14,14 +15,15 @@ depends: [
   "odoc" {with-doc}
 ]
 build: [
-  ["dune" "subst"] {pinned}
+  ["dune" "subst"] {dev}
   ["dune" "build" "-p" name "-j" jobs]
   ["dune" "runtest" "-p" name "-j" jobs] {with-test}
 ]
 url {
-  src: "https://github.com/dividat/ocaml-semver/archive/1.1.0.tar.gz"
+  src:
+    "https://github.com/dividat/ocaml-semver/archive/refs/tags/1.2.0.tar.gz"
   checksum: [
-    "md5=3054c5c107ae2b87246113debbf999fc"
-    "sha512=02527d9591acb722529e54bc41832fef390f10964304074ac96b2dc09b77d84296d7363477921b721a16be66e3d79b12b6388f2637c2360d5e79d6260f24d722"
+    "md5=657c5113dc0b41f11e659fb24e5cf0f9"
+    "sha512=c8f45011fc49dea4be5ed30f0a1391a1fa8b862e3f6f06b6f82d5baefbbb6c9aee632fd5bb1ed0a77b764bb59bd704f559bdf713e195976c39034431b2099b8f"
   ]
 }
