@@ -55,6 +55,7 @@
 - #3422 - Input: Fix terminal key binding not working as expected (fixes #2778)
 - #3435 - Completion: Fix various mouse interactions (fixes #3428)
 - #3439 - Hover: Remove textOverflow(Ellipsis) from hover
+- #3430 - Buffers: Implement action.workbench.quickOpenBuffer (fixes #3413)
 
 ### Performance
 
