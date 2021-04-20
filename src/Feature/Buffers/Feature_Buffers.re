@@ -155,7 +155,9 @@ let vimSettingChanged = (~activeBufferId, ~name, ~value, model) => {
     let indentation = Buffer.getIndentation(buffer);
     buffer
     |> Buffer.setIndentation(
-         Inferred.explicit(IndentationSettings.{...indentation, size}),
+         Inferred.explicit(
+           IndentationSettings.{...indentation, size, tabSize: size},
+         ),
        );
   };
 

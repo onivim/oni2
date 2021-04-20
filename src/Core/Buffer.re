@@ -381,6 +381,7 @@ let setIndentation = (indentation, buf) => {
 
   let lines =
     if (originalIndentationValue != newIndentationValue) {
+      prerr_endline("Updating lines!");
       buf.lines
       |> Array.map(line => {
            let raw = BufferLine.raw(line);
@@ -389,7 +390,7 @@ let setIndentation = (indentation, buf) => {
     } else {
       buf.lines;
     };
-  {...buf, lines, indentation};
+  {...buf, measure, lines, indentation};
 };
 
 let getIndentation = buf => buf.indentation |> Inferred.value;
