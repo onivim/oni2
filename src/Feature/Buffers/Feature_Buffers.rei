@@ -67,6 +67,7 @@ module Msg: {
 
 type outmsg =
   | Nothing
+  | BufferIndentationChanged({buffer: Oni_Core.Buffer.t})
   | BufferUpdated({
       update: Oni_Core.BufferUpdate.t,
       markerUpdate: Oni_Core.MarkerUpdate.t,

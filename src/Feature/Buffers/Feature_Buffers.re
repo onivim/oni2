@@ -291,6 +291,7 @@ module Msg = {
 
 type outmsg =
   | Nothing
+  | BufferIndentationChanged({buffer: Oni_Core.Buffer.t})
   | BufferUpdated({
       update: Oni_Core.BufferUpdate.t,
       markerUpdate: Oni_Core.MarkerUpdate.t,
@@ -480,17 +481,20 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
 
   | IndentationChanged({id, mode, size}) =>
     let newSettings = IndentationSettings.{mode, size, tabSize: size};
-
-    (
+    let model' =
       model
       |> update(
            id,
            Option.map(
              Buffer.setIndentation(Inferred.explicit(newSettings)),
            ),
-         ),
-      Nothing,
-    );
+         );
+    let eff =
+      IntMap.find_opt(id, model'.buffers)
+      |> Option.map(buffer => BufferIndentationChanged({buffer: buffer}))
+      |> Option.value(~default=Nothing);
+
+    (model', eff);
 
   | Saved(bufferId) =>
     let model' =

@@ -1508,6 +1508,28 @@ let update =
         ]),
       );
 
+    | BufferIndentationChanged({buffer}) =>
+      let bufferId = Buffer.getId(buffer);
+      let layout =
+        Feature_Layout.map(
+          editor =>
+            Feature_Editor.(
+              if (Editor.getBufferId(editor) == bufferId) {
+                // Set buffer recalculates word wrap, which is
+                // what we need if the indentation has changed.
+                Editor.setBuffer(
+                  ~buffer=EditorBuffer.ofBuffer(buffer),
+                  editor,
+                );
+              } else {
+                editor;
+              }
+            ),
+          state.layout,
+        );
+
+      ({...state, layout}, Isolinear.Effect.none);
+
     | BufferUpdated({
         update,
         newBuffer,
