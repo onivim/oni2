@@ -156,6 +156,14 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `oni.layout.singleTabMode` __(_bool_ default: `false`)__ - When `true`, groups will only hold a single editor, and closing this editor will always close the group. It will also hide the editor tabs, and therefore essentially hide the concept of editor groups.
 
+### Proxy
+
+Onivim 2 can be configured to send requests through an HTTP/HTTPs proxy with the following configuration:
+
+- `http.proxy` __(_string_ default: `null`) - A URL to be used as a proxy server, including the name and password. ie, `"http.proxy": "http://user@pass:127.0.0.1:8888"`
+
+- `https.proxy` - __(_string_ default: `null`) - A URL to be used as a proxy server for HTTPs requests. If not specified, Onivim will fall back to the `http.proxy` setting.
+
 ### Rendering
 
 - `vsync` __(_bool_ default: `false`)__ - Whether rendering should sync with vertical retrace of the monitor. VSync adds input latency, as rendering must sync with the refresh rate of the monitor, but it reduces screen tearing.
