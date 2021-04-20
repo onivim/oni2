@@ -381,7 +381,6 @@ let setIndentation = (indentation, buf) => {
 
   let lines =
     if (originalIndentationValue != newIndentationValue) {
-      prerr_endline("Updating lines!");
       buf.lines
       |> Array.map(line => {
            let raw = BufferLine.raw(line);

@@ -89,7 +89,9 @@ type outmsg =
       (Exthost.LanguageInfo.t, IconTheme.t) =>
       Feature_Quickmenu.Schema.menu(msg),
     )
-  | NotifyInfo(string);
+  | NotifyInfo(string)
+  | NotifyError(string)
+  | Effect(Isolinear.Effect.t(msg));
 
 // UPDATE
 
@@ -147,7 +149,7 @@ module Effects: {
 
 let vimSettingChanged:
   (~activeBufferId: int, ~name: string, ~value: Vim.Setting.value, model) =>
-  model;
+  Isolinear.Effect.t(msg);
 
 let sub: model => Isolinear.Sub.t(msg);
 

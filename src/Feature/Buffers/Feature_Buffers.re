@@ -142,61 +142,12 @@ let modified = model => {
   |> List.of_seq;
 };
 
-let vimSettingChanged = (~activeBufferId, ~name, ~value, model) => {
-  let updateTabsOrSpaces = (mode, buffer) => {
-    let indentation = Buffer.getIndentation(buffer);
-    buffer
-    |> Buffer.setIndentation(
-         Inferred.explicit(IndentationSettings.{...indentation, mode}),
-       );
-  };
-
-  let updateShiftWidth = (size, buffer) => {
-    let indentation = Buffer.getIndentation(buffer);
-    buffer
-    |> Buffer.setIndentation(
-         Inferred.explicit(
-           IndentationSettings.{...indentation, size, tabSize: size},
-         ),
-       );
-  };
-
-  let maybeUpdater =
-    if (name == "expandtab") {
-      Vim.Setting.(
-        {
-          switch (value) {
-          | Int(0) => Some(updateTabsOrSpaces(IndentationSettings.Tabs))
-          | Int(1) => Some(updateTabsOrSpaces(IndentationSettings.Spaces))
-          | String(_)
-          | Int(_) => None
-          };
-        }
-      );
-    } else if (name == "shiftwidth") {
-      Vim.Setting.(
-        {
-          switch (value) {
-          | Int(size) => Some(updateShiftWidth(size))
-          | String(_) => None
-          };
-        }
-      );
-    } else {
-      None;
-    };
-
-  maybeUpdater
-  |> Option.map(updater => {
-       model |> update(activeBufferId, Option.map(updater))
-     })
-  |> Option.value(~default=model);
-};
-
 [@deriving show]
 type command =
   | ChangeIndentation({mode: IndentationSettings.mode})
   | ChangeFiletype({maybeBufferId: option(int)})
+  | ConvertIndentationToTabs
+  | ConvertIndentationToSpaces
   | DetectIndentation;
 
 [@deriving show({with_path: false})]
@@ -225,7 +176,9 @@ type msg =
       id: int,
       size: int,
       mode: IndentationSettings.mode,
+      didBufferGetModified: bool,
     })
+  | IndentationConversionError(string)
   | FilenameChanged({
       id: int,
       newFilePath: option(string),
@@ -289,6 +242,67 @@ module Msg = {
   let statusBarIndentationClicked = StatusBarIndentationClicked;
 };
 
+let vimSettingChanged = (~activeBufferId, ~name, ~value, model) => {
+  let updateTabsOrSpaces = (mode, buffer) => {
+    let indentation = Buffer.getIndentation(buffer);
+    IndentationChanged({
+      id: Oni_Core.Buffer.getId(buffer),
+      mode,
+      size: indentation.size,
+      didBufferGetModified: false,
+    });
+  };
+
+  let updateShiftWidth = (size, buffer) => {
+    let indentation = Buffer.getIndentation(buffer);
+    IndentationChanged({
+      id: Oni_Core.Buffer.getId(buffer),
+      mode: indentation.mode,
+      size,
+      didBufferGetModified: false,
+    });
+  };
+
+  let maybeUpdater =
+    if (name == "expandtab") {
+      Vim.Setting.(
+        {
+          switch (value) {
+          | Int(0) => Some(updateTabsOrSpaces(IndentationSettings.Tabs))
+          | Int(1) => Some(updateTabsOrSpaces(IndentationSettings.Spaces))
+          | String(_)
+          | Int(_) => None
+          };
+        }
+      );
+    } else if (name == "shiftwidth") {
+      Vim.Setting.(
+        {
+          switch (value) {
+          | Int(size) => Some(updateShiftWidth(size))
+          | String(_) => None
+          };
+        }
+      );
+    } else {
+      None;
+    };
+
+  maybeUpdater
+  |> OptionEx.flatMap(updater => {
+       model.buffers
+       |> IntMap.find_opt(activeBufferId)
+       |> Option.map(updater)
+     })
+  |> Option.map(msg =>
+       EffectEx.value(
+         ~name="Feature_Buffers.Indentation.vimSettingChanged.msg",
+         msg,
+       )
+     )
+  |> Option.value(~default=Isolinear.Effect.none);
+};
+
 type outmsg =
   | Nothing
   | BufferIndentationChanged({buffer: Oni_Core.Buffer.t})
@@ -313,7 +327,9 @@ type outmsg =
       (Exthost.LanguageInfo.t, IconTheme.t) =>
       Feature_Quickmenu.Schema.menu(msg),
     )
-  | NotifyInfo(string);
+  | NotifyInfo(string)
+  | NotifyError(string)
+  | Effect(Isolinear.Effect.t(msg));
 
 module Configuration = {
   open Config.Schema;
@@ -479,15 +495,23 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       Nothing,
     )
 
-  | IndentationChanged({id, mode, size}) =>
+  | IndentationChanged({id, mode, size, didBufferGetModified}) =>
     let newSettings = IndentationSettings.{mode, size, tabSize: size};
     let model' =
       model
       |> update(
            id,
-           Option.map(
-             Buffer.setIndentation(Inferred.explicit(newSettings)),
-           ),
+           Option.map(buffer => {
+             let buffer' =
+               buffer
+               |> Buffer.setIndentation(Inferred.explicit(newSettings));
+
+             if (didBufferGetModified) {
+               buffer' |> Buffer.setModified(true);
+             } else {
+               buffer';
+             };
+           }),
          );
     let eff =
       IntMap.find_opt(id, model'.buffers)
@@ -495,6 +519,8 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       |> Option.value(~default=Nothing);
 
     (model', eff);
+
+  | IndentationConversionError(errorMsg) => (model, NotifyError(errorMsg))
 
   | Saved(bufferId) =>
     let model' =
@@ -536,7 +562,13 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
           (_languageInfo: Exthost.LanguageInfo.t, _iconTheme: IconTheme.t) => {
         Feature_Quickmenu.Schema.menu(
           ~onItemSelected=
-            size => IndentationChanged({id: activeBufferId, size, mode}),
+            size =>
+              IndentationChanged({
+                id: activeBufferId,
+                size,
+                mode,
+                didBufferGetModified: false,
+              }),
           ~toString=string_of_int,
           items,
         );
@@ -574,6 +606,62 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         );
       };
       (model, ShowMenu(menuFn));
+
+    | ConvertIndentationToSpaces =>
+      let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
+      switch (maybeBuffer) {
+      | None => (model, Nothing)
+      | Some(buffer) =>
+        let allLines = Buffer.getLines(buffer);
+        let newLines = allLines |> Array.map(str => "  !!" ++ str);
+        (
+          model,
+          Effect(
+            Service_Vim.Effects.setLines(
+              ~shouldAdjustCursors=true,
+              ~bufferId=activeBufferId,
+              ~lines=newLines,
+              fun
+              | Error(msg) => IndentationConversionError(msg)
+              | Ok(_) =>
+                IndentationChanged({
+                  id: activeBufferId,
+                  mode: IndentationSettings.Spaces,
+                  size: 2,
+                  didBufferGetModified: true,
+                }),
+            ),
+          ),
+        );
+      };
+
+    | ConvertIndentationToTabs =>
+      let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
+      switch (maybeBuffer) {
+      | None => (model, Nothing)
+      | Some(buffer) =>
+        let allLines = Buffer.getLines(buffer);
+        let newLines = allLines |> Array.map(str => "  .." ++ str);
+        (
+          model,
+          Effect(
+            Service_Vim.Effects.setLines(
+              ~shouldAdjustCursors=true,
+              ~bufferId=activeBufferId,
+              ~lines=newLines,
+              fun
+              | Error(msg) => IndentationConversionError(msg)
+              | Ok(_) =>
+                IndentationChanged({
+                  id: activeBufferId,
+                  mode: IndentationSettings.Spaces,
+                  size: 2,
+                  didBufferGetModified: true,
+                }),
+            ),
+          ),
+        );
+      };
 
     | DetectIndentation =>
       let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
@@ -759,14 +847,14 @@ module Commands = {
   let indentUsingTabs =
     define(
       ~title="Indent using tabs",
-      "editor.active.indentUsingTabs",
+      "editor.action.indentUsingTabs",
       Command(ChangeIndentation({mode: IndentationSettings.Tabs})),
     );
 
   let indentUsingSpaces =
     define(
       ~title="Indent using spaces",
-      "editor.active.indentUsingSpaces",
+      "editor.action.indentUsingSpaces",
       Command(ChangeIndentation({mode: IndentationSettings.Spaces})),
     );
 
@@ -776,6 +864,20 @@ module Commands = {
       ~title="Detect Indentation from Content",
       "editor.action.detectIndentation",
       Command(DetectIndentation),
+    );
+
+  let convertIndentationToSpaces =
+    define(
+      ~title="Convert indentation to spaces",
+      "editor.action.indentationToSpaces",
+      Command(ConvertIndentationToSpaces),
+    );
+
+  let convertIndentationToTabs =
+    define(
+      ~title="Convert indentation to tabs",
+      "editor.action.indentationToTabs",
+      Command(ConvertIndentationToTabs),
     );
 
   let changeFiletype =
@@ -818,6 +920,8 @@ module Contributions = {
   let commands =
     Commands.[
       changeFiletype,
+      convertIndentationToSpaces,
+      convertIndentationToTabs,
       detectIndentation,
       indentUsingSpaces,
       indentUsingTabs,

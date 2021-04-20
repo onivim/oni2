@@ -1281,6 +1281,16 @@ let update =
         Internal.notificationEffect(~kind=Info, msg),
       )
 
+    | NotifyError(msg) => (
+        state,
+        Internal.notificationEffect(~kind=Error, msg),
+      )
+
+    | Effect(eff) => (
+        state,
+        eff |> Isolinear.Effect.map(msg => Buffers(msg)),
+      )
+
     | BufferModifiedSet(id, _) =>
       open Feature_Editor;
 
@@ -2366,11 +2376,8 @@ let update =
         e |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
       )
     | SettingsChanged({name, value}) =>
-      prerr_endline(
-        Printf.sprintf("%s: %s", name, Vim.Setting.show_value(value)),
-      );
       let maybeActiveBuffer = Selectors.getActiveBuffer(state);
-      let buffers' =
+      let bufferEffects =
         maybeActiveBuffer
         |> Option.map(activeBuffer => {
              Feature_Buffers.vimSettingChanged(
@@ -2379,9 +2386,14 @@ let update =
                ~value,
                state.buffers,
              )
+             |> Isolinear.Effect.map(msg => Buffers(msg))
            })
-        |> Option.value(~default=state.buffers);
-      {...state, buffers: buffers'} |> Internal.updateConfiguration;
+        |> Option.value(~default=Isolinear.Effect.none);
+
+      let (state, eff) = state |> Internal.updateConfiguration;
+
+      (state, Isolinear.Effect.batch([eff, bufferEffects]));
+
     | ModeDidChange({allowAnimation, mode, effects}) =>
       Internal.updateMode(~allowAnimation, state, mode, effects)
     | Output({cmd, output}) =>
