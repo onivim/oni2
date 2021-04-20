@@ -542,6 +542,8 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         Command(ChangeIndentation({mode: IndentationSettings.Tabs})),
       ),
       ("Auto-detect indentation", Command(DetectIndentation)),
+      ("Convert indentation to tabs", Command(ConvertIndentationToTabs)),
+      ("Convert indentation to spaces", Command(ConvertIndentationToSpaces)),
     ];
 
     let menuFn =
