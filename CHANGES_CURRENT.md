@@ -6,6 +6,7 @@
 - #3352 - Keybindings: Add default keybinding for open configuration (related #1423, thanks @LiHRaM !)
 - #3381 - Language Support: Symbols - implement go-to buffer symbol menu
 - #3387 - Code Actions: Implement context menu for quick fixes
+- #3440 - Indentation: Easier space/tab indentation switching
 
 ### Bug Fixes
 
