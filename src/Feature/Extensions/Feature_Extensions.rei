@@ -54,7 +54,14 @@ let isInstalled: (~extensionId: string, model) => bool;
 let isInstalling: (~extensionId: string, model) => bool;
 let isUninstalling: (~extensionId: string, model) => bool;
 
-let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
+let update:
+  (
+    ~extHostClient: Exthost.Client.t,
+    ~proxy: Service_Net.Proxy.t,
+    msg,
+    model
+  ) =>
+  (model, outmsg);
 
 let resetFocus: model => model;
 
@@ -63,7 +70,13 @@ let activatedIds: model => list(string);
 
 let menus: model => list(Menu.Schema.definition);
 let sub:
-  (~isVisible: bool, ~setup: Oni_Core.Setup.t, model) => Isolinear.Sub.t(msg);
+  (
+    ~proxy: Service_Net.Proxy.t,
+    ~isVisible: bool,
+    ~setup: Oni_Core.Setup.t,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
 
 module Persistence: {
   type t = Yojson.Safe.t;
@@ -87,6 +100,7 @@ module ListView: {
     (
       ~key: Brisk_reconciler.Key.t=?,
       ~model: model,
+      ~proxy: Service_Net.Proxy.t,
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~isFocused: bool,
@@ -100,6 +114,7 @@ module DetailsView: {
   let make:
     (
       ~model: model,
+      ~proxy: Service_Net.Proxy.t,
       ~theme: ColorTheme.Colors.t,
       ~tokenTheme: Oni_Syntax.TokenTheme.t,
       ~font: UiFont.t,

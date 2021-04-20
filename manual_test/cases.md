@@ -335,3 +335,23 @@ __Pass:__
 - [ ] Win
 - [ ] OSX
 - [ ] Linux
+
+# 12. Proxy 
+
+## 12.1 Windows Proxy
+
+### 12.1.1 Verify proxy settings
+
+__Setup:__
+- Install Fiddler classic
+- Run Fiddler classic
+- Use the 'require authentication' proxy setting
+
+- Open Onivim 2 with default settings
+- Search for an extension - verify there is no connection
+- Set `http.proxy` to `"http://1:1@127.0.0.1:88888"`
+- Search again - verify now connection
+- Download extension - verify installed
+
+__Pass:__
+- [ ] Win

@@ -147,6 +147,7 @@ let start =
       ~config=getState().config,
       ~extensions,
       ~setup,
+      ~proxy=getState().proxy |> Feature_Proxy.proxy,
     );
 
   // TODO: How to handle this correctly?
@@ -389,6 +390,7 @@ let start =
       Feature_SideBar.selected(state.sideBar) == Feature_SideBar.Extensions;
     let extensionsSub =
       Feature_Extensions.sub(
+        ~proxy=state.proxy |> Feature_Proxy.proxy,
         ~isVisible=isSideBarOpen && isExtensionsFocused,
         ~setup,
         state.extensions,

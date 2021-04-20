@@ -72,11 +72,11 @@ module Internal = {
     );
   };
 
-  let installFromOpenVSX = (~setup, ~extensionsFolder, extensionId) => {
+  let installFromOpenVSX = (~proxy, ~setup, ~extensionsFolder, extensionId) => {
     // ...otherwise, query the extension store, download, and install
     Catalog.Identifier.fromString(extensionId)
     |> LwtEx.fromOption(~errorMsg="Invalid extension id: " ++ extensionId)
-    |> LwtEx.flatMap(Catalog.details(~setup))
+    |> LwtEx.flatMap(Catalog.details(~proxy, ~setup))
     |> LwtEx.flatMap(
          (
            {downloadUrl, name, namespace, version, _} as details: Catalog.Details.t,
@@ -88,7 +88,7 @@ module Internal = {
              downloadUrl,
            )
          );
-         Service_Net.Request.download(~setup, downloadUrl)
+         Service_Net.Request.download(~proxy, ~setup, downloadUrl)
          |> Lwt.map(downloadPath => {
               let folderName =
                 Printf.sprintf(
@@ -121,7 +121,7 @@ module Internal = {
   };
 };
 
-let install = (~setup, ~extensionsFolder=?, path) => {
+let install = (~proxy, ~setup, ~extensionsFolder=?, path) => {
   // We assume if the requested extension ends with '.vsix',
   // it must be a path.
   let promise =
@@ -130,7 +130,7 @@ let install = (~setup, ~extensionsFolder=?, path) => {
       Internal.installByPath(~setup, ~extensionsFolder, ~folderName, path)
       |> Lwt.map(_ => ());
     } else {
-      Internal.installFromOpenVSX(~setup, ~extensionsFolder, path)
+      Internal.installFromOpenVSX(~proxy, ~setup, ~extensionsFolder, path)
       |> Lwt.map(_ => ());
     };
 
@@ -186,10 +186,15 @@ let uninstall = (~extensionsFolder=?, extensionId) => {
   };
 };
 
-let update = (~setup, ~extensionsFolder=?, extensionId) => {
+let update = (~proxy, ~setup, ~extensionsFolder=?, extensionId) => {
   let uninstallPromise = uninstall(~extensionsFolder?, extensionId);
   Lwt.bind(uninstallPromise, () => {
-    Internal.installFromOpenVSX(~setup, ~extensionsFolder, extensionId)
+    Internal.installFromOpenVSX(
+      ~proxy,
+      ~setup,
+      ~extensionsFolder,
+      extensionId,
+    )
   });
 };
 
