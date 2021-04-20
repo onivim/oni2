@@ -615,7 +615,14 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       | None => (model, Nothing)
       | Some(buffer) =>
         let allLines = Buffer.getLines(buffer);
-        let newLines = allLines |> Array.map(str => "  !!" ++ str);
+        let indentationSettings = Buffer.getIndentation(buffer);
+        let newLines =
+          allLines
+          |> Array.map(
+               IndentationConverter.indentationToSpaces(
+                 ~size=indentationSettings.size,
+               ),
+             );
         (
           model,
           Effect(
@@ -629,7 +636,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
                 IndentationChanged({
                   id: activeBufferId,
                   mode: IndentationSettings.Spaces,
-                  size: 2,
+                  size: indentationSettings.size,
                   didBufferGetModified: true,
                 }),
             ),
@@ -643,7 +650,14 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       | None => (model, Nothing)
       | Some(buffer) =>
         let allLines = Buffer.getLines(buffer);
-        let newLines = allLines |> Array.map(str => "  .." ++ str);
+        let indentationSettings = Buffer.getIndentation(buffer);
+        let newLines =
+          allLines
+          |> Array.map(
+               IndentationConverter.indentationToTabs(
+                 ~size=indentationSettings.size,
+               ),
+             );
         (
           model,
           Effect(
@@ -656,8 +670,8 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
               | Ok(_) =>
                 IndentationChanged({
                   id: activeBufferId,
-                  mode: IndentationSettings.Spaces,
-                  size: 2,
+                  mode: IndentationSettings.Tabs,
+                  size: indentationSettings.size,
                   didBufferGetModified: true,
                 }),
             ),
