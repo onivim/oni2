@@ -423,7 +423,7 @@ let update =
     let (model, outMsg) =
       Feature_Extensions.update(
         ~extHostClient,
-        ~proxy=state.proxy,
+        ~proxy=state.proxy |> Feature_Proxy.proxy,
         msg,
         state.extensions,
       );
@@ -1021,7 +1021,7 @@ let update =
   | Registration(msg) =>
     let (state', outmsg) =
       Feature_Registration.update(
-        ~proxy=state.proxy,
+        ~proxy=state.proxy |> Feature_Proxy.proxy,
         state.registration,
         msg,
       );

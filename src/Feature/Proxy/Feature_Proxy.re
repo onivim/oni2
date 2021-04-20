@@ -1,8 +1,9 @@
 open Oni_Core;
 
-type model = option(Service_Net.Proxy.t);
+type model = Service_Net.Proxy.t;
 
-let initial = None;
+let default =
+  Service_Net.Proxy.{httpUrl: None, httpsUrl: None, strictSSL: true};
 
 let proxy = Fun.id;
 
@@ -10,6 +11,8 @@ module Configuration = {
   open Config.Schema;
 
   let httpProxy = setting("http.proxy", nullable(string), ~default=None);
+
+  let httpsProxy = setting("https.proxy", nullable(string), ~default=None);
 
   let httpProxyStrictSSL =
     setting("http.proxyStrictSSL", bool, ~default=true);
@@ -22,19 +25,20 @@ module Contributions = {
   let configuration =
     Configuration.[
       httpProxy.spec,
+      httpsProxy.spec,
       httpProxyStrictSSL.spec,
       httpProxySupport.spec,
     ];
 };
 
 let configurationChanged = (config, model) => {
-  let maybeProxyUrl = Configuration.httpProxy.get(config);
+  let maybeHttpUrl = Configuration.httpProxy.get(config);
+  let maybeHttpsUrl = Configuration.httpsProxy.get(config);
+  let strictSSL = Configuration.httpProxyStrictSSL.get(config);
 
-  maybeProxyUrl
-  |> Option.map(url => {
-       Service_Net.Proxy.{
-         url,
-         strictSSL: Configuration.httpProxyStrictSSL.get(config),
-       }
-     });
+  Service_Net.Proxy.{
+    httpUrl: maybeHttpUrl,
+    httpsUrl: maybeHttpsUrl,
+    strictSSL,
+  };
 };

@@ -46,7 +46,7 @@ let reduce = (msg, model) =>
   | WidthChanged(width) => {...model, width}
   };
 
-let installButton = (~theme, ~font, ~extensionId, ~dispatch, ()) => {
+let installButton = (~proxy, ~theme, ~font, ~extensionId, ~dispatch, ()) => {
   let backgroundColor = Colors.Button.background.from(theme);
   let color = Colors.Button.foreground.from(theme);
   <ItemView.ActionButton
@@ -122,7 +122,15 @@ let versionToString: option(Semver.t) => string =
   };
 
 let%component make =
-              (~model, ~theme, ~font: UiFont.t, ~isFocused, ~dispatch, ()) => {
+              (
+                ~model,
+                ~proxy,
+                ~theme,
+                ~font: UiFont.t,
+                ~isFocused,
+                ~dispatch,
+                (),
+              ) => {
   let%hook ({width, installedExpanded, bundledExpanded}, localDispatch) =
     Hooks.reducer(~initialState=default, reduce);
 
@@ -145,6 +153,7 @@ let%component make =
 
     <ItemView
       actionButton
+      proxy
       width
       iconPath
       theme
@@ -187,6 +196,7 @@ let%component make =
       };
 
     <ItemView
+      proxy
       actionButton
       width
       iconPath
@@ -283,6 +293,7 @@ let%component make =
                       font
                     />
                   : <installButton
+                      proxy
                       theme
                       extensionId
                       dispatch
@@ -292,6 +303,7 @@ let%component make =
               };
 
             <ItemView
+              proxy
               actionButton
               width
               iconPath=iconUrl

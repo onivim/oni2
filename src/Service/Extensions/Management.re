@@ -88,7 +88,7 @@ module Internal = {
              downloadUrl,
            )
          );
-         Service_Net.Request.download(~setup, downloadUrl)
+         Service_Net.Request.download(~proxy, ~setup, downloadUrl)
          |> Lwt.map(downloadPath => {
               let folderName =
                 Printf.sprintf(

@@ -590,7 +590,7 @@ let initial =
     zen:
       Feature_Zen.initial(~isSingleFile=List.length(cli.filesToOpen) == 1),
     pane: Feature_Pane.initial,
-    proxy: Feature_Proxy.initial,
+    proxy: Feature_Proxy.default,
     newQuickmenu: Feature_Quickmenu.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,

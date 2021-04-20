@@ -57,7 +57,7 @@ let isUninstalling: (~extensionId: string, model) => bool;
 let update:
   (
     ~extHostClient: Exthost.Client.t,
-    ~proxy: option(Service_Net.Proxy.t),
+    ~proxy: Service_Net.Proxy.t,
     msg,
     model
   ) =>
@@ -71,7 +71,7 @@ let activatedIds: model => list(string);
 let menus: model => list(Menu.Schema.definition);
 let sub:
   (
-    ~proxy: option(Service_Net.Proxy.t),
+    ~proxy: Service_Net.Proxy.t,
     ~isVisible: bool,
     ~setup: Oni_Core.Setup.t,
     model
@@ -100,6 +100,7 @@ module ListView: {
     (
       ~key: Brisk_reconciler.Key.t=?,
       ~model: model,
+      ~proxy: Service_Net.Proxy.t,
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~isFocused: bool,
@@ -113,6 +114,7 @@ module DetailsView: {
   let make:
     (
       ~model: model,
+      ~proxy: Service_Net.Proxy.t,
       ~theme: ColorTheme.Colors.t,
       ~tokenTheme: Oni_Syntax.TokenTheme.t,
       ~font: UiFont.t,

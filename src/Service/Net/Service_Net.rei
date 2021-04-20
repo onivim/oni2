@@ -5,7 +5,8 @@ exception ResponseParseFailed;
 
 module Proxy: {
   type t = {
-    url: string,
+    httpUrl: option(string),
+    httpsUrl: option(string),
     strictSSL: bool,
   };
 };
@@ -13,7 +14,7 @@ module Proxy: {
 module Request: {
   let json:
     (
-      ~proxy: option(Proxy.t),
+      ~proxy: Proxy.t,
       ~setup: Oni_Core.Setup.t,
       ~decoder: Json.decoder('a),
       string
@@ -21,5 +22,6 @@ module Request: {
     Lwt.t('a);
 
   let download:
-    (~dest: string=?, ~setup: Oni_Core.Setup.t, string) => Lwt.t(string);
+    (~dest: string=?, ~proxy: Proxy.t, ~setup: Oni_Core.Setup.t, string) =>
+    Lwt.t(string);
 };

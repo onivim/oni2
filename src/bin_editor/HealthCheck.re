@@ -107,7 +107,7 @@ let mainChecks = [
     "Verify simple request",
     (setup: Setup.t) => {
       Service_Net.Request.json(
-        ~proxy=None,
+        ~proxy=Feature_Proxy.(default |> proxy),
         ~setup,
         ~decoder=Json.Decode.value,
         "https://httpbin.org/json",

@@ -83,22 +83,17 @@ module Catalog: {
   };
 
   let details:
-    (~proxy: option(Service_Net.Proxy.t), ~setup: Setup.t, Identifier.t) =>
+    (~proxy: Service_Net.Proxy.t, ~setup: Setup.t, Identifier.t) =>
     Lwt.t(Details.t);
   let search:
-    (
-      ~proxy: option(Service_Net.Proxy.t),
-      ~offset: int,
-      ~setup: Setup.t,
-      string
-    ) =>
+    (~proxy: Service_Net.Proxy.t, ~offset: int, ~setup: Setup.t, string) =>
     Lwt.t(SearchResponse.t);
 };
 
 module Management: {
   let install:
     (
-      ~proxy: option(Service_Net.Proxy.t),
+      ~proxy: Service_Net.Proxy.t,
       ~setup: Setup.t,
       ~extensionsFolder: FpExp.t(FpExp.absolute)=?,
       string
@@ -135,7 +130,7 @@ module Effects: {
 
   let install:
     (
-      ~proxy: option(Service_Net.Proxy.t),
+      ~proxy: Service_Net.Proxy.t,
       ~extensionsFolder: option(FpExp.t(FpExp.absolute)),
       ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'a,
       string
@@ -144,7 +139,7 @@ module Effects: {
 
   let update:
     (
-      ~proxy: option(Service_Net.Proxy.t),
+      ~proxy: Service_Net.Proxy.t,
       ~extensionsFolder: option(FpExp.t(FpExp.absolute)),
       ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'msg,
       string
@@ -153,7 +148,7 @@ module Effects: {
 
   let details:
     (
-      ~proxy: option(Service_Net.Proxy.t),
+      ~proxy: Service_Net.Proxy.t,
       ~extensionId: string,
       ~toMsg: result(Catalog.Details.t, string) => 'a
     ) =>
@@ -163,7 +158,7 @@ module Effects: {
 module Sub: {
   let search:
     (
-      ~proxy: option(Service_Net.Proxy.t),
+      ~proxy: Service_Net.Proxy.t,
       ~setup: Setup.t,
       ~query: Query.t,
       ~toMsg: result(Query.t, exn) => 'a
@@ -172,7 +167,7 @@ module Sub: {
 
   let details:
     (
-      ~proxy: option(Service_Net.Proxy.t),
+      ~proxy: Service_Net.Proxy.t,
       ~setup: Setup.t,
       ~extensionId: string,
       ~toMsg: result(Catalog.Details.t, string) => 'a

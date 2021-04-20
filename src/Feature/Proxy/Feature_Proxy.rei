@@ -2,13 +2,13 @@ open Oni_Core;
 
 // MODEL
 
-type model = option(Service_Net.Proxy.t);
+type model;
 
-let initial: model;
+let default: model;
 
 let configurationChanged: (Config.resolver, model) => model;
 
-let proxy: model => option(Service_Net.Proxy.t);
+let proxy: model => Service_Net.Proxy.t;
 
 // CONTRIBUTIONS
 

@@ -1,7 +1,7 @@
 open Oni_Core;
 type msg = result(Query.t, exn);
 type searchParams = {
-  proxy: option(Service_Net.Proxy.t),
+  proxy: Service_Net.Proxy.t,
   setup: Setup.t,
   query: Query.t,
 };
@@ -62,7 +62,7 @@ let search = (~proxy, ~setup, ~query, ~toMsg) => {
 
 // DETAILS
 type detailParams = {
-  proxy: option(Service_Net.Proxy.t),
+  proxy: Service_Net.Proxy.t,
   setup: Setup.t,
   extensionId: string,
 };
