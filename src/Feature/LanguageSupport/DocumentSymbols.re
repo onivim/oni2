@@ -200,7 +200,7 @@ module MenuItems = {
   open MenuBar.Schema;
 
   let gotoBufferSymbol =
-    command(~title="Goto buffer symbol...", Commands.gotoSymbol);
+    command(~title="Go to Symbol in Buffer...", Commands.gotoSymbol);
 };
 
 module Contributions = {

@@ -389,7 +389,7 @@ let setIndentation = (indentation, buf) => {
     } else {
       buf.lines;
     };
-  {...buf, lines, indentation};
+  {...buf, measure, lines, indentation};
 };
 
 let getIndentation = buf => buf.indentation |> Inferred.value;

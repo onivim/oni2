@@ -39,6 +39,7 @@ type outmsg =
   | ToggleProblems
   | ToggleNotifications
   | ShowFileTypePicker
+  | ShowIndentationPicker
   | Effect(Isolinear.Effect.t(msg));
 
 let update: (~client: Exthost.Client.t, model, msg) => (model, outmsg);
