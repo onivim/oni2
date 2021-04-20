@@ -291,7 +291,6 @@ module Styles = {
   module Colors = Feature_Theme.Colors;
 
   let diagnostic = (~theme) => [
-    textOverflow(`Ellipsis),
     color(Colors.Editor.foreground.from(theme)),
     backgroundColor(Colors.EditorHoverWidget.background.from(theme)),
   ];
