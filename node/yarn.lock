@@ -2,6 +2,15 @@
 # yarn lockfile v1
 
 
+"@onivim/request-light@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@onivim/request-light/-/request-light-0.4.1.tgz#13082e5d8a5664b73116d85d4805fb386aa44f61"
+  integrity sha512-C3gamHhT0aPZWpHK/7bVCgFa0RhkuRGZrM4Bl3yTdtaZd4kbjIVOmPiOz6hgNpqZm0YwSXv1+q8LhDuZF9+oXg==
+  dependencies:
+    http-proxy-agent "^2.1.0"
+    https-proxy-agent "^2.2.4"
+    vscode-nls "^4.1.2"
+
 "@onivim/vscode-exthost@1.53.0":
   version "1.53.0"
   resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.53.0.tgz#86fff6a92163c40c37e5934719992f6d3b6fc26b"
@@ -66,11 +75,6 @@ file-uri-to-path@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/file-uri-to-path/-/file-uri-to-path-1.0.0.tgz#553a7b8446ff6f684359c445f1e37a05dacc33dd"
   integrity sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==
-
-follow-redirects@1.13.2:
-  version "1.13.2"
-  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.13.2.tgz#dd73c8effc12728ba5cf4259d760ea5fb83e3147"
-  integrity sha512-6mPTgLxYm3r6Bkkg0vNM0HTjfGrOEtsfbhagQvbxDEsEkpNhw582upBaoRZylzen6krEmxXJgt9Ju6HiI4O7BA==
 
 fs-extra@^8.1.0:
   version "8.1.0"
@@ -157,15 +161,6 @@ pend@~1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/pend/-/pend-1.2.0.tgz#7a57eb550a6783f9115331fcf4663d5c8e007a50"
   integrity sha1-elfrVQpng/kRUzH89GY9XI4AelA=
-
-request-light@*:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/request-light/-/request-light-0.4.0.tgz#c6b91ef00b18cb0de75d2127e55b3a2c9f7f90f9"
-  integrity sha512-fimzjIVw506FBZLspTAXHdpvgvQebyjpNyLRd0e6drPPRq7gcrROeGWRyF81wLqFg5ijPgnOQbmfck5wdTqpSA==
-  dependencies:
-    http-proxy-agent "^2.1.0"
-    https-proxy-agent "^2.2.4"
-    vscode-nls "^4.1.2"
 
 semver-umd@^5.5.5:
   version "5.5.7"
