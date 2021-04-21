@@ -3,13 +3,6 @@ open Oni_Core;
 open Utility;
 open Component_Animation;
 
-
-
-
-
-
-
-
 // A pixel position relative to the top, left of the current editor
 type relativePixelPosition = PixelPosition.t;
 
