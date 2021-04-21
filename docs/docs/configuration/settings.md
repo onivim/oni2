@@ -112,6 +112,14 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `files.exclude` __(_list of string_ default: `[".git", "_esy", "node_modules"]`)__ - When using `Quick Open` or `Find in files`, Onivim will ignore the files inside the directories listed here 
 
+- `files.autoSave` __(_string_ default: `"off"`)__ - controls when buffers are auto-saved:
+    - _"off"_ - Do not auto-save at all
+    - _"afterDelay"_ - Auto-save after the delay specified by `"files.autoSaveDelay"`
+    - _"onFocusChange"_ - Auto-save when changing focus between buffers
+    - _"onWindowChange"_ - Auto-save when the Onivim application window loses focus
+
+- `files.autoSaveDelay` __(_int_ default: `1000`)__ - specifies the time, in milliseconds, to wait to auto-save a buffer when `files.autoSave` is set to `"afterDelay"`
+
 - `search.exclude` __(_list of string_ default: `[]`)__ - When using `Find in files` Onivim will not look at files located at the directories listed here, this inherit all the values from `files.exclude`
 
 - `workbench.colorTheme` __(_string_ default:`"One Dark Pro"`)__ - Color theme to use.
