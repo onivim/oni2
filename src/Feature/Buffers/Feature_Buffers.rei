@@ -62,10 +62,12 @@ module Msg: {
     msg;
 
   let selectFileTypeClicked: (~bufferId: int) => msg;
+  let statusBarIndentationClicked: msg;
 };
 
 type outmsg =
   | Nothing
+  | BufferIndentationChanged({buffer: Oni_Core.Buffer.t})
   | BufferUpdated({
       update: Oni_Core.BufferUpdate.t,
       markerUpdate: Oni_Core.MarkerUpdate.t,
@@ -87,7 +89,9 @@ type outmsg =
       (Exthost.LanguageInfo.t, IconTheme.t) =>
       Feature_Quickmenu.Schema.menu(msg),
     )
-  | NotifyInfo(string);
+  | NotifyInfo(string)
+  | NotifyError(string)
+  | Effect(Isolinear.Effect.t(msg));
 
 // UPDATE
 
@@ -142,6 +146,10 @@ module Effects: {
     ) =>
     Isolinear.Effect.t(msg);
 };
+
+let vimSettingChanged:
+  (~activeBufferId: int, ~name: string, ~value: Vim.Setting.value, model) =>
+  Isolinear.Effect.t(msg);
 
 let sub: model => Isolinear.Sub.t(msg);
 

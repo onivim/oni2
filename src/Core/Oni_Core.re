@@ -32,6 +32,7 @@ module FontMeasurementCache = FontMeasurementCache;
 module Glob = Glob;
 module IconTheme = IconTheme;
 module Indentation = Indentation;
+module IndentationConverter = IndentationConverter;
 module IndentationSettings = IndentationSettings;
 module Inferred = Inferred;
 module IntMap = Kernel.IntMap;

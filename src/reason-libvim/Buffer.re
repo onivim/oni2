@@ -100,7 +100,8 @@ let setLines =
         };
 
       if (undoable) {
-        Undo.saveRegion(startLine - 1, endLine + 1);
+        let undoEndLine = endLine == (-1) ? getLineCount(buffer) : endLine;
+        Undo.saveRegion(startLine - 1, undoEndLine + 1);
       };
 
       Native.vimBufferSetLines(buffer, startLine, endLine, lines);
