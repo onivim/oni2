@@ -69,7 +69,8 @@ let initial = {mode: Mode.default, delay: Revery.Time.ofFloatSeconds(1.0)};
 type msg =
   | Noop
   | AutoSaveTimerExpired
-  | AutoSaveWindowLostFocus;
+  | AutoSaveWindowLostFocus
+  | AutoSaveBufferChangedFocus;
 
 type outmsg =
   | Nothing
@@ -84,11 +85,12 @@ let update = (msg, model) => {
   switch (msg) {
   | Noop => (model, Nothing)
   | AutoSaveWindowLostFocus
+  | AutoSaveBufferChangedFocus
   | AutoSaveTimerExpired => (model, DoAutoSave)
   };
 };
 
-let sub = (~isWindowFocused, ~buffers, model) => {
+let sub = (~isWindowFocused, ~maybeFocusedBuffer, ~buffers, model) => {
   let anyDirty = buffers |> List.exists(buf => Buffer.isModified(buf));
 
   switch (model.mode) {
@@ -104,8 +106,13 @@ let sub = (~isWindowFocused, ~buffers, model) => {
     } else {
       Isolinear.Sub.none;
     }
-  // TODO
-  | OnFocusChange => Isolinear.Sub.none
+  | OnFocusChange =>
+    let uniqueId =
+      switch (maybeFocusedBuffer) {
+      | None => "Feature_Buffer.autoSave.focusChange:None"
+      | Some(id) => "Feature_Buffer.autoSave.focusChange" ++ string_of_int(id)
+      };
+    SubEx.value(~uniqueId, AutoSaveBufferChangedFocus);
   | OnWindowChange =>
     if (!isWindowFocused) {
       SubEx.value(

@@ -933,7 +933,7 @@ module Commands = {
     );
 };
 
-let sub = (~isWindowFocused, model) => {
+let sub = (~isWindowFocused, ~maybeFocusedBuffer, model) => {
   let buffers = model.buffers |> IntMap.bindings |> List.map(snd);
   let largeFileSub =
     if (!model.checkForLargeFiles) {
@@ -953,7 +953,12 @@ let sub = (~isWindowFocused, model) => {
     };
 
   let autoSaveSub =
-    AutoSave.sub(~isWindowFocused, ~buffers, model.autoSave)
+    AutoSave.sub(
+      ~isWindowFocused,
+      ~maybeFocusedBuffer,
+      ~buffers,
+      model.autoSave,
+    )
     |> Isolinear.Sub.map(msg => AutoSave(msg));
   [largeFileSub, autoSaveSub] |> Isolinear.Sub.batch;
 };

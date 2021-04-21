@@ -154,7 +154,9 @@ let vimSettingChanged:
   (~activeBufferId: int, ~name: string, ~value: Vim.Setting.value, model) =>
   Isolinear.Effect.t(msg);
 
-let sub: (~isWindowFocused: bool, model) => Isolinear.Sub.t(msg);
+let sub:
+  (~isWindowFocused: bool, ~maybeFocusedBuffer: option(int), model) =>
+  Isolinear.Sub.t(msg);
 
 module Contributions: {
   let commands: Command.Lookup.t(msg);
