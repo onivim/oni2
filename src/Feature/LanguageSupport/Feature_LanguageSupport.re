@@ -586,7 +586,7 @@ let bufferSaved =
       ~isLargeBuffer,
       ~buffer,
       ~config,
-      ~savedBufferId,
+      ~savedBufferId as _,
       ~activeBufferId,
       model,
     ) =>

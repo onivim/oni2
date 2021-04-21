@@ -1,6 +1,4 @@
-open EditorCoreTypes;
 open Oni_Core;
-open Utility;
 
 module Log = (val Log.withNamespace("Oni2.Model.Buffers.AutoSave"));
 module Mode = {
@@ -77,7 +75,7 @@ type outmsg =
   | Nothing
   | DoAutoSave;
 
-let configurationChanged = (~config, model) => {
+let configurationChanged = (~config, _model) => {
   mode: Configuration.autoSave.get(config),
   delay: Configuration.autoSaveDelay.get(config),
 };
