@@ -387,6 +387,16 @@ let defaultKeyBindings =
         ~command=Feature_Layout.Commands.toggleMaximize.id,
         ~condition=windowCommandCondition,
       ),
+      bind(
+        ~key="<C-W><C-Q>",
+        ~command=Feature_Layout.Commands.closeActiveSplit.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>q",
+        ~command=Feature_Layout.Commands.closeActiveSplit.id,
+        ~condition=windowCommandCondition,
+      ),
     ]
   @ Component_VimWindows.Contributions.keybindings
   @ Component_VimList.Contributions.keybindings

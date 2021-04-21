@@ -423,7 +423,8 @@
     "@opam/dir": "bryphe/reason-native:dir.opam#e16590c",
     "@opam/conf-pkg-config": "1.2",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
-    "flex": "bryphe/flex#5e19b05"
+    "flex": "bryphe/flex#5e19b05",
+    "@revery/esy-libvterm": "1.0.4"
   },
   "devDependencies": {
     "ocaml": "4.10.0",

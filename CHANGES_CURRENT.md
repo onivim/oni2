@@ -51,6 +51,11 @@
 - #3414 - Code Actions: Fix regression in control-p binding
 - #3416 - Editor: Fix word-wrap calculation with tab characters (fixes #3372)
 - #2329 - UX - Completion: Fix overflowing detail text (fixes #2264)
+- #3421 - Lifecycle: Show unsaved dialog when closing last editor via mouse (fixes #417)
+- #3420 - Vim: Implement C-W, C-Q binding (related #1721)
+- #3422 - Input: Fix terminal key binding not working as expected (fixes #2778)
+- #3435 - Completion: Fix various mouse interactions (fixes #3428)
+- #3439 - Hover: Remove textOverflow(Ellipsis) from hover
 
 ### Performance
 
@@ -77,3 +82,4 @@
 - #3319 - Dependency: esy-macdylibbundler -> 0.4.5001 to support Big Sur (thanks @brdoney !)
 - #3313 - Packaging: Fix macOS Big Sur release bundling issues (fixes #2813, thanks @brdoney !)
 - #3369 - CI: Install python3 on CentOS dockerfile
+- #3429 - CI: Remove libtools dependency
