@@ -39,7 +39,7 @@ module Effects: {
   let loadBuffer:
     (~filePath: string, (~bufferId: int) => 'msg) => Isolinear.Effect.t('msg);
 
-  let saveAll: Isolinear.Effect.t(unit);
+  let saveAll: (unit => 'msg) => Isolinear.Effect.t('msg);
 
   let applyCompletion:
     (

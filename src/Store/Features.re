@@ -1454,7 +1454,7 @@ let update =
         };
 
       (state'', Effect.none);
-    | BufferSaved(buffer) =>
+    | BufferSaved({buffer, reason}) =>
       let eff =
         Service_Exthost.Effects.FileSystemEventService.onBufferChanged(
           ~buffer,
@@ -1502,6 +1502,7 @@ let update =
              let config = Selectors.configResolver(state);
              state.languageSupport
              |> Feature_LanguageSupport.bufferSaved(
+                  ~reason,
                   ~isLargeBuffer=
                     Feature_Buffers.isLargeFile(state.buffers, buffer),
                   ~activeBufferId,

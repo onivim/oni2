@@ -244,11 +244,11 @@ module Effects = {
     });
   };
 
-  let saveAll = {
+  let saveAll = toMsg => {
     Isolinear.Effect.createWithDispatch(~name="loadBuffer", dispatch => {
       let (_: Vim.Context.t, _effects: list(Vim.Effect.t)) =
         Vim.command("wa!");
-      ();
+      dispatch(toMsg());
     });
   };
 };

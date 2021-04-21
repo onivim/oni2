@@ -75,7 +75,7 @@ type msg =
 
 type outmsg =
   | Nothing
-  | Effect(Isolinear.Effect.t(msg));
+  | DoAutoSave;
 
 let configurationChanged = (~config, model) => {
   mode: Configuration.autoSave.get(config),
@@ -86,10 +86,7 @@ let update = (msg, model) => {
   switch (msg) {
   | Noop => (model, Nothing)
   | AutoSaveWindowLostFocus
-  | AutoSaveTimerExpired => (
-      model,
-      Effect(Service_Vim.Effects.saveAll |> Isolinear.Effect.map(() => Noop)),
-    )
+  | AutoSaveTimerExpired => (model, DoAutoSave)
   };
 };
 

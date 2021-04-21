@@ -76,7 +76,10 @@ type outmsg =
       oldBuffer: Oni_Core.Buffer.t,
       triggerKey: option(string),
     })
-  | BufferSaved(Oni_Core.Buffer.t)
+  | BufferSaved({
+      buffer: Oni_Core.Buffer.t,
+      reason: SaveReason.t,
+    })
   | CreateEditor({
       buffer: Oni_Core.Buffer.t,
       split: SplitDirection.t,

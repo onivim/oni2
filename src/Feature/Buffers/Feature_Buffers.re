@@ -12,6 +12,7 @@ module Log = (val Log.withNamespace("Oni2.Model.Buffers"));
 
 type model = {
   autoSave: AutoSave.model,
+  pendingSaveReason: option(SaveReason.t),
   buffers: IntMap.t(Buffer.t),
   originalLines: IntMap.t(array(string)),
   computedDiffs: IntMap.t(DiffMarkers.t),
@@ -20,6 +21,8 @@ type model = {
 
 let empty = {
   autoSave: AutoSave.initial,
+  pendingSaveReason: None,
+
   buffers: IntMap.empty,
   originalLines: IntMap.empty,
   computedDiffs: IntMap.empty,
@@ -156,6 +159,7 @@ type command =
 [@deriving show({with_path: false})]
 type msg =
   | AutoSave(AutoSave.msg)
+  | AutoSaveCompleted
   | Command(command)
   | EditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
@@ -318,7 +322,10 @@ type outmsg =
       oldBuffer: Oni_Core.Buffer.t,
       triggerKey: option(string),
     })
-  | BufferSaved(Oni_Core.Buffer.t)
+  | BufferSaved({
+      buffer: Oni_Core.Buffer.t,
+      reason: SaveReason.t,
+    })
   | CreateEditor({
       buffer: Oni_Core.Buffer.t,
       split: SplitDirection.t,
@@ -387,13 +394,16 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   | AutoSave(msg) =>
     let (autoSave', outmsg) = AutoSave.update(msg, model.autoSave);
 
-    let outmsg' =
-      switch (outmsg) {
-      | AutoSave.Nothing => Nothing
-      | AutoSave.Effect(eff) =>
-        Effect(eff |> Isolinear.Effect.map(msg => AutoSave(msg)))
-      };
-    ({...model, autoSave: autoSave'}, outmsg');
+    let model' = {...model, autoSave: autoSave'};
+    switch (outmsg) {
+    | AutoSave.Nothing => (model', Nothing)
+    | AutoSave.DoAutoSave => (
+        {...model, pendingSaveReason: Some(SaveReason.AutoSave)},
+        Effect(Service_Vim.Effects.saveAll(() => AutoSaveCompleted)),
+      )
+    };
+
+  | AutoSaveCompleted => ({...model, pendingSaveReason: None}, Nothing)
 
   | EditorRequested({buffer, split, position, grabFocus, preview}) => (
       add(buffer, model),
@@ -538,12 +548,14 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   | IndentationConversionError(errorMsg) => (model, NotifyError(errorMsg))
 
   | Saved(bufferId) =>
-    prerr_endline("Feature_buffers - saved: " ++ string_of_int(bufferId));
+    let saveReason =
+      model.pendingSaveReason
+      |> Option.value(~default=SaveReason.UserInitiated);
     let model' =
       update(bufferId, Option.map(Buffer.incrementSaveTick), model);
     let eff =
       IntMap.find_opt(bufferId, model.buffers)
-      |> Option.map(buffer => BufferSaved(buffer))
+      |> Option.map(buffer => BufferSaved({buffer, reason: saveReason}))
       |> Option.value(~default=Nothing);
     (model', eff);
 
