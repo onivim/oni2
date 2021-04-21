@@ -1852,6 +1852,8 @@ module Reply: {
   let okJson: Yojson.Safe.t => t;
 
   let okBuffer: Bytes.t => t;
+
+  let toDebugString: t => string;
 };
 
 module Middleware: {let download: Msg.DownloadService.msg => Lwt.t(Reply.t);};

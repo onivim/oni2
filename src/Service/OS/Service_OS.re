@@ -198,10 +198,13 @@ module Api = {
     let buffer = Luv.Buffer.from_bytes(contents);
     path
     |> Internal.openfile(~flags=[`CREAT, `WRONLY])
+    |> LwtEx.tap(_ => prerr_endline("-- Open file OK"))
     |> bind(file => {
          [buffer] |> wrap(Luv.File.write(file)) |> Lwt.map(_ => file)
        })
-    |> bind(Internal.closefile);
+    |> LwtEx.tap(_ => prerr_endline("-- Write file OK"))
+    |> bind(Internal.closefile)
+    |> LwtEx.tap(_ => prerr_endline("-- Close file OK"));
   };
 
   let copy = (~source, ~target, ~overwrite) => {
@@ -212,13 +215,55 @@ module Api = {
     copy(~source, ~target, ~overwrite) |> bind(() => unlink(source));
   };
   let mkdir = path => {
-    Log.tracef(m => m("Calling mkdirf for path: %s", path));
-    path |> wrap(Luv.File.mkdir);
+    Log.tracef(m => m("Calling mkdir for path: %s", path));
+    prerr_endline("Calling mkdirf for path: " ++ path);
+    let maybeStat = str => {
+      Lwt.catch(
+        () => stat(str) |> Lwt.map(stat => Some(stat)),
+        _exn => Lwt.return(None),
+      );
+    };
+
+    let isDirectory = (stat: Luv.File.Stat.t) => {
+      Luv.File.Mode.test([`IFDIR], stat.mode);
+    };
+
+    let doMkdir = path => path |> wrap(Luv.File.mkdir);
+
+    let attemptCheckOrCreateDirectory = path => {
+      path
+      |> maybeStat
+      |> LwtEx.flatMap(maybeStatResult => {
+           maybeStatResult
+           |> Option.map(statResult =>
+                if (isDirectory(statResult)) {
+                  Lwt.return();
+                } else {
+                  doMkdir(path);
+                }
+              )
+           |> OptionEx.value_or_lazy(() => doMkdir(path))
+         });
+    };
+
+    let rec loop = attemptCount =>
+      if (attemptCount >= 3) {
+        attemptCheckOrCreateDirectory(path);
+      } else {
+        Lwt.catch(
+          () => {attemptCheckOrCreateDirectory(path)},
+          _exn => loop(attemptCount + 1),
+        );
+      };
+
+    loop(0);
   };
 
   let mkdirp = (path: FpExp.t(FpExp.absolute)) => {
-    let rec loop = path =>
-      if (FpExp.eq(path, FpExp.root)) {
+    let rec loop = path => {
+      prerr_endline("** mkdirp - loop: " ++ FpExp.toString(path));
+      // Hit the root!
+      if (FpExp.eq(path, FpExp.root) || FpExp.eq(path, FpExp.dirName(path))) {
         Lwt.return();
       } else {
         let parent = FpExp.dirName(path);
@@ -255,6 +300,7 @@ module Api = {
              }
            });
       };
+    };
 
     loop(path);
   };
