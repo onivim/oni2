@@ -108,6 +108,7 @@ let spec =
       passthroughFloat,
       " Force the DPI scaling for the editor.",
     ),
+    ("--window-position", passthroughString, " Set the window position x,y in display space"),
     (
       "--working-directory",
       passthrough,

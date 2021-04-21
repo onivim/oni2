@@ -10,6 +10,11 @@ open Rench;
 module CoreLog = Log;
 module Log = (val Log.withNamespace("Oni2.Core.Cli"));
 
+type position = {
+  x: int,
+  y: int,
+};
+
 type t = {
   gpuAcceleration: [ | `Auto | `ForceSoftware | `ForceHardware],
   folder: option(string),
@@ -28,6 +33,7 @@ type t = {
   needsConsole: bool,
   proxyServer: Service_Net.Proxy.t,
   vimExCommands: list(string),
+  windowPosition: option(position),
 };
 
 type eff =
@@ -318,6 +324,7 @@ let parse = (~getenv: string => option(string), args) => {
     needsConsole,
     proxyServer: proxyServer^,
     vimExCommands: (vimExCommands^ |> List.rev) @ anonymousExCommands,
+    windowPosition: Some({x: 100, y: 200})
   };
 
   (cli, eff^);
