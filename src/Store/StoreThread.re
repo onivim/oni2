@@ -473,9 +473,15 @@ let start =
          })
       |> Isolinear.Sub.batch;
 
+    let maybeFocusedBuffer =
+      Model.Selectors.getFocusedBuffer(state)
+      |> Option.map(Oni_Core.Buffer.getId);
     let bufferSub =
       state.buffers
-      |> Feature_Buffers.sub
+      |> Feature_Buffers.sub(
+           ~isWindowFocused=state.windowIsFocused,
+           ~maybeFocusedBuffer,
+         )
       |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
 
     let quickmenuSub =

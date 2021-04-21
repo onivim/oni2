@@ -1278,6 +1278,11 @@ let update =
     switch (outmsg) {
     | Nothing => (state, Effect.none)
 
+    | Effect(eff) => (
+        state,
+        eff |> Isolinear.Effect.map(msg => Buffers(msg)),
+      )
+
     | ShowMenu(menuFn) =>
       let languageInfo =
         state.languageSupport |> Feature_LanguageSupport.languageInfo;
@@ -1295,11 +1300,6 @@ let update =
     | NotifyError(msg) => (
         state,
         Internal.notificationEffect(~kind=Error, msg),
-      )
-
-    | Effect(eff) => (
-        state,
-        eff |> Isolinear.Effect.map(msg => Buffers(msg)),
       )
 
     | BufferModifiedSet(id, _) =>
@@ -1454,7 +1454,7 @@ let update =
         };
 
       (state'', Effect.none);
-    | BufferSaved(buffer) =>
+    | BufferSaved({buffer, reason}) =>
       let eff =
         Service_Exthost.Effects.FileSystemEventService.onBufferChanged(
           ~buffer,
@@ -1502,9 +1502,11 @@ let update =
              let config = Selectors.configResolver(state);
              state.languageSupport
              |> Feature_LanguageSupport.bufferSaved(
+                  ~reason,
                   ~isLargeBuffer=
                     Feature_Buffers.isLargeFile(state.buffers, buffer),
                   ~activeBufferId,
+                  ~savedBufferId=Oni_Core.Buffer.getId(buffer),
                   ~config,
                   ~buffer,
                 );

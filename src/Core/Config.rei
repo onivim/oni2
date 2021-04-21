@@ -68,6 +68,7 @@ module Schema: {
     let int: codec(int);
     let float: codec(float);
     let string: codec(string);
+    let time: codec(Revery.Time.t);
     let list: codec('a) => codec(list('a));
     let nullable: codec('a) => codec(option('a));
 
@@ -92,6 +93,7 @@ module Schema: {
   let int: codec(int);
   let float: codec(float);
   let string: codec(string);
+  let time: codec(Revery.Time.t);
   let list: codec('a) => codec(list('a));
   let nullable: codec('a) => codec(option('a));
 
