@@ -87,21 +87,21 @@ let listDisplays = () => {
   let _ = Sdl2.init();
   let displays = Sdl2.Display.getDisplays();
 
-  print_endline ("Displays:");
+  print_endline("Displays:");
 
   displays
   |> List.iteri((idx, display) => {
-       print_endline(Printf.sprintf(
-           "Display %d:%s - %s Bounds: %s",
+       print_endline(
+         Printf.sprintf(
+           "%d: %s - %s",
            idx,
            Sdl2.Display.getName(display),
-           Sdl2.Display.getCurrentMode(display) |> Sdl2.Display.Mode.show,
            Sdl2.Display.getBounds(display) |> Sdl2.Rect.toString,
-         )
+         ),
        )
      });
 
-    0;
+  0;
 };
 
 let queryExtension = (extension, {proxyServer: proxy, _}) => {

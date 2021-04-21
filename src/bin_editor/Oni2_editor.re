@@ -64,7 +64,7 @@ switch (eff) {
 | CheckHealth =>
   initializeLogging();
   HealthCheck.run(~checks=All, cliOptions) |> exit;
-| ListDisplays => Cli.listDisplays() |> exit;
+| ListDisplays => Cli.listDisplays() |> exit
 | ListExtensions => Cli.listExtensions(cliOptions) |> exit
 | StartSyntaxServer({parentPid, namedPipe}) =>
   Oni_Syntax_Server.start(~parentPid, ~namedPipe, ~healthCheck=() =>
@@ -139,19 +139,21 @@ switch (eff) {
     | `Centered => "Centered"
   );
 
-  let maybeWindowPositionX = cliOptions.windowPosition
-  |> Option.map(({x, _}: Oni_CLI.position) => x);
+  let maybeWindowPositionX =
+    cliOptions.windowPosition |> Option.map(({x, _}: Oni_CLI.position) => x);
 
-  let defaultPositionX = maybeWindowPositionX
-  |> Option.map(pos => `Absolute(pos))
-  |> Option.value(~default=`Centered);
+  let defaultPositionX =
+    maybeWindowPositionX
+    |> Option.map(pos => `Absolute(pos))
+    |> Option.value(~default=`Centered);
 
-  let maybeWindowPositionY = cliOptions.windowPosition
-  |> Option.map(({y, _}: Oni_CLI.position) => y);
+  let maybeWindowPositionY =
+    cliOptions.windowPosition |> Option.map(({y, _}: Oni_CLI.position) => y);
 
-  let defaultPositionY = maybeWindowPositionY
-  |> Option.map(pos => `Absolute(pos))
-  |> Option.value(~default=`Centered);
+  let defaultPositionY =
+    maybeWindowPositionY
+    |> Option.map(pos => `Absolute(pos))
+    |> Option.value(~default=`Centered);
 
   let createWindow = (~forceScaleFactor, ~maybeWorkspace, app) => {
     let (x, y, width, height, maximized) = {
@@ -179,7 +181,9 @@ switch (eff) {
                windowMaximized(store),
              );
            })
-        |> Option.value(~default=(defaultPositionX, defaultPositionY, 800, 600, false))
+        |> Option.value(
+             ~default=(defaultPositionX, defaultPositionY, 800, 600, false),
+           )
       );
     };
 

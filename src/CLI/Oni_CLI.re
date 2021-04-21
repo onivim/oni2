@@ -15,6 +15,21 @@ type position = {
   y: int,
 };
 
+let parsePosition = str => {
+  switch (String.split_on_char(',', str)) {
+  | [] => None
+  | [single] =>
+    int_of_string_opt(single) |> Option.map(pos => {x: pos, y: pos})
+  | [xStr, yStr] =>
+    Utility.OptionEx.map2(
+      (x, y) => {{x, y}},
+      int_of_string_opt(xStr),
+      int_of_string_opt(yStr),
+    )
+  | _ => None
+  };
+};
+
 type t = {
   gpuAcceleration: [ | `Auto | `ForceSoftware | `ForceHardware],
   folder: option(string),
@@ -129,6 +144,8 @@ let parse = (~getenv: string => option(string), args) => {
   let disableLoadConfiguration = () => shouldLoadConfiguration := false;
   let disableSyntaxHighlight = () => shouldSyntaxHighlight := false;
 
+  let windowPosition = ref(None);
+
   let setAttached = () => {
     attachToForeground := true;
     // Set log level if it hasn't already been set
@@ -218,6 +235,16 @@ let parse = (~getenv: string => option(string), args) => {
       ),
       ("--extensions-dir", String(setRef(extensionsDir)), ""),
       ("--force-device-scale-factor", Float(setRef(scaleFactor)), ""),
+      (
+        "--window-position",
+        String(
+          str => {
+            let maybePosition = parsePosition(str);
+            windowPosition := maybePosition;
+          },
+        ),
+        "",
+      ),
     ],
     arg => additionalArgs := [arg, ...additionalArgs^],
     "",
@@ -324,7 +351,7 @@ let parse = (~getenv: string => option(string), args) => {
     needsConsole,
     proxyServer: proxyServer^,
     vimExCommands: (vimExCommands^ |> List.rev) @ anonymousExCommands,
-    windowPosition: Some({x: 100, y: 200})
+    windowPosition: windowPosition^,
   };
 
   (cli, eff^);
