@@ -122,7 +122,15 @@ let versionToString: option(Semver.t) => string =
   };
 
 let%component make =
-              (~model, ~theme, ~font: UiFont.t, ~isFocused, ~dispatch, ()) => {
+              (
+                ~model,
+                ~proxy,
+                ~theme,
+                ~font: UiFont.t,
+                ~isFocused,
+                ~dispatch,
+                (),
+              ) => {
   let%hook ({width, installedExpanded, bundledExpanded}, localDispatch) =
     Hooks.reducer(~initialState=default, reduce);
 
@@ -145,6 +153,7 @@ let%component make =
 
     <ItemView
       actionButton
+      proxy
       width
       iconPath
       theme
@@ -187,6 +196,7 @@ let%component make =
       };
 
     <ItemView
+      proxy
       actionButton
       width
       iconPath
@@ -292,6 +302,7 @@ let%component make =
               };
 
             <ItemView
+              proxy
               actionButton
               width
               iconPath=iconUrl

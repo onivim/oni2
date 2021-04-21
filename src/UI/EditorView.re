@@ -204,6 +204,7 @@ module Parts = {
       | ExtensionDetails =>
         <Feature_Extensions.DetailsView
           model={state.extensions}
+          proxy={state.proxy |> Feature_Proxy.proxy}
           tokenTheme={state.colorTheme |> Feature_Theme.tokenColors}
           theme
           font=uiFont

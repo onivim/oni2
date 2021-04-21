@@ -15,10 +15,16 @@ module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 module OptionEx = Core.Utility.OptionEx;
 
-let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
+let installExtension =
+    (path, Oni_CLI.{overriddenExtensionsDir, proxyServer: proxy, _}) => {
   let setup = Core.Setup.init();
   let result =
-    ExtM.install(~setup, ~extensionsFolder=?overriddenExtensionsDir, path)
+    ExtM.install(
+      ~proxy,
+      ~setup,
+      ~extensionsFolder=?overriddenExtensionsDir,
+      path,
+    )
     |> LwtEx.sync;
 
   switch (result) {
@@ -30,7 +36,7 @@ let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
     Printf.printf("Failed to install extension: %s\n", path);
 
     let candidates: result(Service_Extensions.Catalog.SearchResponse.t, exn) =
-      ExtC.search(~offset=0, ~setup, path) |> LwtEx.sync;
+      ExtC.search(~proxy, ~offset=0, ~setup, path) |> LwtEx.sync;
 
     switch (candidates) {
     | Ok({extensions, _}) when extensions == [] => ()
@@ -77,7 +83,7 @@ let printVersion = () => {
   0;
 };
 
-let queryExtension = (extension, _cli) => {
+let queryExtension = (extension, {proxyServer: proxy, _}) => {
   let setup = Core.Setup.init();
   Service_Extensions.
     // Try to parse the extension id - either search, or
@@ -85,7 +91,7 @@ let queryExtension = (extension, _cli) => {
     (
       switch (Catalog.Identifier.fromString(extension)) {
       | Some(identifier) =>
-        Catalog.details(~setup, identifier)
+        Catalog.details(~proxy, ~setup, identifier)
         |> LwtEx.sync
         |> (
           fun
@@ -99,7 +105,7 @@ let queryExtension = (extension, _cli) => {
             }
         )
       | None =>
-        Catalog.search(~offset=0, ~setup, extension)
+        Catalog.search(~proxy, ~offset=0, ~setup, extension)
         |> LwtEx.sync
         |> (
           fun

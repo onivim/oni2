@@ -40,7 +40,10 @@ type msg =
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | SettingsChanged
+  | SettingsChanged({
+      name: string,
+      value: Vim.Setting.value,
+    })
   | ModeDidChange({
       allowAnimation: bool,
       mode: Vim.Mode.t,

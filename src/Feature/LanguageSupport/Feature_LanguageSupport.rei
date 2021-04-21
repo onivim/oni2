@@ -114,6 +114,7 @@ let bufferSaved:
     ~isLargeBuffer: bool,
     ~buffer: Oni_Core.Buffer.t,
     ~config: Oni_Core.Config.resolver,
+    ~savedBufferId: int,
     ~activeBufferId: int,
     model
   ) =>

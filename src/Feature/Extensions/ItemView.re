@@ -113,6 +113,7 @@ let make =
       ~isRestartRequired,
       ~version,
       ~font: UiFont.t,
+      ~proxy,
       ~showIcon=true,
       ~onClick,
       (),
@@ -125,6 +126,7 @@ let make =
       ? <View style=Styles.imageContainer>
           <Oni_Components.RemoteImage
             url
+            proxy
             width=Constants.imageSize
             height=Constants.imageSize
           />
