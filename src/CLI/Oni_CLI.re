@@ -33,6 +33,7 @@ type t = {
 type eff =
   | PrintVersion
   | CheckHealth
+  | ListDisplays
   | ListExtensions
   | InstallExtension(string)
   | QueryExtension(string)
@@ -169,6 +170,7 @@ let parse = (~getenv: string => option(string), args) => {
       ("--log-file", String(str => logFile := Some(str)), ""),
       ("--log-filter", String(str => logFilter := Some(str)), ""),
       ("--checkhealth", setEffect(CheckHealth), ""),
+      ("--list-displays", setEffect(ListDisplays), ""),
       ("--list-extensions", setEffect(ListExtensions), ""),
       ("--install-extension", setStringEffect(s => InstallExtension(s)), ""),
       (

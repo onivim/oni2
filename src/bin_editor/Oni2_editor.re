@@ -64,6 +64,7 @@ switch (eff) {
 | CheckHealth =>
   initializeLogging();
   HealthCheck.run(~checks=All, cliOptions) |> exit;
+| ListDisplays => Cli.listDisplays() |> exit;
 | ListExtensions => Cli.listExtensions(cliOptions) |> exit
 | StartSyntaxServer({parentPid, namedPipe}) =>
   Oni_Syntax_Server.start(~parentPid, ~namedPipe, ~healthCheck=() =>

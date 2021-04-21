@@ -25,6 +25,7 @@ let default: t;
 type eff =
   | PrintVersion
   | CheckHealth
+  | ListDisplays
   | ListExtensions
   | InstallExtension(string)
   | QueryExtension(string)

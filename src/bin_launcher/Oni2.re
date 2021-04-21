@@ -42,6 +42,7 @@ let spec =
     ("--trace", passthrough, " Enable trace logging."),
     ("--quiet", passthrough, " Print only error log messages."),
     ("--silent", passthrough, " Do not print any logging."),
+    ("--list-displays", passthroughAndStayAttached, " List information about the connected displays."),
     ("--log-file", passthroughString, " Specify a file for the output logs."),
     ("--log-filter", passthroughString, " Filter log output."),
     (
