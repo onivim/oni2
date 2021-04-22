@@ -19,7 +19,7 @@ if [ "$PRERR_COUNT" -ne "7" ]; then
     exit 3
 fi
 
-if [ "$PRINT_COUNT" -ne "16" ]; then
+if [ "$PRINT_COUNT" -ne "18" ]; then
     echo "New print_endline introduced; please remove and re-check."
     echo "---"
     echo "Output: $(git grep print_endline)"

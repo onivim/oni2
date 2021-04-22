@@ -414,7 +414,7 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#373b087",
+    "revery": "revery-ui/revery#5a82f13",
     "esy-skia": "revery-ui/esy-skia#91c98f6",
     "isolinear": "revery-ui/isolinear#53fc4eb",
     "revery-terminal": "revery-ui/revery-terminal#a9cb168",

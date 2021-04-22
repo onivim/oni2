@@ -60,6 +60,7 @@
 - #3435 - Completion: Fix various mouse interactions (fixes #3428)
 - #3439 - Hover: Remove textOverflow(Ellipsis) from hover
 - #3442 - Buffers: Fix regression causing control+tab menu not to stay open (related #3442)
+- #3443 - App: Fix broken window positioning w/ multiple monitors (fixes #3349)
 
 ### Performance
 
@@ -80,6 +81,7 @@
 - #3334 - Dependency: Revery -> b746d68 (thanks @timbertson !)
 - #3385 - Dependency: Revery -> 4337e2c
 - #3408 - Dependency: Revery -> 373b087
+- #3449 - Dependency: esy -> 0.6.10
 
 ### Infrastructure
 
