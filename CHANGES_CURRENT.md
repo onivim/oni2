@@ -9,6 +9,7 @@
 - #3440 - Indentation: Easier space/tab indentation switching
 - #3337 - Proxy: Add configuration for proxies (fixes #3314, #2660)
 - #3419 - Buffers: Implement auto-save functionality (fixes #2431)
+- #3430 - Buffers: Implement workbench.action.quickOpenBuffer (fixes #3413)
 
 ### Bug Fixes
 
