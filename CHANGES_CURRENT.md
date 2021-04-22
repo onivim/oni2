@@ -81,6 +81,7 @@
 - #3334 - Dependency: Revery -> b746d68 (thanks @timbertson !)
 - #3385 - Dependency: Revery -> 4337e2c
 - #3408 - Dependency: Revery -> 373b087
+- #3449 - Dependency: esy -> 0.6.10
 
 ### Infrastructure
 
