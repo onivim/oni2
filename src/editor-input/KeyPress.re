@@ -26,6 +26,12 @@ let equals = (keyA, keyB) => {
   };
 };
 
+let isModifier =
+  fun
+  | PhysicalKey({key: Key.LeftControl, _}) => true
+  | PhysicalKey({key: Key.RightControl, _}) => true
+  | _ => false;
+
 let ofInternal =
     (
       ~addShiftKeyToCapital,
