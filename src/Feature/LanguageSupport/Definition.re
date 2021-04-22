@@ -15,7 +15,7 @@ type provider = {
 [@deriving show]
 type definition = {
   bufferId: int,
-  requestLocation: Location.t,
+  requestLocation: CharacterPosition.t,
   definition: Exthost.DefinitionLink.t,
 };
 
@@ -26,7 +26,7 @@ type model = {
 
 [@deriving show]
 type command =
-  | GotoDefinition;
+  | GotoDefinition(SplitDirection.t);
 
 [@deriving show]
 type msg =
@@ -46,19 +46,23 @@ let update = (msg, model) =>
       {...model, maybeDefinition: Some(definition)},
       Outmsg.Nothing,
     )
-  | Command(GotoDefinition) =>
+  | Command(GotoDefinition(direction)) =>
     let outmsg =
       switch (model.maybeDefinition) {
       | None => Outmsg.Nothing
       | Some({definition, _}) =>
         let position =
-          Location.{
-            line: Index.fromOneBased(definition.range.startLineNumber),
-            column: Index.fromOneBased(definition.range.startColumn),
+          CharacterPosition.{
+            line:
+              EditorCoreTypes.LineNumber.ofOneBased(
+                definition.range.startLineNumber,
+              ),
+            character: CharacterIndex.ofInt(definition.range.startColumn - 1),
           };
         Outmsg.OpenFile({
           filePath: definition.uri |> Oni_Core.Uri.toFileSystemPath,
           location: Some(position),
+          direction,
         });
       };
     (model, outmsg);
@@ -89,7 +93,7 @@ let getAt = (~bufferId as currentBufferId, ~range, {maybeDefinition, _}) => {
   maybeDefinition
   |> OptionEx.flatMap(({bufferId, definition, requestLocation}) =>
        if (bufferId == currentBufferId
-           && Range.contains(requestLocation, range)) {
+           && CharacterRange.contains(requestLocation, range)) {
          Some(definition);
        } else {
          None;
@@ -142,24 +146,39 @@ module Commands = {
       ~category="Language",
       ~title="Go-to Definition",
       "editor.action.revealDefinition",
-      Command(GotoDefinition),
+      Command(GotoDefinition(SplitDirection.Current)),
+    );
+
+  let gotoDefinitionAside =
+    define(
+      ~category="Language",
+      ~title="Go-to Definition Aside",
+      "editor.action.revealDefinitionAside",
+      Command(GotoDefinition(SplitDirection.Vertical({shouldReuse: true}))),
     );
 };
 
 module Keybindings = {
-  open Oni_Input.Keybindings;
+  open Feature_Input.Schema;
 
   let condition = "normalMode" |> WhenExpr.parse;
 
-  let goToDefinition = {
-    key: "<F12>",
-    command: Commands.gotoDefinition.id,
-    condition,
-  };
+  let gotoDefinition =
+    bind(~key="<F12>", ~command=Commands.gotoDefinition.id, ~condition);
+  // TODO:
+  // let gotoDefinitionAside =
+  //   bind(
+  //     ~key="<C-K>F12",
+  //     ~command=Commands.gotoDefinitionAside.id,
+  //     ~condition,
+  //   );
 };
 
 module Contributions = {
-  let commands = [Commands.gotoDefinition];
+  let commands = [Commands.gotoDefinition, Commands.gotoDefinitionAside];
 
-  let keybindings = [Keybindings.goToDefinition];
+  let keybindings = [
+    Keybindings.gotoDefinition,
+    //Keybindings.gotoDefinitionAside,
+  ];
 };

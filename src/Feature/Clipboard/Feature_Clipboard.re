@@ -44,7 +44,14 @@ let update = (msg, model) => {
   | PasteClipboardEmpty => (model, Nothing)
   | PasteClipboardText({text}) =>
     let (isMultiLine, lines) = StringEx.splitLines(text);
-    (model, Pasted({isMultiLine, lines, rawText: text}));
+    (
+      model,
+      Pasted({
+        isMultiLine,
+        lines,
+        rawText: StringEx.removeWindowsNewLines(text),
+      }),
+    );
   };
 };
 
@@ -59,6 +66,38 @@ module Commands = {
     );
 };
 
+module Keybindings = {
+  open Feature_Input.Schema;
+  let pasteNonMac =
+    bind(
+      ~key="<C-V>",
+      ~command=Commands.paste.id,
+      // The WhenExpr parser doesn't support precedence, so we manually construct it here...
+      // It'd be nice to bring back explicit precedence via '(' and ')'
+      // Alternatively, a manual construction could be done with separate bindings for !isMac OR each condition
+      ~condition=
+        WhenExpr.(
+          And([
+            Not(Defined("isMac")),
+            Or([
+              And([Defined("editorTextFocus"), Defined("insertMode")]),
+              Defined("textInputFocus"),
+              Defined("commandLineFocus"),
+            ]),
+          ])
+        ),
+    );
+
+  let pasteMac =
+    bind(
+      ~key="<D-V>",
+      ~command=Commands.paste.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
+};
+
 module Contributions = {
   let commands = [Commands.paste];
+
+  let keybindings = Keybindings.[pasteMac, pasteNonMac];
 };

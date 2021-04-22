@@ -12,10 +12,10 @@ describe("DirectoryChanged", ({test, _}) => {
     let updates: ref(list(string)) = ref([]);
     let dispose = onDirectoryChanged(upd => updates := [upd, ...updates^]);
 
-    let _context: Context.t = command("cd test");
+    ignore(command("cd test"): (Context.t, list(Effect.t)));
     expect.int(List.length(updates^)).toBe(1);
 
-    let _context: Context.t = command("cd ..");
+    ignore(command("cd .."): (Context.t, list(Effect.t)));
     expect.int(List.length(updates^)).toBe(2);
 
     dispose();

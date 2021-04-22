@@ -63,13 +63,15 @@ module Schema = {
 
 type t = Lookup.t(Value.t);
 
+let empty = Lookup.empty;
+
 let fromList = entries =>
   entries
   |> List.to_seq
   |> Seq.map(((key, value)) => (Lookup.key(key), value))
   |> Lookup.of_seq;
 
-let fromSchema = (schema, model) =>
+let fromSchema = (model, schema) =>
   Lookup.map(Schema.(entry => entry.get(model)), schema);
 
 let union = (xs, ys) =>
@@ -84,6 +86,14 @@ let union = (xs, ys) =>
     ys,
   );
 let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
+
+let values = lookup =>
+  lookup
+  |> Lookup.to_seq
+  |> Seq.map(((key, value)) =>
+       (Kernel.KeyedStringMap.keyName(key), value)
+     )
+  |> List.of_seq;
 
 let getValue = (lookup, key) =>
   Lookup.find_opt(Lookup.key(key), lookup)

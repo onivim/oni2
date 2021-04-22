@@ -20,6 +20,7 @@ module Decode: {
   };
 
   let obj: (objGetters => 'a) => decoder('a);
+  let regexp: decoder(Oniguruma.OnigRegExp.t);
   let default: ('a, decoder(option('a))) => decoder('a);
 };
 
@@ -30,7 +31,7 @@ type encoder('a) = Encode.encoder('a);
 
 module Error: {
   type t = {
-    range: Range.t,
+    range: CharacterRange.t,
     message: string,
   };
 

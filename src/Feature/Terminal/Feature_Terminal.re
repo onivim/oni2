@@ -4,8 +4,7 @@ open Oni_Core;
 
 type terminal = {
   id: int,
-  cmd: string,
-  arguments: list(string),
+  launchConfig: Exthost.ShellLaunchConfig.t,
   rows: int,
   columns: int,
   pid: option(int),
@@ -61,6 +60,10 @@ type msg =
       id: int,
       key: string,
     })
+  | Pasted({
+      id: int,
+      text: string,
+    })
   | Service(Service_Terminal.msg);
 
 type outmsg =
@@ -83,6 +86,7 @@ let shellCmd = ShellUtility.getDefaultShell();
 module Configuration = {
   open Oni_Core;
   open Config.Schema;
+  module Codecs = Feature_Configuration.GlobalConfiguration.Codecs;
 
   module Shell = {
     let windows =
@@ -110,9 +114,49 @@ module Configuration = {
       setting(
         "terminal.integrated.shellArgs.osx",
         list(string),
-        ~default=[],
+        // ~/.[bash|zsh}_profile etc is not sourced when logging in on macOS.
+        // Instead, terminals on macOS should run as a login shell (which in turn
+        // sources these files).
+        // See more at http://unix.stackexchange.com/a/119675/115410.
+        ~default=["-l"],
       );
   };
+
+  let fontFamily =
+    setting(
+      "terminal.integrated.fontFamily",
+      nullable(string),
+      ~default=None,
+    );
+
+  let fontSize =
+    setting(
+      "terminal.integrated.fontSize",
+      nullable(Codecs.fontSize),
+      ~default=None,
+    );
+  let fontWeight =
+    setting(
+      "terminal.integrated.fontWeight",
+      nullable(Codecs.fontWeight),
+      ~default=None,
+    );
+
+  let fontLigatures =
+    setting(
+      "terminal.integrated.fontLigatures",
+      nullable(Codecs.fontLigatures),
+      ~default=None,
+    );
+
+  let fontSmoothing =
+    setting(
+      "terminal.integrated.fontSmoothing",
+      nullable(
+        custom(~encode=FontSmoothing.encode, ~decode=FontSmoothing.decode),
+      ),
+      ~default=None,
+    );
 };
 
 let shouldClose = (~id, {idToTerminal, _}) => {
@@ -133,9 +177,9 @@ let update = (~config: Config.resolver, model: t, msg) => {
       switch (cmd) {
       | None =>
         switch (Revery.Environment.os) {
-        | Windows => Configuration.Shell.windows.get(config)
-        | Mac => Configuration.Shell.osx.get(config)
-        | Linux => Configuration.Shell.linux.get(config)
+        | Windows(_) => Configuration.Shell.windows.get(config)
+        | Mac(_) => Configuration.Shell.osx.get(config)
+        | Linux(_) => Configuration.Shell.linux.get(config)
         | _ => shellCmd
         }
       | Some(specifiedCommand) => specifiedCommand
@@ -143,10 +187,74 @@ let update = (~config: Config.resolver, model: t, msg) => {
 
     let arguments =
       switch (Revery.Environment.os) {
-      | Windows => Configuration.ShellArgs.windows.get(config)
-      | Mac => Configuration.ShellArgs.osx.get(config)
-      | Linux => Configuration.ShellArgs.linux.get(config)
+      | Windows(_) => Configuration.ShellArgs.windows.get(config)
+      | Mac(_) => Configuration.ShellArgs.osx.get(config)
+      | Linux(_) => Configuration.ShellArgs.linux.get(config)
       | _ => []
+      };
+
+    let defaultEnvVariables =
+      [
+        ("ONIVIM_TERMINAL", BuildInfo.version),
+        // TODO:
+        // ("ONIVIM_SERVERNAME", ...)
+      ]
+      |> List.to_seq
+      |> StringMap.of_seq;
+
+    let env =
+      Exthost.ShellLaunchConfig.(
+        switch (Revery.Environment.os) {
+        // Windows - simply inherit from the running process
+        | Windows(_) => Additive(defaultEnvVariables)
+
+        // Mac - inherit (we rely on the '-l' flag to pick up user config)
+        | Mac(_) => Additive(defaultEnvVariables)
+
+        // For Linux, there's a few stray variables that may come in from the AppImage
+        // for example - LD_LIBRARY_PATH in issue #2040. We need to clear those out.
+        | Linux(_) =>
+          switch (
+            Sys.getenv_opt("ONI2_ORIG_PATH"),
+            Sys.getenv_opt("ONI2_ORIG_LD_LIBRARY_PATH"),
+          ) {
+          // We're running from the AppImage, which tracks the original env.
+          | (Some(origPath), Some(origLdLibPath)) =>
+            let envVariables =
+              [("PATH", origPath), ("LD_LIBRARY_PATH", origLdLibPath)]
+              |> List.to_seq
+              |> StringMap.of_seq;
+
+            let merge = (maybeA, maybeB) =>
+              switch (maybeA, maybeB) {
+              | (Some(_) as a, Some(_)) => a
+              | (Some(_) as a, _) => a
+              | (None, Some(_) as b) => b
+              | (None, None) => None
+              };
+            let allVariables =
+              StringMap.merge(
+                _key => merge,
+                envVariables,
+                defaultEnvVariables,
+              );
+
+            Additive(allVariables);
+
+          // All other cases - just inherit. Maybe not running from AppImage.
+          | _ => Additive(defaultEnvVariables)
+          }
+
+        | _ => Additive(defaultEnvVariables)
+        }
+      );
+
+    let launchConfig =
+      Exthost.ShellLaunchConfig.{
+        name: "Terminal",
+        arguments,
+        executable: cmdToUse,
+        env,
       };
 
     let id = model.nextId;
@@ -155,14 +263,13 @@ let update = (~config: Config.resolver, model: t, msg) => {
         id,
         {
           id,
-          arguments,
-          cmd: cmdToUse,
+          launchConfig,
           rows: 40,
           columns: 40,
           pid: None,
           title: None,
           screen: ReveryTerminal.Screen.initial,
-          cursor: ReveryTerminal.Cursor.{row: 0, column: 0, visible: false},
+          cursor: ReveryTerminal.Cursor.initial,
           closeOnExit,
         },
         model.idToTerminal,
@@ -182,6 +289,12 @@ let update = (~config: Config.resolver, model: t, msg) => {
       |> Isolinear.Effect.map(msg => Service(msg));
     (model, Effect(inputEffect));
 
+  | Pasted({id, text}) =>
+    let inputEffect =
+      Service_Terminal.Effect.paste(~id, text)
+      |> Isolinear.Effect.map(msg => Service(msg));
+    (model, Effect(inputEffect));
+
   | Resized({id, rows, columns}) =>
     let newModel = updateById(id, term => {...term, rows, columns}, model);
     (newModel, Nothing);
@@ -195,12 +308,8 @@ let update = (~config: Config.resolver, model: t, msg) => {
       updateById(id, term => {...term, title: Some(title)}, model);
     (newModel, Nothing);
 
-  | Service(ScreenUpdated({id, screen})) =>
-    let newModel = updateById(id, term => {...term, screen}, model);
-    (newModel, Nothing);
-
-  | Service(CursorMoved({id, cursor})) =>
-    let newModel = updateById(id, term => {...term, cursor}, model);
+  | Service(ScreenUpdated({id, screen, cursor})) =>
+    let newModel = updateById(id, term => {...term, screen, cursor}, model);
     (newModel, Nothing);
 
   | Service(ProcessExit({id, exitCode})) => (
@@ -220,8 +329,7 @@ let subscription = (~workspaceUri, extHostClient, model: t) => {
   |> List.map((terminal: terminal) => {
        Service_Terminal.Sub.terminal(
          ~id=terminal.id,
-         ~arguments=terminal.arguments,
-         ~cmd=terminal.cmd,
+         ~launchConfig=terminal.launchConfig,
          ~rows=terminal.rows,
          ~columns=terminal.columns,
          ~workspaceUri,
@@ -233,84 +341,7 @@ let subscription = (~workspaceUri, extHostClient, model: t) => {
 };
 
 // COLORS
-
-module Colors = {
-  open Revery;
-  open ColorTheme.Schema;
-
-  let background =
-    define("terminal.background", color(Color.rgb_int(0, 0, 0)) |> all);
-  let foreground =
-    define(
-      "terminal.foreground",
-      color(Color.rgb_int(233, 235, 235)) |> all,
-    );
-  let ansiBlack =
-    define("terminal.ansiBlack", color(Color.rgb_int(0, 0, 0)) |> all);
-  let ansiRed =
-    define("terminal.ansiRed", color(Color.rgb_int(194, 54, 33)) |> all);
-  let ansiGreen =
-    define("terminal.ansiGreen", color(Color.rgb_int(37, 188, 36)) |> all);
-  let ansiYellow =
-    define(
-      "terminal.ansiYellow",
-      color(Color.rgb_int(173, 173, 39)) |> all,
-    );
-  let ansiBlue =
-    define("terminal.ansiBlue", color(Color.rgb_int(73, 46, 225)) |> all);
-  let ansiMagenta =
-    define(
-      "terminal.ansiMagenta",
-      color(Color.rgb_int(211, 56, 211)) |> all,
-    );
-  let ansiCyan =
-    define("terminal.ansiCyan", color(Color.rgb_int(51, 197, 200)) |> all);
-  let ansiWhite =
-    define(
-      "terminal.ansiWhite",
-      color(Color.rgb_int(203, 204, 205)) |> all,
-    );
-  let ansiBrightBlack =
-    define(
-      "terminal.ansiBrightBlack",
-      color(Color.rgb_int(129, 131, 131)) |> all,
-    );
-  let ansiBrightRed =
-    define(
-      "terminal.ansiBrightRed",
-      color(Color.rgb_int(252, 57, 31)) |> all,
-    );
-  let ansiBrightGreen =
-    define(
-      "terminal.ansiBrightGreen",
-      color(Color.rgb_int(49, 231, 34)) |> all,
-    );
-  let ansiBrightYellow =
-    define(
-      "terminal.ansiBrightYellow",
-      color(Color.rgb_int(234, 236, 35)) |> all,
-    );
-  let ansiBrightBlue =
-    define(
-      "terminal.ansiBrightBlue",
-      color(Color.rgb_int(88, 51, 255)) |> all,
-    );
-  let ansiBrightMagenta =
-    define(
-      "terminal.ansiBrightMagenta",
-      color(Color.rgb_int(20, 240, 240)) |> all,
-    );
-  let ansiBrightCyan =
-    define(
-      "terminal.ansiBrightCyan",
-      color(Color.rgb_int(20, 240, 240)) |> all,
-    );
-  let ansiBrightWhite =
-    define(
-      "terminal.ansiBrightWhite",
-      color(Color.rgb_int(233, 235, 235)) |> all,
-    );
-};
+module Colors = Feature_Theme.Colors.Terminal;
 
 let theme = theme =>
   fun
@@ -588,5 +619,75 @@ module Contributions = {
       ShellArgs.windows.spec,
       ShellArgs.linux.spec,
       ShellArgs.osx.spec,
+      fontFamily.spec,
+      fontSize.spec,
+      fontWeight.spec,
+      fontLigatures.spec,
+      fontSmoothing.spec,
     ];
+
+  let keybindings = {
+    Feature_Input.Schema.[
+      // Insert mode -> normal mdoe
+      bind(
+        ~key="<C-\\><C-N>",
+        ~command=Commands.Oni.normalMode.id,
+        ~condition="terminalFocus && insertMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-\\>n",
+        ~command=Commands.Oni.normalMode.id,
+        ~condition="terminalFocus && insertMode" |> WhenExpr.parse,
+      ),
+      // Normal mode -> insert mode
+      bind(
+        ~key="o",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-O>",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="Shift+a",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="a",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="i",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="Shift+i",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      // Paste - Windows:
+      bind(
+        ~key="<C-V>",
+        ~command=Feature_Clipboard.Commands.paste.id,
+        ~condition="terminalFocus && insertMode && isWin" |> WhenExpr.parse,
+      ),
+      // Paste - Linux:
+      bind(
+        ~key="<C-S-V>",
+        ~command=Feature_Clipboard.Commands.paste.id,
+        ~condition="terminalFocus && insertMode && isLinux" |> WhenExpr.parse,
+      ),
+      // Paste - Mac:
+      bind(
+        ~key="<D-V>",
+        ~command=Feature_Clipboard.Commands.paste.id,
+        ~condition="terminalFocus && insertMode && isMac" |> WhenExpr.parse,
+      ),
+    ];
+  };
 };

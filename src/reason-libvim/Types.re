@@ -16,15 +16,6 @@ type lineEnding =
   | LF
   | CRLF;
 
-type mode =
-  | Normal
-  | Insert
-  | CommandLine
-  | Replace
-  | Visual
-  | Operator
-  | Select;
-
 type cmdlineType =
   | Ex
   | SearchForward
@@ -37,6 +28,7 @@ type cmdline = {
   position: int,
 };
 
+[@deriving show]
 type visualType =
   | Character
   | Line
@@ -54,8 +46,11 @@ type quitType =
 
 type windowSplitType =
   | Horizontal
+  | HorizontalNew
   | Vertical
-  | TabPage;
+  | VerticalNew
+  | TabPage
+  | TabPageNew;
 
 type windowMovementType =
   | OneLeft

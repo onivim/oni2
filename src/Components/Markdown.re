@@ -22,9 +22,9 @@ open {
              lines,
            ) => {
          let grammarRepository =
-           Textmate.GrammarRepository.create(scope =>
+           Textmate.GrammarRepository.create(scope => {
              GrammarRepository.getGrammar(~scope, grammars)
-           );
+           });
 
          let scope =
            switch (language) {

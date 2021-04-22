@@ -31,8 +31,7 @@ let rec getIndentLevel =
    * to 0.
    */
 
-  // TODO: Speed this up - no need to copy / allocate to check this!
-  if (String.trim(lineText) != "") {
+  if (!Utility.StringEx.isWhitespaceOnly(lineText)) {
     Indentation.getLevel(indentationSettings, lineText);
   } else {
     let newLine = reverse ? line - 1 : line + 1;
@@ -61,42 +60,84 @@ let rec getIndentLevel =
   };
 };
 
-let paint = Skia.Paint.make();
+let getActiveIndentLevelAndRange =
+    (
+      ~indentLevelCache,
+      ~cursorLineIndentLevel,
+      ~cursorLine,
+      ~buffer,
+      ~startLine,
+      ~endLine,
+    ) => {
+  let bufferLineCount = Buffer.getNumberOfLines(buffer);
+  if (cursorLine < bufferLineCount) {
+    let topFinished = ref(false);
+    let topLine = ref(cursorLine - 1);
+    let bottomLine = ref(cursorLine + 1);
+    let bottomFinished = ref(false);
+    let previousIndentLevel = ref(cursorLineIndentLevel);
+
+    while (topLine^ >= startLine && ! topFinished^) {
+      let indentLevel =
+        Hashtbl.find_opt(indentLevelCache, topLine^)
+        |> Option.value(~default=0);
+
+      if (indentLevel < cursorLineIndentLevel) {
+        topFinished := true;
+      } else {
+        decr(topLine);
+        previousIndentLevel := indentLevel;
+      };
+    };
+
+    previousIndentLevel := cursorLineIndentLevel;
+
+    while (bottomLine^ <= endLine && ! bottomFinished^) {
+      let indentLevel =
+        Hashtbl.find_opt(indentLevelCache, bottomLine^)
+        |> Option.value(~default=0);
+
+      if (indentLevel < cursorLineIndentLevel) {
+        bottomFinished := true;
+      } else {
+        incr(bottomLine);
+        previousIndentLevel := indentLevel;
+      };
+    };
+    Some((topLine^, bottomLine^));
+  } else {
+    None;
+  };
+};
+
+module GlobalMutable = {
+  let inactivePaint = Skia.Paint.make();
+  let activePaint = Skia.Paint.make();
+  let cachedIndentLevel = Hashtbl.create(100);
+};
 
 let render =
     (
       ~context: Draw.context,
       ~buffer: Buffer.t,
-      ~startLine: int,
-      ~endLine: int,
-      ~cursorPosition: Location.t,
+      ~startLine,
+      ~endLine,
+      ~cursorPosition: CharacterPosition.t,
       ~colors: Colors.t,
       ~showActive: bool,
       indentationSettings: IndentationSettings.t,
     ) => {
-  /* First, render *all* indent guides */
+  /* First, calculate indentation level for all relevant lines*/
+  Hashtbl.clear(GlobalMutable.cachedIndentLevel);
+
+  let startLine = EditorCoreTypes.LineNumber.toZeroBased(startLine);
+  let endLine = EditorCoreTypes.LineNumber.toZeroBased(endLine) + 1;
   let bufferLineCount = Buffer.getNumberOfLines(buffer);
-  let cursorLine = Index.toZeroBased(cursorPosition.line);
+  let cursorLine =
+    EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line);
   let startLine = max(0, startLine);
   let endLine = min(bufferLineCount, endLine);
-
-  let cursorLineIndentLevel = ref(0);
   let previousIndentLevel = ref(0);
-
-  let indentationWidthInPixels =
-    float(indentationSettings.tabSize) *. context.charWidth;
-
-  let editor = context.editor;
-  let bufferPositionToPixel = line => {
-    let ({pixelX, pixelY}: Editor.pixelPosition, _) =
-      Editor.bufferLineByteToPixel(~line, ~byteIndex=0, editor);
-
-    let x = pixelX;
-    let y = pixelY;
-    (x, y);
-  };
-
-  let lineHeight = Editor.lineHeightInPixels(editor);
   for (line in startLine to endLine - 1) {
     let level =
       getIndentLevel(
@@ -108,13 +149,82 @@ let render =
         previousIndentLevel^,
       );
 
+    previousIndentLevel := level;
+
+    Hashtbl.add(GlobalMutable.cachedIndentLevel, line, level);
+  };
+
+  let cursorLineIndentLevel =
+    Hashtbl.find_opt(GlobalMutable.cachedIndentLevel, cursorLine)
+    |> Option.value(~default=0);
+
+  let maybeActiveIndentRange =
+    if (showActive && cursorLineIndentLevel >= 1) {
+      getActiveIndentLevelAndRange(
+        ~indentLevelCache=GlobalMutable.cachedIndentLevel,
+        ~cursorLineIndentLevel,
+        ~cursorLine,
+        ~buffer,
+        ~startLine,
+        ~endLine,
+      );
+    } else {
+      None;
+    };
+
+  /* Next, render *all* indent guides */
+
+  let indentationWidthInPixels =
+    float(indentationSettings.tabSize) *. context.charWidth;
+
+  let editor = context.editor;
+  let bufferPositionToPixel = lineIdx => {
+    let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
+      Editor.bufferBytePositionToPixel(
+        ~position=
+          BytePosition.{
+            line: EditorCoreTypes.LineNumber.ofZeroBased(lineIdx),
+            byte: ByteIndex.zero,
+          },
+        editor,
+      );
+
+    let x = pixelX;
+    let y = pixelY;
+    (x, y);
+  };
+
+  Skia.Paint.setColor(
+    GlobalMutable.inactivePaint,
+    Revery.Color.toSkia(colors.indentGuideBackground),
+  );
+  Skia.Paint.setColor(
+    GlobalMutable.activePaint,
+    Revery.Color.toSkia(colors.indentGuideActiveBackground),
+  );
+
+  let lineHeight = Editor.lineHeightInPixels(editor);
+  for (line in startLine to endLine - 1) {
+    let level =
+      Hashtbl.find_opt(GlobalMutable.cachedIndentLevel, line)
+      |> Option.value(~default=0);
+
     let (x, y) = bufferPositionToPixel(line);
 
     for (i in 0 to level - 1) {
-      Skia.Paint.setColor(
-        paint,
-        Revery.Color.toSkia(colors.indentGuideBackground),
-      );
+      let isActive =
+        if (i == cursorLineIndentLevel - 1) {
+          switch (maybeActiveIndentRange) {
+          | Some((top, bottom)) => line >= top && line < bottom
+          | None => false
+          };
+        } else {
+          false;
+        };
+
+      let paint =
+        isActive ? GlobalMutable.activePaint : GlobalMutable.inactivePaint;
+
       CanvasContext.drawRectLtwh(
         ~left=x +. indentationWidthInPixels *. float(i),
         ~top=y,
@@ -126,78 +236,5 @@ let render =
     };
 
     previousIndentLevel := level;
-
-    if (line == cursorLine) {
-      cursorLineIndentLevel := level;
-    };
-  };
-
-  /* Next, render _active_ indent guide */
-  if (cursorLine < bufferLineCount && showActive) {
-    let topFinished = ref(false);
-    let topLine = ref(cursorLine - 1);
-    let bottomLine = ref(cursorLine + 1);
-    let bottomFinished = ref(false);
-    let previousIndentLevel = ref(cursorLineIndentLevel^);
-
-    while (topLine^ >= 0 && ! topFinished^) {
-      let indentLevel =
-        getIndentLevel(
-          ~reverse=true,
-          indentationSettings,
-          buffer,
-          startLine,
-          endLine,
-          topLine^,
-          previousIndentLevel^,
-        );
-
-      if (indentLevel < cursorLineIndentLevel^) {
-        topFinished := true;
-      } else {
-        decr(topLine);
-        previousIndentLevel := indentLevel;
-      };
-    };
-
-    previousIndentLevel := cursorLineIndentLevel^;
-
-    while (bottomLine^ < bufferLineCount && ! bottomFinished^) {
-      let indentLevel =
-        getIndentLevel(
-          indentationSettings,
-          buffer,
-          startLine,
-          endLine,
-          bottomLine^,
-          previousIndentLevel^,
-        );
-
-      if (indentLevel < cursorLineIndentLevel^) {
-        bottomFinished := true;
-      } else {
-        incr(bottomLine);
-        previousIndentLevel := indentLevel;
-      };
-    };
-
-    let (x, topY) = bufferPositionToPixel(topLine^);
-    let (_, bottomY) = bufferPositionToPixel(bottomLine^);
-
-    if (cursorLineIndentLevel^ >= 1) {
-      Skia.Paint.setColor(
-        paint,
-        Revery.Color.toSkia(colors.indentGuideActiveBackground),
-      );
-      CanvasContext.drawRectLtwh(
-        ~left=
-          x +. indentationWidthInPixels *. float(cursorLineIndentLevel^ - 1),
-        ~top=topY +. lineHeight,
-        ~width=1.,
-        ~height=bottomY -. topY -. lineHeight,
-        ~paint,
-        context.canvasContext,
-      );
-    };
   };
 };

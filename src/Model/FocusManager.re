@@ -27,27 +27,38 @@ let current = (state: State.t) =>
     Focus.LanguageSupport;
   } else if (Feature_Registers.isActive(state.registers)) {
     Focus.InsertRegister;
+  } else if (Feature_Registration.isActive(state.registration)) {
+    Focus.LicenseKey;
   } else if (state.modal != None) {
     Focus.Modal;
+  } else if (state.newQuickmenu |> Feature_Quickmenu.isMenuOpen) {
+    Focus.NewQuickmenu;
   } else {
     switch (state.quickmenu) {
     | Some({variant: Actions.Wildmenu(_), _}) => Focus.Wildmenu
     | Some(_) => Focus.Quickmenu
     | _ =>
-      state
+      let current = Focus.current(state.focus);
+      let activeEditor = state.layout |> Feature_Layout.activeEditor;
+      let activeBuffer =
+        Feature_Buffers.get(
+          Feature_Editor.Editor.getBufferId(activeEditor),
+          state.buffers,
+        );
       // See if terminal has focus
-      |> Selectors.getActiveBuffer
+      activeBuffer
       |> Option.map(Oni_Core.Buffer.getId)
       |> Option.map(id => BufferRenderers.getById(id, state.bufferRenderers))
       |> OptionEx.flatMap(renderer =>
            switch (renderer) {
-           | BufferRenderer.Terminal({id, insertMode, _}) when insertMode =>
+           | BufferRenderer.Terminal({id, insertMode, _})
+               when insertMode && current == Some(Focus.Editor) =>
              Some(Focus.Terminal(id))
            | _ => None
            }
          )
       // Otherwise, get from assigned focus state
-      |> OptionEx.or_(Focus.current(state.focus))
-      |> Option.value(~default=Focus.Editor)
+      |> OptionEx.or_(current)
+      |> Option.value(~default=Focus.Editor);
     };
   };

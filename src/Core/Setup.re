@@ -19,29 +19,25 @@ type t = {
   nodeScriptPath: string,
   [@key "rg"]
   rgPath: string,
-  [@key "rls"]
-  rlsPath: string,
 };
 
 let default = () => {
   let execDir = Revery.Environment.executingDirectory;
 
   switch (Revery.Environment.os) {
-  | Revery.Environment.Windows => {
+  | Windows(_) => {
       nodePath: execDir ++ "node.exe",
       nodeScriptPath: execDir ++ "node",
       bundledExtensionsPath: execDir ++ "extensions",
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg.exe",
-      rlsPath: execDir ++ "rls.exe",
     }
-  | Revery.Environment.Mac => {
+  | Mac(_) => {
       nodePath: execDir ++ "node",
       nodeScriptPath: execDir ++ "../Resources/node",
       bundledExtensionsPath: execDir ++ "../Resources/extensions",
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg",
-      rlsPath: execDir ++ "rls",
     }
   | _ => {
       nodePath: execDir ++ "node",
@@ -49,7 +45,6 @@ let default = () => {
       bundledExtensionsPath: execDir ++ "extensions",
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg",
-      rlsPath: execDir ++ "rls",
     }
   };
 };

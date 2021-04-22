@@ -135,20 +135,25 @@ module Internal = {
 let format = (~indentation, ~languageConfiguration, ~startLineNumber, lines) => {
   let len: int = Array.length(lines);
   let lenIdx =
-    Index.toZeroBased(startLineNumber) + len - 1 |> Index.fromZeroBased;
+    EditorCoreTypes.(
+      LineNumber.toZeroBased(startLineNumber)
+      + len
+      - 1
+      |> LineNumber.ofZeroBased
+    );
   let out = Internal.doFormat(~indentation, ~languageConfiguration, lines);
 
   let edit =
     Vim.Edit.{
       range:
-        Range.{
+        CharacterRange.{
           start: {
             line: startLineNumber,
-            column: Index.zero,
+            character: CharacterIndex.zero,
           },
           stop: {
             line: lenIdx,
-            column: Index.fromZeroBased(Zed_utf8.length(lines[len - 1])),
+            character: CharacterIndex.ofInt(Zed_utf8.length(lines[len - 1])),
           },
         },
       text: out,

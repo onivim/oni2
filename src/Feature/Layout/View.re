@@ -17,6 +17,8 @@ module type ContentModel = {
 
   let id: t => int;
   let title: t => string;
+  let preview: t => bool;
+  let tooltip: t => string;
   let icon: t => option(Oni_Core.IconTheme.IconDefinition.t);
   let isModified: t => bool;
 
@@ -156,21 +158,24 @@ module Tab = {
   let%component make =
                 (
                   ~title,
+                  ~tooltip,
                   ~isGroupFocused,
                   ~isActive,
                   ~isModified,
                   ~onClick,
+                  ~onDoubleClick=() => (),
                   ~onClose,
                   ~theme: ColorTheme.Colors.t,
                   ~uiFont: UiFont.t,
                   ~icon,
+                  ~isPreview: bool=false,
                   (),
                 ) => {
     let%hook (isHovered, setHovered) = Hooks.state(false);
 
     let fileIconView =
       switch (icon) {
-      | Some((icon: IconTheme.IconDefinition.t)) =>
+      | Some(icon: IconTheme.IconDefinition.t) =>
         <FontIcon
           fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
           icon={icon.fontCharacter}
@@ -203,6 +208,7 @@ module Tab = {
         sneakId=title
         onSneak=onClick
         onAnyClick
+        onDoubleClick
         style=Style.[
           width(proportion(0.80)),
           flexGrow(1),
@@ -211,13 +217,15 @@ module Tab = {
           justifyContent(`Center),
         ]>
         <View style=Styles.icon> fileIconView </View>
-        <Text
-          style={Styles.text(~isGroupFocused, ~isActive, ~theme)}
-          fontFamily={uiFont.family}
-          italic={isGroupFocused && isActive}
-          fontSize={uiFont.size}
-          text=title
-        />
+        <Tooltip text=tooltip>
+          <Text
+            style={Styles.text(~isGroupFocused, ~isActive, ~theme)}
+            fontFamily={uiFont.family}
+            italic=isPreview
+            fontSize={uiFont.size}
+            text=title
+          />
+        </Tooltip>
       </Sneakable>
       <Sneakable onClick=onClose style=Styles.icon sneakId={title ++ ".close"}>
         <FontIcon
@@ -256,6 +264,8 @@ module EditorGroupView = {
 
     let id: t => int;
     let title: t => string;
+    let preview: t => bool;
+    let tooltip: t => string;
     let icon: t => option(IconTheme.IconDefinition.t);
     let isModified: t => bool;
 
@@ -298,13 +308,23 @@ module EditorGroupView = {
                 uiFont
                 theme
                 title={ContentModel.title(item)}
+                tooltip={ContentModel.tooltip({item})}
                 isGroupFocused=isActive
                 isActive=isSelected
                 isModified={ContentModel.isModified(item)}
+                isPreview={ContentModel.preview(item)}
                 icon={ContentModel.icon(item)}
                 onClick={() =>
                   dispatch(
                     EditorTabClicked({
+                      groupId: model.id,
+                      editorId: ContentModel.id(item),
+                    }),
+                  )
+                }
+                onDoubleClick={() =>
+                  dispatch(
+                    EditorTabDoubleClicked({
                       groupId: model.id,
                       editorId: ContentModel.id(item),
                     }),
@@ -464,7 +484,7 @@ module Layout = {
         ~provider,
         ~model as layout,
         ~config,
-        ~isZenMode,
+        ~isFocused,
         ~showTabs,
         ~uiFont,
         ~theme,
@@ -480,16 +500,7 @@ module Layout = {
       let children =
         switch (maybeDimensions) {
         | Some((width, height)) =>
-          let positioned =
-            isZenMode
-              ? Positioned.fromWindow(
-                  0,
-                  0,
-                  width,
-                  height,
-                  layout.activeGroupId,
-                )
-              : Positioned.fromLayout(0, 0, width, height, tree);
+          let positioned = Positioned.fromLayout(0, 0, width, height, tree);
 
           let renderWindow = id =>
             switch (groupById(id, layout)) {
@@ -499,7 +510,7 @@ module Layout = {
                 uiFont
                 config
                 showTabs
-                isActive={group.id == layout.activeGroupId}
+                isActive={group.id == layout.activeGroupId && isFocused}
                 theme
                 model=group
                 dispatch
@@ -545,6 +556,7 @@ let make =
     (
       ~children as provider,
       ~model,
+      ~isFocused,
       ~isZenMode,
       ~showTabs,
       ~config,
@@ -558,7 +570,7 @@ let make =
       provider
       model={activeLayout(model)}
       config
-      isZenMode
+      isFocused
       showTabs
       uiFont
       theme
@@ -606,6 +618,7 @@ let make =
             uiFont
             theme
             title
+            tooltip=title
             isActive=isSelected
             isGroupFocused=true
             isModified

@@ -44,66 +44,89 @@ module Api = {
   };
 
   let readdir = path => {
+    Log.infof(m => m("readdir called for: %s", path));
     path
     |> Internal.opendir
     |> bind(dir => {
          Internal.readdir(dir) |> Lwt.map(items => (dir, items))
        })
     |> bind(((dir, results: array(Luv.File.Dirent.t))) => {
-         Internal.closedir(dir) |> Lwt.map(() => results |> Array.to_list)
+         Log.infof(m =>
+           m("readdir returned %d items", Array.length(results))
+         );
+         Internal.closedir(dir) |> Lwt.map(() => results |> Array.to_list);
        });
   };
 
   let rec fold =
           (
+            ~shouldContinue: 'a => bool,
             ~includeFiles,
             ~excludeDirectory,
             ~initial,
             accumulateFn: ('a, string) => 'a,
             rootPath,
-          ) => {
-    readdir(rootPath)
-    |> LwtEx.flatMap(entries => {
-         entries
-         |> List.fold_left(
-              (accPromise, {kind, name}: Luv.File.Dirent.t) => {
-                let fullPath = Rench.Path.join(rootPath, name);
-                if (kind == `FILE && includeFiles(fullPath)) {
-                  let promise: Lwt.t('a) =
-                    accPromise
-                    |> LwtEx.flatMap(acc => {
-                         Lwt.return(accumulateFn(acc, fullPath))
-                       });
-                  promise;
-                } else if (kind == `DIR && !excludeDirectory(fullPath)) {
-                  let promise: Lwt.t('a) =
-                    accPromise
-                    |> LwtEx.flatMap(acc => {
-                         fold(
-                           ~includeFiles,
-                           ~excludeDirectory,
-                           ~initial=acc,
-                           accumulateFn,
-                           fullPath,
-                         )
-                       });
-                  promise;
-                } else {
-                  accPromise;
-                };
-              },
-              Lwt.return(initial),
+          ) =>
+    if (!shouldContinue(initial)) {
+      Lwt.return(initial);
+    } else {
+      Lwt.catch(
+        () => {
+          readdir(rootPath)
+          |> LwtEx.flatMap(entries => {
+               entries
+               |> List.fold_left(
+                    (accPromise, {kind, name}: Luv.File.Dirent.t) => {
+                      let fullPath = Rench.Path.join(rootPath, name);
+                      if (kind == `FILE && includeFiles(fullPath)) {
+                        let promise: Lwt.t('a) =
+                          accPromise
+                          |> LwtEx.flatMap(acc => {
+                               Lwt.return(accumulateFn(acc, fullPath))
+                             });
+                        promise;
+                      } else if (kind == `DIR && !excludeDirectory(fullPath)) {
+                        let promise: Lwt.t('a) =
+                          accPromise
+                          |> LwtEx.flatMap(acc => {
+                               fold(
+                                 ~shouldContinue,
+                                 ~includeFiles,
+                                 ~excludeDirectory,
+                                 ~initial=acc,
+                                 accumulateFn,
+                                 fullPath,
+                               )
+                             });
+                        promise;
+                      } else {
+                        accPromise;
+                      };
+                    },
+                    Lwt.return(initial),
+                  )
+             })
+        },
+        exn => {
+          Log.warnf(m =>
+            m(
+              "Error while running Service_OS.fold on %s: %s",
+              rootPath,
+              Printexc.to_string(exn),
             )
-       });
-  };
+          );
+          Lwt.return(initial);
+        },
+      );
+    };
 
-  let glob = (~includeFiles=?, ~excludeDirectories=?, path) => {
+  let glob = (~maxCount=?, ~includeFiles=?, ~excludeDirectories=?, path) => {
     let includeFilesFn =
       includeFiles
       |> Option.map(filesGlobStr => {
            let regex =
              Re.Glob.glob(~expand_braces=true, filesGlobStr) |> Re.compile;
-           p => Re.execp(regex, p);
+           p => Re.execp(regex, Utility.Path.normalizeBackSlashes(p));
          })
       |> Option.value(~default=_ => true);
     let excludeDirectoryFn =
@@ -112,17 +135,30 @@ module Api = {
            let regex =
              Re.Glob.glob(~expand_braces=true, excludeDirectoryStr)
              |> Re.compile;
-           p => Re.execp(regex, p);
+           p => Re.execp(regex, Utility.Path.normalizeBackSlashes(p));
          })
       |> Option.value(~default=_ => false);
 
+    let shouldContinue =
+      switch (maxCount) {
+      | None => (_ => true)
+      | Some(max) => (list => ListEx.boundedLength(~max, list) < max)
+      };
+
     fold(
+      ~shouldContinue,
       ~includeFiles=includeFilesFn,
       ~excludeDirectory=excludeDirectoryFn,
       ~initial=[],
       (acc, curr) => [curr, ...acc],
       path,
-    );
+    )
+    |> Lwt.map(items => {
+         switch (maxCount) {
+         | None => items
+         | Some(count) => items |> ListEx.firstk(count)
+         }
+       });
   };
 
   let readFile = (~chunkSize=4096, path) => {
@@ -241,6 +277,8 @@ module Api = {
     };
 };
 
+// EFFECTS
+
 module Effect = {
   let openURL = url =>
     Isolinear.Effect.create(~name="os.openurl", () =>
@@ -259,4 +297,74 @@ module Effect = {
         paths,
       )
     );
+
+  module Dialog = {
+    let openFolder = (~initialDirectory=?, toMsg) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="os.dialog.openFolder", dispatch => {
+        let maybeFolders =
+          Revery_Native.Dialog.openFiles(
+            ~startDirectory=?initialDirectory,
+            ~canChooseDirectories=true,
+            ~canChooseFiles=false,
+            ~title="Open Folder",
+            (),
+          );
+
+        let selectedFolders = maybeFolders |> Option.value(~default=[||]);
+
+        if (Array.length(selectedFolders) > 0) {
+          selectedFolders[0]
+          |> FpExp.absoluteCurrentPlatform
+          |> toMsg
+          |> dispatch;
+        } else {
+          None |> toMsg |> dispatch;
+        };
+      });
+    };
+  };
+};
+
+// SUBSCRIPTIONS
+
+module Sub = {
+  type dirParams = {
+    id: string,
+    cwd: string,
+  };
+  module DirSub =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(list(Luv.File.Dirent.t), string);
+
+      type nonrec params = dirParams;
+
+      type state = unit;
+
+      let name = "Service_OS.Sub.dir";
+      let id = ({id, cwd}) => id ++ cwd;
+
+      let init = (~params, ~dispatch) => {
+        let promise = Api.readdir(params.cwd);
+
+        Lwt.on_success(promise, dirItems => dispatch(Ok(dirItems)));
+
+        Lwt.on_failure(promise, exn =>
+          dispatch(Error(Printexc.to_string(exn)))
+        );
+
+        ();
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => {
+        state;
+      };
+
+      let dispose = (~params as _, ~state as _) => {
+        ();
+      };
+    });
+  let dir = (~uniqueId, ~toMsg, path) => {
+    DirSub.create({id: uniqueId, cwd: path}) |> Isolinear.Sub.map(toMsg);
+  };
 };

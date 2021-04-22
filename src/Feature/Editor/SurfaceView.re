@@ -25,8 +25,12 @@ module Constants = {
   let hoverTime = 1.0;
 };
 
-let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
-  Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
+let drawCurrentLineHighlight = (~context, ~colors: Colors.t, viewLine: int) =>
+  Draw.lineHighlight(
+    ~context,
+    ~color=colors.lineHighlightBackground,
+    viewLine,
+  );
 
 let renderRulers = (~context: Draw.context, ~colors: Colors.t, rulers) => {
   let characterWidth = Editor.characterWidthInPixels(context.editor);
@@ -42,45 +46,68 @@ let%component make =
                 ~editor,
                 ~colors,
                 ~dispatch,
-                ~topVisibleLine,
-                ~onCursorChange,
-                ~cursorPosition: Location.t,
+                ~cursorPosition: CharacterPosition.t,
                 ~editorFont: Service_Font.font,
-                ~leftVisibleColumn,
                 ~diagnosticsMap,
                 ~selectionRanges,
                 ~matchingPairs,
-                ~bufferHighlights,
+                ~vim,
                 ~languageSupport,
+                ~languageConfiguration,
                 ~bufferSyntaxHighlights,
-                ~bottomVisibleLine,
+                ~maybeYankHighlights,
                 ~mode,
+                ~snippets: Feature_Snippets.model,
                 ~isActiveSplit,
                 ~gutterWidth,
                 ~bufferPixelWidth,
-                ~bufferWidthInCharacters,
                 ~windowIsFocused,
                 ~config,
+                ~uiFont,
+                ~theme,
                 (),
               ) => {
   let%hook maybeBbox = React.Hooks.ref(None);
-  let%hook hoverTimerActive = React.Hooks.ref(false);
-  let%hook lastMousePosition = React.Hooks.ref(None);
-  let%hook (hoverTimer, resetHoverTimer) =
-    Hooks.timer(~active=hoverTimerActive^, ());
 
-  let lineCount = editor |> Editor.totalViewLines;
-  let indentation =
-    switch (Buffer.getIndentation(buffer)) {
-    | Some(v) => v
-    | None => IndentationSettings.default
+  let indentation = Buffer.getIndentation(buffer);
+
+  //let inlineElements = Editor.getInlineElements(editor);
+
+  let topVisibleLine = Editor.getTopVisibleBufferLine(editor);
+  let bottomVisibleLine = Editor.getBottomVisibleBufferLine(editor);
+
+  let rec getInlineElements = (acc: list(Revery.UI.element), lines) =>
+    switch (lines) {
+    | [] => acc
+    | [line, ...tail] =>
+      let isVisible = line >= topVisibleLine && line <= bottomVisibleLine;
+      getInlineElements(
+        [
+          <InlineElementView.Container
+            config
+            uiFont
+            theme
+            editor
+            line
+            dispatch
+            isVisible
+          />,
+          ...acc,
+        ],
+        tail,
+      );
     };
+
+  let linesWithElements = Editor.linesWithInlineElements(editor);
+
+  let lensElements = getInlineElements([], linesWithElements);
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
     dispatch(
       Msg.EditorMouseWheel({
         deltaY: wheelEvent.deltaY *. (-1.),
         deltaX: wheelEvent.deltaX,
+        shiftKey: wheelEvent.shiftKey,
       }),
     );
 
@@ -88,94 +115,77 @@ let%component make =
     maybeBbox^
     |> Option.map(bbox => {
          let (minX, minY, _, _) = bbox |> BoundingBox2d.getBounds;
-
          let relX = mouseX -. minX;
          let relY = mouseY -. minY;
-
-         Editor.Slow.pixelPositionToBufferLineByte(
-           ~buffer,
-           ~pixelX=relX,
-           ~pixelY=relY,
-           editor,
-         );
+         let time = Revery.Time.now();
+         (relX, relY, time);
        });
   };
 
   let onMouseMove = (evt: NodeEvents.mouseMoveEventParams) => {
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-    |> Option.iter(((line, col)) => {
+    |> Option.iter(((pixelX, pixelY, time)) => {
+         dispatch(Msg.EditorMouseMoved({time, pixelX, pixelY}))
+       });
+  };
+
+  let onMouseEnter = _evt => {
+    dispatch(Msg.EditorMouseEnter);
+  };
+
+  let onMouseLeave = _evt => {
+    dispatch(Msg.EditorMouseLeave);
+  };
+
+  let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
+    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
+    |> Option.iter(((pixelX, pixelY, time)) => {
          dispatch(
-           Msg.MouseMoved({
-             location:
-               EditorCoreTypes.Location.create(
-                 ~line=Index.fromZeroBased(line),
-                 ~column=Index.fromZeroBased(col),
-               ),
-           }),
+           Msg.EditorMouseDown({altKey: evt.ctrlKey, time, pixelX, pixelY}),
          )
        });
-    hoverTimerActive := true;
-    lastMousePosition := Some((evt.mouseX, evt.mouseY));
-    resetHoverTimer();
   };
-
-  let onMouseLeave = _ => {
-    hoverTimerActive := false;
-    lastMousePosition := None;
-    resetHoverTimer();
-  };
-
-  // Usually the If hook compares a value to a prior version of itself
-  // However, here we just want to compare it to a constant value,
-  // so we discard the second argument to the function.
-  let%hook () =
-    Hooks.effect(
-      If(
-        (t, _) => Revery.Time.toFloatSeconds(t) > Constants.hoverTime,
-        hoverTimer,
-      ),
-      () => {
-        lastMousePosition^
-        |> Utility.OptionEx.flatMap(((mouseX, mouseY)) =>
-             getMaybeLocationFromMousePosition(mouseX, mouseY)
-           )
-        |> Option.iter(((line, col)) =>
-             dispatch(
-               Msg.MouseHovered({
-                 location:
-                   EditorCoreTypes.Location.create(
-                     ~line=Index.fromZeroBased(line),
-                     ~column=Index.fromZeroBased(col),
-                   ),
-               }),
-             )
-           );
-        hoverTimerActive := false;
-        resetHoverTimer();
-        None;
-      },
-    );
 
   let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
-    Log.trace("editorMouseUp");
-
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-    |> Option.iter(((line, col)) => {
-         Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
-         Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
-
-         let cursor =
-           Vim.Cursor.create(
-             ~line=Index.fromOneBased(line + 1),
-             ~column=Index.fromZeroBased(col),
-           );
-
-         onCursorChange(cursor);
+    |> Option.iter(((pixelX, pixelY, time)) => {
+         dispatch(
+           Msg.EditorMouseUp({altKey: evt.ctrlKey, time, pixelX, pixelY}),
+         )
        });
   };
 
   let pixelWidth = Editor.visiblePixelWidth(editor);
   let pixelHeight = Editor.visiblePixelHeight(editor);
+
+  let yankHighlightElement =
+    maybeYankHighlights
+    |> Option.map((highlights: Editor.yankHighlight) =>
+         <YankHighlights
+           config
+           opacity={Component_Animation.get(highlights.opacity)}
+           key={highlights.key}
+           pixelRanges={highlights.pixelRanges}
+         />
+       )
+    |> Option.value(~default=React.empty);
+
+  let cursors =
+    Editor.cursors(editor)
+    |> List.filter_map(pos => Editor.byteToCharacter(pos, editor))
+    |> List.map(cursorPosition => {
+         <CursorView
+           config
+           editor
+           editorFont
+           mode
+           cursorPosition
+           isActiveSplit
+           windowIsFocused
+           colors
+         />
+       })
+    |> React.listToElement;
 
   <View
     onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
@@ -183,8 +193,10 @@ let%component make =
       gutterWidth,
       float(pixelWidth) -. gutterWidth,
     )}
+    onMouseDown
     onMouseUp
     onMouseMove
+    onMouseEnter
     onMouseLeave
     onMouseWheel>
     <Canvas
@@ -199,11 +211,14 @@ let%component make =
             ~editorFont,
           );
 
-        drawCurrentLineHighlight(
-          ~context,
-          ~colors,
-          cursorPosition.line |> Index.toZeroBased,
-        );
+        let maybeCursorBytePosition =
+          Editor.characterToByte(cursorPosition, editor);
+        maybeCursorBytePosition
+        |> Option.iter(bytePosition => {
+             let viewLine =
+               Editor.bufferBytePositionToViewLine(bytePosition, editor);
+             drawCurrentLineHighlight(~context, ~colors, viewLine);
+           });
 
         renderRulers(~context, ~colors, Config.rulers.get(config));
 
@@ -211,8 +226,8 @@ let%component make =
           IndentLineRenderer.render(
             ~context,
             ~buffer,
-            ~startLine=topVisibleLine - 1,
-            ~endLine=bottomVisibleLine + 1,
+            ~startLine=Editor.getTopVisibleBufferLine(editor),
+            ~endLine=Editor.getBottomVisibleBufferLine(editor),
             ~cursorPosition,
             ~colors,
             ~showActive=Config.highlightActiveIndentGuide.get(config),
@@ -220,34 +235,37 @@ let%component make =
           );
         };
 
+        snippets
+        |> Feature_Snippets.session
+        |> Option.iter(SnippetVisualizer.draw(~colors, ~config, ~context));
+
         ContentView.render(
           ~context,
-          ~count=lineCount,
           ~buffer,
           ~editor,
-          ~leftVisibleColumn,
           ~colors,
           ~diagnosticsMap,
           ~selectionRanges,
           ~matchingPairs,
-          ~bufferHighlights,
+          ~vim,
           ~cursorPosition,
           ~languageSupport,
+          ~languageConfiguration,
           ~bufferSyntaxHighlights,
           ~shouldRenderWhitespace=Config.renderWhitespace.get(config),
-          ~bufferWidthInCharacters,
-          ~bufferWidthInPixels=bufferPixelWidth,
         );
 
         if (Config.scrollShadow.get(config)) {
           let () =
             ScrollShadow.renderVertical(
+              ~color=colors.shadow,
               ~editor,
               ~width=float(bufferPixelWidth),
               ~context,
             );
           let () =
             ScrollShadow.renderHorizontal(
+              ~color=colors.shadow,
               ~editor,
               ~width=float(bufferPixelWidth),
               ~context,
@@ -256,15 +274,8 @@ let%component make =
         };
       }}
     />
-    <CursorView
-      config
-      editor
-      editorFont
-      mode
-      cursorPosition
-      isActiveSplit
-      windowIsFocused
-      colors
-    />
+    {lensElements |> React.listToElement}
+    yankHighlightElement
+    cursors
   </View>;
 };

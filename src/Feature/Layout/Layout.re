@@ -1399,3 +1399,107 @@ let rec rightmost = node =>
   | `Split(`Horizontal, [first, ..._]) => rightmost(first)
   | `Split(_, []) => failwith("encountered empty split")
   };
+
+let rec topLeft = node =>
+  switch (node.kind) {
+  | `Window(id) => id
+  | `Split(`Vertical, [first, ..._]) => topLeft(first)
+  | `Split(`Horizontal, [first, ..._]) => topLeft(first)
+  | `Split(_, []) => failwith("encountered empty split")
+  };
+
+let rec bottomRight = node =>
+  switch (node.kind) {
+  | `Window(id) => id
+  | `Split(`Vertical, children) =>
+    children |> Base.List.last_exn |> bottomRight
+  | `Split(`Horizontal, children) =>
+    children |> Base.List.last_exn |> bottomRight
+  };
+
+let cycle = (~direction: [ | `Forward | `Backward], ~activeId: 'a, node) => {
+  let rec loopChildren = (children: list(t('a))) => {
+    switch (children) {
+    // Check if the target split is next to another one - if so,
+    // we found our new split!
+    | [{kind: `Window(id), _}, {kind: `Window(next), _}, ..._]
+        when id == activeId =>
+      `Found(next)
+
+    // Target window is alone -> we'll have to bubble this up to have a
+    // parent split handle it.
+    | [{kind: `Window(id), _}] when id == activeId => `FoundAtEdge
+
+    // Look at splits - this is where we handle the 'edge' case, if we can.
+    | [hd, next, ...tail] =>
+      switch (loop(hd)) {
+      | `NotFound => loopChildren([next, ...tail])
+      | `Found(next) => `Found(next)
+      | `FoundAtEdge =>
+        `direction == `Forward
+          ? `Found(bottomRight(next)) : `Found(topLeft(next))
+      }
+
+    // Lone split
+    | [hd] =>
+      switch (loop(hd)) {
+      | `NotFound => `NotFound
+      | `Found(next) => `Found(next)
+      | `FoundAtEdge => `FoundAtEdge
+      }
+    | [] => `NotFound
+    };
+  }
+  and loop = node => {
+    switch (node.kind) {
+    // If have a window here, it's mixed with splits at the same level.
+    | `Window(id) when activeId == id => `FoundAtEdge
+    | `Window(_) => `NotFound
+
+    | `Split(_, children) =>
+      let children' = direction == `Forward ? children : List.rev(children);
+      loopChildren(children');
+    };
+  };
+
+  switch (loop(node)) {
+  | `NotFound => activeId
+  | `FoundAtEdge => direction == `Forward ? topLeft(node) : bottomRight(node)
+  | `Found(id) => id
+  };
+};
+
+let%test_module "cycle" =
+  (module
+   {
+     let%test "forward: next element" = {
+       let initial = vsplit([window(1), window(2)]);
+
+       cycle(~direction=`Forward, ~activeId=1, initial) == 2;
+     };
+     let%test "forward: loops back" = {
+       let initial = vsplit([window(1), window(2), window(3)]);
+
+       cycle(~direction=`Forward, ~activeId=3, initial) == 1;
+     };
+     let%test "forward: enters nested split" = {
+       let initial = vsplit([window(1), vsplit([window(2), window(3)])]);
+
+       cycle(~direction=`Forward, ~activeId=1, initial) == 2;
+     };
+     let%test "forward: loops back from nested split" = {
+       let initial = vsplit([window(1), vsplit([window(2), window(3)])]);
+
+       cycle(~direction=`Forward, ~activeId=3, initial) == 1;
+     };
+     let%test "backward: loops back from nested split" = {
+       let initial = vsplit([window(1), vsplit([window(2), window(3)])]);
+
+       cycle(~direction=`Backward, ~activeId=2, initial) == 1;
+     };
+     let%test "backward: loops back to bottom right" = {
+       let initial = vsplit([window(1), vsplit([window(2), window(3)])]);
+
+       cycle(~direction=`Backward, ~activeId=1, initial) == 3;
+     };
+   });

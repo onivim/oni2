@@ -4,83 +4,54 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-
-module ExtensionDocumentSymbolProvider = {
-  let create =
-      (
-        id,
-        selector,
-        _label, // TODO: What to do with label?
-        client,
-        buffer,
-      ) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideDocumentSymbols(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        client,
-      )
-    });
-  };
-};
-
-let create = (~config, ~extensions, ~setup: Setup.t) => {
+let create =
+    (
+      ~initialWorkspace,
+      ~attachStdio,
+      ~config,
+      ~extensions,
+      ~setup: Setup.t,
+      ~proxy: Service_Net.Proxy.t,
+    ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
+
+  Log.infof(m =>
+    m("ExtensionClient.create called with attachStdio: %b", attachStdio)
+  );
+
+  let maybeClientRef = ref(None);
 
   let extensionInfo =
     extensions |> List.map(Exthost.Extension.InitData.Extension.ofScanResult);
-
-  let onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let documentSymbolProvider =
-      ExtensionDocumentSymbolProvider.create(handle, selector, label, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.DocumentSymbolProviderAvailable(
-          id,
-          documentSymbolProvider,
-        ),
-      ),
-    );
-  };
-
-  let onDiagnosticsChangeMany =
-      (owner: string, entries: list(Exthost.Msg.Diagnostics.entry)) => {
-    let protocolDiagToDiag: Exthost.Diagnostic.t => Diagnostic.t =
-      d => {
-        let range = Exthost.OneBasedRange.toRange(d.range);
-        let message = d.message;
-        Diagnostic.create(~range, ~message, ());
-      };
-
-    let f = (d: Exthost.Msg.Diagnostics.entry) => {
-      let diagnostics = List.map(protocolDiagToDiag, snd(d));
-      let uri = fst(d);
-      Actions.DiagnosticsSet(uri, owner, diagnostics);
-    };
-
-    entries |> List.map(f) |> List.iter(a => dispatch(a));
-  };
   open Exthost;
   open Exthost.Extension;
   open Exthost.Msg;
 
-  let maybeClientRef = ref(None);
-
-  let withClient = f =>
-    switch (maybeClientRef^) {
-    | None => Log.warn("Warning - withClient does not have a client")
-    | Some(client) => f(client)
-    };
-
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
       switch (msg) {
-      | DownloadService(msg) => Middleware.download(msg)
-      | FileSystem(msg) => Middleware.filesystem(msg)
+      | Initialized =>
+        dispatch(Actions.Exthost(Feature_Exthost.Msg.initialized));
+        Lwt.return(Reply.okEmpty);
+      | DownloadService(Download({uri, dest})) =>
+        let uri = uri |> Oni_Core.Uri.toString;
+        let dest = dest |> Oni_Core.Uri.toFileSystemPath;
+
+        Service_Net.Request.download(
+          ~proxy,
+          ~dest,
+          ~setup=Oni_Core.Setup.init(),
+          uri,
+        )
+        |> Lwt.map(_ => Reply.okEmpty);
+
+      | FileSystem(msg) =>
+        let (promise, resolver) = Lwt.task();
+
+        let fileSystemMsg = Feature_FileSystem.Msg.exthost(~resolver, msg);
+        dispatch(FileSystem(fileSystemMsg));
+        promise;
+
       | SCM(msg) =>
         Feature_SCM.handleExtensionMessage(
           ~dispatch=msg => dispatch(Actions.SCM(msg)),
@@ -96,84 +67,50 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
 
         promise;
 
-      | Configuration(RemoveConfigurationOption({key, _})) =>
+      | Commands(ExecuteCommand({command, args, _})) =>
+        // TODO: Is this really the right action?
+        dispatch(Actions.CommandInvoked({command, arguments: `List(args)}));
+        Lwt.return(Reply.okEmpty);
+
+      | Configuration(msg) =>
         dispatch(
-          Actions.ConfigurationTransform(
-            "configuration.json",
-            ConfigurationTransformer.removeField(key),
+          Actions.Configuration(Feature_Configuration.Msg.exthost(msg)),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | Diagnostics(diagnosticMsg) =>
+        dispatch(
+          Actions.Diagnostics(
+            Feature_Diagnostics.Msg.exthost(diagnosticMsg),
           ),
         );
         Lwt.return(Reply.okEmpty);
 
-      | Configuration(UpdateConfigurationOption({key, value, _})) =>
+      | DocumentContentProvider(documentContentProviderMsg) =>
         dispatch(
-          Actions.ConfigurationTransform(
-            "configuration.json",
-            ConfigurationTransformer.setField(key, value),
+          Actions.SCM(
+            Feature_SCM.Msg.documentContentProvider(
+              documentContentProviderMsg,
+            ),
           ),
         );
+
         Lwt.return(Reply.okEmpty);
 
-      | LanguageFeatures(
-          RegisterDocumentSymbolProvider({handle, selector, label}),
-        ) =>
-        withClient(
-          onRegisterDocumentSymbolProvider(handle, selector, label),
+      | Decorations(decorationsMsg) =>
+        dispatch(
+          Decorations(Feature_Decorations.Msg.exthost(decorationsMsg)),
         );
-        Lwt.return(Reply.okEmpty);
-
-      | Diagnostics(Clear({owner})) =>
-        dispatch(Actions.DiagnosticsClear(owner));
-        Lwt.return(Reply.okEmpty);
-      | Diagnostics(ChangeMany({owner, entries})) =>
-        onDiagnosticsChangeMany(owner, entries);
-        Lwt.return(Reply.okEmpty);
-
-      | DocumentContentProvider(
-          RegisterTextContentProvider({handle, scheme}),
-        ) =>
-        dispatch(NewTextContentProvider({handle, scheme}));
-        Lwt.return(Reply.okEmpty);
-
-      | DocumentContentProvider(UnregisterTextContentProvider({handle})) =>
-        dispatch(LostTextContentProvider({handle: handle}));
-        Lwt.return(Reply.okEmpty);
-
-      | Decorations(RegisterDecorationProvider({handle, label})) =>
-        dispatch(NewDecorationProvider({handle, label}));
-        Lwt.return(Reply.okEmpty);
-      | Decorations(UnregisterDecorationProvider({handle})) =>
-        dispatch(LostDecorationProvider({handle: handle}));
-        Lwt.return(Reply.okEmpty);
-      | Decorations(DecorationsDidChange({handle, uris})) =>
-        dispatch(DecorationsChanged({handle, uris}));
         Lwt.return(Reply.okEmpty);
 
       | Documents(documentsMsg) =>
-        switch (documentsMsg) {
-        | Documents.TryOpenDocument({uri}) =>
-          if (Oni_Core.Uri.getScheme(uri) == Oni_Core.Uri.Scheme.File) {
-            dispatch(
-              Actions.OpenFileByPath(
-                Oni_Core.Uri.toFileSystemPath(uri),
-                None,
-                None,
-              ),
-            );
-          } else {
-            Log.warnf(m =>
-              m(
-                "TryOpenDocument: Unable to open %s",
-                uri |> Oni_Core.Uri.toString,
-              )
-            );
-          }
-        | Documents.TrySaveDocument(_) =>
-          Log.warn("TrySaveDocument is not yet implemented.")
-        | Documents.TryCreateDocument(_) =>
-          Log.warn("TryCreateDocument is not yet implemented.")
-        };
-        Lwt.return(Reply.okEmpty);
+        let (promise, resolver) = Lwt.task();
+        dispatch(
+          Actions.Exthost(
+            Feature_Exthost.Msg.document(documentsMsg, resolver),
+          ),
+        );
+        promise;
 
       | ExtensionService(extMsg) =>
         Log.infof(m => m("ExtensionService: %s", Exthost.Msg.show(msg)));
@@ -182,27 +119,13 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
-      | LanguageFeatures(RegisterHoverProvider({handle, selector})) =>
-        dispatch(
-          Actions.Hover(
-            Feature_Hover.ProviderRegistered({handle, selector}),
-          ),
-        );
-        Lwt.return(Reply.okEmpty);
+      | Languages(msg) =>
+        let (promise, resolver) = Lwt.task();
 
-      | LanguageFeatures(
-          RegisterSignatureHelpProvider({handle, selector, metadata}),
-        ) =>
-        dispatch(
-          Actions.SignatureHelp(
-            Feature_SignatureHelp.ProviderRegistered({
-              handle,
-              selector,
-              metadata,
-            }),
-          ),
-        );
-        Lwt.return(Reply.okEmpty);
+        let languagesMsg = Feature_Extensions.Msg.languages(~resolver, msg);
+        dispatch(Extensions(languagesMsg));
+
+        promise;
 
       | LanguageFeatures(msg) =>
         dispatch(
@@ -253,6 +176,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
             label,
             alignment,
             priority,
+            backgroundColor,
             color,
             command,
             tooltip,
@@ -260,13 +184,14 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           }),
         ) =>
         let command =
-          command |> Option.map(({id, _}: Exthost.Command.t) => id);
+          command |> OptionEx.flatMap(({id, _}: Exthost.Command.t) => id);
         dispatch(
           Actions.StatusBar(
-            Feature_StatusBar.ItemAdded(
+            Feature_StatusBar.Msg.itemAdded(
               Feature_StatusBar.Item.create(
                 ~command?,
                 ~color?,
+                ~backgroundColor?,
                 ~tooltip?,
                 ~id,
                 ~label,
@@ -280,7 +205,11 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         Lwt.return(Reply.okEmpty);
 
       | StatusBar(Dispose({id})) =>
-        dispatch(Actions.StatusBar(ItemDisposed(id |> string_of_int)));
+        dispatch(
+          Actions.StatusBar(
+            Feature_StatusBar.Msg.itemDisposed(id |> string_of_int),
+          ),
+        );
         Lwt.return(Reply.okEmpty);
 
       | TerminalService(msg) =>
@@ -292,8 +221,20 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           : Lwt.return(Reply.error("Unable to open URI"))
       | Window(GetWindowVisibility) =>
         Lwt.return(Reply.okJson(`Bool(true)))
-      | Workspace(StartFileSearch({includePattern, excludePattern, _})) =>
+
+      | Workspace(SaveAll({includeUntitled})) =>
+        ignore(includeUntitled);
+
+        dispatch(
+          Actions.VimExecuteCommand({command: "wa!", allowAnimation: false}),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | Workspace(
+          StartFileSearch({includePattern, excludePattern, maxResults}),
+        ) =>
         Service_OS.Api.glob(
+          ~maxCount=?maxResults,
           ~includeFiles=?includePattern,
           ~excludeDirectories=?excludePattern,
           // TODO: Pull from store
@@ -329,13 +270,45 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     Filename.temp_file(~temp_dir=tempDir, "onivim2", "exthost.log")
     |> Uri.fromPath;
 
+  let extHostVersion = {
+    // The @onivim/vscode-exthost has an adjusted patch version number -
+    // @onivim/vscode-exthost at 1.51.1000 corresponds to 1.51.1 of the vscode extension host
+    let originalVersion = Oni_Core.BuildInfo.extensionHostVersion;
+
+    originalVersion
+    |> Semver.of_string
+    |> OptionEx.flatMap((ver: Semver.t) => {
+         Semver.from_parts(
+           ver.major,
+           ver.minor,
+           ver.patch / 1000,
+           ver.prerelease,
+           ver.build,
+         )
+       })
+    |> Option.map(Semver.to_string)
+    |> OptionEx.tapNone(() =>
+         Log.errorf(m => m("Unable to adjust version: %s", originalVersion))
+       )
+    |> Option.value(~default=originalVersion);
+  };
+
+  let staticWorkspace =
+    initialWorkspace
+    |> Option.map(({id, name, _}: Exthost.WorkspaceData.t) => {
+         Exthost.Extension.InitData.StaticWorkspaceData.{id, name}
+       })
+    |> Option.value(
+         ~default=Exthost.Extension.InitData.StaticWorkspaceData.global,
+       );
+
   let initData =
     InitData.create(
-      ~version="1.44.5", // TODO: How to keep in sync with bundled version?
+      ~version=extHostVersion,
       ~parentPid,
       ~logsLocation,
       ~logFile,
-      ~logLevel=0,
+      ~workspace=staticWorkspace,
       extensionInfo,
     );
 
@@ -347,10 +320,10 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     Exthost.Client.start(
       ~initialConfiguration=
         Feature_Configuration.toExtensionConfiguration(
+          ~additionalExtensions=extensions,
           config,
-          extensions,
-          setup,
         ),
+      ~initialWorkspace,
       ~namedPipe,
       ~initData,
       ~handler,
@@ -358,10 +331,29 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       (),
     );
 
-  let env = Luv.Env.environ() |> Result.get_ok;
+  // INVESTIGATE: Why does using `Luv.Env.environ()` sometimes not work correctly when calling Process.spawn?
+  // In some cases - intermittently - the spawned process will not have the environment variables set.
+  // let env = Luv.Env.environ() |> Result.get_ok;
+  // ...in the meantime, fall-back to Unix.environment:
+  let env =
+    Unix.environment()
+    |> Array.to_list
+    |> List.fold_left(
+         (acc, curr) => {
+           switch (String.split_on_char('=', curr)) {
+           | [] => acc
+           | [_] => acc
+           | [key, ...values] =>
+             let v = String.concat("=", values);
+
+             [(key, v), ...acc];
+           }
+         },
+         [],
+       );
   let environment = [
     (
-      "AMD_ENTRYPOINT",
+      "VSCODE_AMD_ENTRYPOINT",
       "vs/workbench/services/extensions/node/extensionHostProcess",
     ),
     ("VSCODE_IPC_HOOK_EXTHOST", pipeStr),
@@ -383,7 +375,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   };
 
   let redirect =
-    if (Timber.App.isEnabled()) {
+    if (attachStdio) {
       [
         Luv.Process.inherit_fd(
           ~fd=Luv.Process.stdin,

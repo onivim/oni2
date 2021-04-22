@@ -69,8 +69,8 @@ module Step = {
   [@deriving show]
   type t = {
     message: option(string),
-    increment: option(int),
-    total: option(int),
+    increment: option(float),
+    total: option(float),
   };
 
   let decode =
@@ -78,9 +78,43 @@ module Step = {
       obj(({field, _}) =>
         {
           message: field.optional("title", string),
-          increment: field.optional("increment", int),
-          total: field.optional("total", int),
+          increment: field.optional("increment", float),
+          total: field.optional("total", float),
         }
       )
     );
+
+  let%test_module "Step" =
+    (module
+     {
+       let%test "decode: integer increment / total" = {
+         let actual =
+           {|
+  {"title": "test", "increment": 1, "total": 2}
+|}
+           |> Yojson.Safe.from_string
+           |> Json.Decode.decode_value(decode);
+         actual
+         == Ok({
+              message: Some("test"),
+              increment: Some(1.0),
+              total: Some(2.0),
+            });
+       };
+
+       let%test "decode: float increment / total" = {
+         let actual =
+           {|
+  {"title": "test", "increment": 1.0, "total": 2.0}
+|}
+           |> Yojson.Safe.from_string
+           |> Json.Decode.decode_value(decode);
+         actual
+         == Ok({
+              message: Some("test"),
+              increment: Some(1.0),
+              total: Some(2.0),
+            });
+       };
+     });
 };

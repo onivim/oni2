@@ -1,15 +1,19 @@
 [@deriving show({with_path: false})]
 type focusable =
   | Editor
-  | Extensions
   | Wildmenu
   | Quickmenu
-  | Search
+  | NewQuickmenu
+  // Sidebar
+  | Extensions
   | FileExplorer
   | SCM
+  | Search
+  | Pane
   | Sneak
   | Modal
   | InsertRegister
+  | LicenseKey
   | LanguageSupport
   | Terminal(int);
 
@@ -31,3 +35,9 @@ let current =
   fun
   | [head, ..._] => Some(head)
   | _ => None;
+
+let isLayoutFocused =
+  fun
+  | Editor
+  | Terminal(_) => true
+  | _ => false;

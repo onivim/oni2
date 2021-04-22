@@ -9,6 +9,12 @@ let openFile = (filePath: string) => {
   ret;
 };
 
+let loadFile = (filePath: string) => {
+  Native.vimBufferLoad(filePath);
+};
+
+let make = Native.vimBufferNew;
+
 let getFilename = (buffer: t) => {
   Native.vimBufferGetFilename(buffer);
 };
@@ -35,8 +41,14 @@ let getLineCount = (buffer: t) => {
   Native.vimBufferGetLineCount(buffer);
 };
 
-let getLine = (buffer: t, line: Index.t) => {
-  Native.vimBufferGetLine(buffer, Index.toOneBased(line));
+let getLine = (buffer: t, line: LineNumber.t) => {
+  Native.vimBufferGetLine(buffer, LineNumber.toOneBased(line));
+};
+
+let getLines = (buffer: t) => {
+  let count = getLineCount(buffer);
+
+  Array.init(count, idx => {Native.vimBufferGetLine(buffer, idx + 1)});
 };
 
 let getId = (buffer: t) => {
@@ -70,29 +82,40 @@ let setLineEndings = (buffer, lineEnding) => {
      );
 };
 
-let setLines = (~start=?, ~stop=?, ~lines, buffer) => {
-  let startLine =
-    switch (start) {
-    | Some(v) => Index.toOneBased(v) - 1
-    | None => 0
-    };
+let setLines =
+    (~undoable=false, ~start=?, ~stop=?, ~shouldAdjustCursors, ~lines, buffer) => {
+  BufferUpdateTracker.watch(
+    ~shouldAdjustCursors,
+    () => {
+      let startLine =
+        switch (start) {
+        | Some(v) => LineNumber.toOneBased(v) - 1
+        | None => 0
+        };
 
-  let endLine =
-    switch (stop) {
-    | Some(v) => Index.toOneBased(v) - 1
-    | None => (-1)
-    };
+      let endLine =
+        switch (stop) {
+        | Some(v) => LineNumber.toOneBased(v) - 1
+        | None => (-1)
+        };
 
-  Native.vimBufferSetLines(buffer, startLine, endLine, lines);
+      if (undoable) {
+        let undoEndLine = endLine == (-1) ? getLineCount(buffer) : endLine;
+        Undo.saveRegion(startLine - 1, undoEndLine + 1);
+      };
+
+      Native.vimBufferSetLines(buffer, startLine, endLine, lines);
+    },
+  );
 };
 
-let applyEdits = (~edits, buffer) => {
+let applyEdits = (~shouldAdjustCursors, ~edits, buffer) => {
   let provider = idx => {
     let lineCount = getLineCount(buffer);
     if (idx >= lineCount) {
       None;
     } else {
-      Some(getLine(buffer, Index.(zero + idx)));
+      Some(getLine(buffer, LineNumber.ofZeroBased(idx)));
     };
   };
 
@@ -120,22 +143,33 @@ let applyEdits = (~edits, buffer) => {
       let result = Edit.applyEdit(~provider, hd);
       switch (result) {
       | Ok({oldStartLine, oldEndLine, newLines}) =>
-        // Save previous lines for undo
-        Undo.saveRegion(
-          oldStartLine |> Index.toZeroBased,
-          (oldEndLine |> Index.toZeroBased) + 2,
-        );
+        EditorCoreTypes.
+          // Save previous lines for undo
+          (
+            {
+              Undo.saveRegion(
+                oldStartLine |> LineNumber.toZeroBased,
+                (oldEndLine |> LineNumber.toZeroBased) + 2,
+              );
 
-        let lineCount = getLineCount(buffer);
-        let stop =
-          if (oldEndLine |> Index.toZeroBased >= lineCount) {
-            None;
-          } else {
-            Some(Index.(oldEndLine + 1));
-          };
+              let lineCount = getLineCount(buffer);
+              let stop =
+                if (oldEndLine |> LineNumber.toZeroBased >= lineCount) {
+                  None;
+                } else {
+                  Some(LineNumber.(oldEndLine + 1));
+                };
 
-        setLines(~start=oldStartLine, ~stop?, ~lines=newLines, buffer);
-        loop(tail);
+              setLines(
+                ~shouldAdjustCursors,
+                ~start=oldStartLine,
+                ~stop?,
+                ~lines=newLines,
+                buffer,
+              );
+              loop(tail);
+            }
+          )
       | Error(_) as err => err
       };
     };
@@ -153,10 +187,6 @@ let applyEdits = (~edits, buffer) => {
     setCurrent(previousBuffer);
   };
   ret;
-};
-
-let onEnter = (f: Listeners.bufferListener) => {
-  Event.add(f, Listeners.bufferEnter);
 };
 
 let onModifiedChanged = (f: Listeners.bufferModifiedChangedListener) => {

@@ -1,0 +1,7 @@
+(library
+ (name KeyboardLayout_Test)
+ (flags
+  (:standard
+   (-w -39)))
+ (ocamlopt_flags -linkall -g)
+ (libraries rely.lib Oni2.KeyboardLayout reason-sdl2))

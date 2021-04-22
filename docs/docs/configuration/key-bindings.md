@@ -16,7 +16,7 @@ Onivim's keyboard configuration is designed to be mostly compatible with [VSCode
 Keybindings are defined as a JSON array, like:
 ```
 [
-  { "key": "<C-P>", "command": "quickOpenFiles", "when": "editorTextFocus" }
+  { "key": "<C-P>", "command": "workbench.action.quickOpen", "when": "editorTextFocus" }
 ]
 ```
 
@@ -34,7 +34,7 @@ When a key is pressed:
 - If a rule is found and has a `command` set, the `command` is executed.
 - If no matching rules are found, we pass the input key through to `libvim` to be handled by Vim.
 
-There are a set of default rules provided by Onivim, but the customized rules are appended to the bottom - thus, user key bindings are esxecuted first.
+There are a set of default rules provided by Onivim, but the customized rules are appended to the bottom - thus, user key bindings are executed first.
 
 ### `key` format
 
@@ -57,7 +57,7 @@ Modifiers may be combined, for example:
 
 ```
 [
-  { "key": "<C-S-P>", "command": "quickOpenFiles", "when": "editorTextFocus" }
+  { "key": "<C-S-P>", "command": "workbench.action.quickOpen", "when": "editorTextFocus" }
 ]
 ```
 
@@ -101,12 +101,12 @@ For conditional expressions, you can use the following conditional operators:
 
 | Operator | Symbol | Example |
 | --- | --- | --- |
-| Or | <code>&#124;&#124;</code> | <code>menuFocus &#124;&#124; textInputFocus</code> |
+| Or | <code>&#124;&#124;</code> | <code>listFocus &#124;&#124; textInputFocus</code> |
 | And | `&&` | `insertMode && suggestWidgetVisible` |
 
 Expressions may be grouped with `()`, for example:
 ```
-(menuFocus && !insertMode) || suggestWidgetVisible
+(editorTextFocus && !insertMode) || suggestWidgetVisible
 ```
 
 #### Contexts
@@ -115,10 +115,18 @@ Common contexts with VSCode:
 
 | Context Name | True When | 
 | --- | --- |
-| `editorFocus` | An editor has focus |
+| `editorTextFocus` | An editor has focus |
+| `inSnippetMode` | A snippet session is currently active |
+| `renameInputVisible` | The rename input is visible |
+| `suggestWidgetVisible` | The suggest widget (auto-completion) is visible |
 | `textInputFocus` | A text input area has focus |
 | `terminalFocus` | A terminal has focus |
-| `suggestWidgetVisible` | The suggest widget (auto-completion) is visible |
+
+The `activeViewlet` context key corresponds to the id of the open sidebar pane:
+- `workbench.view.explorer` - File Explorer
+- `workbench.view.extensions` - Extensions
+- `workbench.view.scm` - SCM
+- `workbench.view.search` - Search
 
 Onivim-specific contexts:
 
@@ -129,7 +137,12 @@ Onivim-specific contexts:
 | `visualMode` |  The active editor is in `visual` mode |
 | `sneakMode` | Sneak mode is active |
 | `commandLineFocus` | The Vim commandline is open |
-| `menuFocus` | A pop-up menu has focus |
+| `listFocus` | A list of items (like a pop-up menu) is focused |
+| `sideBarFocus` | The sidebar has focus visible |
+| `sideBarVisible` | The sidebar is visible |
+| `paneFocus` | The bottom pane has focus |
+| `vimListNavigation` | Inside a Vim-navigable list |
+| `vimTreeNavigation` | Inside the file explorer |
 
 ## Commands
 
@@ -158,11 +171,28 @@ Onivim-specific contexts:
 | Up Arrow / Control+P | Move focus up | `list.focusUp` |
 | Down Arrow / Control+N | Move focus down | `list.focusDown` |
 
+### Sidebar
+
+| Default Key Binding | Description | Command |
+| --- | --- | --- |
+| Command+Shift+E / Control+Shift+E | Focus Explorer | `workbench.view.explorer` |
+| Command+Shift+F / Control+Shift+F | Focus Search | `workbench.action.findInFiles` |
+| Command+Shift+X / Control+Shift+X | Focus Extensions | `workbench.view.extensions` |
+| Control+Shift+G | Focus Source Control | `workbench.view.scm` |
+| Control+W, Control+J | Navigate down a section | `vim.window.moveDown` |
+| Control+W, Control+K | Navigate up a section | `vim.window.moveUp` |
+
+### Snippets
+
+| Default Key Binding | Description | Command | 
+| --- | --- | --- |
+| n/a | Insert a Snippet | `editor.action.insertSnippet` |
+| n/a | Configure user snippets | `workbench.action.openSnippets` |
+
 ### Window Management
 
 | Default Key Binding | Description | Command |
 | --- | --- | --- |
-| Control+Shift+B | Toggle Explorer | `explorer.toggle` |
 | Control+W, Control+V | Vertical Split | `view.splitVertical` |
 | Control+W, Control+S | Horizontal Split | `view.splitHorizontal` |
 | Control+W, Control+H | Move to left split | `window.moveLeft` |
@@ -202,3 +232,42 @@ Onivim-specific contexts:
 | --- | --- | ---
 | n/a | Enable KeyDisplayer | `keyDisplayer.enable` |
 | n/a | Disable KeyDisplayer | `keyDisplayer.disable` |
+
+### Ex Commands
+
+Commands that start with a `:` (colon) will be interpreted as vim ex commands. These can also carry arguments.
+
+Examples:
+
+```
+  {"key": "kk", "command": ":split", "when": "editorTextFocus"},
+  {"key": "<C-D>", "command": ":d 2", "when": "insertMode"}
+```
+
+### Leader Key
+
+A leader key can be specified via the following configuration setting:
+
+```
+{ "vim.leader": "<space>" }
+```
+> NOTE: This setting is in `configuration.json`, not `keybindings.json`
+
+Alternatively, the leader key can be specified via an `Ex` command:
+```
+:nmap <space> <Leader>
+```
+
+Once the leader key is defined, it may be used in both `keybindings.json` and via VimL map commands:
+
+```
+[
+  { "key": "<Leader>p", "command": "workbench.action.quickOpen", "when": "editorTextFocus && normalMode" }
+]
+```
+
+or, alternatively, in VimL:
+
+```
+:nnoremap <Leader>p <C-S-P>
+```

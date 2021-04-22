@@ -6,5 +6,4 @@
 
 module Dock = Dock;
 module GlobalContext = GlobalContext;
-module FileExplorerView = FileExplorerView;
 module Root = Root;

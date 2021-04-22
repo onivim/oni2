@@ -24,6 +24,21 @@ module Schema: {
     item('state, 'value);
 };
 
+// UPGRADER
+
+module Upgrader: {
+  type t;
+
+  let define:
+    (
+      ~name: string,
+      ~fromVersion: int,
+      ~toVersion: int,
+      Yojson.Safe.t => Yojson.Safe.t
+    ) =>
+    t;
+};
+
 // STORE
 
 module Store: {
@@ -33,7 +48,13 @@ module Store: {
   let entry: Schema.item('state, _) => entry('state);
 
   let instantiate:
-    (~storeFolder: string=?, string, unit => list(entry('state))) =>
+    (
+      ~version: int,
+      ~upgraders: list(Upgrader.t),
+      ~storeFolder: FpExp.t(FpExp.absolute)=?,
+      string,
+      unit => list(entry('state))
+    ) =>
     t('state);
 
   let isDirty: ('state, t('state)) => bool;

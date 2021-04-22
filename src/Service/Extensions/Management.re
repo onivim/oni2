@@ -21,7 +21,9 @@ module Internal = {
     getUserExtensionsDirectory(~overriddenExtensionsDir)
     |> Option.map(
          FunEx.tap(p =>
-           Log.infof(m => m("Searching for user extensions in: %s", p))
+           Log.infof(m =>
+             m("Searching for user extensions in: %s", p |> FpExp.toString)
+           )
          ),
        )
     |> Option.map(Exthost.Extension.Scanner.scan(~category=User))
@@ -43,13 +45,17 @@ module Internal = {
         };
 
       Log.debugf(m =>
-        m("Installing extension %s to %s", name, extensionsFolder)
+        m(
+          "Installing extension %s to %s",
+          name,
+          extensionsFolder |> FpExp.toString,
+        )
       );
 
       NodeTask.run(
         ~name="Install",
         ~setup,
-        ~args=[absolutePath, extensionsFolder, folderName],
+        ~args=[absolutePath, extensionsFolder |> FpExp.toString, folderName],
         "install-extension.js",
       );
     };
@@ -66,11 +72,11 @@ module Internal = {
     );
   };
 
-  let installFromOpenVSX = (~setup, ~extensionsFolder, extensionId) => {
+  let installFromOpenVSX = (~proxy, ~setup, ~extensionsFolder, extensionId) => {
     // ...otherwise, query the extension store, download, and install
     Catalog.Identifier.fromString(extensionId)
     |> LwtEx.fromOption(~errorMsg="Invalid extension id: " ++ extensionId)
-    |> LwtEx.flatMap(Catalog.details(~setup))
+    |> LwtEx.flatMap(Catalog.details(~proxy, ~setup))
     |> LwtEx.flatMap(
          (
            {downloadUrl, name, namespace, version, _} as details: Catalog.Details.t,
@@ -82,10 +88,17 @@ module Internal = {
              downloadUrl,
            )
          );
-         Service_Net.Request.download(~setup, downloadUrl)
+         Service_Net.Request.download(~proxy, ~setup, downloadUrl)
          |> Lwt.map(downloadPath => {
               let folderName =
-                Printf.sprintf("%s.%s-%s", namespace, name, version);
+                Printf.sprintf(
+                  "%s.%s-%s",
+                  namespace,
+                  name,
+                  version
+                  |> Option.map(Semver.to_string)
+                  |> Option.value(~default="0.0.0"),
+                );
 
               (downloadPath, folderName);
             });
@@ -108,7 +121,7 @@ module Internal = {
   };
 };
 
-let install = (~setup, ~extensionsFolder=?, path) => {
+let install = (~proxy, ~setup, ~extensionsFolder=?, path) => {
   // We assume if the requested extension ends with '.vsix',
   // it must be a path.
   let promise =
@@ -117,7 +130,7 @@ let install = (~setup, ~extensionsFolder=?, path) => {
       Internal.installByPath(~setup, ~extensionsFolder, ~folderName, path)
       |> Lwt.map(_ => ());
     } else {
-      Internal.installFromOpenVSX(~setup, ~extensionsFolder, path)
+      Internal.installFromOpenVSX(~proxy, ~setup, ~extensionsFolder, path)
       |> Lwt.map(_ => ());
     };
 
@@ -171,6 +184,18 @@ let uninstall = (~extensionsFolder=?, extensionId) => {
 
     promise;
   };
+};
+
+let update = (~proxy, ~setup, ~extensionsFolder=?, extensionId) => {
+  let uninstallPromise = uninstall(~extensionsFolder?, extensionId);
+  Lwt.bind(uninstallPromise, () => {
+    Internal.installFromOpenVSX(
+      ~proxy,
+      ~setup,
+      ~extensionsFolder,
+      extensionId,
+    )
+  });
 };
 
 let get = (~extensionsFolder=?, ()) => {

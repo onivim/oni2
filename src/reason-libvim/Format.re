@@ -14,8 +14,8 @@ type effect =
       formatType,
       bufferId: int,
       // The inclusive startline of the format
-      startLine: Index.t,
+      startLine: LineNumber.t,
       // The inclusive endline of the format
-      endLine: Index.t,
+      endLine: LineNumber.t,
       adjustCursor: bool,
     });

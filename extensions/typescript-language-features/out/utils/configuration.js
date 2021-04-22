@@ -4,12 +4,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TypeScriptServiceConfiguration = exports.TsServerLogLevel = void 0;
+exports.TypeScriptServiceConfiguration = exports.ImplicitProjectConfiguration = exports.TsServerLogLevel = void 0;
 const os = require("os");
 const path = require("path");
 const vscode = require("vscode");
 const objects = require("../utils/objects");
-const arrays = require("./arrays");
 var TsServerLogLevel;
 (function (TsServerLogLevel) {
     TsServerLogLevel[TsServerLogLevel["Off"] = 0] = "Off";
@@ -47,6 +46,32 @@ var TsServerLogLevel;
     }
     TsServerLogLevel.toString = toString;
 })(TsServerLogLevel = exports.TsServerLogLevel || (exports.TsServerLogLevel = {}));
+class ImplicitProjectConfiguration {
+    constructor(configuration) {
+        this.checkJs = ImplicitProjectConfiguration.readCheckJs(configuration);
+        this.experimentalDecorators = ImplicitProjectConfiguration.readExperimentalDecorators(configuration);
+        this.strictNullChecks = ImplicitProjectConfiguration.readImplicitStrictNullChecks(configuration);
+        this.strictFunctionTypes = ImplicitProjectConfiguration.readImplicitStrictFunctionTypes(configuration);
+    }
+    isEqualTo(other) {
+        return objects.equals(this, other);
+    }
+    static readCheckJs(configuration) {
+        var _a;
+        return (_a = configuration.get('js/ts.implicitProjectConfig.checkJs')) !== null && _a !== void 0 ? _a : configuration.get('javascript.implicitProjectConfig.checkJs', false);
+    }
+    static readExperimentalDecorators(configuration) {
+        var _a;
+        return (_a = configuration.get('js/ts.implicitProjectConfig.experimentalDecorators')) !== null && _a !== void 0 ? _a : configuration.get('javascript.implicitProjectConfig.experimentalDecorators', false);
+    }
+    static readImplicitStrictNullChecks(configuration) {
+        return configuration.get('js/ts.implicitProjectConfig.strictNullChecks', false);
+    }
+    static readImplicitStrictFunctionTypes(configuration) {
+        return configuration.get('js/ts.implicitProjectConfig.strictFunctionTypes', true);
+    }
+}
+exports.ImplicitProjectConfiguration = ImplicitProjectConfiguration;
 class TypeScriptServiceConfiguration {
     constructor() {
         this.tsServerLogLevel = TsServerLogLevel.Off;
@@ -57,31 +82,21 @@ class TypeScriptServiceConfiguration {
         this.npmLocation = TypeScriptServiceConfiguration.readNpmLocation(configuration);
         this.tsServerLogLevel = TypeScriptServiceConfiguration.readTsServerLogLevel(configuration);
         this.tsServerPluginPaths = TypeScriptServiceConfiguration.readTsServerPluginPaths(configuration);
-        this.checkJs = TypeScriptServiceConfiguration.readCheckJs(configuration);
-        this.experimentalDecorators = TypeScriptServiceConfiguration.readExperimentalDecorators(configuration);
+        this.implictProjectConfiguration = new ImplicitProjectConfiguration(configuration);
         this.disableAutomaticTypeAcquisition = TypeScriptServiceConfiguration.readDisableAutomaticTypeAcquisition(configuration);
-        this.useSeparateSyntaxServer = TypeScriptServiceConfiguration.readUseSeparateSyntaxServer(configuration);
+        this.separateSyntaxServer = TypeScriptServiceConfiguration.readUseSeparateSyntaxServer(configuration);
         this.enableProjectDiagnostics = TypeScriptServiceConfiguration.readEnableProjectDiagnostics(configuration);
         this.maxTsServerMemory = TypeScriptServiceConfiguration.readMaxTsServerMemory(configuration);
+        this.enablePromptUseWorkspaceTsdk = TypeScriptServiceConfiguration.readEnablePromptUseWorkspaceTsdk(configuration);
         this.watchOptions = TypeScriptServiceConfiguration.readWatchOptions(configuration);
+        this.includePackageJsonAutoImports = TypeScriptServiceConfiguration.readIncludePackageJsonAutoImports(configuration);
+        this.enableTsServerTracing = TypeScriptServiceConfiguration.readEnableTsServerTracing(configuration);
     }
     static loadFromWorkspace() {
         return new TypeScriptServiceConfiguration();
     }
     isEqualTo(other) {
-        return this.locale === other.locale
-            && this.globalTsdk === other.globalTsdk
-            && this.localTsdk === other.localTsdk
-            && this.npmLocation === other.npmLocation
-            && this.tsServerLogLevel === other.tsServerLogLevel
-            && this.checkJs === other.checkJs
-            && this.experimentalDecorators === other.experimentalDecorators
-            && this.disableAutomaticTypeAcquisition === other.disableAutomaticTypeAcquisition
-            && arrays.equals(this.tsServerPluginPaths, other.tsServerPluginPaths)
-            && this.useSeparateSyntaxServer === other.useSeparateSyntaxServer
-            && this.enableProjectDiagnostics === other.enableProjectDiagnostics
-            && this.maxTsServerMemory === other.maxTsServerMemory
-            && objects.equals(this.watchOptions, other.watchOptions);
+        return objects.equals(this, other);
     }
     static fixPathPrefixes(inspectValue) {
         const pathPrefixes = ['~' + path.sep];
@@ -113,12 +128,6 @@ class TypeScriptServiceConfiguration {
     static readTsServerPluginPaths(configuration) {
         return configuration.get('typescript.tsserver.pluginPaths', []);
     }
-    static readCheckJs(configuration) {
-        return configuration.get('javascript.implicitProjectConfig.checkJs', false);
-    }
-    static readExperimentalDecorators(configuration) {
-        return configuration.get('javascript.implicitProjectConfig.experimentalDecorators', false);
-    }
     static readNpmLocation(configuration) {
         return configuration.get('typescript.npm', null);
     }
@@ -129,13 +138,20 @@ class TypeScriptServiceConfiguration {
         return configuration.get('typescript.locale', null);
     }
     static readUseSeparateSyntaxServer(configuration) {
-        return configuration.get('typescript.tsserver.useSeparateSyntaxServer', true);
+        const value = configuration.get('typescript.tsserver.useSeparateSyntaxServer', true);
+        if (value === true) {
+            return 1 /* Enabled */;
+        }
+        return 0 /* Disabled */;
     }
     static readEnableProjectDiagnostics(configuration) {
         return configuration.get('typescript.tsserver.experimental.enableProjectDiagnostics', false);
     }
     static readWatchOptions(configuration) {
         return configuration.get('typescript.tsserver.watchOptions');
+    }
+    static readIncludePackageJsonAutoImports(configuration) {
+        return configuration.get('typescript.preferences.includePackageJsonAutoImports');
     }
     static readMaxTsServerMemory(configuration) {
         const defaultMaxMemory = 3072;
@@ -145,6 +161,12 @@ class TypeScriptServiceConfiguration {
             return defaultMaxMemory;
         }
         return Math.max(memoryInMB, minimumMaxMemory);
+    }
+    static readEnablePromptUseWorkspaceTsdk(configuration) {
+        return configuration.get('typescript.enablePromptUseWorkspaceTsdk', false);
+    }
+    static readEnableTsServerTracing(configuration) {
+        return configuration.get('typescript.tsserver.enableTracing', false);
     }
 }
 exports.TypeScriptServiceConfiguration = TypeScriptServiceConfiguration;

@@ -16,7 +16,11 @@ module Global = {
       define("version", string, BuildInfo.commitId, _ => BuildInfo.commitId);
     let workspace =
       define("workspace", option(string), None, state =>
-        Some(state.workspace.workingDirectory)
+        Feature_Workspace.openedFolder(state.workspace)
+      );
+    let licenseKey =
+      define("licenseKey", option(string), None, state =>
+        state.registration.licenseKey
       );
   };
 
@@ -25,8 +29,13 @@ module Global = {
   let store =
     lazy(
       {
-        instantiate("global", () =>
-          Schema.[entry(version), entry(workspace), entry(extensionValues)]
+        instantiate(~version=0, ~upgraders=[], "global", () =>
+          Schema.[
+            entry(version),
+            entry(workspace),
+            entry(extensionValues),
+            entry(licenseKey),
+          ]
         );
       }
     );
@@ -34,6 +43,7 @@ module Global = {
   let extensionValues = () => get(Schema.extensionValues, Lazy.force(store));
   let version = () => get(Schema.version, Lazy.force(store));
   let workspace = () => get(Schema.workspace, Lazy.force(store));
+  let licenseKey = () => get(Schema.licenseKey, Lazy.force(store));
 
   let persist = state => persist(state, Lazy.force(store));
 };
@@ -80,8 +90,27 @@ module Workspace = {
 
   include Persistence.Store;
 
+  module Upgraders = {
+    let version0To1ClearWindowPosition =
+      Persistence.Upgrader.define(
+        ~name="0 -> 1: Clear Window Position",
+        ~fromVersion=0,
+        ~toVersion=1,
+        json => {
+          let clearWindowX = Utility.JsonEx.update("windowX", _ => None);
+          let clearWindowY = Utility.JsonEx.update("windowY", _ => None);
+
+          json |> clearWindowX |> clearWindowY;
+        },
+      );
+  };
+
   let instantiate = path =>
-    instantiate(path, () =>
+    instantiate(
+      ~version=1,
+      ~upgraders=[Upgraders.version0To1ClearWindowPosition],
+      path,
+      () =>
       Schema.[
         entry(windowX),
         entry(windowY),

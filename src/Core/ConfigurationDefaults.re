@@ -31,7 +31,9 @@ let getDefaultConfigString = configName =>
   "files.exclude": ["_esy", "node_modules", ".git"],
   "workbench.activityBar.visible": true,
   "workbench.editor.showTabs": true,
+  "workbench.editor.enablePreview": true,
   "workbench.iconTheme": "vs-seti",
+  "workbench.sideBar.location": "left",
   "workbench.sideBar.visible": true,
   "workbench.statusBar.visible": true,
   "workbench.tree.indent": 2,
@@ -46,8 +48,8 @@ let getDefaultConfigString = configName =>
   // See the onivim documentation for details on the format:
   // https://onivim.github.io/docs/configuration/key-bindings
   // Add key bindings here, for example:
-  // { "key": "<TAB>", "command": "workbench.action.quickOpen", when: "editorTextFocus" },
-  // { "key": "jk", "command": "vim.esc", when: "insertMode" },
+  // { "key": "<TAB>", "command": "workbench.action.quickOpen", "when": "editorTextFocus" },
+  // { "key": "jk", "command": "vim.esc", "when": "insertMode" },
 ]
 |},
     )

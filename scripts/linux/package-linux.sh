@@ -8,10 +8,7 @@ mkdir -p _staging
 
 cp -r $cur__bin _release/linux
 
-# Temporary workaround for: https://github.com/linuxdeploy/linuxdeploy/issues/142
-#wget -O _staging/linuxdeploy-x86_64.AppImage https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-wget -O _staging/linuxdeploy-x86_64.AppImage https://artifacts.assassinate-you.net/artifactory/list/linuxdeploy/travis-456/linuxdeploy-x86_64.AppImage
-
+wget -O _staging/linuxdeploy-x86_64.AppImage https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
 chmod +x _staging/linuxdeploy-x86_64.AppImage
 
 wget -O _staging/appimagetool-x86_64.AppImage https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage
@@ -35,7 +32,6 @@ cp _release/linux/bin/Oni2 _release/Onivim2.AppDir/usr/bin/Oni2
 
 cp vendor/ripgrep-v0.10.0/linux/rg _release/Onivim2.AppDir/usr/bin/rg
 cp vendor/node-v12.17.0/linux-x64/node _release/Onivim2.AppDir/usr/bin/node
-cp vendor/reason-language-server/bin.native.linux _release/Onivim2.AppDir/usr/bin/rls
 
 ls _release/Onivim2.AppDir/usr/share
 
@@ -43,7 +39,7 @@ cp -r extensions/ _release/Onivim2.AppDir/usr/bin
 cp -r node/ _release/Onivim2.AppDir/usr/share
 # cp -r src/textmate_service/ _release/Onivim2.AppDir/usr/bin
 
-rm _release/Onivim2.AppDir/usr/bin/setup.json
+rm -f _release/Onivim2.AppDir/usr/bin/setup.json
 
 ARCH=x86_64 _staging/appimagetool-x86_64.AppImage _release/Onivim2.AppDir _release/Onivim2-x86_64.AppImage
 

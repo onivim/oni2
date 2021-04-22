@@ -16,6 +16,13 @@ let passthroughStringAndStayAttached = Arg.String(_ => stayAttached := true);
 
 let spec =
   Arg.align([
+    ("-c", passthroughString, "Execute an :ex command after loading files"),
+    (
+      "-f",
+      Arg.Set(stayAttached),
+      " Stay attached to the foreground terminal.",
+    ),
+    ("-v", passthroughAndStayAttached, " Print version information."),
     (
       "-f",
       Arg.Set(stayAttached),
@@ -27,9 +34,19 @@ let spec =
       " Stay attached to the foreground terminal.",
     ),
     ("--debug", passthrough, " Enable debug logging."),
+    (
+      "--debug-exthost",
+      passthrough,
+      " Pipe exthost output to stdout/stderr.",
+    ),
     ("--trace", passthrough, " Enable trace logging."),
     ("--quiet", passthrough, " Print only error log messages."),
     ("--silent", passthrough, " Do not print any logging."),
+    (
+      "--list-displays",
+      passthroughAndStayAttached,
+      " List information about the connected displays.",
+    ),
     ("--log-file", passthroughString, " Specify a file for the output logs."),
     ("--log-filter", passthroughString, " Filter log output."),
     (
@@ -50,9 +67,25 @@ let spec =
       " Do not load user configuration (use default configuration).",
     ),
     (
+      "--gpu-acceleration",
+      passthroughString,
+      " Override default renderer strategy - one of: "
+      ++ {|
+
+      - auto: automatically choose between software / hardware rendering (default)
+      - hardware: force hardware renderer
+      - software: force software renderer
+      |},
+    ),
+    (
       "--install-extension",
       passthroughStringAndStayAttached,
       " Install extension by specifying a path to the .vsix file",
+    ),
+    (
+      "--proxy-server",
+      passthroughString,
+      " Set a proxy URL to use for web requests, in the form of <uri>[:<port>] ",
     ),
     (
       "--query-extension",
@@ -78,6 +111,11 @@ let spec =
       "--force-device-scale-factor",
       passthroughFloat,
       " Force the DPI scaling for the editor.",
+    ),
+    (
+      "--window-position",
+      passthroughString,
+      " Set the window position x,y in display space",
     ),
     (
       "--working-directory",

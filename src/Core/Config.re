@@ -1,10 +1,19 @@
+open Utility;
 open Revery;
 
 module Log = (val Log.withNamespace("Oni2.Core.Config"));
 module Lookup = Kernel.KeyedStringTree;
 
+type rawValue =
+  | Json(Json.t)
+  | Vim(VimSetting.t)
+  | NotSet;
+
 type key = Lookup.path;
-type resolver = key => option(Json.t);
+type resolver = (~vimSetting: option(string), key) => rawValue;
+type fileTypeResolver = (~fileType: string) => resolver;
+
+let emptyResolver = (~vimSetting as _, _) => NotSet;
 
 let key = Lookup.path;
 let keyAsString = Lookup.key;
@@ -32,9 +41,11 @@ module Settings = {
   };
 
   let fromFile = path =>
-    try(path |> Yojson.Safe.from_file |> fromJson) {
+    try(path |> FpExp.toString |> Yojson.Safe.from_file |> fromJson) {
     | Yojson.Json_error(message) =>
-      Log.errorf(m => m("Failed to read file %s: %s", path, message));
+      Log.errorf(m =>
+        m("Failed to read file %s: %s", path |> FpExp.toString, message)
+      );
       empty;
     };
 
@@ -122,45 +133,101 @@ module Schema = {
     };
 
     let bool = {decode: Json.Decode.bool, encode: Json.Encode.bool};
+    let float = {decode: Json.Decode.float, encode: Json.Encode.float};
     let int = {decode: Json.Decode.int, encode: Json.Encode.int};
     let string = {decode: Json.Decode.string, encode: Json.Encode.string};
+    let time = {
+      decode: Json.Decode.(int |> map(Time.ms)),
+      encode:
+        Json.Encode.(
+          t =>
+            t
+            |> Time.toFloatSeconds
+            |> (t => t *. 1000.)
+            |> int_of_float
+            |> int
+        ),
+    };
+
     let list = valueCodec => {
       decode: Json.Decode.list(valueCodec.decode),
       encode: Json.Encode.list(valueCodec.encode),
     };
 
+    let nullable = valueCodec => {
+      decode: Json.Decode.nullable(valueCodec.decode),
+      encode: Json.Encode.nullable(valueCodec.encode),
+    };
+
     let custom = (~decode, ~encode) => {decode, encode};
 
-    let setting = (key, codec, ~default) => {
-      let path = Lookup.path(key);
+    type vimSetting('a) = resolver => option('a);
 
-      {
-        spec: {
-          path,
-          default: codec.encode(default),
-        },
-        get: resolve => {
-          switch (resolve(path)) {
-          | Some(jsonValue) =>
-            switch (Json.Decode.decode_value(codec.decode, jsonValue)) {
-            | Ok(value) => value
-            | Error(err) =>
-              Log.errorf(m =>
-                m(
-                  "Failed to decode value for `%s`:\n\t%s",
-                  key,
-                  Json.Decode.string_of_error(err),
-                )
-              );
-              default;
-            }
-          | None =>
-            Log.warnf(m => m("Missing default value for `%s`", key));
-            default;
-          };
-        },
+    let toVimSettingOpt = (resolver, name) => {
+      switch (resolver(~vimSetting=Some(name), [])) {
+      | Vim(setting) => Some(setting)
+      | Json(_) => None
+      | NotSet => None
       };
     };
+
+    let vim = (name, converter: VimSetting.t => 'a, resolver) => {
+      name |> toVimSettingOpt(resolver) |> Option.map(converter);
+    };
+
+    let vim2 =
+        (
+          nameA: string,
+          nameB: string,
+          converter:
+            (option(VimSetting.t), option(VimSetting.t)) => option('a),
+          resolver,
+        ) => {
+      let settingA = nameA |> toVimSettingOpt(resolver);
+      let settingB = nameB |> toVimSettingOpt(resolver);
+
+      converter(settingA, settingB);
+    };
+
+    let setting:
+      (~vim: vimSetting('a)=?, string, codec('a), ~default: 'a) =>
+      setting('a) =
+      (~vim=?, key, codec, ~default) => {
+        let path = Lookup.path(key);
+
+        {
+          spec: {
+            path,
+            default: codec.encode(default),
+          },
+          get: resolve => {
+            // Try and call vim resolver
+            vim
+            |> OptionEx.flatMap(f => f(resolve))
+            |> OptionEx.value_or_lazy(() => {
+                 switch (resolve(~vimSetting=None, path)) {
+                 | Json(jsonValue) =>
+                   switch (Json.Decode.decode_value(codec.decode, jsonValue)) {
+                   | Ok(value) => value
+                   | Error(err) =>
+                     Log.errorf(m =>
+                       m(
+                         "Failed to decode value for `%s`:\n\t%s",
+                         key,
+                         Json.Decode.string_of_error(err),
+                       )
+                     );
+                     default;
+                   }
+                 | Vim(_)
+                 | NotSet =>
+                   Log.warnf(m => m("Missing default value for `%s`", key));
+                   default;
+                 }
+               });
+          },
+        };
+      };
   };
 
   include DSL;

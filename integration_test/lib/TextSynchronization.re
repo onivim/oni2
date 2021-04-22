@@ -15,10 +15,11 @@ let _getTextForVimBuffer = () => {
   let i = ref(1);
   let lines = ref([]);
   while (i^ <= count) {
-    lines := [Vim.Buffer.getLine(buffer, Index.fromOneBased(i^)), ...lines^];
+    lines :=
+      [Vim.Buffer.getLine(buffer, LineNumber.ofOneBased(i^)), ...lines^];
     incr(i);
   };
-  "fulltext:" ++ String.concat("|", lines^ |> List.rev) ++ "|";
+  "fulltext:" ++ String.concat("|", lines^ |> List.rev);
 };
 
 let _getTextForOnivimBuffer = state => {
@@ -26,13 +27,13 @@ let _getTextForOnivimBuffer = state => {
   |> Option.map(Core.Buffer.getLines)
   |> Option.map(Array.to_list)
   |> Option.map(String.concat("|"))
-  |> Option.map(s => "fulltext:" ++ s ++ "|")
+  |> Option.map(s => "fulltext:" ++ s)
   |> Option.value(~default="(Empty)");
 };
 
 let _getTextFromExtHost = state => {
   Model.State.(
-    switch ((state.notifications :> list(Feature_Notification.notification))) {
+    switch (Feature_Notification.all(state.notifications)) {
     | [hd, ..._] => hd.message
     | [] => "(Empty)"
     }

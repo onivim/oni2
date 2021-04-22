@@ -5,10 +5,15 @@ type command =
   | SplitVertical
   | SplitHorizontal
   | CloseActiveEditor
+  | CloseActiveGroup
   | MoveLeft
   | MoveRight
   | MoveUp
   | MoveDown
+  | MoveTopLeft
+  | MoveBottomRight
+  | CycleForward
+  | CycleBackward
   | RotateForward
   | RotateBackward
   | DecreaseSize
@@ -36,6 +41,10 @@ type t =
     })
   | DragComplete
   | EditorTabClicked({
+      groupId: int,
+      editorId: int,
+    })
+  | EditorTabDoubleClicked({
       groupId: int,
       editorId: int,
     })

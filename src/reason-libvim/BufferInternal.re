@@ -33,7 +33,8 @@ let string_opt = s =>
   };
 
 let doFullUpdate = (buffer: t) => {
-  let bu = BufferUpdate.createFull(buffer);
+  let shouldAdjustCursorPosition = BufferUpdateTracker.shouldAdjustCursors();
+  let bu = BufferUpdate.createFull(~shouldAdjustCursorPosition, buffer);
   notifyUpdate(buffer);
   Event.dispatch(bu, Listeners.bufferUpdate);
 };
@@ -44,15 +45,12 @@ let checkBufferForUpdate = buffer => {
   | None =>
     let update = BufferUpdate.createInitial(buffer);
     notifyUpdate(buffer);
-    Event.dispatch(buffer, Listeners.bufferEnter);
     Event.dispatch(update, Listeners.bufferUpdate);
   | Some(lastVersion) =>
     /* Check if the current buffer changed */
     switch (currentBuffer^) {
     | Some(v) =>
       if (v != buffer) {
-        Event.dispatch(v, Listeners.bufferLeave);
-        Event.dispatch(buffer, Listeners.bufferEnter);
         currentBuffer := Some(buffer);
         lastFilename := Native.vimBufferGetFilename(buffer);
         lastFiletype := Native.vimBufferGetFiletype(buffer);
@@ -78,9 +76,7 @@ let checkBufferForUpdate = buffer => {
           );
         };
       }
-    | None =>
-      Event.dispatch(buffer, Listeners.bufferEnter);
-      currentBuffer := Some(buffer);
+    | None => currentBuffer := Some(buffer)
     };
     let newVersion = Native.vimBufferGetChangedTick(buffer);
 

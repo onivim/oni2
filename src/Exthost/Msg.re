@@ -1,5 +1,6 @@
 module ExtCommand = Command;
 module ExtConfig = Configuration;
+module ExtLanguageConfiguration = LanguageConfiguration;
 open Oni_Core;
 
 module Internal = {
@@ -538,76 +539,86 @@ module ExtensionService = {
         activateCallTime: int,
         activateResolvedTime: int,
       })
-    //activationEvent: option(string),
     | ExtensionActivationError({
         extensionId: ExtensionId.t,
-        errorMessage: string,
+        error: ExtensionActivationError.t,
       })
-    | ExtensionRuntimeError({extensionId: ExtensionId.t});
-  let withExtensionId = (f, extensionIdJson) => {
-    extensionIdJson
-    |> Json.Decode.decode_value(ExtensionId.decode)
-    |> Result.map(f)
-    |> Result.map_error(Json.Decode.string_of_error);
-  };
+    | ExtensionRuntimeError({
+        extensionId: ExtensionId.t,
+        errorsJson: list(Yojson.Safe.t),
+      });
 
   let handle = (method, args: Yojson.Safe.t) => {
-    switch (method, args) {
-    | ("$activateExtension", `List([extensionIdJson])) =>
-      extensionIdJson
-      |> withExtensionId(extensionId => {
-           ActivateExtension({extensionId, activationEvent: None})
-         })
-    | ("$activateExtension", `List([extensionIdJson, activationEventJson])) =>
-      let activationEvent =
-        switch (activationEventJson) {
-        | `String(v) => Some(v)
-        | _ => None
-        };
+    Base.Result.Let_syntax.(
+      {
+        switch (method, args) {
+        | ("$activateExtension", `List([extensionIdJson])) =>
+          let%bind extensionId =
+            extensionIdJson |> Internal.decode_value(ExtensionId.decode);
+          Ok(ActivateExtension({extensionId, activationEvent: None}));
 
-      extensionIdJson
-      |> withExtensionId(extensionId => {
-           ActivateExtension({extensionId, activationEvent})
-         });
-    | (
-        "$onExtensionActivationError",
-        `List([extensionIdJson, `String(errorMessage)]),
-      ) =>
-      extensionIdJson
-      |> withExtensionId(extensionId => {
-           ExtensionActivationError({extensionId, errorMessage})
-         })
-    | ("$onWillActivateExtension", `List([extensionIdJson])) =>
-      extensionIdJson
-      |> withExtensionId(extensionId => {
-           WillActivateExtension({extensionId: extensionId})
-         })
-    | (
-        "$onDidActivateExtension",
-        `List([
-          extensionIdJson,
-          `Int(codeLoadingTime),
-          `Int(activateCallTime),
-          `Int(activateResolvedTime),
-          ..._args,
-        ]),
-      ) =>
-      extensionIdJson
-      |> withExtensionId(extensionId => {
-           DidActivateExtension({
-             extensionId,
-             codeLoadingTime,
-             activateCallTime,
-             activateResolvedTime,
-           })
-         })
-    | ("$onExtensionRuntimeError", `List([extensionIdJson, ..._args])) =>
-      extensionIdJson
-      |> withExtensionId(extensionId => {
-           ExtensionRuntimeError({extensionId: extensionId})
-         })
-    | _ => Error("Unhandled method: " ++ method)
-    };
+        | (
+            "$activateExtension",
+            `List([extensionIdJson, activationEventJson]),
+          ) =>
+          let activationEvent =
+            switch (activationEventJson) {
+            | `String(v) => Some(v)
+            | _ => None
+            };
+
+          let%bind extensionId =
+            extensionIdJson |> Internal.decode_value(ExtensionId.decode);
+          Ok(ActivateExtension({extensionId, activationEvent}));
+        | (
+            "$onExtensionActivationError",
+            `List([extensionIdJson, errorJson]),
+          ) =>
+          let%bind extensionId =
+            extensionIdJson |> Internal.decode_value(ExtensionId.decode);
+
+          let%bind error =
+            errorJson
+            |> Internal.decode_value(ExtensionActivationError.decode);
+
+          Ok(ExtensionActivationError({extensionId, error}));
+
+        | ("$onWillActivateExtension", `List([extensionIdJson])) =>
+          let%bind extensionId =
+            extensionIdJson |> Internal.decode_value(ExtensionId.decode);
+          Ok(WillActivateExtension({extensionId: extensionId}));
+        | (
+            "$onDidActivateExtension",
+            `List([
+              extensionIdJson,
+              `Int(codeLoadingTime),
+              `Int(activateCallTime),
+              `Int(activateResolvedTime),
+              ..._args,
+            ]),
+          ) =>
+          let%bind extensionId =
+            extensionIdJson |> Internal.decode_value(ExtensionId.decode);
+          Ok(
+            DidActivateExtension({
+              extensionId,
+              codeLoadingTime,
+              activateCallTime,
+              activateResolvedTime,
+            }),
+          );
+        | (
+            "$onExtensionRuntimeError",
+            `List([extensionIdJson, ...errorsJson]),
+          ) =>
+          let%bind extensionId =
+            extensionIdJson |> Internal.decode_value(ExtensionId.decode);
+          Ok(ExtensionRuntimeError({extensionId, errorsJson}));
+
+        | _ => Error("Unhandled method: " ++ method)
+        };
+      }
+    );
   };
 };
 
@@ -685,6 +696,19 @@ module FileSystem = {
         let%bind opts =
           deleteOptsJson |> Internal.decode_value(FileDeleteOptions.decode);
         Ok(Delete({uri, opts}));
+
+      | (
+          "$registerFileSystemProvider",
+          `List([`Int(handle), `String(scheme), capabilitiesJson]),
+        ) =>
+        let%bind capabilities =
+          capabilitiesJson
+          |> Internal.decode_value(FileSystemProviderCapabilities.decode);
+        Ok(RegisterFileSystemProvider({handle, scheme, capabilities}));
+
+      | ("$unregisterFileSystemProvider", `List([`Int(handle)])) =>
+        Ok(UnregisterProvider({handle: handle}))
+
       | _ => Error("Unhandled FileSystem method: " ++ method)
       }
     );
@@ -697,7 +721,7 @@ module LanguageFeatures = {
     | EmitCodeLensEvent({
         eventHandle: int,
         event: Yojson.Safe.t,
-      }) // ??
+      })
     | RegisterCodeLensSupport({
         handle: int,
         selector: DocumentSelector.t,
@@ -744,6 +768,13 @@ module LanguageFeatures = {
         supportsResolveDetails: bool,
         extensionId: string,
       })
+    | RegisterQuickFixSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        metadata: CodeAction.ProviderMetadata.t,
+        displayName: string,
+        supportsResolve: bool,
+      })
     | RegisterReferenceSupport({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -770,6 +801,11 @@ module LanguageFeatures = {
         selector: DocumentSelector.t,
         autoFormatTriggerCharacters: list(string),
         extensionId: ExtensionId.t,
+      })
+    | SetLanguageConfiguration({
+        handle: int,
+        languageId: string,
+        configuration: ExtLanguageConfiguration.t,
       })
     | Unregister({handle: int});
 
@@ -829,8 +865,13 @@ module LanguageFeatures = {
         Ok(RegisterDocumentHighlightProvider({handle, selector}))
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
+
+    | ("$emitCodeLensEvent", `List([`Int(eventHandle)])) =>
+      Ok(EmitCodeLensEvent({eventHandle, event: `Null}))
+
     | ("$emitCodeLensEvent", `List([`Int(eventHandle), json])) =>
       Ok(EmitCodeLensEvent({eventHandle, event: json}))
+
     | (
         "$registerCodeLensSupport",
         `List([handleJson, selectorJson, eventHandleJson]),
@@ -894,6 +935,39 @@ module LanguageFeatures = {
         Ok(RegisterImplementationSupport({handle, selector}))
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
+
+    | (
+        "$registerQuickFixSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          metadataJson,
+          `String(displayName),
+          `Bool(supportsResolve),
+        ]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(DocumentSelector.decode);
+
+        let%bind metadata =
+          metadataJson |> decode_value(CodeAction.ProviderMetadata.decode);
+
+        Ok(
+          RegisterQuickFixSupport({
+            handle,
+            selector,
+            metadata,
+            displayName,
+            supportsResolve,
+          }),
+        );
+      };
+
+      ret |> Result.map_error(string_of_error);
 
     | ("$registerReferenceSupport", `List([`Int(handle), selectorJson])) =>
       switch (parseDocumentSelector(selectorJson)) {
@@ -1076,6 +1150,34 @@ module LanguageFeatures = {
         );
       };
       ret |> Result.map_error(string_of_error);
+
+    | (
+        "$setLanguageConfiguration",
+        `List([
+          `Int(handle),
+          `String(languageId),
+          languageConfigurationJson,
+        ]),
+      ) =>
+      open Json.Decode;
+      let ret = {
+        open Base.Result.Let_syntax;
+
+        let%bind languageConfiguration =
+          languageConfigurationJson
+          |> decode_value(ExtLanguageConfiguration.decode);
+
+        Ok(
+          SetLanguageConfiguration({
+            handle,
+            languageId,
+            configuration: languageConfiguration,
+          }),
+        );
+      };
+
+      ret |> Result.map_error(string_of_error);
+
     | _ =>
       Error(
         Printf.sprintf(
@@ -1083,6 +1185,37 @@ module LanguageFeatures = {
           method,
           Yojson.Safe.to_string(args),
         ),
+      )
+    };
+  };
+};
+
+module Languages = {
+  [@deriving show]
+  type msg =
+    | GetLanguages
+    | ChangeLanguage({
+        uri: Oni_Core.Uri.t,
+        languageId: string,
+      });
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    switch (method, args) {
+    | ("$getLanguages", _) => Ok(GetLanguages)
+
+    | ("$changeLanguage", `List([uriJson, `String(languageId)])) =>
+      open Base.Result.Let_syntax;
+
+      let%bind uri = uriJson |> Internal.decode_value(Oni_Core.Uri.decode);
+
+      Ok(ChangeLanguage({uri, languageId}));
+
+    | _ =>
+      Error(
+        "Unable to parse method: "
+        ++ method
+        ++ " with args: "
+        ++ Yojson.Safe.to_string(args),
       )
     };
   };
@@ -1204,6 +1337,7 @@ module StatusBar = {
         alignment,
         command: option(ExtCommand.t),
         color: option(Color.t),
+        backgroundColor: option(Color.t),
         tooltip: option(string),
         priority: int,
       })
@@ -1221,8 +1355,10 @@ module StatusBar = {
           tooltipJson,
           commandJson,
           colorJson,
+          backgroundColorJson,
           alignmentJson,
           priorityJson,
+          _accessibilityInfoJson,
         ]),
       ) =>
       open Base.Result.Let_syntax;
@@ -1233,6 +1369,8 @@ module StatusBar = {
         commandJson |> Internal.decode_value(nullable(ExtCommand.decode));
       let%bind color =
         colorJson |> Internal.decode_value(nullable(Color.decode));
+      let%bind backgroundColor =
+        backgroundColorJson |> Internal.decode_value(nullable(Color.decode));
       let%bind tooltip =
         tooltipJson |> Internal.decode_value(nullable(string));
       let%bind label = labelJson |> Internal.decode_value(Label.decode);
@@ -1240,7 +1378,10 @@ module StatusBar = {
       let%bind alignmentNumber =
         alignmentJson |> Internal.decode_value(Decode.int);
       let alignment = alignmentNumber |> intToAlignment;
-      let%bind priority = priorityJson |> Internal.decode_value(Decode.int);
+      let%bind priority =
+        priorityJson
+        |> Internal.decode_value(nullable(Decode.int))
+        |> Result.map(Option.value(~default=0));
       Ok(
         SetEntry({
           id,
@@ -1248,6 +1389,7 @@ module StatusBar = {
           label,
           alignment,
           color,
+          backgroundColor,
           priority,
           tooltip,
           command,
@@ -1364,11 +1506,10 @@ module SCM = {
         features: SCM.ProviderFeatures.t,
       })
     // statusBarCommands: option(_),
-    | RegisterSCMResourceGroup({
+    | RegisterSCMResourceGroups({
         provider: int,
-        handle: int,
-        id: string,
-        label: string,
+        groups: list(SCM.Group.t),
+        splices: list(SCM.Resource.Splices.t),
       })
     | UnregisterSCMResourceGroup({
         provider: int,
@@ -1441,15 +1582,16 @@ module SCM = {
         | _ => Error("Unexpected arguments for $updateSourceControl")
         }
 
-      | "$registerGroup" =>
+      | "$registerGroups" =>
         switch (args) {
-        | `List([
-            `Int(provider),
-            `Int(handle),
-            `String(id),
-            `String(label),
-          ]) =>
-          Ok(RegisterSCMResourceGroup({provider, handle, id, label}))
+        | `List([`Int(provider), groupsJson, splicesJson]) =>
+          open Json.Decode;
+          let%bind groups =
+            groupsJson |> Internal.decode_value(list(SCM.Group.decode));
+          let%bind splices =
+            splicesJson
+            |> Internal.decode_value(list(SCM.Resource.Decode.splices));
+          Ok(RegisterSCMResourceGroups({provider, groups, splices}));
 
         | _ => Error("Unexpected arguments for $registerGroup")
         }
@@ -1631,6 +1773,7 @@ module Window = {
 module Workspace = {
   [@deriving show]
   type msg =
+    | SaveAll({includeUntitled: bool})
     | StartFileSearch({
         includePattern: option(string),
         //        includeFolder: option(Oni_Core.Uri.t),
@@ -1641,6 +1784,26 @@ module Workspace = {
   let handle = (method, args: Yojson.Safe.t) => {
     Base.Result.Let_syntax.(
       switch (method) {
+      | "$saveAll" =>
+        switch (args) {
+        | `List([]) => Ok(SaveAll({includeUntitled: false}))
+        | `List([includeUntitledJson]) =>
+          let%bind includeUntitled =
+            includeUntitledJson
+            |> Internal.decode_value(Json.Decode.nullable(Decode.bool));
+          Ok(
+            SaveAll({
+              includeUntitled:
+                includeUntitled |> Option.value(~default=false),
+            }),
+          );
+        | _ =>
+          Error(
+            "Unexpected arguments for $saveAll: "
+            ++ Yojson.Safe.to_string(args),
+          )
+        }
+
       | "$startFileSearch" =>
         switch (args) {
         | `List([
@@ -1699,6 +1862,7 @@ type t =
   | ExtensionService(ExtensionService.msg)
   | FileSystem(FileSystem.msg)
   | LanguageFeatures(LanguageFeatures.msg)
+  | Languages(Languages.msg)
   | MessageService(MessageService.msg)
   | OutputService(OutputService.msg)
   | Progress(Progress.msg)

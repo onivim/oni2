@@ -8,22 +8,27 @@ module Log = (
 
 runTest(
   ~name="InsertMode test - effects batched to runEffects",
-  (dispatch, wait, runEffects) => {
+  ({dispatch, wait, runEffects, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   dispatch(KeyboardInput({isText: true, input: "i"}));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Insert
+    Selectors.mode(state) |> Vim.Mode.isInsert
   );
 
   setClipboard(None);
 
   /* Simulate multiple events getting dispatched before running effects */
   dispatch(KeyboardInput({isText: true, input: "A"}));
-  dispatch(Command("editor.action.clipboardPasteAction"));
+  dispatch(
+    CommandInvoked({
+      command: "editor.action.clipboardPasteAction",
+      arguments: `Null,
+    }),
+  );
   dispatch(KeyboardInput({isText: true, input: "B"}));
 
   runEffects();

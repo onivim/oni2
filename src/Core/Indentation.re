@@ -57,6 +57,9 @@ let getLevel = (settings: IndentationSettings.t, text: string) => {
 
 let applyLevel =
     (~indentation: IndentationSettings.t, ~level: int, str: string) => {
+  // Negative levels should not be allowed
+  let level = level < 0 ? 0 : level;
+
   str
   |> StringEx.findNonWhitespace
   |> Option.map(idx => {
@@ -71,10 +74,20 @@ let applyLevel =
   |> Option.value(~default=str);
 };
 
-let getForBuffer = (~buffer, configuration: Configuration.t) => {
-  let bufferIndentation = Buffer.getIndentation(buffer);
-  switch (bufferIndentation) {
-  | None => IndentationSettings.ofConfiguration(configuration)
-  | Some(indentation) => indentation
-  };
-};
+let%test_module "applyLevel" =
+  (module
+   {
+     let indentation = IndentationSettings.default; // 4 spaces
+
+     let%test "remove whitespace, level 0" = {
+       applyLevel(~indentation, ~level=0, "  ab") == "ab";
+     };
+
+     let%test "add whitespace, level 0" = {
+       applyLevel(~indentation, ~level=1, "ab") == "    ab";
+     };
+
+     let%test "remove whitespace, negative level" = {
+       applyLevel(~indentation, ~level=-1, "  ab") == "ab";
+     };
+   });

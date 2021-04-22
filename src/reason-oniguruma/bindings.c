@@ -23,12 +23,12 @@ void reonig_finalize_regexp(value v) {
 };
 
 static struct custom_operations regexp_custom_ops = {
-  identifier : "regexp handling",
-  finalize : reonig_finalize_regexp,
-  compare : custom_compare_default,
-  hash : custom_hash_default,
-  serialize : custom_serialize_default,
-  deserialize : custom_deserialize_default
+  .identifier = "regexp handling",
+  .finalize = reonig_finalize_regexp,
+  .compare = custom_compare_default,
+  .hash = custom_hash_default,
+  .serialize = custom_serialize_default,
+  .deserialize = custom_deserialize_default
 };
 
 static value reonig_val_result_error(char *errorMsg) {
@@ -96,9 +96,9 @@ CAMLprim value reonig_search(value vStr, value vPos, value vRegExp) {
   CAMLparam3(vStr, vPos, vRegExp);
   CAMLlocal2(ret, v);
 
-  UChar *searchData = String_val(vStr);
+  UChar *searchData = (UChar *) String_val(vStr);
   size_t position = Int_val(vPos);
-  size_t end = strlen(searchData);
+  size_t end = strlen((const char *) searchData);
 
   regexp_W *p = Data_custom_val(vRegExp);
   regex_t *regex = p->regexp;
@@ -179,9 +179,9 @@ CAMLprim value reonig_get_last_matches(value vStr, value vRegExp) {
 CAMLprim value reonig_search_fast(value vStr, value vPos, value vRegExp) {
   CAMLparam3(vStr, vPos, vRegExp);
 
-  UChar *searchData = String_val(vStr);
+  UChar *searchData = (UChar *) String_val(vStr);
   size_t position = Int_val(vPos);
-  size_t end = strlen(searchData);
+  size_t end = strlen((const char *) searchData);
 
   regexp_W *p = Data_custom_val(vRegExp);
   regex_t *regex = p->regexp;

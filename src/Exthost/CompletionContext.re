@@ -1,8 +1,10 @@
+[@deriving show]
 type triggerKind =
   | Invoke
   | TriggerCharacter
   | TriggerForIncompleteCompletions;
 
+[@deriving show]
 type t = {
   triggerKind,
   triggerCharacter: option(string),

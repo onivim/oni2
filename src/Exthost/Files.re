@@ -236,3 +236,21 @@ module ReadDirResult = {
       value(`List([name |> string, fileType |> FileType.encode]))
     );
 };
+
+module FileSystemEvents = {
+  type t = {
+    created: list(Oni_Core.Uri.t),
+    changed: list(Oni_Core.Uri.t),
+    deleted: list(Oni_Core.Uri.t),
+  };
+
+  let encode = ({created, changed, deleted}) => {
+    Json.Encode.(
+      obj([
+        ("created", created |> list(Oni_Core.Uri.encode)),
+        ("changed", changed |> list(Oni_Core.Uri.encode)),
+        ("deleted", deleted |> list(Oni_Core.Uri.encode)),
+      ])
+    );
+  };
+};

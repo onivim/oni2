@@ -18,6 +18,14 @@ open Msg;
 [@deriving show({with_path: false})]
 type msg = Msg.t;
 
+module ShadowedMsg = Msg;
+module Msg = {
+  let moveLeft = ShadowedMsg.Command(MoveLeft);
+  let moveUp = ShadowedMsg.Command(MoveUp);
+  let moveDown = ShadowedMsg.Command(MoveDown);
+  let moveRight = ShadowedMsg.Command(MoveRight);
+};
+
 type outmsg =
   | Nothing
   | SplitAdded
@@ -122,7 +130,18 @@ let update = (~focus, model, msg) => {
       ),
       Nothing,
     )
-
+  | EditorTabDoubleClicked({groupId, editorId}) => (
+      updateActiveLayout(
+        updateGroup(
+          groupId,
+          Group.updateEditor(editorId, editor =>
+            Feature_Editor.Editor.setPreview(~preview=false, editor)
+          ),
+        ),
+        model,
+      ),
+      Nothing,
+    )
   | GroupSelected(id) => (
       updateActiveLayout(layout => {...layout, activeGroupId: id}, model),
       Focus(Center),
@@ -149,15 +168,41 @@ let update = (~focus, model, msg) => {
 
   | Command(PreviousEditor) => (previousEditor(model), Nothing)
 
-  | Command(SplitVertical) => (split(`Vertical, model), SplitAdded)
+  | Command(SplitVertical) =>
+    let editor = Feature_Editor.Editor.copy(activeEditor(model));
+    (split(~shouldReuse=false, ~editor, `Vertical, model), SplitAdded);
 
-  | Command(SplitHorizontal) => (split(`Horizontal, model), SplitAdded)
+  | Command(SplitHorizontal) =>
+    let editor = Feature_Editor.Editor.copy(activeEditor(model));
+    (split(~shouldReuse=false, ~editor, `Horizontal, model), SplitAdded);
 
   | Command(CloseActiveEditor) =>
     switch (removeActiveEditor(model)) {
     | Some(model) => (model, Nothing)
     | None => (model, RemoveLastWasBlocked)
     }
+
+  | Command(CloseActiveGroup) =>
+    let curLayout = model |> activeLayout;
+    let activeGroupId = curLayout.activeGroupId;
+
+    let rec loop = (newModel: model) => {
+      let newLayout = newModel |> activeLayout;
+      if (newLayout.activeGroupId != activeGroupId) {
+        Some(newModel);
+      } else {
+        switch (removeActiveEditor(newModel)) {
+        | Some(model) => loop(model)
+        | None => None
+        };
+      };
+    };
+
+    let model' = loop(model);
+    switch (model') {
+    | Some(model) => (model, Nothing)
+    | None => (model, RemoveLastWasBlocked)
+    };
 
   | Command(MoveLeft) =>
     switch (focus) {
@@ -178,6 +223,17 @@ let update = (~focus, model, msg) => {
         );
       };
 
+    | Some(Right) =>
+      let model =
+        updateActiveLayout(
+          layout => {
+            let newActiveGroupId = layout |> activeTree |> Layout.rightmost;
+            {...layout, activeGroupId: newActiveGroupId};
+          },
+          model,
+        );
+      (model, Focus(Center));
+
     | Some(Left)
     | Some(Bottom)
     | None => (model, Nothing)
@@ -186,16 +242,21 @@ let update = (~focus, model, msg) => {
   | Command(MoveRight) =>
     switch (focus) {
     | Some(Center) =>
-      let model =
-        updateActiveLayout(
-          layout => {
-            let newActiveGroupId =
-              layout |> activeTree |> moveRight(layout.activeGroupId);
-            {...layout, activeGroupId: newActiveGroupId};
-          },
-          model,
+      let layout = model |> activeLayout;
+      let newActiveGroupId =
+        layout |> activeTree |> moveRight(layout.activeGroupId);
+
+      if (newActiveGroupId == layout.activeGroupId) {
+        (model, Focus(Right));
+      } else {
+        (
+          updateActiveLayout(
+            layout => {...layout, activeGroupId: newActiveGroupId},
+            model,
+          ),
+          Nothing,
         );
-      (model, Nothing);
+      };
 
     | Some(Left) =>
       let model =
@@ -209,6 +270,7 @@ let update = (~focus, model, msg) => {
       (model, Focus(Center));
 
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -238,6 +300,7 @@ let update = (~focus, model, msg) => {
       (model, Focus(Center));
 
     | Some(Left)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -261,10 +324,74 @@ let update = (~focus, model, msg) => {
       };
 
     | Some(Left) => (model, Focus(Bottom))
+    | Some(Right) => (model, Focus(Bottom))
 
     | Some(Bottom)
     | None => (model, Nothing)
     }
+
+  | Command(MoveTopLeft) =>
+    switch (focus) {
+    | Some(Center) =>
+      let layout = model |> activeLayout;
+      let newActiveGroupId = layout |> activeTree |> Layout.topLeft;
+      (
+        updateActiveLayout(
+          layout => {...layout, activeGroupId: newActiveGroupId},
+          model,
+        ),
+        Nothing,
+      );
+
+    | Some(Left)
+    | Some(Right)
+    | Some(Bottom)
+    | None => (model, Nothing)
+    }
+  | Command(MoveBottomRight) =>
+    switch (focus) {
+    | Some(Center) =>
+      let layout = model |> activeLayout;
+      let newActiveGroupId = layout |> activeTree |> Layout.bottomRight;
+      (
+        updateActiveLayout(
+          layout => {...layout, activeGroupId: newActiveGroupId},
+          model,
+        ),
+        Nothing,
+      );
+
+    | Some(Left)
+    | Some(Right)
+    | Some(Bottom)
+    | None => (model, Nothing)
+    }
+  | Command(CycleForward) =>
+    let layout = model |> activeLayout;
+    let newActiveGroupId =
+      layout
+      |> activeTree
+      |> Layout.cycle(~direction=`Forward, ~activeId=layout.activeGroupId);
+    (
+      updateActiveLayout(
+        layout => {...layout, activeGroupId: newActiveGroupId},
+        model,
+      ),
+      Nothing,
+    );
+  | Command(CycleBackward) =>
+    let layout = model |> activeLayout;
+    let newActiveGroupId =
+      layout
+      |> activeTree
+      |> Layout.cycle(~direction=`Backward, ~activeId=layout.activeGroupId);
+    (
+      updateActiveLayout(
+        layout => {...layout, activeGroupId: newActiveGroupId},
+        model,
+      ),
+      Nothing,
+    );
 
   | Command(RotateForward) =>
     switch (focus) {
@@ -272,6 +399,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -281,6 +409,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -295,6 +424,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -309,6 +439,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -321,6 +452,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -333,6 +465,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -345,6 +478,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -357,6 +491,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -369,6 +504,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -381,6 +517,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -390,6 +527,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -399,6 +537,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -408,6 +547,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -426,6 +566,7 @@ let update = (~focus, model, msg) => {
 
         | Some(Left)
         | Some(Bottom)
+        | Some(Right)
         | None => model
         }
       };
@@ -508,6 +649,14 @@ module Commands = {
       Command(CloseActiveEditor),
     );
 
+  let closeActiveSplit =
+    define(
+      ~category="View",
+      ~title="Close Split",
+      "view.closeSplit",
+      Command(CloseActiveGroup),
+    );
+
   let rotateForward =
     define(
       ~category="View",
@@ -551,6 +700,26 @@ module Commands = {
       "window.moveDown",
       Command(MoveDown),
     );
+
+  let moveTopLeft =
+    define(
+      ~category="View",
+      ~title="Focus Top Left Window",
+      "window.moveTopLeft",
+      Command(MoveTopLeft),
+    );
+
+  let moveBottomRight =
+    define(
+      ~category="View",
+      ~title="Focus Bottom Right Window",
+      "window.moveBottomRight",
+      Command(MoveBottomRight),
+    );
+
+  let cycleForward = define("window.cycleForward", Command(CycleForward));
+
+  let cycleBackward = define("window.cycleBackward", Command(CycleBackward));
 
   let decreaseSize =
     define(
@@ -723,12 +892,17 @@ module Contributions = {
       splitVertical,
       splitHorizontal,
       closeActiveEditor,
+      closeActiveSplit,
       rotateForward,
       rotateBackward,
       moveLeft,
       moveRight,
       moveUp,
       moveDown,
+      moveTopLeft,
+      moveBottomRight,
+      cycleForward,
+      cycleBackward,
       increaseSize,
       decreaseSize,
       increaseHorizontalSize,

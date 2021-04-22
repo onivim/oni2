@@ -1,16 +1,13 @@
+open Oni_Core;
+
 module Api: {
-  let fold:
+  let glob:
     (
-      ~includeFiles: string => bool,
-      ~excludeDirectory: string => bool,
-      ~initial: 'a,
-      ('a, string) => 'a,
+      ~maxCount: int=?,
+      ~includeFiles: string=?,
+      ~excludeDirectories: string=?,
       string
     ) =>
-    Lwt.t('a);
-
-  let glob:
-    (~includeFiles: string=?, ~excludeDirectories: string=?, string) =>
     Lwt.t(list(string));
 
   let rmdir: (~recursive: bool=?, string) => Lwt.t(unit);
@@ -35,4 +32,23 @@ module Effect: {
   let stat: (string, Unix.stats => 'msg) => Isolinear.Effect.t('msg);
   let statMultiple:
     (list(string), (string, Unix.stats) => 'msg) => Isolinear.Effect.t('msg);
+
+  module Dialog: {
+    let openFolder:
+      (
+        ~initialDirectory: string=?,
+        option(FpExp.t(FpExp.absolute)) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
+  };
+};
+
+module Sub: {
+  let dir:
+    (
+      ~uniqueId: string,
+      ~toMsg: result(list(Luv.File.Dirent.t), string) => 'msg,
+      string
+    ) =>
+    Isolinear.Sub.t('msg);
 };

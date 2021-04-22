@@ -14,25 +14,83 @@ function activate(context) {
     // Create a simple status bar
     let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000)
     item.color = new vscode.ThemeColor("foreground")
+    // TODO: Bring back
+    // item.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground")
     item.command = "developer.oni.statusBarClicked"
     item.text = "$(wrench) Developer"
     item.tooltip = "Hello from oni-dev-extension!"
     item.show()
 
+
     let cleanup = (disposable) => context.subscriptions.push(disposable)
+
+    // DIAGNOSTICS
+    const diagnostics = vscode.languages.createDiagnosticCollection("oni-dev.diagnostics");
+
+    cleanup(
+        vscode.commands.registerCommand("developer.oni.diagnostics-add", () => {
+            const document = vscode.window.activeTextEditor.document;
+
+            if (document && document.lineCount > 0) {
+                const start = new vscode.Position(0, 0);
+                const stop = document.lineAt(document.lineCount - 1).range.end;
+                const range = new vscode.Range(start, stop);
+                const diagnostic = new vscode.Diagnostic(range, "Test diagnostic from oni-dev", vscode.DiagnosticSeverity.Error);
+                diagnostics.set(document.uri, [diagnostic]);
+            }
+        }),
+    )
 
     cleanup(
         vscode.commands.registerCommand("developer.oni.statusBarClicked", () => {
             vscode.window.showWarningMessage("You clicked developer", [])
         }),
     )
-    
+
+    cleanup(
+        vscode.commands.registerCommand("_test.findFiles", (count) => {
+            vscode.workspace.findFiles(
+                "*.json", undefined, count
+            ).then((results) => {
+                vscode.window.showInformationMessage("success:" + results.length);
+                // vscode.window.showInformationMessage("success:1");
+            })
+        }),
+    )
+
     cleanup(
         vscode.commands.registerCommand("developer.oni.hideStatusBar", () => {
             item.hide();
         }),
     )
-    
+
+    cleanup(
+        vscode.commands.registerCommand("developer.oni.logBufferUpdates", () => {
+            vscode.window.showInformationMessage("Logging buffer updates!");
+            vscode.workspace.onDidChangeTextDocument((e) => {
+                console.log({
+                    type: "workspace.onDidChangeTextDocument",
+                    filename: e.document.fileName,
+                    version: e.document.version,
+                    contentChanges: e.contentChanges,
+                    fullText: e.document.getText(),
+                });
+            });
+        }),
+    )
+
+    cleanup(
+        vscode.commands.registerCommand("developer.oni.tryOpenDocument", () => {
+            vscode.workspace.openTextDocument(vscode.Uri.file("package.json"))
+                .then((document) => {
+                    let text = document.getText();
+                    vscode.window.showInformationMessage("Got text document: " + text);
+                }, err => {
+                    vscode.window.showErrorMessage("Failed to get text document: " + err.toString());
+                })
+        }),
+    )
+
     cleanup(
         vscode.commands.registerCommand("developer.oni.showStatusBar", () => {
             item.show();
@@ -54,7 +112,7 @@ function activate(context) {
                 return [vscode.CompletionItem("HelloWorld"), vscode.CompletionItem("HelloAgain")]
             },
             resolveCompletionItem: (completionItem, token) => {
-                completionItem.documentation = "RESOLVED documentation:  "+ completionItem.label;
+                completionItem.documentation = "RESOLVED documentation:  " + completionItem.label;
                 completionItem.detail = "RESOLVED detail: " + completionItem.label;
                 return completionItem;
             }
@@ -64,10 +122,116 @@ function activate(context) {
     cleanup(
         vscode.languages.registerCompletionItemProvider("oni-dev", {
             provideCompletionItems: (document, position, token, context) => {
-                return [vscode.CompletionItem("ReasonML"), vscode.CompletionItem("OCaml")]
+                const itemWithAdditionalEdit = vscode.CompletionItem("ReasonML1");
+                itemWithAdditionalEdit.detail = "(Inserts line at top too)";
+                const range0 = new vscode.Range(0, 0, 0, 0);
+                const edit0 = new vscode.TextEdit(range0, "Insert line up top!\n");
+                itemWithAdditionalEdit.additionalTextEdits = [
+                    edit0
+                ];
+
+                const itemWithAdditionalEditAfter = vscode.CompletionItem("OCaml");
+                itemWithAdditionalEditAfter.detail = "(Inserts line at line 10, too)";
+                const range1 = new vscode.Range(11, 0, 11, 0);
+                const edit1 = new vscode.TextEdit(range1, "Insert line at line 10\n");
+                itemWithAdditionalEditAfter.additionalTextEdits = [
+                    edit1
+                ];
+                return [itemWithAdditionalEdit, itemWithAdditionalEditAfter];
             },
         }),
     )
+
+    // SLOW completion provider
+    cleanup(
+        vscode.languages.registerCompletionItemProvider("oni-dev", {
+            provideCompletionItems: (document, position, token, context) => {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve([
+                            vscode.CompletionItem("ReasonML0"),
+                            vscode.CompletionItem("OCaml0"),
+                            vscode.CompletionItem("ReasonML2"),
+                            vscode.CompletionItem("OCaml2"),
+                        ])
+                    }, 500);
+                });
+            },
+        }),
+    )
+
+    // INCOMPLETE completion provider
+    cleanup(
+        vscode.languages.registerCompletionItemProvider("oni-dev", {
+            provideCompletionItems: (document, position, token, context) => {
+                const items = [
+                    vscode.CompletionItem("Incomplete" + Date.now().toString()),
+                ];
+                return {
+                    isIncomplete: true,
+                    items,
+                };
+            },
+        }),
+    )
+
+    // FORMATTING
+
+    const adjustLineFormatter = (document) => {
+        const lineCount = document.lineCount;
+
+        const edits = []
+        for (let idx = lineCount - 1; idx >= 0; idx--) {
+            const line = document.lineAt(idx);
+            if (line.text.startsWith("DELETE")) {
+                edits.push(vscode.TextEdit.delete(line.rangeIncludingLineBreak))
+            } else if (line.text.startsWith("INSERT")) {
+                edits.push(vscode.TextEdit.insert(line.range.start, "!!"))
+            }
+        }
+        return edits
+    };
+
+    const replaceEntireFileFormatter = (document) => {
+        const lineCount = document.lineCount;
+
+        if (lineCount == 0) {
+            return []
+        } else {
+            let start = document.lineAt(0).range.start;
+            let stop = document.lineAt(lineCount - 1).rangeIncludingLineBreak.end;
+            let range = new vscode.Range(start, stop);
+            let edit = vscode.TextEdit.replace(range, "a\nb\nc\n");
+            return [edit]
+        }
+    };
+
+    const noopFormatter = (_document) => [];
+
+    var formatterToUse = adjustLineFormatter;
+
+    const setFormatter = () => {
+        const formatter = vscode.workspace.getConfiguration().get("developer.oni-dev.formatter")
+        if (formatter == "singleLine") {
+            formatterToUse = adjustLineFormatter
+        } else if (formatter == "replaceFile") {
+            formatterToUse = replaceEntireFileFormatter;
+        } else {
+            formatterToUse = noopFormatter;
+        }
+    };
+
+    vscode.workspace.onDidChangeConfiguration((event) => {
+        if (event.affectsConfiguration("developer.oni-dev.formatter")) {
+            setFormatter();
+        }
+    });
+
+    setFormatter();
+
+    vscode.languages.registerDocumentFormattingEditProvider("oni-dev", {
+        provideDocumentFormattingEdits: (document) => formatterToUse(document),
+    });
 
     const output = vscode.window.createOutputChannel("oni-dev")
     output.appendLine("Hello output channel!")
@@ -77,18 +241,22 @@ function activate(context) {
 
     const collection = vscode.languages.createDiagnosticCollection("test")
 
+    let latestText = ""
+
     cleanup(
-        vscode.workspace.onDidOpenTextDocument((e) => {
+        vscode.workspace.onDidOpenTextDocument((document) => {
             // TODO:
             // Add command / option to toggle this
             // showData({
             //     type: "workspace.onDidOpenTextDocument",
             //     filename: e.fileName,
             // });
+
+            if (document) {
+                latestText = document.getText().split(os.EOL).join("|")
+            }
         }),
     )
-
-    let latestText = ""
 
     cleanup(
         vscode.workspace.onDidChangeTextDocument((e) => {
@@ -128,16 +296,16 @@ function activate(context) {
     cleanup(
         vscode.commands.registerCommand("developer.oni.showChoiceMessage", () => {
             vscode.window.showInformationMessage(
-//`Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?`
-"Hello!"
-    , "Option 1", "Option 2", "Option 3").then(
-                (result) => {
-                    vscode.window.showInformationMessage("You picked: " + result)
-                },
-                (err) => {
-                    vscode.window.showInformationMessage("Cancelled: " + err)
-                },
-            )
+                //`Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?`
+                "Hello!"
+                , "Option 1", "Option 2", "Option 3").then(
+                    (result) => {
+                        vscode.window.showInformationMessage("You picked: " + result)
+                    },
+                    (err) => {
+                        vscode.window.showInformationMessage("Cancelled: " + err)
+                    },
+                )
         }),
     )
 
@@ -156,6 +324,7 @@ function activate(context) {
     cleanup(
         vscode.commands.registerCommand("developer.oni.showWorkspaceRootPath", () => {
             vscode.window.showInformationMessage("Workspace rootPath: " + vscode.workspace.rootPath)
+            vscode.window.showInformationMessage("Workspace storagePath: " + context.storagePath)
         }),
     )
 
@@ -241,36 +410,38 @@ function activate(context) {
         }),
     )
 
-    function createResourceUri(relativePath) {
-        const absolutePath = path.join(vscode.workspace.rootPath, relativePath)
-        return vscode.Uri.file(absolutePath)
-    }
+    if (vscode.workspace.rootPath) {
+        function createResourceUri(relativePath) {
+            const absolutePath = path.join(vscode.workspace.rootPath, relativePath)
+            return vscode.Uri.file(absolutePath)
+        }
 
-    // Test SCM
+        // Test SCM
 
-    const testSCM = vscode.scm.createSourceControl("test", "Test")
+        const testSCM = vscode.scm.createSourceControl("test", "Test")
 
-    const index = testSCM.createResourceGroup("index", "Index")
-    index.resourceStates = [
-        { resourceUri: createResourceUri("README.md") },
-        { resourceUri: createResourceUri("src/test/api.ts") },
-    ]
+        const index = testSCM.createResourceGroup("index", "Index")
+        index.resourceStates = [
+            { resourceUri: createResourceUri("README.md") },
+            { resourceUri: createResourceUri("src/test/api.ts") },
+        ]
 
-    const workingTree = testSCM.createResourceGroup("workingTree", "Changes")
-    workingTree.resourceStates = [
-        { resourceUri: createResourceUri(".travis.yml") },
-        { resourceUri: createResourceUri("README.md") },
-    ]
+        const workingTree = testSCM.createResourceGroup("workingTree", "Changes")
+        workingTree.resourceStates = [
+            { resourceUri: createResourceUri(".travis.yml") },
+            { resourceUri: createResourceUri("README.md") },
+        ]
 
-    testSCM.count = 13
+        testSCM.count = 13
 
-    testSCM.quickDiffProvider = {
-        provideOriginalResource: (uri, _token) => {
-            return vscode.Uri.file("README.md.old")
-        },
-    }
+        testSCM.quickDiffProvider = {
+            provideOriginalResource: (uri, _token) => {
+                return vscode.Uri.file("README.md.old")
+            },
+        }
 
-    testSCM.dispose()
+        testSCM.dispose()
+    };
 
     // Text Document Content Provider
 
@@ -285,6 +456,8 @@ function activate(context) {
         textContentProvider,
     )
     disposable.dispose()
+
+    console.log("Storage path available: " + context.storagePath);
 
     // Configuration
 
@@ -306,7 +479,7 @@ function activate(context) {
 }
 
 // this method is called when your extension is deactivated
-function deactivate() {}
+function deactivate() { }
 
 module.exports = {
     activate,

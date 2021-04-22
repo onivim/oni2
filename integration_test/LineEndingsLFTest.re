@@ -3,15 +3,15 @@ open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="LineEndingsLFTest", (dispatch, wait, _runEffects) => {
+runTest(~name="LineEndingsLFTest", ({dispatch, wait, _}) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   let testFile = getAssetPath("test.lf");
 
   // Create a buffer
-  dispatch(Actions.OpenFileByPath(testFile, None, None));
+  dispatch(Actions.OpenFileByPath(testFile, SplitDirection.Current, None));
 
   wait(~name="Verify buffer is loaded", (state: State.t) => {
     state
@@ -30,7 +30,9 @@ runTest(~name="LineEndingsLFTest", (dispatch, wait, _runEffects) => {
   });
 
   // Switch line endings
-  dispatch(Actions.VimExecuteCommand("set ff=dos"));
+  dispatch(
+    Actions.VimExecuteCommand({allowAnimation: true, command: "set ff=dos"}),
+  );
 
   wait(
     ~name="Verify buffer is switched to CRLF", ~timeout=10.0, (state: State.t) => {

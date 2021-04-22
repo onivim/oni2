@@ -28,7 +28,17 @@ describe("Uri", ({describe, _}) => {
     test("adds slash for windows-style path", ({expect, _}) => {
       let uri = Uri.fromPath("C:/test");
       expect.string(Uri.toString(uri)).toEqual("file:///c:/test");
-    })
+    });
+    if (Sys.win32) {
+      test(
+        "#2282 - Windows: backward slashes should get normalized to forward slashes",
+        ({expect, _}) => {
+        let uri = Uri.fromPath("C:\\hello-rust\\src\\main.rs");
+        expect.string(Uri.toString(uri)).toEqual(
+          "file:///c:/hello-rust/src/main.rs",
+        );
+      });
+    };
   });
   describe("toFileSystemPath", ({test, _}) => {
     test("round-trip windows-style path", ({expect, _}) => {

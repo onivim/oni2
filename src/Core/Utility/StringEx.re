@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 let isSpace =
   fun
   | ' '
@@ -7,19 +9,144 @@ let isSpace =
   | '\t' => true
   | _ => false;
 
+let findFirst = (~query, str) => {
+  let re = Str.regexp_string(query);
+  try(Some(Str.search_forward(re, str, 0))) {
+  | Not_found => None
+  };
+};
+
 /** [contains(query, str)] returns true if [str] contains the substring [query], false otherwise. */
 let contains = (query, str) => {
-  let re = Str.regexp_string(query);
-  try({
-    let _: int = Str.search_forward(re, str, 0);
-    true;
-  }) {
-  | Not_found => false
+  findFirst(~query, str) != None;
+};
+
+let characterCount = (~startByte, ~endByte, str) => {
+  let len = String.length(str);
+
+  let rec loop = (count, idx) =>
+    if (idx >= endByte || idx >= len) {
+      count;
+    } else {
+      loop(count + 1, Zed_utf8.next(str, idx));
+    };
+
+  loop(0, startByte);
+};
+
+let characterToByte = (~index: EditorCoreTypes.CharacterIndex.t, str) => {
+  let idx = CharacterIndex.toInt(index);
+  let len = String.length(str);
+  let rec loop = (accBytes, count) =>
+    if (accBytes >= len) {
+      len;
+    } else if (count >= idx) {
+      accBytes;
+    } else {
+      let nextByte = Zed_utf8.next(str, accBytes);
+      loop(nextByte, count + 1);
+    };
+
+  loop(0, 0) |> ByteIndex.ofInt;
+};
+
+let firstDifference = (a, b) => {
+  let lenA = String.length(a);
+  let lenB = String.length(b);
+
+  let rec loop = idx =>
+    if (idx >= lenA || idx >= lenB) {
+      if (lenA == lenB) {
+        None;
+      } else {
+        Some(idx);
+      };
+    } else {
+      let (charA, idxA) = Zed_utf8.extract_next(a, idx);
+      let (charB, _) = Zed_utf8.extract_next(b, idx);
+
+      if (!Uchar.equal(charA, charB)) {
+        Some(idx);
+      } else {
+        loop(idxA);
+      };
+    };
+
+  loop(0);
+};
+
+let%test_module "splitAt" =
+  (module
+   {
+     let%test "no difference" = {
+       firstDifference("", "") == None;
+     };
+
+     let%test "difference at first byte" = {
+       firstDifference("a", "b") == Some(0);
+     };
+
+     let%test "unicode-aware difference" = {
+       firstDifference("κόσμε", "κόσε") == Some(7);
+     };
+   });
+
+let splitAt = (~byte: int, str) => {
+  let len = String.length(str);
+  if (byte <= 0) {
+    ("", str);
+  } else if (byte >= len) {
+    (str, "");
+  } else {
+    (String.sub(str, 0, byte), String.sub(str, byte, len - byte));
   };
+};
+
+let%test_module "splitAt" =
+  (module
+   {
+     let%test "out-of-bounds - negative" = {
+       splitAt(~byte=-1, "abc") == ("", "abc");
+     };
+
+     let%test "out-of-bounds - past length" = {
+       splitAt(~byte=100, "abc") == ("abc", "");
+     };
+
+     let%test "valid splits" = {
+       splitAt(~byte=0, "abc") == ("", "abc")
+       && splitAt(~byte=1, "abc") == ("a", "bc")
+       && splitAt(~byte=2, "abc") == ("ab", "c")
+       && splitAt(~byte=3, "abc") == ("abc", "");
+     };
+   });
+
+let isWhitespaceOnly = str => {
+  let len = String.length(str);
+  let rec loop = idx =>
+    if (idx >= len) {
+      true;
+    } else if (!isSpace(str.[idx])) {
+      false;
+    } else {
+      loop(idx + 1);
+    };
+  loop(0);
 };
 
 let explode = str =>
   str |> String.to_seq |> List.of_seq |> List.map(c => String.make(1, c));
+
+let padFront = (~totalLength, char, str) => {
+  let originalLength = String.length(str);
+  let padLength = totalLength - originalLength;
+
+  if (padLength <= 0) {
+    str;
+  } else {
+    String.make(padLength, char) ++ str;
+  };
+};
 
 exception NoMatchException;
 
@@ -127,6 +254,29 @@ let findNonWhitespace = str => {
     };
   loop(0);
 };
+
+/** [leadingWhitespace(str)] returns a string containing the leading whitespace characters of [str] */
+let leadingWhitespace = str => {
+  let maybeIdx = findNonWhitespace(str);
+  switch (maybeIdx) {
+  | None => str
+  | Some(idx) => String.sub(str, 0, idx)
+  };
+};
+
+let%test_module "leadingWhitespace" =
+  (module
+   {
+     let%test "no whitespace" = {
+       leadingWhitespace("abc") == "";
+     };
+     let%test "single space" = {
+       leadingWhitespace(" abc") == " ";
+     };
+     let%test "mixed spaces" = {
+       leadingWhitespace(" \t abc") == " \t ";
+     };
+   });
 
 let isEmpty = str =>
   if (String.equal(str, "")) {
@@ -254,12 +404,73 @@ let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {
   };
 };
 
-let removeWindowsNewLines = s =>
-  List.init(String.length(s), String.get(s))
-  |> List.filter(c => c != '\r')
-  |> List.map(c => String.make(1, c))
-  |> String.concat("");
+let removeWindowsNewLines = str => {
+  let len = String.length(str);
+  let filteredString = Bytes.of_string(str);
+
+  let destIdx = ref(0);
+  for (srcIdx in 0 to len - 1) {
+    if (str.[srcIdx] != '\r') {
+      Bytes.set(filteredString, destIdx^, str.[srcIdx]);
+      incr(destIdx);
+    };
+  };
+
+  let destLen = destIdx^;
+  Bytes.sub(filteredString, 0, destLen) |> Bytes.to_string;
+};
+
+let%test_module "removeWindowsNewLines" =
+  (module
+   {
+     let%test "empty" = {
+       removeWindowsNewLines("") == "";
+     };
+     let%test "just CR" = {
+       removeWindowsNewLines("\r") == "";
+     };
+     let%test "CR as part of a newline" = {
+       removeWindowsNewLines("a\r\nb") == "a\nb";
+     };
+
+     let%test "very large string, without CR" = {
+       let size = 10 * 1024 * 1024;
+       let str = String.make(size, 'a');
+       removeWindowsNewLines(str) == str;
+     };
+
+     let%test "very large string, with CR" = {
+       let size = 10 * 1024 * 1024;
+       let str = String.make(size, '\r');
+       removeWindowsNewLines(str) == "";
+     };
+   });
+
 let splitNewLines = s => s |> String.split_on_char('\n') |> Array.of_list;
+
+let%test_module "splitNewLines" =
+  (module
+   {
+     let%test "empty" = {
+       splitNewLines("") == [|""|];
+     };
+     let%test "single line" = {
+       splitNewLines("abc") == [|"abc"|];
+     };
+     let%test "multiple lines, LF" = {
+       splitNewLines("abc\ndef") == [|"abc", "def"|];
+     };
+
+     let%test "multiple lines, ending with newline, LF" = {
+       splitNewLines("abc\ndef\n") == [|"abc", "def", ""|];
+     };
+
+     let%test "very large string, LF" = {
+       let size = 10 * 1024 * 1024;
+       let str = String.make(size, '\n');
+       splitNewLines(str) == Array.make(size + 1, "");
+     };
+   });
 
 let removeTrailingNewLine = s => {
   let len = String.length(s);
@@ -279,3 +490,29 @@ let splitLines: string => (bool, array(string)) =
 
     (isMultipleLines(text), out);
   };
+
+/** unescaped meaning not preceded directly by a backslash (\) */
+let findUnescapedFromEnd: (string, char) => option(int) =
+  (str, chr) => {
+    let last_unescaped_index = ref(None); // default result
+    String.iteri(
+      (i, c) =>
+        if (i > 0 && str.[i - 1] != '\\' && c == chr) {
+          last_unescaped_index := Some(i + 1); // Advance past space
+        },
+      str,
+    );
+    last_unescaped_index^;
+  };
+
+// turns 'hello world' into 'hello\ world'
+// may be worth replacing/complementing with 'escapeFilePath' */
+let escapeSpaces: string => string =
+  s =>
+    List.init(String.length(s), String.get(s))
+    |> List.map(c => (c == ' ' ? "\\" : "") ++ String.make(1, c))
+    |> String.concat("");
+
+let replace = (~match, ~replace, str) => {
+  Str.global_replace(Str.regexp_string(match), replace, str);
+};

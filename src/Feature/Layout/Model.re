@@ -18,6 +18,8 @@ module Group: {
   let selected: t => Editor.t;
 
   let select: (int, t) => t;
+  let updateEditor: (int, Editor.t => Editor.t, t) => t;
+
   let nextEditor: t => t;
   let previousEditor: t => t;
   let openEditor: (Editor.t, t) => t;
@@ -26,12 +28,16 @@ module Group: {
 
   let map: (Editor.t => Editor.t, t) => t;
   let fold: (('acc, Editor.t) => 'acc, 'acc, t) => 'acc;
+
+  let allEditors: t => list(Editor.t);
 } = {
   type t = {
     id: int,
     editors: list(Editor.t),
     selectedId: int,
   };
+
+  let allEditors = ({editors, _}) => editors;
 
   let fold = (f, initial, group) => {
     List.fold_left(f, initial, group.editors);
@@ -54,6 +60,16 @@ module Group: {
     assert(List.exists(item => Editor.getId(item) == id, group.editors));
 
     {...group, selectedId: id};
+  };
+
+  let updateEditor = (editorId, f, group) => {
+    let newEditors =
+      List.map(
+        e => {Editor.getId(e) != editorId ? e : f(e)},
+        group.editors,
+      );
+
+    {...group, editors: newEditors};
   };
 
   let nextEditor = group => {
@@ -87,12 +103,16 @@ module Group: {
       group.editors,
     );
 
+  let map = (f, group) => {...group, editors: List.map(f, group.editors)};
+
   let openEditor = (editor, group) => {
-    let bufferId = Editor.getBufferId(editor);
-    switch (
-      List.find_opt(e => Editor.getBufferId(e) == bufferId, group.editors)
-    ) {
-    | Some(editor) => {...group, selectedId: Editor.getId(editor)}
+    let editorId = Editor.getId(editor);
+    switch (List.find_opt(e => Editor.getId(e) == editorId, group.editors)) {
+    | Some(existingEditor) =>
+      let editorId = Editor.getId(existingEditor);
+
+      {...group, selectedId: Editor.getId(existingEditor)}
+      |> map(e => Editor.getId(e) != editorId ? e : editor);
     | None => {
         ...group,
         editors: [editor, ...group.editors],
@@ -127,12 +147,12 @@ module Group: {
       Some({...group, editors, selectedId});
     };
   };
-
-  let map = (f, group) => {...group, editors: List.map(f, group.editors)};
 };
 
+[@deriving show]
 type panel =
   | Left
+  | Right
   | Center
   | Bottom;
 
@@ -171,6 +191,8 @@ let initial = editors => {
 
   {layouts: [initialLayout], activeLayoutIndex: 0};
 };
+
+let groups = ({groups, _}) => groups;
 
 let groupById = (id, layout) =>
   List.find_opt((group: Group.t) => group.id == id, layout.groups);
@@ -218,6 +240,8 @@ let visibleEditors = model =>
   |> List.filter_map(id => model |> activeLayout |> groupById(id))
   |> List.map(Group.selected);
 
+let activeLayoutGroups = model => model |> activeLayout |> groups;
+
 let editorById = (id, model) =>
   Base.List.find_map(activeLayout(model).groups, ~f=group =>
     List.find_opt(editor => Editor.getId(editor) == id, group.editors)
@@ -228,28 +252,6 @@ let addWindow = (direction, focus) =>
 let insertWindow = (target, direction, focus) =>
   updateTree(Layout.insertWindow(target, direction, focus));
 let removeWindow = target => updateTree(Layout.removeWindow(target));
-
-let split = (direction, model) => {
-  let activeEditor = activeEditor(model);
-  let newGroup = Group.create([Editor.copy(activeEditor)]);
-
-  updateActiveLayout(
-    layout =>
-      {
-        groups: [newGroup, ...layout.groups],
-        activeGroupId: newGroup.id,
-        tree:
-          Layout.insertWindow(
-            `After(layout.activeGroupId),
-            direction,
-            newGroup.id,
-            activeTree(layout),
-          ),
-        uncommittedTree: `None,
-      },
-    model,
-  );
-};
 
 let move = (focus, dirX, dirY, layout) => {
   let positioned = Positioned.fromLayout(0, 0, 200, 200, layout);
@@ -262,6 +264,66 @@ let moveLeft = current => move(current, -1, 0);
 let moveRight = current => move(current, 1, 0);
 let moveUp = current => move(current, 0, -1);
 let moveDown = current => move(current, 0, 1);
+
+let rec moveTopLeft = (current, layout) => {
+  let next = move(current, -1, -1, layout);
+
+  if (next == current) {
+    current;
+  } else {
+    moveTopLeft(next, layout);
+  };
+};
+
+let rec moveBottomRight = (current, layout) => {
+  let next = move(current, 1, 1, layout);
+
+  if (next == current) {
+    current;
+  } else {
+    moveBottomRight(next, layout);
+  };
+};
+
+let hasSplitToRight = model => {
+  let layout = model |> activeLayout;
+  let newActiveGroupId =
+    layout |> activeTree |> moveRight(layout.activeGroupId);
+
+  layout.activeGroupId != newActiveGroupId;
+};
+
+let split = (~shouldReuse, ~editor, direction, model) =>
+  if (shouldReuse && direction == `Vertical && hasSplitToRight(model)) {
+    // TODO: Consider split open direction?
+    let layout = model |> activeLayout;
+    let newActiveGroupId =
+      layout |> activeTree |> moveRight(layout.activeGroupId);
+    model
+    |> updateActiveLayout(layout =>
+         {...layout, activeGroupId: newActiveGroupId}
+       )
+    |> updateActiveGroup(Group.openEditor(editor));
+  } else {
+    let newGroup = Group.create([editor]);
+
+    updateActiveLayout(
+      layout =>
+        {
+          groups: [newGroup, ...layout.groups],
+          activeGroupId: newGroup.id,
+          tree:
+            Layout.insertWindow(
+              `After(layout.activeGroupId),
+              direction,
+              newGroup.id,
+              activeTree(layout),
+            ),
+          uncommittedTree: `None,
+        },
+      model,
+    );
+  };
 
 let nextEditor = updateActiveGroup(Group.nextEditor);
 
@@ -397,7 +459,7 @@ let addLayoutTab = model => {
 let gotoLayoutTab = (index, model) => {
   ...model,
   activeLayoutIndex:
-    IntEx.clamp(index, ~lo=0, ~hi=List.length(model.layouts) - 1),
+    IntEx.wrap(index, ~lo=0, ~hi=List.length(model.layouts) - 1),
 };
 
 let previousLayoutTab = (~count=1, model) =>
@@ -441,4 +503,10 @@ let fold = (f, initial, model) => {
     initial,
     model.layouts,
   );
+};
+
+let activeGroupEditors = model => {
+  let group = activeGroup(model);
+
+  group.editors;
 };

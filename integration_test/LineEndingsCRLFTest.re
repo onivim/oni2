@@ -3,15 +3,15 @@ open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="LineEndingsCRLFTest", (dispatch, wait, _runEffects) => {
+runTest(~name="LineEndingsCRLFTest", ({dispatch, wait, _}) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   let testFile = getAssetPath("test.crlf");
 
   // Create a buffer
-  dispatch(Actions.OpenFileByPath(testFile, None, None));
+  dispatch(Actions.OpenFileByPath(testFile, SplitDirection.Current, None));
 
   // Wait for highlights to show up
   wait(
@@ -24,7 +24,9 @@ runTest(~name="LineEndingsCRLFTest", (dispatch, wait, _runEffects) => {
   });
 
   // Switch line endings
-  dispatch(Actions.VimExecuteCommand("set ff=unix"));
+  dispatch(
+    Actions.VimExecuteCommand({allowAnimation: true, command: "set ff=unix"}),
+  );
 
   // Verify buffer now has LF line endings...
   wait(

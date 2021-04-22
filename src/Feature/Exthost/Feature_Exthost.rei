@@ -1,10 +1,33 @@
+// MODEL
+
+[@deriving show]
+type msg;
+
+module Msg: {
+  let document: (Exthost.Msg.Documents.msg, Lwt.u(Exthost.Reply.t)) => msg;
+  let initialized: msg;
+};
+
+type model;
+
+let initial: model;
+
+let isInitialized: model => bool;
+
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg));
+
+let update: (msg, model) => (model, outmsg);
+
 // SUBSCRIPTION
 
 let subscription:
   (
-    ~buffers: list(Oni_Core.Buffer.t),
+    ~buffers: Feature_Buffers.model,
     ~editors: list(Feature_Editor.Editor.t),
     ~activeEditorId: option(Feature_Editor.EditorId.t),
-    ~client: Exthost.Client.t
+    ~client: Exthost.Client.t,
+    model
   ) =>
-  Isolinear.Sub.t(unit);
+  Isolinear.Sub.t(msg);

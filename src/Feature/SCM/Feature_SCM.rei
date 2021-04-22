@@ -3,7 +3,7 @@ open Oni_Core;
 // MODEL
 
 [@deriving show]
-type command;
+type command = Exthost.SCM.command;
 
 module Resource: {
   [@deriving show]
@@ -19,13 +19,7 @@ module Resource: {
 
 module ResourceGroup: {
   [@deriving show]
-  type t = {
-    handle: int,
-    id: string,
-    label: string,
-    hideWhenEmpty: bool,
-    resources: list(Resource.t),
-  };
+  type t;
 };
 
 module Provider: {
@@ -42,24 +36,20 @@ module Provider: {
     acceptInputCommand: option(command),
     inputVisible: bool,
     validationEnabled: bool,
-    statusBarCommands: list(Exthost.Command.t),
+    statusBarCommands: list(command),
   };
 };
 
 [@deriving show]
 type model;
 
+let resetFocus: model => model;
+
+let count: model => int;
+
 let initial: model;
 
-let statusBarCommands: model => list(Exthost.Command.t);
-
-// EFFECTS
-
-module Effects: {
-  let getOriginalUri:
-    (Exthost.Client.t, model, string, Uri.t => 'msg) =>
-    Isolinear.Effect.t('msg);
-};
+let statusBarCommands: (~workingDirectory: string, model) => list(command);
 
 // UPDATE
 
@@ -69,17 +59,40 @@ type msg;
 module Msg: {
   let keyPressed: string => msg;
   let paste: string => msg;
+  let documentContentProvider: Exthost.Msg.DocumentContentProvider.msg => msg;
 };
 
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
+  | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
+  | OpenFile(string)
+  | PreviewFile(string)
+  | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | OriginalContentLoaded({
+      bufferId: int,
+      originalLines: array(string),
+    })
   | Nothing;
 
-let update: (Exthost.Client.t, model, msg) => (model, outmsg);
+let update:
+  (
+    ~previewEnabled: bool,
+    ~fileSystem: Feature_FileSystem.model,
+    Exthost.Client.t,
+    model,
+    msg
+  ) =>
+  (model, outmsg);
 
 let handleExtensionMessage:
   (~dispatch: msg => unit, Exthost.Msg.SCM.msg) => unit;
+
+// SUBSCRIPTION
+
+let sub:
+  (~activeBuffer: Oni_Core.Buffer.t, ~client: Exthost.Client.t, model) =>
+  Isolinear.Sub.t(msg);
 
 // VIEW
 
@@ -89,12 +102,18 @@ module Pane: {
       ~key: Brisk_reconciler.Key.t=?,
       ~model: model,
       ~workingDirectory: string,
-      ~onItemClick: Resource.t => unit,
       ~isFocused: bool,
+      ~iconTheme: Oni_Core.IconTheme.t,
+      ~languageInfo: Exthost.LanguageInfo.t,
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~dispatch: msg => unit,
       unit
     ) =>
     Revery.UI.element;
+};
+
+module Contributions: {
+  let commands: (~isFocused: bool, model) => list(Command.t(msg));
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
 };

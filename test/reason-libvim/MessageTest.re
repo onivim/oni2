@@ -4,7 +4,37 @@ open Vim;
 let reset = () => Helpers.resetBuffer("test/testfile.txt");
 let input = s => ignore(Vim.input(s));
 
-describe("Messages", ({test, _}) => {
+describe("Messages", ({describe, test, _}) => {
+  describe("ex cmds", ({test, _}) => {
+    test(":messages produces Goto Messages effect", ({expect, _}) => {
+      let _ = reset();
+
+      let (_: Context.t, effects) = command("messages");
+
+      expect.equal(effects, [Vim.(Effect.Goto(Goto.Messages))]);
+    });
+    test(":messages clear produces clear effect with 0 count", ({expect, _}) => {
+      let _ = reset();
+
+      let (_: Context.t, effects) = command("messages clear");
+
+      expect.equal(
+        effects,
+        [Vim.(Effect.Clear(Clear.{target: Messages, count: 0}))],
+      );
+    });
+    test(
+      ":5messages clear produces clear effect with 5 count", ({expect, _}) => {
+      let _ = reset();
+
+      let (_: Context.t, effects) = command("5messages clear");
+
+      expect.equal(
+        effects,
+        [Vim.(Effect.Clear(Clear.{target: Messages, count: 5}))],
+      );
+    });
+  });
   test("echo dispatches message", ({expect, _}) => {
     let _ = reset();
 
@@ -14,7 +44,7 @@ describe("Messages", ({test, _}) => {
         messages := [(priority, title, contents), ...messages^]
       );
 
-    let _: Context.t = command("echo 'hello'");
+    let (_: Context.t, _: list(Effect.t)) = command("echo 'hello'");
 
     expect.int(List.length(messages^)).toBe(1);
 
@@ -35,7 +65,7 @@ describe("Messages", ({test, _}) => {
         messages := [(priority, title, contents), ...messages^]
       );
 
-    let _: Context.t = command("echoerr 'aproblem'");
+    let (_: Context.t, _: list(Effect.t)) = command("echoerr 'aproblem'");
 
     /* TODO: Fix this! */
     /* expect.int(List.length(messages^)).toBe(1); */

@@ -1,6 +1,6 @@
-open EditorCoreTypes;
 open Oni_Core;
 open BenchFramework;
+module LineNumber = EditorCoreTypes.LineNumber;
 
 open Revery.UI;
 
@@ -8,15 +8,21 @@ let rootNode = (new node)();
 
 let setup = () => ();
 
-let emptyBuffer = Buffer.ofLines([||]);
+let emptyBuffer = Buffer.ofLines(~font=Font.default(), [||]);
 let emptyBufferId = Buffer.getId(emptyBuffer);
 
 let hundredThousandLineBuffer =
-  Buffer.ofLines(Array.make(100000, "This buffer is pretty big"));
+  Buffer.ofLines(
+    ~font=Font.default(),
+    Array.make(100000, "This buffer is pretty big"),
+  );
 let hundredThousandLineBufferId = Buffer.getId(hundredThousandLineBuffer);
 
 let smallBuffer =
-  Buffer.ofLines(Array.make(100, "This buffer is a bit smaller"));
+  Buffer.ofLines(
+    ~font=Font.default(),
+    Array.make(100, "This buffer is a bit smaller"),
+  );
 let smallBufferId = Buffer.getId(smallBuffer);
 
 let hundredThousandLines = Array.make(100000, "Another big buffer update");
@@ -24,9 +30,10 @@ let hundredThousandLines = Array.make(100000, "Another big buffer update");
 let addLinesToEmptyBuffer = () => {
   let _ =
     BufferUpdate.create(
+      ~shouldAdjustCursorPosition=false,
       ~id=emptyBufferId,
-      ~startLine=Index.zero,
-      ~endLine=Index.fromZeroBased(-1),
+      ~startLine=LineNumber.zero,
+      ~endLine=LineNumber.ofZeroBased(-1),
       ~lines=hundredThousandLines,
       ~version=1,
       (),
@@ -38,9 +45,10 @@ let addLinesToEmptyBuffer = () => {
 let clearLargeBuffer = () => {
   let _ =
     BufferUpdate.create(
+      ~shouldAdjustCursorPosition=false,
       ~id=hundredThousandLineBufferId,
-      ~startLine=Index.zero,
-      ~endLine=Index.fromZeroBased(-1),
+      ~startLine=LineNumber.zero,
+      ~endLine=LineNumber.ofZeroBased(-1),
       ~lines=[||],
       ~version=1,
       (),
@@ -52,9 +60,10 @@ let clearLargeBuffer = () => {
 let insertInMiddleOfSmallBuffer = () => {
   let _ =
     BufferUpdate.create(
+      ~shouldAdjustCursorPosition=false,
       ~id=smallBufferId,
-      ~startLine=Index.fromZeroBased(50),
-      ~endLine=Index.fromZeroBased(51),
+      ~startLine=LineNumber.ofZeroBased(50),
+      ~endLine=LineNumber.ofZeroBased(51),
       ~lines=[|"this is a new line"|],
       ~version=1,
       (),
@@ -66,9 +75,10 @@ let insertInMiddleOfSmallBuffer = () => {
 let insertInMiddleOfLargeBuffer = () => {
   let _ =
     BufferUpdate.create(
+      ~shouldAdjustCursorPosition=false,
       ~id=hundredThousandLineBufferId,
-      ~startLine=Index.fromZeroBased(5000),
-      ~endLine=Index.fromZeroBased(50001),
+      ~startLine=LineNumber.ofZeroBased(5000),
+      ~endLine=LineNumber.ofZeroBased(50001),
       ~lines=[|"this is a new line"|],
       ~version=1,
       (),

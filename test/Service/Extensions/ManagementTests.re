@@ -12,9 +12,14 @@ let testCollateralPath =
 let markdownExtension = testCollateralPath ++ "markdown-1.0.0.vsix";
 
 let createExtensionsFolder = () =>
-  Filesystem.mkTempDir(~prefix="extensions-test", ());
+  Service_OS.Api.mktempdir(~prefix="extensions-test", ())
+  |> LwtEx.sync
+  |> Result.to_option
+  |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform)
+  |> Option.get;
 
 let setup = Setup.init();
+let proxy = Service_Net.Proxy.none;
 
 describe("Management", ({describe, _}) => {
   describe("uninstall", ({test, _}) => {
@@ -22,7 +27,7 @@ describe("Management", ({describe, _}) => {
       let extensionsFolder = createExtensionsFolder();
 
       let installResult =
-        ExtM.install(~setup, ~extensionsFolder, markdownExtension)
+        ExtM.install(~proxy, ~setup, ~extensionsFolder, markdownExtension)
         |> LwtEx.sync;
 
       expect.equal(Result.is_ok(installResult), true);
@@ -46,7 +51,7 @@ describe("Management", ({describe, _}) => {
       expect.equal(List.length(startExtensions), 0);
 
       let result =
-        ExtM.install(~setup, ~extensionsFolder, markdownExtension)
+        ExtM.install(~proxy, ~setup, ~extensionsFolder, markdownExtension)
         |> LwtEx.sync;
 
       expect.equal(Result.is_ok(result), true);
@@ -64,8 +69,8 @@ describe("Management", ({describe, _}) => {
       expect.equal(List.length(startExtensions), 0);
 
       let result =
-        ExtM.install(~setup, ~extensionsFolder, "redhat.java")
-        |> LwtEx.sync(~timeout=60.0);
+        ExtM.install(~proxy, ~setup, ~extensionsFolder, "redhat.java")
+        |> LwtEx.sync(~timeout=300.0);
 
       expect.equal(Result.is_ok(result), true);
 
@@ -84,7 +89,7 @@ describe("Management", ({describe, _}) => {
       expect.equal(List.length(startExtensions), 0);
 
       let result =
-        ExtM.install(~setup, ~extensionsFolder, "golang.Go")
+        ExtM.install(~proxy, ~setup, ~extensionsFolder, "golang.Go")
         |> LwtEx.sync(~timeout=60.0);
 
       expect.equal(Result.is_ok(result), true);
@@ -98,6 +103,7 @@ describe("Management", ({describe, _}) => {
 
       let result =
         ExtM.install(
+          ~proxy,
           ~setup,
           ~extensionsFolder,
           "invalid-namespace.invalid-extension-id",

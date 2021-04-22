@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 open Feature_Editor;
@@ -7,10 +6,9 @@ open Feature_Editor;
 // This test validates:
 // - The 'oni-dev' extension gets activated
 // - We get a definition response
-runTestWithInput(
-  ~name="ExtHostDefinitionTest", (input, dispatch, wait, _runEffects) => {
-  wait(~name="Capture initial state", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+runTest(~name="ExtHostDefinitionTest", ({input, dispatch, wait, key, _}) => {
+  wait(~timeout=30.0, ~name="Exthost is initialized", (state: State.t) =>
+    Feature_Exthost.isInitialized(state.exthost)
   );
 
   // Wait until the extension is activated
@@ -26,7 +24,9 @@ runTestWithInput(
   );
 
   // Create a buffer
-  dispatch(Actions.OpenFileByPath("test.oni-dev", None, None));
+  dispatch(
+    Actions.OpenFileByPath("test.oni-dev", SplitDirection.Current, None),
+  );
 
   // Wait for the oni-dev filetype
   wait(
@@ -35,12 +35,10 @@ runTestWithInput(
     (state: State.t) => {
       let fileType =
         Selectors.getActiveBuffer(state)
-        |> OptionEx.flatMap(Buffer.getFileType);
+        |> Option.map(Buffer.getFileType)
+        |> Option.map(Buffer.FileType.toString);
 
-      switch (fileType) {
-      | Some("oni-dev") => true
-      | _ => false
-      };
+      fileType == Some("oni-dev");
     },
   );
 
@@ -51,9 +49,7 @@ runTestWithInput(
   input("b");
   input("c");
 
-  // Workaround a bug where cursor position is offset with <esc>
-  input("<esc>");
-  input("h");
+  key(EditorInput.Key.Escape);
 
   // Should get a definition
   wait(

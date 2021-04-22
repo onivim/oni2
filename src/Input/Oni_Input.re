@@ -3,4 +3,3 @@
  */
 
 module Handler = Handler;
-module Keybindings = Keybindings;

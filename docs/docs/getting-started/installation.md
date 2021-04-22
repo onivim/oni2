@@ -12,12 +12,12 @@ While we're developing Onivim 2, the latest builds are available at our [early a
 
 - Requires OSX 10.13+
 
+> NOTE: Apple Silicon ARM Macs are not yet supported - tracking in [issue #2708](https://github.com/onivim/oni2/issues/2708).
+
 ### Windows
 
 - x64 Only
 - Windows 8+ or higher
-
-> NOTE: Windows 7 will also be supported, but there is a [blocking issue](https://github.com/onivim/oni2/issues/850)
 
 ### Linux 
 
@@ -41,6 +41,8 @@ Tested on:
 > __NOTE:__ A gatekeeper dialog will open on the first run - press 'Open' to start the application.
 
 5. _OPTIONAL:_ Add Onivim2 to your Dock by right-clicking on the icon to bring up the context menu, and choosing __Options, Keep in Dock.__
+
+6. __OPTIONAL:__ Add `oni2` to your `PATH` so that it can be launched from the terminal: [Adding `oni2` to PATH on OSX](https://onivim.github.io/docs/using-onivim/command-line#macos)
 
 ### Windows (x64)
 

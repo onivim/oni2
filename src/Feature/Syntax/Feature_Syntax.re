@@ -33,6 +33,26 @@ let highlight = (~scope, ~theme, ~grammars, lines) => {
   result;
 };
 
+module Tokens = {
+  let getAt = (~byteIndex as orig, tokens) => {
+    let byteIndex = ByteIndex.toInt(orig);
+    let rec loop = (lastToken, tokens: list(ThemeToken.t)) => {
+      switch (tokens) {
+      | [] => lastToken
+      | [token] => token.index <= byteIndex ? Some(token) : lastToken
+      | [token, ...tail] =>
+        if (token.index > byteIndex) {
+          lastToken;
+        } else {
+          loop(Some(token), tail);
+        }
+      };
+    };
+
+    loop(None, tokens);
+  };
+};
+
 module Configuration = {
   open Oni_Core;
   open Config.Schema;
@@ -117,23 +137,34 @@ let noTokens = [];
 
 module ClientLog = (val Oni_Core.Log.withNamespace("Oni2.Feature.Syntax"));
 
-let getTokens = (~bufferId: int, ~line: Index.t, {highlights, _}) => {
+let getTokens =
+    (~bufferId: int, ~line: EditorCoreTypes.LineNumber.t, {highlights, _}) => {
   highlights
   |> BufferMap.find_opt(bufferId)
-  |> OptionEx.flatMap(LineMap.find_opt(line |> Index.toZeroBased))
+  |> OptionEx.flatMap(
+       LineMap.find_opt(line |> EditorCoreTypes.LineNumber.toZeroBased),
+     )
   |> Option.value(~default=noTokens);
 };
 
+let getAt =
+    (~bufferId, ~bytePosition: EditorCoreTypes.BytePosition.t, highlights) => {
+  let tokens = getTokens(~bufferId, ~line=bytePosition.line, highlights);
+  Tokens.getAt(~byteIndex=bytePosition.byte, tokens);
+};
+
 let getSyntaxScope =
-    (~bufferId: int, ~line: Index.t, ~bytePosition: int, bufferHighlights) => {
-  let tokens = getTokens(~bufferId, ~line, bufferHighlights);
+    (~bytePosition: BytePosition.t, ~bufferId: int, bufferHighlights) => {
+  let tokens =
+    getTokens(~bufferId, ~line=bytePosition.line, bufferHighlights);
+  let byte = ByteIndex.toInt(bytePosition.byte);
 
   let rec loop = (syntaxScope, currentTokens) => {
     ThemeToken.(
       switch (currentTokens) {
       // Reached the end... return what we have
       | [] => syntaxScope
-      | [{index, syntaxScope, _}, ...rest] when index <= bytePosition =>
+      | [{index, syntaxScope, _}, ...rest] when index <= byte =>
         loop(syntaxScope, rest)
       // Gone past the relevant tokens, return
       // the scope we ended up with
@@ -203,14 +234,15 @@ let handleUpdate =
       ~scope,
       ~theme,
       ~config: Config.resolver,
-      bufferUpdate: BufferUpdate.t,
+      ~bufferUpdate: BufferUpdate.t,
+      ~markerUpdate: MarkerUpdate.t,
       bufferHighlights,
     ) =>
   if (BufferMap.mem(bufferUpdate.id, bufferHighlights.ignoredBuffers)) {
     bufferHighlights;
   } else if (bufferUpdate.version == 1 && bufferUpdate.isFull) {
     // Eager syntax highlighting - on the very first buffer update,
-    // we'll synchronousyl calculate syntax highlights for an initial
+    // we'll synchronously calculate syntax highlights for an initial
     // chunk of the buffer.
     let newHighlights = ref(bufferHighlights);
     let highlights =
@@ -234,7 +266,7 @@ let handleUpdate =
         );
     };
     newHighlights^;
-  } else if (!bufferUpdate.isFull) {
+  } else {
     // Otherwise, if not a full update, we'll pre-emptively shift highlights
     // to give immediate feedback.
     let highlights =
@@ -243,14 +275,52 @@ let handleUpdate =
         fun
         | None => None
         | Some(lineMap) => {
-            let startPos = bufferUpdate.startLine |> Index.toZeroBased;
-            let endPos = bufferUpdate.endLine |> Index.toZeroBased;
-            Some(
+            let shiftLines = (~afterLine, ~delta, lineMap) => {
+              let lineNumber =
+                EditorCoreTypes.LineNumber.toZeroBased(afterLine);
               LineMap.shift(
                 ~default=v => v,
-                ~startPos,
-                ~endPos,
-                ~delta=Array.length(bufferUpdate.lines) - (endPos - startPos),
+                ~startPos=lineNumber,
+                ~endPos=lineNumber,
+                ~delta,
+                lineMap,
+              );
+            };
+
+            let shiftCharacters =
+                (
+                  ~line: EditorCoreTypes.LineNumber.t,
+                  ~afterByte: ByteIndex.t,
+                  ~deltaBytes: int,
+                  ~afterCharacter as _,
+                  ~deltaCharacters as _,
+                  lineMap,
+                ) => {
+              lineMap
+              |> LineMap.update(
+                   line |> EditorCoreTypes.LineNumber.toZeroBased,
+                   Option.map(tokens => {
+                     let afterIndex = afterByte |> ByteIndex.toInt;
+                     tokens
+                     |> List.map((token: ThemeToken.t) =>
+                          if (token.index >= afterIndex) {
+                            {...token, index: token.index + deltaBytes};
+                          } else {
+                            token;
+                          }
+                        );
+                   }),
+                 );
+            };
+
+            let clearLine = (~line as _, model) => model;
+
+            Some(
+              MarkerUpdate.apply(
+                ~clearLine,
+                ~shiftLines,
+                ~shiftCharacters,
+                markerUpdate,
                 lineMap,
               ),
             );
@@ -258,8 +328,6 @@ let handleUpdate =
         bufferHighlights.highlights,
       );
     {...bufferHighlights, highlights};
-  } else {
-    bufferHighlights;
   };
 
 let update: (t, msg) => (t, outmsg) =
@@ -280,6 +348,7 @@ let update: (t, msg) => (t, outmsg) =
 
 let subscription =
     (
+      ~buffers: Feature_Buffers.model,
       ~config: Config.resolver,
       ~grammarInfo,
       ~languageInfo,
@@ -292,6 +361,7 @@ let subscription =
     bufferVisibility
     |> List.filter(((buffer, _)) =>
          !BufferMap.mem(Oni_Core.Buffer.getId(buffer), ignoredBuffers)
+         && !Feature_Buffers.isLargeFile(buffers, buffer)
        )
     |> List.map(((buffer, visibleRanges)) => {
          Service_Syntax.Sub.buffer(
@@ -336,11 +406,10 @@ let subscription =
 
 module Effect = {
   let bufferUpdate = (~bufferUpdate, {maybeSyntaxClient, _}) => {
-    Isolinear.Effect.create(~name="feature.syntax.bufferUpdate", () => {
-      maybeSyntaxClient
-      |> Option.iter(syntaxClient => {
-           Oni_Syntax_Client.notifyBufferUpdate(~bufferUpdate, syntaxClient)
-         })
-    });
+    maybeSyntaxClient
+    |> Option.map(client => {
+         Service_Syntax.Effect.bufferUpdate(~client, ~bufferUpdate)
+       })
+    |> Option.value(~default=Isolinear.Effect.none);
   };
 };

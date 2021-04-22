@@ -3,21 +3,40 @@ open Feature_Editor;
 
 // MODEL
 
+[@deriving show]
 type panel =
   | Left
+  | Right
   | Center
   | Bottom;
 
+module Group: {
+  type t;
+
+  let allEditors: t => list(Editor.t);
+};
+
 type model;
+
+let activeLayoutGroups: model => list(Group.t);
 
 let initial: list(Editor.t) => model;
 
 let visibleEditors: model => list(Editor.t);
 let editorById: (int, model) => option(Editor.t);
+let removeEditor: (int, model) => option(model);
 
-let split: ([ | `Horizontal | `Vertical], model) => model;
+let split:
+  (
+    ~shouldReuse: bool,
+    ~editor: Editor.t,
+    [ | `Horizontal | `Vertical],
+    model
+  ) =>
+  model;
 
 let activeEditor: model => Editor.t;
+let activeGroupEditors: model => list(Editor.t);
 
 let openEditor: (~config: Config.resolver, Editor.t, model) => model;
 let closeBuffer: (~force: bool, Vim.Types.buffer, model) => option(model);
@@ -42,6 +61,13 @@ let fold: (('acc, Editor.t) => 'acc, 'acc, model) => 'acc;
 [@deriving show]
 type msg;
 
+module Msg: {
+  let moveLeft: msg;
+  let moveRight: msg;
+  let moveUp: msg;
+  let moveDown: msg;
+};
+
 type outmsg =
   | Nothing
   | SplitAdded
@@ -60,6 +86,8 @@ module View: {
 
     let id: t => int;
     let title: t => string;
+    let preview: t => bool;
+    let tooltip: t => string;
     let icon: t => option(IconTheme.IconDefinition.t);
     let isModified: t => bool;
 
@@ -70,6 +98,7 @@ module View: {
     (
       ~children: (module ContentModel),
       ~model: model,
+      ~isFocused: bool,
       ~isZenMode: bool,
       ~showTabs: bool,
       ~config: Config.resolver,
@@ -91,11 +120,16 @@ module Commands: {
   let splitHorizontal: Command.t(msg);
 
   let closeActiveEditor: Command.t(msg);
+  let closeActiveSplit: Command.t(msg);
 
   let moveLeft: Command.t(msg);
   let moveRight: Command.t(msg);
   let moveUp: Command.t(msg);
   let moveDown: Command.t(msg);
+  let moveTopLeft: Command.t(msg);
+  let moveBottomRight: Command.t(msg);
+  let cycleForward: Command.t(msg);
+  let cycleBackward: Command.t(msg);
 
   let rotateForward: Command.t(msg);
   let rotateBackward: Command.t(msg);

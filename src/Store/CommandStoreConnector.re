@@ -3,15 +3,6 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Model.Actions;
 
-module KeyDisplayer = Oni_Components.KeyDisplayer;
-
-module Constants = {
-  let zoomStep = 0.2;
-  let defaultZoomValue = 1.0;
-  let minZoomValue = 0.0;
-  let maxZoomValue = 2.8;
-};
-
 let start = () => {
   let togglePathEffect = name =>
     Isolinear.Effect.create(
@@ -26,53 +17,16 @@ let start = () => {
       },
     );
 
-  let zoomEffect = (state: State.t, getCalculatedZoomValue, _) =>
-    Isolinear.Effect.createWithDispatch(~name="window.zoom", dispatch => {
-      let configuration = state.configuration;
-      let currentZoomValue =
-        Configuration.getValue(c => c.uiZoom, configuration);
-
-      let calculatedZoomValue = getCalculatedZoomValue(currentZoomValue);
-      let newZoomValue =
-        Utility.IntEx.clamp(
-          calculatedZoomValue,
-          ~hi=Constants.maxZoomValue,
-          ~lo=Constants.minZoomValue,
-        );
-
-      if (newZoomValue != currentZoomValue) {
-        dispatch(
-          ConfigurationSet({
-            ...configuration,
-            default: {
-              ...configuration.default,
-              uiZoom: newZoomValue,
-            },
-          }),
-        );
-      };
-    });
-
   let openChangelogEffect = _ =>
     Isolinear.Effect.createWithDispatch(~name="oni.changelog", dispatch => {
-      dispatch(OpenFileByPath(BufferPath.changelog, None, None))
+      dispatch(
+        OpenFileByPath(BufferPath.changelog, SplitDirection.Current, None),
+      )
     });
 
   let commands = [
     ("system.addToPath", _ => togglePathEffect),
     ("system.removeFromPath", _ => togglePathEffect),
-    (
-      "workbench.action.zoomIn",
-      state => zoomEffect(state, zoom => zoom +. Constants.zoomStep),
-    ),
-    (
-      "workbench.action.zoomOut",
-      state => zoomEffect(state, zoom => zoom -. Constants.zoomStep),
-    ),
-    (
-      "workbench.action.zoomReset",
-      state => zoomEffect(state, _zoom => Constants.defaultZoomValue),
-    ),
     ("oni.changelog", _ => openChangelogEffect),
   ];
 
@@ -88,17 +42,7 @@ let start = () => {
 
   let updater = (state: State.t, action) => {
     switch (action) {
-    | EnableKeyDisplayer => (
-        {...state, keyDisplayer: Some(KeyDisplayer.initial)},
-        Isolinear.Effect.none,
-      )
-
-    | DisableKeyDisplayer => (
-        {...state, keyDisplayer: None},
-        Isolinear.Effect.none,
-      )
-
-    | Command(cmd) =>
+    | CommandInvoked({command: cmd, _}) =>
       switch (StringMap.find_opt(cmd, commandMap)) {
       | Some(v) => (state, v(state, cmd))
       | None => (state, Isolinear.Effect.none)

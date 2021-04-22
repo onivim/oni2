@@ -23,9 +23,12 @@ let li =
        },
        [],
      )
-  |> Exthost.LanguageInfo.ofExtensions;
+  |> (
+    extensions =>
+      Exthost.(LanguageInfo.addExtensions(extensions, LanguageInfo.initial))
+  );
 
-let buf = Buffer.ofLines([|"#!/bin/bash", "ls *"|]);
+let buf = Buffer.ofLines(~font=Font.default(), [|"#!/bin/bash", "ls *"|]);
 
 describe("LanguageInfo", ({describe, _}) => {
   describe("get language from file path", ({test, _}) => {

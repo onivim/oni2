@@ -6,9 +6,8 @@ open Oni_Core;
 module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 
 module FontIcon = Oni_Components.FontIcon;
-module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Diagnostics = Feature_LanguageSupport.Diagnostics;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Diagnostics = Feature_Diagnostics;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Styles = {
   open Style;
@@ -23,25 +22,33 @@ module Styles = {
   ];
 };
 
-let completionsView =
+let signatureHelpView =
     (
-      ~languageSupport,
       ~cursorPixelX,
       ~cursorPixelY,
+      ~languageSupport,
       ~theme,
       ~tokenTheme,
       ~editorFont: Service_Font.font,
+      ~uiFont: UiFont.t,
+      ~languageInfo,
+      ~buffer,
+      ~grammars,
+      ~dispatch,
       (),
     ) =>
-  Feature_LanguageSupport.Completion.isActive(languageSupport)
-    ? <Feature_LanguageSupport.Completion.View
+  Feature_LanguageSupport.SignatureHelp.isActive(languageSupport)
+    ? <Feature_LanguageSupport.SignatureHelp.View
         x=cursorPixelX
         y=cursorPixelY
-        lineHeight={editorFont.measuredHeight}
         theme
         tokenTheme
         editorFont
-        //colors
+        uiFont
+        languageInfo
+        buffer
+        grammars
+        dispatch
         model=languageSupport
       />
     : React.empty;
@@ -49,34 +56,39 @@ let completionsView =
 let make =
     (
       ~isActiveSplit,
-      ~cursorPosition: Location.t,
+      ~cursorPosition: CharacterPosition.t,
       ~editor: Editor.t,
       ~gutterWidth,
       ~theme,
       ~tokenTheme,
       ~languageSupport,
       ~editorFont: Service_Font.font,
+      ~uiFont,
+      ~buffer,
+      ~languageInfo,
+      ~grammars,
       (),
     ) => {
-  let ({pixelX, pixelY}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(
-      ~line=Index.toZeroBased(cursorPosition.line),
-      ~byteIndex=Index.toZeroBased(cursorPosition.column),
-      editor,
-    );
+  let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
+    Editor.bufferCharacterPositionToPixel(~position=cursorPosition, editor);
 
   let cursorPixelY = pixelY |> int_of_float;
   let cursorPixelX = pixelX +. gutterWidth |> int_of_float;
 
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
-        <completionsView
+        <signatureHelpView
           languageSupport
           cursorPixelX
           cursorPixelY
           theme
           tokenTheme
           editorFont
+          uiFont
+          buffer
+          languageInfo
+          dispatch={_ => ()}
+          grammars
         />
       </View>
     : React.empty;

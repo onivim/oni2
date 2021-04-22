@@ -6,6 +6,9 @@ module OptionEx = Core.Utility.OptionEx;
 
 module Log = (val Core.Log.withNamespace("Oni2.Service_Syntax"));
 
+module BufferTracker =
+  Oni_Core.BufferTracker.Make({});
+
 module Constants = {
   let defaultScope = "source.text";
 };
@@ -175,6 +178,7 @@ module Sub = {
       type nonrec params = bufferParams;
 
       type state = {
+        lastScope: string,
         lastVisibleRanges: list(Range.t),
         unsubscribe: unit => unit,
       };
@@ -182,11 +186,12 @@ module Sub = {
       let name = "BufferSubscription";
       let id = params => {
         let bufferId = params.buffer |> Core.Buffer.getId |> string_of_int;
-        bufferId ++ params.scope;
+        bufferId;
       };
 
       let init = (~params, ~dispatch) => {
         let bufferId = Core.Buffer.getId(params.buffer);
+        BufferTracker.startTracking(bufferId);
         let unsubscribe =
           Internal.subscribe(bufferId, tokenUpdates => {
             dispatch(ReceivedHighlights(tokenUpdates))
@@ -202,13 +207,27 @@ module Sub = {
           params.client,
         );
 
-        {lastVisibleRanges: params.visibleRanges, unsubscribe};
+        {
+          lastVisibleRanges: params.visibleRanges,
+          unsubscribe,
+          lastScope: params.scope,
+        };
       };
 
       let update = (~params, ~state, ~dispatch as _) => {
         let currentVisibleRanges = state.lastVisibleRanges;
 
-        if (currentVisibleRanges != params.visibleRanges) {
+        if (state.lastScope != params.scope) {
+          let bufferId = Core.Buffer.getId(params.buffer);
+          Oni_Syntax_Client.stopHighlightingBuffer(~bufferId, params.client);
+          Oni_Syntax_Client.startHighlightingBuffer(
+            ~scope=params.scope,
+            ~bufferId,
+            ~visibleRanges=params.visibleRanges,
+            ~lines=Core.Buffer.getLines(params.buffer),
+            params.client,
+          );
+        } else if (currentVisibleRanges != params.visibleRanges) {
           Oni_Syntax_Client.notifyBufferVisibilityChanged(
             ~bufferId=Core.Buffer.getId(params.buffer),
             ~ranges=params.visibleRanges,
@@ -216,12 +235,17 @@ module Sub = {
           );
         };
 
-        {...state, lastVisibleRanges: params.visibleRanges};
+        {
+          ...state,
+          lastVisibleRanges: params.visibleRanges,
+          lastScope: params.scope,
+        };
       };
 
       let dispose = (~params, ~state) => {
         state.unsubscribe();
         let bufferId = Core.Buffer.getId(params.buffer);
+        BufferTracker.stopTracking(bufferId);
         Log.infof(m => m("Stopping buffer subscription for: %d", bufferId));
         Oni_Syntax_Client.stopHighlightingBuffer(~bufferId, params.client);
       };
@@ -231,11 +255,23 @@ module Sub = {
     let scope =
       buffer
       |> Core.Buffer.getFileType
-      |> OptionEx.flatMap(
-           Exthost.LanguageInfo.getScopeFromLanguage(languageInfo),
-         )
+      |> Core.Buffer.FileType.toString
+      |> Exthost.LanguageInfo.getScopeFromLanguage(languageInfo)
       |> Option.value(~default=Constants.defaultScope);
 
     BufferSubscription.create({client, buffer, scope, visibleRanges});
+  };
+};
+
+module Effect = {
+  let bufferUpdate = (~client, ~bufferUpdate: Core.BufferUpdate.t) => {
+    Isolinear.Effect.create(~name="service.syntax.bufferUpdate", () => {
+      let bufferId = bufferUpdate.id;
+      if (BufferTracker.isTracking(bufferId)) {
+        Oni_Syntax_Client.notifyBufferUpdate(~bufferUpdate, client);
+      } else {
+        ();
+      };
+    });
   };
 };

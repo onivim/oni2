@@ -107,20 +107,36 @@ let start = () => {
       Lwt.wakeup_exn(resolver, MenuCancelled)
     });
 
-  let makeBufferCommands = (languageInfo, iconTheme, buffers) => {
-    let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
+  let makeBufferCommands =
+      (layout, workspace, languageInfo, iconTheme, buffers) => {
+    // Get visible buffers
+
+    let bufferIds: IntSet.t =
+      layout
+      |> Feature_Layout.activeLayoutGroups
+      |> List.map(Feature_Layout.Group.allEditors)
+      |> List.flatten
+      |> List.map(Feature_Editor.Editor.getBufferId)
+      |> List.fold_left(
+           (acc, curr) => {IntSet.add(curr, acc)},
+           IntSet.empty,
+         );
+    // Get the current workspace, if available
+    let maybeWorkspace = Feature_Workspace.openedFolder(workspace);
 
     buffers
-    |> IntMap.to_seq
-    |> Seq.map(snd)
-    |> List.of_seq
+    |> Feature_Buffers.all
+    |> List.filter(buffer => IntSet.mem(Buffer.getId(buffer), bufferIds))
     // Sort by most recerntly used
     |> List.fast_sort((a, b) =>
          - Float.compare(Buffer.getLastUsed(a), Buffer.getLastUsed(b))
        )
     |> List.filter_map(buffer => {
          let maybeName =
-           Buffer.getMediumFriendlyName(~workingDirectory, buffer);
+           Buffer.getMediumFriendlyName(
+             ~workingDirectory=?maybeWorkspace,
+             buffer,
+           );
          let maybePath = Buffer.getFilePath(buffer);
 
          OptionEx.map2(
@@ -129,9 +145,14 @@ let start = () => {
                category: None,
                name,
                command: () => {
-                 Actions.OpenFileByPath(path, None, None);
+                 Actions.OpenFileByPath(path, SplitDirection.Current, None);
                },
-               icon: FileExplorer.getFileIcon(languageInfo, iconTheme, path),
+               icon:
+                 Component_FileExplorer.getFileIcon(
+                   ~languageInfo,
+                   ~iconTheme,
+                   path,
+                 ),
                highlight: [],
                handle: None,
              },
@@ -143,7 +164,7 @@ let start = () => {
   };
 
   let typeToSearchInput =
-    Feature_InputText.create(~placeholder="type to search...");
+    Component_InputText.create(~placeholder="type to search...");
 
   let menuUpdater =
       (
@@ -152,6 +173,8 @@ let start = () => {
         buffers,
         languageInfo,
         iconTheme,
+        layout,
+        workspace,
         commands,
         menus,
         contextKeys,
@@ -169,7 +192,14 @@ let start = () => {
       )
 
     | QuickmenuShow(EditorsPicker) =>
-      let items = makeBufferCommands(languageInfo, iconTheme, buffers);
+      let items =
+        makeBufferCommands(
+          layout,
+          workspace,
+          languageInfo,
+          iconTheme,
+          buffers,
+        );
 
       (
         Some({
@@ -180,11 +210,6 @@ let start = () => {
         Isolinear.Effect.none,
       );
 
-    | QuickmenuShow(DocumentSymbols) => (
-        Some({...Quickmenu.defaults(DocumentSymbols), focused: Some(0)}),
-        Isolinear.Effect.none,
-      )
-
     | QuickmenuShow(Extension({id, hasItems, resolver})) => (
         Some({
           ...Quickmenu.defaults(Extension({id, hasItems, resolver})),
@@ -193,16 +218,33 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(FilesPicker) => (
-        Some({
-          ...Quickmenu.defaults(FilesPicker),
-          filterProgress: Loading,
-          ripgrepProgress: Loading,
-          inputText: typeToSearchInput,
-          focused: Some(0),
-        }),
-        Isolinear.Effect.none,
-      )
+    | QuickmenuShow(FilesPicker) =>
+      if (Feature_Workspace.openedFolder(workspace) == None) {
+        let items =
+          makeBufferCommands(
+            layout,
+            workspace,
+            languageInfo,
+            iconTheme,
+            buffers,
+          );
+
+        (
+          Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
+          Isolinear.Effect.none,
+        );
+      } else {
+        (
+          Some({
+            ...Quickmenu.defaults(FilesPicker),
+            filterProgress: Loading,
+            ripgrepProgress: Loading,
+            inputText: typeToSearchInput,
+            focused: Some(0),
+          }),
+          Isolinear.Effect.none,
+        );
+      }
 
     | QuickmenuShow(Wildmenu(cmdType)) => (
         Some({
@@ -212,30 +254,25 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(ThemesPicker(themes)) =>
+    | QuickmenuShow(OpenBuffersPicker) =>
       let items =
-        themes
-        |> List.map((theme: ExtensionContributions.Theme.t) => {
-             Actions.{
-               category: Some("Theme"),
-               name: theme.label,
-               command: () => ThemeLoadByName(theme.label),
-               icon: None,
-               highlight: [],
-               handle: None,
-             }
-           })
-        |> Array.of_list;
+        makeBufferCommands(
+          layout,
+          workspace,
+          languageInfo,
+          iconTheme,
+          buffers,
+        );
 
       (
-        Some({...Quickmenu.defaults(ThemesPicker(themes)), items}),
+        Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
         Isolinear.Effect.none,
       );
 
     | QuickmenuPaste(text) => (
         Option.map(
           (Quickmenu.{inputText, _} as state) => {
-            let inputText = Feature_InputText.paste(~text, inputText);
+            let inputText = Component_InputText.paste(~text, inputText);
 
             Quickmenu.{...state, inputText, focused: Some(0)};
           },
@@ -246,7 +283,7 @@ let start = () => {
     | QuickmenuInput(key) => (
         Option.map(
           (Quickmenu.{inputText, _} as state) => {
-            let inputText = Feature_InputText.handleInput(~key, inputText);
+            let inputText = Component_InputText.handleInput(~key, inputText);
 
             Quickmenu.{...state, inputText, focused: Some(0)};
           },
@@ -260,10 +297,13 @@ let start = () => {
           (Quickmenu.{variant, inputText, _} as state) => {
             switch (variant) {
             | Wildmenu(_) =>
-              let oldPosition = inputText |> Feature_InputText.cursorPosition;
+              let oldPosition =
+                inputText |> Component_InputText.cursorPosition;
 
-              let inputText = Feature_InputText.update(msg, inputText);
-              let newPosition = inputText |> Feature_InputText.cursorPosition;
+              let (inputText, _) =
+                Component_InputText.update(msg, inputText);
+              let newPosition =
+                inputText |> Component_InputText.cursorPosition;
               let transition = newPosition - oldPosition;
 
               if (transition > 0) {
@@ -295,7 +335,7 @@ let start = () => {
             Quickmenu.{
               ...state,
               inputText:
-                Feature_InputText.set(~text, ~cursor, state.inputText),
+                Component_InputText.set(~text, ~cursor, state.inputText),
             },
           state,
         ),
@@ -441,21 +481,46 @@ let start = () => {
     };
   };
 
-  let updater = (state: State.t, action: Actions.t) => {
-    let (menuState, menuEffect) =
-      menuUpdater(
-        state.quickmenu,
-        action,
-        state.buffers,
-        state.languageInfo,
-        state.iconTheme,
-        State.commands(state),
-        State.menus(state),
-        WhenExpr.ContextKeys.fromSchema(ContextKeys.all, state),
-      );
+  let updater = (state: State.t, action: Actions.t) =>
+    // Transition menus to this new-style quickmenu
+    if (Feature_Quickmenu.isMenuOpen(state.newQuickmenu)) {
+      switch (action) {
+      | ListFocusUp =>
+        let (newQuickmenu, eff) = Feature_Quickmenu.prev(state.newQuickmenu);
+        ({...state, newQuickmenu}, eff);
+      | ListFocusDown =>
+        let (newQuickmenu, eff) = Feature_Quickmenu.next(state.newQuickmenu);
+        ({...state, newQuickmenu}, eff);
+      | ListSelect =>
+        let (newQuickmenu, eff) =
+          Feature_Quickmenu.select(state.newQuickmenu);
+        ({...state, newQuickmenu}, eff);
+      | QuickmenuClose => (
+          {
+            ...state,
+            newQuickmenu: Feature_Quickmenu.cancel(state.newQuickmenu),
+          },
+          Isolinear.Effect.none,
+        )
+      | _ => (state, Isolinear.Effect.none)
+      };
+    } else {
+      let (menuState, menuEffect) =
+        menuUpdater(
+          state.quickmenu,
+          action,
+          state.buffers,
+          state.languageSupport |> Feature_LanguageSupport.languageInfo,
+          state.iconTheme,
+          state.layout,
+          state.workspace,
+          CommandManager.current(state),
+          MenuManager.current(state),
+          ContextKeys.all(state),
+        );
 
-    ({...state, quickmenu: menuState}, menuEffect);
-  };
+      ({...state, quickmenu: menuState}, menuEffect);
+    };
 
   updater;
 };
@@ -478,7 +543,7 @@ let subscriptions = (ripgrep, dispatch) => {
       ~onUpdate=(items, ~progress) => {
         let items =
           items
-          |> List.map((Filter.{item, highlight}) =>
+          |> List.map((Filter.{item, highlight, _}) =>
                ({...item, highlight}: Actions.menuItem)
              )
           |> Array.of_list;
@@ -490,72 +555,79 @@ let subscriptions = (ripgrep, dispatch) => {
     );
   };
 
-  let documentSymbols = (languageFeatures, buffer) => {
-    DocumentSymbolSubscription.create(
-      ~id="document-symbols", ~buffer, ~languageFeatures, ~onUpdate=items => {
-      addItems(items)
-    });
-  };
-
-  let ripgrep = (languageInfo, iconTheme, configuration) => {
+  let ripgrep = (workspace, languageInfo, iconTheme, configuration) => {
     let filesExclude =
-      Configuration.getValue(c => c.filesExclude, configuration);
-    let directory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
+      Feature_Configuration.Legacy.getValue(
+        c => c.filesExclude,
+        configuration,
+      );
 
-    let stringToCommand = (languageInfo, iconTheme, fullPath) =>
-      Actions.{
-        category: None,
-        name: Path.toRelative(~base=directory, fullPath),
-        command: () => Actions.OpenFileByPath(fullPath, None, None),
-        icon: FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
-        highlight: [],
-        handle: None,
-      };
+    switch (Feature_Workspace.openedFolder(workspace)) {
+    | None =>
+      // It's not really clear what the behavior should be for the ripgrep subscription w/o
+      // an opened workspace / folder. In the current logic, we shouldn't ever get here -
+      // when opening the 'files picker', if there is no workspace, we'll open the 'buffers picker'
+      // instead.
+      []
+    | Some(directory) =>
+      let stringToCommand = (languageInfo, iconTheme, fullPath) =>
+        Actions.{
+          category: None,
+          name: Path.toRelative(~base=directory, fullPath),
+          command: () =>
+            Actions.OpenFileByPath(fullPath, SplitDirection.Current, None),
+          icon:
+            Component_FileExplorer.getFileIcon(
+              ~languageInfo,
+              ~iconTheme,
+              fullPath,
+            ),
+          highlight: [],
+          handle: None,
+        };
+      [
+        RipgrepSubscription.create(
+          ~id="workspace-search",
+          ~filesExclude,
+          ~directory,
+          ~ripgrep,
+          ~onUpdate=
+            items => {
+              items
+              |> List.map(stringToCommand(languageInfo, iconTheme))
+              |> addItems;
 
-    RipgrepSubscription.create(
-      ~id="workspace-search",
-      ~filesExclude,
-      ~directory,
-      ~ripgrep,
-      ~onUpdate=
-        items => {
-          items
-          |> List.map(stringToCommand(languageInfo, iconTheme))
-          |> addItems;
-
-          dispatch(Actions.QuickmenuUpdateRipgrepProgress(Loading));
-        },
-      ~onComplete=() => Actions.QuickmenuUpdateRipgrepProgress(Complete),
-      ~onError=_ => Actions.Noop,
-    );
+              dispatch(Actions.QuickmenuUpdateRipgrepProgress(Loading));
+            },
+          ~onComplete=() => Actions.QuickmenuUpdateRipgrepProgress(Complete),
+          ~onError=_ => Actions.Noop,
+        ),
+      ];
+    };
   };
 
   let updater = (state: State.t) => {
     switch (state.quickmenu) {
     | Some(quickmenu) =>
-      let query = quickmenu.inputText |> Feature_InputText.value;
+      let query = quickmenu.inputText |> Component_InputText.value;
       switch (quickmenu.variant) {
       | CommandPalette
       | EditorsPicker
-      | ThemesPicker(_) => [filter(query, quickmenu.items)]
+      | OpenBuffersPicker => [filter(query, quickmenu.items)]
 
       | Extension({hasItems, _}) =>
         hasItems ? [filter(query, quickmenu.items)] : []
 
-      | FilesPicker => [
-          filter(query, quickmenu.items),
-          ripgrep(state.languageInfo, state.iconTheme, state.configuration),
-        ]
+      | FilesPicker =>
+        [filter(query, quickmenu.items)]
+        @ ripgrep(
+            state.workspace,
+            state.languageSupport |> Feature_LanguageSupport.languageInfo,
+            state.iconTheme,
+            state.config,
+          )
 
       | Wildmenu(_) => []
-      | DocumentSymbols =>
-        switch (Selectors.getActiveBuffer(state)) {
-        | Some(buffer) => [
-            filter(query, quickmenu.items),
-            documentSymbols(state.languageFeatures, buffer),
-          ]
-        | None => []
-        }
       };
 
     | None => []
