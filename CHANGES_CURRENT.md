@@ -9,6 +9,7 @@
 - #3440 - Indentation: Easier space/tab indentation switching
 - #3337 - Proxy: Add configuration for proxies (fixes #3314, #2660)
 - #3419 - Buffers: Implement auto-save functionality (fixes #2431)
+- #3430 - Buffers: Implement workbench.action.quickOpenBuffer (fixes #3413)
 
 ### Bug Fixes
 
@@ -58,7 +59,6 @@
 - #3422 - Input: Fix terminal key binding not working as expected (fixes #2778)
 - #3435 - Completion: Fix various mouse interactions (fixes #3428)
 - #3439 - Hover: Remove textOverflow(Ellipsis) from hover
-- #3430 - Buffers: Implement action.workbench.quickOpenBuffer (fixes #3413)
 - #3442 - Buffers: Fix regression causing control+tab menu not to stay open (related #3442)
 
 ### Performance
