@@ -31,6 +31,8 @@ jobs:
 
 - job: Hygiene_Checks
   displayName: 'Hygiene Checks'
+  # Run if not master - don't need to run hygiene checks for 'master' builds, just for PR validation
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   timeoutInMinutes: 0
   pool:
     vmImage: 'macOS 10.14'
