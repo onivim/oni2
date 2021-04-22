@@ -80,6 +80,7 @@
 - #3334 - Dependency: Revery -> b746d68 (thanks @timbertson !)
 - #3385 - Dependency: Revery -> 4337e2c
 - #3408 - Dependency: Revery -> 373b087
+- #3446 - Dependency: Upgrade dune, isolinear, and revery-terminal to prep for compiler upgrade
 
 ### Infrastructure
 
