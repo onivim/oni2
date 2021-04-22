@@ -83,7 +83,6 @@ module Schema = {
 };
 
 module Upgrader = {
-  module Log = (val Oni_Core.Log.withNamespace("Oni2.Core.JsonUpgrader"));
   type t = {
     name: string,
     fromVersion: int,
@@ -161,49 +160,57 @@ module Store = {
     version: int,
   };
 
-  let read = (~upgraders, store) =>
+  let read = (~upgraders, store) => {
+    let build = json => {
+      let json =
+        Upgrader.doUpgrade(~targetVersion=store.version, ~upgraders, json);
+
+      switch (Json.Decode.(decode_value(key_value_pairs(value), json))) {
+      | Ok(persistedEntries) =>
+        List.iter(
+          (Entry({definition, _} as entry)) =>
+            switch (List.assoc_opt(definition.key, persistedEntries)) {
+            | Some(value) =>
+              switch (
+                Json.Decode.decode_value(definition.codec.decode, value)
+              ) {
+              | Ok(value) => entry.value = value
+              | Error(error) =>
+                let message = Json.Decode.string_of_error(error);
+                Log.error("Error decoding store file: " ++ message);
+                entry.value = definition.default;
+              }
+            | None => entry.value = definition.default
+            },
+          store.entries,
+        )
+
+      | Error(error) =>
+        let message = Json.Decode.string_of_error(error);
+        Log.error("Error parsing store file: " ++ message);
+      };
+    };
+
+    let empty = `Assoc([]);
     switch (store.filePath) {
     | Some(filePath) =>
       switch (Yojson.Safe.from_file(filePath)) {
-      | json =>
-        let json =
-          Upgrader.doUpgrade(~targetVersion=store.version, ~upgraders, json);
-
-        switch (Json.Decode.(decode_value(key_value_pairs(value), json))) {
-        | Ok(persistedEntries) =>
-          List.iter(
-            (Entry({definition, _} as entry)) =>
-              switch (List.assoc_opt(definition.key, persistedEntries)) {
-              | Some(value) =>
-                switch (
-                  Json.Decode.decode_value(definition.codec.decode, value)
-                ) {
-                | Ok(value) => entry.value = value
-                | Error(error) =>
-                  let message = Json.Decode.string_of_error(error);
-                  Log.error("Error decoding store file: " ++ message);
-                  entry.value = definition.default;
-                }
-              | None => entry.value = definition.default
-              },
-            store.entries,
-          )
-
-        | Error(error) =>
-          let message = Json.Decode.string_of_error(error);
-          Log.error("Error parsing store file: " ++ message);
-        };
+      | json => build(json)
       | exception (Sys_error(message)) =>
         // Most likely because the file doesn't exist, which is expected, but log it just in case.
-        Log.debug("Unable to read store file: " ++ message)
+        Log.debug("Unable to read store file: " ++ message);
+        build(empty);
       | exception exn =>
         // Other exceptions would be unexpected here, but could happen with extraordinary circumstances,
         // ie a corrupted store file: https://github.com/onivim/oni2/1766
-        Log.error(Printexc.to_string(exn))
+        Log.error(Printexc.to_string(exn));
+        build(empty);
       }
     | None =>
-      Log.warn("Unable to read store due to no path. See previous error.")
+      Log.warn("Unable to read store due to no path. See previous error.");
+      build(empty);
     };
+  };
 
   let instantiate = (~version, ~upgraders, ~storeFolder=?, name, entries) => {
     let hash = Internal.hash(name);
