@@ -29,7 +29,7 @@ module Global = {
   let store =
     lazy(
       {
-        instantiate("global", () =>
+        instantiate(~version=0, ~upgraders=[], "global", () =>
           Schema.[
             entry(version),
             entry(workspace),
@@ -90,8 +90,27 @@ module Workspace = {
 
   include Persistence.Store;
 
+  module Upgraders = {
+    let version0To1ClearWindowPosition =
+      Persistence.Upgrader.define(
+        ~name="0 -> 1: Clear Window Position",
+        ~fromVersion=0,
+        ~toVersion=1,
+        json => {
+          let clearWindowX = Utility.JsonEx.update("windowX", _ => None);
+          let clearWindowY = Utility.JsonEx.update("windowY", _ => None);
+
+          json |> clearWindowX |> clearWindowY;
+        },
+      );
+  };
+
   let instantiate = path =>
-    instantiate(path, () =>
+    instantiate(
+      ~version=1,
+      ~upgraders=[Upgraders.version0To1ClearWindowPosition],
+      path,
+      () =>
       Schema.[
         entry(windowX),
         entry(windowY),

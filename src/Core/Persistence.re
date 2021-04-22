@@ -82,6 +82,67 @@ module Schema = {
   };
 };
 
+module Upgrader = {
+  module Log = (val Oni_Core.Log.withNamespace("Oni2.Core.JsonUpgrader"));
+  type t = {
+    name: string,
+    fromVersion: int,
+    toVersion: int,
+    upgrader: Yojson.Safe.t => Yojson.Safe.t,
+  };
+
+  let define = (~name, ~fromVersion, ~toVersion, upgrader) => {
+    name,
+    fromVersion,
+    toVersion,
+    upgrader,
+  };
+
+  let doUpgrade = (~targetVersion, ~upgraders, json) => {
+    let currentVersion =
+      switch (Yojson.Safe.Util.member("$version", json)) {
+      | `Int(i) => i
+      | `Float(f) => int_of_float(f)
+      | _ => 0
+      };
+
+    let rec loop = (currentJson, currentVersion, targetVersion) =>
+      if (currentVersion >= targetVersion) {
+        Log.infof(m => m("Json is at target version of %d", targetVersion));
+        (currentJson, currentVersion);
+      } else {
+        let maybeCandidateUpgrader =
+          upgraders
+          |> List.filter(({fromVersion, _}) =>
+               fromVersion == currentVersion
+             )
+          |> ListEx.nth_opt(0);
+
+        switch (maybeCandidateUpgrader) {
+        | None =>
+          Log.warnf(m =>
+            m("No candidate upgrader found for version %d", currentVersion)
+          );
+          (currentJson, currentVersion);
+        | Some({upgrader, toVersion, name, fromVersion}) =>
+          Log.infof(m =>
+            m("Running upgrader %s (%d -> %d)", name, fromVersion, toVersion)
+          );
+          let json' = upgrader(currentJson);
+          let newVersion = toVersion;
+          loop(json', newVersion, targetVersion);
+        };
+      };
+
+    let (resultJson, resultVersion) =
+      loop(json, currentVersion, targetVersion);
+
+    Log.infof(m => m("Ended at version: %d", resultVersion));
+
+    resultJson |> JsonEx.update("$version", _ => Some(`Int(resultVersion)));
+  };
+};
+
 module Store = {
   type entry('state) =
     | Entry({
@@ -97,13 +158,17 @@ module Store = {
     hash: string,
     filePath: option(string),
     entries: list(entry('state)),
+    version: int,
   };
 
-  let read = store =>
+  let read = (~upgraders, store) =>
     switch (store.filePath) {
     | Some(filePath) =>
       switch (Yojson.Safe.from_file(filePath)) {
       | json =>
+        let json =
+          Upgrader.doUpgrade(~targetVersion=store.version, ~upgraders, json);
+
         switch (Json.Decode.(decode_value(key_value_pairs(value), json))) {
         | Ok(persistedEntries) =>
           List.iter(
@@ -127,7 +192,7 @@ module Store = {
         | Error(error) =>
           let message = Json.Decode.string_of_error(error);
           Log.error("Error parsing store file: " ++ message);
-        }
+        };
       | exception (Sys_error(message)) =>
         // Most likely because the file doesn't exist, which is expected, but log it just in case.
         Log.debug("Unable to read store file: " ++ message)
@@ -140,7 +205,7 @@ module Store = {
       Log.warn("Unable to read store due to no path. See previous error.")
     };
 
-  let instantiate = (~storeFolder=?, name, entries) => {
+  let instantiate = (~version, ~upgraders, ~storeFolder=?, name, entries) => {
     let hash = Internal.hash(name);
     let storeFolderResult =
       switch (storeFolder) {
@@ -161,9 +226,15 @@ module Store = {
            },
          );
 
-    let store = {name, hash, filePath: maybeFilePath, entries: entries()};
+    let store = {
+      name,
+      hash,
+      filePath: maybeFilePath,
+      entries: entries(),
+      version,
+    };
 
-    read(store);
+    read(~upgraders, store);
 
     store;
   };
@@ -185,11 +256,18 @@ module Store = {
   let write = store => {
     Log.debug("Writing store for " ++ store.name);
 
-    let jsonBuffer =
+    let obj =
       store.entries
       |> List.map((Entry({definition, value})) =>
            (definition.key, definition.codec.encode(value))
-         )
+         );
+
+    let objWithVersion = [
+      ("$version", Json.Encode.int(store.version)),
+      ...obj,
+    ];
+    let jsonBuffer =
+      objWithVersion
       |> Json.Encode.encode_string(Json.Encode.obj)
       |> Luv.Buffer.from_string;
 
