@@ -57,6 +57,7 @@ Tested on:
 
 ### Linux (x64)
 
-1. Download `Onivim2-x86_64-master.AppImage`.
-2. `$ chmod u+x Onivim2-x86_64-master.AppImage`.
-3. `$ ./Onivim2-x86_64-master.AppImage`.
+1. Download the Onivim 2 AppImage for Linux.
+2. `$ cd ~/Downloads`
+3. `$ chmod u+x Onivim2-*.AppImage`
+4. `$ ./Onivim2-*.AppImage`
