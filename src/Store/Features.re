@@ -363,6 +363,17 @@ let update =
       action: Actions.t,
     ) =>
   switch (action) {
+  | ClientServer(msg) =>
+    let (clientServer, outmsg) =
+      Feature_ClientServer.update(msg, state.clientServer);
+
+    // TODO
+    let eff =
+      switch (outmsg) {
+      | _ => Isolinear.Effect.none
+      };
+
+    ({...state, clientServer}, eff);
   | Clipboard(msg) =>
     let (model, outmsg) = Feature_Clipboard.update(msg, state.clipboard);
 
