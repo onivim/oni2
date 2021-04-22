@@ -311,6 +311,30 @@ jobs:
     env:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
+- job: ValidateMacOSReleaseBigSur
+  displayName: "MacOS: Validate Release (11.0)"
+  dependsOn: 
+  - Kickoff
+  - MacOS
+  pool:
+    vmImage: 'macOS-11.0'
+  variables:
+    ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
+
+  steps:
+  - script: echo $(ONI2_SHORT_COMMIT_ID)
+  - script: 'echo ArtifactDir: $(System.ArtifactsDirectory)'
+    displayName: 'Echo artifact dir'
+  - task: DownloadBuildArtifacts@0
+    inputs: 
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'Release_Darwin'
+      downloadPath: '$(System.ArtifactsDirectory)'
+  - script: ./scripts/osx/validate-release.sh
+    env:
+      SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
+
 - job: ValidateWindowsRelease
   timeoutInMinutes: 30
   displayName: "Windows: Validate Release"
