@@ -89,3 +89,4 @@
 - #3313 - Packaging: Fix macOS Big Sur release bundling issues (fixes #2813, thanks @brdoney !)
 - #3369 - CI: Install python3 on CentOS dockerfile
 - #3429 - CI: Remove libtools dependency
+- #3450 - CI: Fix esy cache path after upgrade to 0.6.10
