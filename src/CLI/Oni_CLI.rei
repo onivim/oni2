@@ -1,5 +1,10 @@
 open Oni_Core;
 
+type position = {
+  x: int,
+  y: int,
+};
+
 type t = {
   gpuAcceleration: [ | `Auto | `ForceSoftware | `ForceHardware],
   folder: option(string),
@@ -18,6 +23,7 @@ type t = {
   needsConsole: bool,
   proxyServer: Service_Net.Proxy.t,
   vimExCommands: list(string),
+  windowPosition: option(position),
 };
 
 let default: t;
@@ -25,6 +31,7 @@ let default: t;
 type eff =
   | PrintVersion
   | CheckHealth
+  | ListDisplays
   | ListExtensions
   | InstallExtension(string)
   | QueryExtension(string)

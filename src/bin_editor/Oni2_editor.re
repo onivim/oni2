@@ -64,6 +64,7 @@ switch (eff) {
 | CheckHealth =>
   initializeLogging();
   HealthCheck.run(~checks=All, cliOptions) |> exit;
+| ListDisplays => Cli.listDisplays() |> exit
 | ListExtensions => Cli.listExtensions(cliOptions) |> exit
 | StartSyntaxServer({parentPid, namedPipe}) =>
   Oni_Syntax_Server.start(~parentPid, ~namedPipe, ~healthCheck=() =>
@@ -138,6 +139,22 @@ switch (eff) {
     | `Centered => "Centered"
   );
 
+  let maybeWindowPositionX =
+    cliOptions.windowPosition |> Option.map(({x, _}: Oni_CLI.position) => x);
+
+  let defaultPositionX =
+    maybeWindowPositionX
+    |> Option.map(pos => `Absolute(pos))
+    |> Option.value(~default=`Centered);
+
+  let maybeWindowPositionY =
+    cliOptions.windowPosition |> Option.map(({y, _}: Oni_CLI.position) => y);
+
+  let defaultPositionY =
+    maybeWindowPositionY
+    |> Option.map(pos => `Absolute(pos))
+    |> Option.value(~default=`Centered);
+
   let createWindow = (~forceScaleFactor, ~maybeWorkspace, app) => {
     let (x, y, width, height, maximized) = {
       Store.Persistence.Workspace.(
@@ -145,13 +162,15 @@ switch (eff) {
         |> Option.map(workspace => {
              let store = storeFor(FpExp.toString(workspace));
              (
-               windowX(store)
+               maybeWindowPositionX
+               |> OptionEx.or_(windowX(store))
                |> OptionEx.tap(x =>
                     Log.infof(m => m("Unsanitized x value: %d", x))
                   )
                |> OptionEx.filter(isValidPosition)
                |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
-               windowY(store)
+               maybeWindowPositionY
+               |> OptionEx.or_(windowY(store))
                |> OptionEx.tap(y =>
                     Log.infof(m => m("Unsanitized x value: %d", y))
                   )
@@ -162,7 +181,9 @@ switch (eff) {
                windowMaximized(store),
              );
            })
-        |> Option.value(~default=(`Centered, `Centered, 800, 600, false))
+        |> Option.value(
+             ~default=(defaultPositionX, defaultPositionY, 800, 600, false),
+           )
       );
     };
 

@@ -60,6 +60,7 @@
 - #3435 - Completion: Fix various mouse interactions (fixes #3428)
 - #3439 - Hover: Remove textOverflow(Ellipsis) from hover
 - #3442 - Buffers: Fix regression causing control+tab menu not to stay open (related #3442)
+- #3443 - App: Fix broken window positioning w/ multiple monitors (fixes #3349)
 
 ### Performance
 
