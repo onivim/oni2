@@ -195,6 +195,7 @@ module Internal = {
              ~config=resolver,
            );
 
+      let proxy = state.proxy |> Feature_Proxy.configurationChanged(resolver);
       let colorTheme =
         state.colorTheme |> Feature_Theme.configurationChanged(~resolver);
 
@@ -240,6 +241,7 @@ module Internal = {
           languageSupport,
           sideBar,
           layout,
+          proxy,
           vim,
           zen,
           zoom,
@@ -419,7 +421,12 @@ let update =
 
   | Extensions(msg) =>
     let (model, outMsg) =
-      Feature_Extensions.update(~extHostClient, msg, state.extensions);
+      Feature_Extensions.update(
+        ~extHostClient,
+        ~proxy=state.proxy |> Feature_Proxy.proxy,
+        msg,
+        state.extensions,
+      );
     let state = {...state, extensions: model};
     let (state', effect) =
       Feature_Extensions.(
@@ -1013,7 +1020,11 @@ let update =
 
   | Registration(msg) =>
     let (state', outmsg) =
-      Feature_Registration.update(state.registration, msg);
+      Feature_Registration.update(
+        ~proxy=state.proxy |> Feature_Proxy.proxy,
+        state.registration,
+        msg,
+      );
 
     let effect =
       switch (outmsg) {
@@ -1236,6 +1247,14 @@ let update =
           }),
         );
 
+      | ShowIndentationPicker => (
+          state',
+          EffectEx.value(
+            ~name="StatusBar.showIndentationPicker",
+            Actions.Buffers(Feature_Buffers.Msg.statusBarIndentationClicked),
+          ),
+        )
+
       | Effect(eff) => (
           state',
           eff |> Isolinear.Effect.map(msg => Actions.StatusBar(msg)),
@@ -1259,6 +1278,11 @@ let update =
     switch (outmsg) {
     | Nothing => (state, Effect.none)
 
+    | Effect(eff) => (
+        state,
+        eff |> Isolinear.Effect.map(msg => Buffers(msg)),
+      )
+
     | ShowMenu(menuFn) =>
       let languageInfo =
         state.languageSupport |> Feature_LanguageSupport.languageInfo;
@@ -1271,6 +1295,11 @@ let update =
     | NotifyInfo(msg) => (
         state,
         Internal.notificationEffect(~kind=Info, msg),
+      )
+
+    | NotifyError(msg) => (
+        state,
+        Internal.notificationEffect(~kind=Error, msg),
       )
 
     | BufferModifiedSet(id, _) =>
@@ -1425,7 +1454,7 @@ let update =
         };
 
       (state'', Effect.none);
-    | BufferSaved(buffer) =>
+    | BufferSaved({buffer, reason}) =>
       let eff =
         Service_Exthost.Effects.FileSystemEventService.onBufferChanged(
           ~buffer,
@@ -1473,9 +1502,11 @@ let update =
              let config = Selectors.configResolver(state);
              state.languageSupport
              |> Feature_LanguageSupport.bufferSaved(
+                  ~reason,
                   ~isLargeBuffer=
                     Feature_Buffers.isLargeFile(state.buffers, buffer),
                   ~activeBufferId,
+                  ~savedBufferId=Oni_Core.Buffer.getId(buffer),
                   ~config,
                   ~buffer,
                 );
@@ -1499,6 +1530,28 @@ let update =
           |> Isolinear.Effect.map(msg => Actions.LanguageSupport(msg)),
         ]),
       );
+
+    | BufferIndentationChanged({buffer}) =>
+      let bufferId = Buffer.getId(buffer);
+      let layout =
+        Feature_Layout.map(
+          editor =>
+            Feature_Editor.(
+              if (Editor.getBufferId(editor) == bufferId) {
+                // Set buffer recalculates word wrap, which is
+                // what we need if the indentation has changed.
+                Editor.setBuffer(
+                  ~buffer=EditorBuffer.ofBuffer(buffer),
+                  editor,
+                );
+              } else {
+                editor;
+              }
+            ),
+          state.layout,
+        );
+
+      ({...state, layout}, Isolinear.Effect.none);
 
     | BufferUpdated({
         update,
@@ -2335,7 +2388,25 @@ let update =
         state,
         e |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
       )
-    | SettingsChanged => state |> Internal.updateConfiguration
+    | SettingsChanged({name, value}) =>
+      let maybeActiveBuffer = Selectors.getActiveBuffer(state);
+      let bufferEffects =
+        maybeActiveBuffer
+        |> Option.map(activeBuffer => {
+             Feature_Buffers.vimSettingChanged(
+               ~activeBufferId=Buffer.getId(activeBuffer),
+               ~name,
+               ~value,
+               state.buffers,
+             )
+             |> Isolinear.Effect.map(msg => Buffers(msg))
+           })
+        |> Option.value(~default=Isolinear.Effect.none);
+
+      let (state, eff) = state |> Internal.updateConfiguration;
+
+      (state, Isolinear.Effect.batch([eff, bufferEffects]));
+
     | ModeDidChange({allowAnimation, mode, effects}) =>
       Internal.updateMode(~allowAnimation, state, mode, effects)
     | Output({cmd, output}) =>

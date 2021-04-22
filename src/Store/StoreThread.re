@@ -147,6 +147,7 @@ let start =
       ~config=getState().config,
       ~extensions,
       ~setup,
+      ~proxy=getState().proxy |> Feature_Proxy.proxy,
     );
 
   // TODO: How to handle this correctly?
@@ -389,6 +390,7 @@ let start =
       Feature_SideBar.selected(state.sideBar) == Feature_SideBar.Extensions;
     let extensionsSub =
       Feature_Extensions.sub(
+        ~proxy=state.proxy |> Feature_Proxy.proxy,
         ~isVisible=isSideBarOpen && isExtensionsFocused,
         ~setup,
         state.extensions,
@@ -471,9 +473,15 @@ let start =
          })
       |> Isolinear.Sub.batch;
 
+    let maybeFocusedBuffer =
+      Model.Selectors.getFocusedBuffer(state)
+      |> Option.map(Oni_Core.Buffer.getId);
     let bufferSub =
       state.buffers
-      |> Feature_Buffers.sub
+      |> Feature_Buffers.sub(
+           ~isWindowFocused=state.windowIsFocused,
+           ~maybeFocusedBuffer,
+         )
       |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
 
     let quickmenuSub =

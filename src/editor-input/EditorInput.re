@@ -694,29 +694,33 @@ module Make = (Config: {
     let id = KeyDownId.get();
     let pressedScancodes = IntSet.add(scancode, bindings.pressedScancodes);
 
-    let (model, effects) =
-      handleKeyCore(
-        ~allowRemaps=true,
-        ~leaderKey,
-        ~context,
-        Down(id, key),
-        {...bindings, pressedScancodes},
-      );
+    // #2778 - Don't allow modifiers to interrupt candidate bindings
+    if (!KeyCandidate.isModifier(key)) {
+      let (model, effects) =
+        handleKeyCore(
+          ~allowRemaps=true,
+          ~leaderKey,
+          ~context,
+          Down(id, key),
+          {...bindings, pressedScancodes},
+        );
 
-    let isUnhandled =
-      switch (effects) {
-      | [Unhandled({isProducedByRemap: false, _})] => true
-      | _ => false
-      };
+      let isUnhandled =
+        switch (effects) {
+        | [Unhandled({isProducedByRemap: false, _})] => true
+        | _ => false
+        };
 
-    let model' =
-      if (isUnhandled) {
-        {...model, suppressText: false};
-      } else {
-        model;
-      };
-
-    (model', effects);
+      let model' =
+        if (isUnhandled) {
+          {...model, suppressText: false};
+        } else {
+          model;
+        };
+      (model', effects);
+    } else {
+      ({...bindings, pressedScancodes}, []);
+    };
   };
 
   let text = (~text, bindings) =>

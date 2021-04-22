@@ -8,8 +8,8 @@
     "test": "jest"
   },
   "dependencies": {
+    "@onivim/request-light": "0.4.1",
     "@onivim/vscode-exthost": "1.53.0",
-    "follow-redirects": "1.13.2",
     "fs-extra": "^8.1.0",
     "sudo-prompt": "^9.0.0",
     "yauzl": "^2.5.1"

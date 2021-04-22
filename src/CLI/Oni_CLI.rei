@@ -16,6 +16,7 @@ type t = {
   logFilter: option(string),
   logColorsEnabled: option(bool),
   needsConsole: bool,
+  proxyServer: Service_Net.Proxy.t,
   vimExCommands: list(string),
 };
 

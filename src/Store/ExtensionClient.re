@@ -5,7 +5,14 @@ open Oni_Model;
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
 let create =
-    (~initialWorkspace, ~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
+    (
+      ~initialWorkspace,
+      ~attachStdio,
+      ~config,
+      ~extensions,
+      ~setup: Setup.t,
+      ~proxy: Service_Net.Proxy.t,
+    ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   Log.infof(m =>
@@ -26,7 +33,17 @@ let create =
       | Initialized =>
         dispatch(Actions.Exthost(Feature_Exthost.Msg.initialized));
         Lwt.return(Reply.okEmpty);
-      | DownloadService(msg) => Middleware.download(msg)
+      | DownloadService(Download({uri, dest})) =>
+        let uri = uri |> Oni_Core.Uri.toString;
+        let dest = dest |> Oni_Core.Uri.toFileSystemPath;
+
+        Service_Net.Request.download(
+          ~proxy,
+          ~dest,
+          ~setup=Oni_Core.Setup.init(),
+          uri,
+        )
+        |> Lwt.map(_ => Reply.okEmpty);
 
       | FileSystem(msg) =>
         let (promise, resolver) = Lwt.task();

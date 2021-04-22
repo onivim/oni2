@@ -75,11 +75,19 @@ module Items = {
       item(~title="Enter license key", ~command="oni.app.enterLicenseKey");
   };
 
+  module Go = {
+    let gotoFile =
+      item(~title="Go to File", ~command="workbench.action.quickOpen");
+    let gotoBuffer =
+      item(
+        ~title="Go to Buffer",
+        ~command="workbench.action.quickOpenBuffer",
+      );
+  };
+
   module View = {
     let commands =
       item(~title="Commands", ~command="workbench.action.showCommands");
-
-    let files = item(~title="Files", ~command="workbench.action.quickOpen");
 
     let cycleOpenFiles =
       item(
@@ -114,11 +122,8 @@ let groups = [
   group(~order=200, ~parent=file, Items.File.[saveFile, saveAll]),
   group(~order=300, ~parent=application, Items.File.Preferences.[submenu]),
   group(~order=999, ~parent=file, Items.File.[quit]),
-  group(
-    ~order=100,
-    ~parent=view,
-    Items.View.[commands, files, cycleOpenFiles],
-  ),
+  group(~order=200, ~parent=go, Items.Go.[gotoFile, gotoBuffer]),
+  group(~order=100, ~parent=view, Items.View.[commands, cycleOpenFiles]),
   group(~order=150, ~parent=view, Items.View.Zoom.[submenu]),
   group(~parent=edit, Items.Edit.[undo, redo]),
   group(

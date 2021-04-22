@@ -2162,6 +2162,19 @@ let isMousePressedNearLeftEdge = ({isMouseDown, lastMouseScreenPosition, _}) => 
   |> Option.value(~default=false);
 };
 
+let gutterWidth = (~editorFont: Service_Font.font, {lineNumbers, buffer, _}) => {
+  let lineNumberWidth =
+    lineNumbers != `Off
+      ? LineNumber.getLineNumberPixelWidth(
+          ~lines=EditorBuffer.numberOfLines(buffer),
+          ~fontPixelWidth=editorFont.underscoreWidth,
+          (),
+        )
+      : 0.0;
+
+  lineNumberWidth +. Constants.diffMarkerWidth +. Constants.gutterMargin;
+};
+
 let isMousePressedNearRightEdge =
     ({isMouseDown, lastMouseScreenPosition, _} as editor) => {
   let {bufferWidthInPixels, _}: EditorLayout.t = getLayout(editor);

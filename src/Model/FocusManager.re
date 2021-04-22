@@ -39,9 +39,14 @@ let current = (state: State.t) =>
     | Some(_) => Focus.Quickmenu
     | _ =>
       let current = Focus.current(state.focus);
-      state
+      let activeEditor = state.layout |> Feature_Layout.activeEditor;
+      let activeBuffer =
+        Feature_Buffers.get(
+          Feature_Editor.Editor.getBufferId(activeEditor),
+          state.buffers,
+        );
       // See if terminal has focus
-      |> Selectors.getActiveBuffer
+      activeBuffer
       |> Option.map(Oni_Core.Buffer.getId)
       |> Option.map(id => BufferRenderers.getById(id, state.bufferRenderers))
       |> OptionEx.flatMap(renderer =>

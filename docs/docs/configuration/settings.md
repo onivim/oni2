@@ -112,6 +112,14 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `files.exclude` __(_list of string_ default: `[".git", "_esy", "node_modules"]`)__ - When using `Quick Open` or `Find in files`, Onivim will ignore the files inside the directories listed here 
 
+- `files.autoSave` __(_string_ default: `"off"`)__ - controls when buffers are auto-saved:
+    - _"off"_ - Do not auto-save at all
+    - _"afterDelay"_ - Auto-save after the delay specified by `"files.autoSaveDelay"`
+    - _"onFocusChange"_ - Auto-save when changing focus between buffers
+    - _"onWindowChange"_ - Auto-save when the Onivim application window loses focus
+
+- `files.autoSaveDelay` __(_int_ default: `1000`)__ - specifies the time, in milliseconds, to wait to auto-save a buffer when `files.autoSave` is set to `"afterDelay"`
+
 - `search.exclude` __(_list of string_ default: `[]`)__ - When using `Find in files` Onivim will not look at files located at the directories listed here, this inherit all the values from `files.exclude`
 
 - `workbench.colorTheme` __(_string_ default:`"One Dark Pro"`)__ - Color theme to use.
@@ -198,6 +206,14 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
     - _"keepPosition"_  - The notification popup hides the __items__ on the `showOnNotification`.
     - _"compact"_  - The notification popups take the minimum space available, but notifications can stack up on the status bar.
     - _"compact+"_ - The same as `compact` but notification popups do not stack up.
+
+### Proxy
+
+Onivim 2 can be configured to send requests through an HTTP/HTTPs proxy with the following configuration:
+
+- `http.proxy` __(_string_ default: `null`) - A URL to be used as a proxy server, including the name and password. ie, `"http.proxy": "http://user@pass:127.0.0.1:8888"`
+
+- `https.proxy` - __(_string_ default: `null`) - A URL to be used as a proxy server for HTTPs requests. If not specified, Onivim will fall back to the `http.proxy` setting.
 
 ### Rendering
 

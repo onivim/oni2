@@ -56,6 +56,7 @@ module Make =
 
   let%component make =
                 (
+                  ~proxy,
                   ~url: string,
                   ~children: status => React.element(React.node),
                   (),
@@ -87,6 +88,7 @@ module Make =
                 fun
                 | true =>
                   Service_Net.Request.download(
+                    ~proxy,
                     ~setup=Oni_Core.Setup.init(),
                     url,
                   )

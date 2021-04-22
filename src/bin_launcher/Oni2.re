@@ -78,6 +78,11 @@ let spec =
       " Install extension by specifying a path to the .vsix file",
     ),
     (
+      "--proxy-server",
+      passthroughString,
+      " Set a proxy URL to use for web requests, in the form of <uri>[:<port>] ",
+    ),
+    (
       "--query-extension",
       passthroughStringAndStayAttached,
       " Query extension info by specifying an extension id.",

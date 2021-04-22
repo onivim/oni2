@@ -440,6 +440,7 @@ type t = {
   lifecycle: Lifecycle.t,
   menuBar: Feature_MenuBar.model,
   notifications: Feature_Notification.model,
+  proxy: Feature_Proxy.model,
   registers: Feature_Registers.model,
   scm: Feature_SCM.model,
   sneak: Feature_Sneak.model,
@@ -589,6 +590,7 @@ let initial =
     zen:
       Feature_Zen.initial(~isSingleFile=List.length(cli.filesToOpen) == 1),
     pane: Feature_Pane.initial,
+    proxy: Feature_Proxy.default,
     newQuickmenu: Feature_Quickmenu.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,

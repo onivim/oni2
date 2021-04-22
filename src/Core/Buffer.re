@@ -389,7 +389,7 @@ let setIndentation = (indentation, buf) => {
     } else {
       buf.lines;
     };
-  {...buf, lines, indentation};
+  {...buf, measure, lines, indentation};
 };
 
 let getIndentation = buf => buf.indentation |> Inferred.value;
@@ -451,7 +451,11 @@ let setFont = (font, buf) => {
 
 let getSaveTick = ({saveTick, _}) => saveTick;
 
-let incrementSaveTick = buffer => {...buffer, saveTick: buffer.saveTick + 1};
+let incrementSaveTick = buffer => {
+  ...buffer,
+  modified: false,
+  saveTick: buffer.saveTick + 1,
+};
 
 let toDebugString = buf => {
   let lines =

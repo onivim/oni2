@@ -580,20 +580,32 @@ let bufferUpdated =
   {...model, completion, signatureHelp};
 };
 
-let bufferSaved = (~isLargeBuffer, ~buffer, ~config, ~activeBufferId, model) => {
-  let (formatting', formattingEffect) =
-    Formatting.bufferSaved(
+let bufferSaved =
+    (
+      ~reason,
       ~isLargeBuffer,
       ~buffer,
       ~config,
+      ~savedBufferId as _,
       ~activeBufferId,
-      model.formatting,
+      model,
+    ) =>
+  if (reason == Oni_Core.SaveReason.AutoSave) {
+    (model, Isolinear.Effect.none);
+  } else {
+    let (formatting', formattingEffect) =
+      Formatting.bufferSaved(
+        ~isLargeBuffer,
+        ~buffer,
+        ~config,
+        ~activeBufferId,
+        model.formatting,
+      );
+    (
+      {...model, formatting: formatting'},
+      formattingEffect |> Isolinear.Effect.map(msg => Formatting(msg)),
     );
-  (
-    {...model, formatting: formatting'},
-    formattingEffect |> Isolinear.Effect.map(msg => Formatting(msg)),
-  );
-};
+  };
 
 let configurationChanged = (~config, model) => {
   ...model,
@@ -809,35 +821,6 @@ module Completion = {
 
   let availableCompletionCount = ({completion, _}: model) =>
     OldCompletion.availableCompletionCount(completion);
-
-  module View = {
-    let make =
-        (
-          ~buffer,
-          ~cursor,
-          ~x,
-          ~y,
-          ~lineHeight,
-          ~theme,
-          ~tokenTheme,
-          ~editorFont,
-          ~model,
-          (),
-        ) => {
-      OldCompletion.View.make(
-        ~buffer,
-        ~cursor,
-        ~x,
-        ~y,
-        ~lineHeight,
-        ~theme,
-        ~tokenTheme,
-        ~editorFont,
-        ~completions=model.completion,
-        (),
-      );
-    };
-  };
 };
 
 module SignatureHelp = {
@@ -1120,15 +1103,45 @@ module View = {
   };
 
   module Overlay = {
-    let make = (~toPixel, ~theme, ~model, ~editorFont, ~uiFont, ~dispatch, ()) => {
-      <CodeActions.View.Overlay
-        toPixel
-        theme
-        model={model.codeActions}
-        dispatch={msg => dispatch(CodeActions(msg))}
-        editorFont
-        uiFont
-      />;
+    let make =
+        (
+          ~activeEditorId: int,
+          ~activeBuffer: Oni_Core.Buffer.t,
+          ~cursorPosition: CharacterPosition.t,
+          ~lineHeight: float,
+          ~toPixel,
+          ~theme,
+          ~tokenTheme,
+          ~model,
+          ~editorFont,
+          ~uiFont,
+          ~dispatch,
+          (),
+        ) => {
+      [
+        <CodeActions.View.Overlay
+          toPixel
+          theme
+          model={model.codeActions}
+          dispatch={msg => dispatch(CodeActions(msg))}
+          editorFont
+          uiFont
+        />,
+        <OldCompletion.View.Overlay
+          activeEditorId
+          cursorPosition
+          buffer=activeBuffer
+          toPixel
+          theme
+          lineHeight
+          tokenTheme
+          model={model.completion}
+          dispatch={msg => dispatch(Completion(msg))}
+          editorFont
+          uiFont
+        />,
+      ]
+      |> Revery.UI.React.listToElement;
     };
   };
 };

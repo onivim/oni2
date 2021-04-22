@@ -111,9 +111,11 @@ let update:
 
 let bufferSaved:
   (
+    ~reason: SaveReason.t,
     ~isLargeBuffer: bool,
     ~buffer: Oni_Core.Buffer.t,
     ~config: Oni_Core.Config.resolver,
+    ~savedBufferId: int,
     ~activeBufferId: int,
     model
   ) =>
@@ -190,23 +192,6 @@ module Completion: {
   let providerCount: model => int;
 
   let availableCompletionCount: model => int;
-
-  module View: {
-    let make:
-      (
-        ~buffer: Buffer.t,
-        ~cursor: CharacterPosition.t,
-        ~x: int,
-        ~y: int,
-        ~lineHeight: float,
-        ~theme: Oni_Core.ColorTheme.Colors.t,
-        ~tokenTheme: Oni_Syntax.TokenTheme.t,
-        ~editorFont: Service_Font.font,
-        ~model: model,
-        unit
-      ) =>
-      Revery.UI.element;
-  };
 };
 
 module SignatureHelp: {
@@ -267,9 +252,14 @@ module View: {
   module Overlay: {
     let make:
       (
+        ~activeEditorId: int,
+        ~activeBuffer: Oni_Core.Buffer.t,
+        ~cursorPosition: CharacterPosition.t,
+        ~lineHeight: float,
         ~toPixel: (~editorId: int, CharacterPosition.t) =>
                   option(PixelPosition.t),
         ~theme: ColorTheme.Colors.t,
+        ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~model: model,
         ~editorFont: Service_Font.font,
         ~uiFont: UiFont.t,
