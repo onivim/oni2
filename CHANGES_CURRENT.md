@@ -73,6 +73,7 @@
 - #3293 - Formatting: Initial formatting documentation
 - #3296 - Emmet: Add documentation on using Emmet for tsx/jsx files (fixes #3283)
 - #3411 - Vim Tips: Fix missing links (fixes #3407)
+- #2272 - Documentation: Fix AppImage installation instructions (thanks @mkenigs !)
 
 ### Refactoring
 
