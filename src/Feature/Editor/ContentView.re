@@ -16,6 +16,7 @@ let renderLine =
       ~selectionRanges,
       ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
       ~vim,
+      ~languageConfiguration,
       ~languageSupport,
       viewLine,
       _offset,
@@ -41,7 +42,7 @@ let renderLine =
       let range =
         if (diagnostic.range.start == diagnostic.range.stop) {
           Editor.getTokenAt(
-            ~languageConfiguration=Oni_Core.LanguageConfiguration.default,
+            ~languageConfiguration,
             diagnostic.range.start,
             context.editor,
           )
@@ -142,6 +143,7 @@ let renderEmbellishments =
       ~matchingPairs,
       ~vim,
       ~languageSupport,
+      ~languageConfiguration,
     ) =>
   Draw.renderImmediate(
     ~context,
@@ -154,6 +156,7 @@ let renderEmbellishments =
       ~matchingPairs,
       ~vim,
       ~languageSupport,
+      ~languageConfiguration,
     ),
   );
 
@@ -297,6 +300,7 @@ let render =
     ~matchingPairs,
     ~vim,
     ~languageSupport,
+    ~languageConfiguration,
   );
 
   let bufferId = Buffer.getId(buffer);
