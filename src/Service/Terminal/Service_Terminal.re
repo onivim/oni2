@@ -31,6 +31,7 @@ type msg =
 
 module Sub = {
   type params = {
+    setup: Setup.t,
     id: int,
     launchConfig: Exthost.ShellLaunchConfig.t,
     //    cmd: string,
@@ -44,9 +45,9 @@ module Sub = {
   module TerminalSubscription =
     Isolinear.Sub.Make({
       type state = {
+        maybePty: ref(option(Pty.t)),
         rows: int,
         columns: int,
-        dispose: unit => unit,
         terminal: ReveryTerminal.t,
         isResizing: ref(bool),
       };
@@ -73,13 +74,14 @@ module Sub = {
           | ReveryTerminal.TermPropChanged(_) => ()
           };
 
-        let rows = 10;
+        let rows = params.rows;
+        let columns = params.columns;
 
         let terminal =
           ReveryTerminal.make(
             ~scrollBackSize=512,
             ~rows,
-            ~columns=params.columns,
+            ~columns,
             ~onEffect,
             (),
           );
@@ -94,11 +96,12 @@ module Sub = {
 
         let ptyResult =
           Pty.start(
+            ~setup=params.setup,
             ~env=[],
             ~cwd=Sys.getcwd(),
             ~rows,
-            ~cols=40,
-            ~cmd="bash.exe",
+            ~cols=columns,
+            ~cmd=params.launchConfig.executable,
             onData,
           );
 
@@ -111,20 +114,7 @@ module Sub = {
 
         Hashtbl.replace(Internal.idToTerminal, params.id, terminal);
 
-        let dispose = () => {
-          switch (maybePty^) {
-          | Some(pty) => Pty.close(pty)
-          | None => ()
-          };
-        };
-
-        {
-          dispose,
-          isResizing,
-          rows: params.rows,
-          columns: params.columns,
-          terminal,
-        };
+        {maybePty, isResizing, rows, columns, terminal};
       };
 
       let update = (~params: params, ~state: state, ~dispatch as _) => {
@@ -133,22 +123,20 @@ module Sub = {
         if (rows > 0
             && columns > 0
             && (rows != state.rows || columns != state.columns)) {
-          {
-            // TODO: Resize
-            // Exthost.Request.TerminalService.acceptProcessResize(
-            //   ~id=params.id,
-            //   ~cols=columns,
-            //   ~rows,
-            //   params.extHostClient,
-            // );
+          // TODO: Resize
+          // Exthost.Request.TerminalService.acceptProcessResize(
+          //   ~id=params.id,
+          //   ~cols=columns,
+          //   ~rows,
+          //   params.extHostClient,
+          // );
 
-            // state.isResizing := true;
-            // ReveryTerminal.resize(~rows, ~columns, state.terminal);
-            // state.isResizing := false;
-            ...state,
-            rows,
-            columns,
-          };
+          state.isResizing := true;
+          // ReveryTerminal.resize(~rows, ~columns, state.terminal);
+          Pty.resize(~rows, ~cols=columns);
+          ReveryTerminal.resize(~rows, ~columns, state.terminal);
+          state.isResizing := false;
+          {...state, rows, columns};
         } else {
           state;
         };
@@ -163,14 +151,29 @@ module Sub = {
         //     params.extHostClient,
         //   );
 
+        switch (state.maybePty^) {
+        | None => ()
+        | Some(pty) => Pty.close(pty)
+        };
+
+        state.maybePty := None;
+
         Hashtbl.remove(Internal.idToTerminal, params.id);
-        state.dispose();
       };
     });
 
   let terminal =
-      (~id, ~launchConfig, ~columns, ~rows, ~workspaceUri, ~extHostClient) =>
+      (
+        ~setup,
+        ~id,
+        ~launchConfig,
+        ~columns,
+        ~rows,
+        ~workspaceUri,
+        ~extHostClient,
+      ) =>
     TerminalSubscription.create({
+      setup,
       id,
       launchConfig,
       columns,

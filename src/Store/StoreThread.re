@@ -250,6 +250,7 @@ let start =
 
     let terminalSubscription =
       Feature_Terminal.subscription(
+        ~setup,
         ~workspaceUri=
           Core.Uri.fromPath(
             Feature_Workspace.workingDirectory(state.workspace),

@@ -2,6 +2,7 @@ const net = require("net");
 
 const pty = require('node-pty');
 
+process.stdout.write("Hello!");
 const log = (msg) => console.log(`[NODE] ${msg}`)
 
 const pipe = process.argv[2];
@@ -11,12 +12,12 @@ log("Connected to pipe: " + pipe);
 log("Using cwd: " + cwd);
 log("Using cmd: " + cmd);
 
-// const client = net.connect(pipe, () => {
-// 	log("Connected.");
-// });
+const client = net.connect(pipe, () => {
+	log("Connected.");
+});
 
 const ptyProcess = pty.spawn(cmd, [], {
-	name: pipe,
+	name: 'xterm-color',
 	cols: 80,
 	rows: 30,
 	cwd: cwd,
@@ -39,24 +40,29 @@ const write = (str) => {
 	let outBuffer = Buffer.concat([header, data]);
 	console.log(`Sending data - total length: ${outBuffer.length}`);
 	console.log(`data: ${str}`)
-	//client.write(outBuffer)
+	client.write(outBuffer)
 };
 
 ptyProcess.on('data', write);
 
-// client.on('data', (buffer) => {
-// 	let type = buffer.readUInt8(0);
-// 	let id = buffer.readUInt32BE(1);
-// 	let ack = buffer.readUInt32BE(5);
-// 	let length = buffer.readUInt32BE(9);
+ptyProcess.on('exit', (exitCode) => {
+	console.log("js: pty exited");
+});
 
-// 	let data = buffer.slice(13, buffer.length);
-// 	//console.log(`Got data - type: ${type} id: ${id} ack: ${ack} length: ${length} - data: |${data.toString("utf8")}|`);
-// 	ptyProcess.write(data);
-// });
+client.on('data', (buffer) => {
+	console.log("Got input: " + Buffer.toString(buffer));
+	let type = buffer.readUInt8(0);
+	let id = buffer.readUInt32BE(1);
+	let ack = buffer.readUInt32BE(5);
+	let length = buffer.readUInt32BE(9);
 
-// client.on('close', () => {
-// 	log("close");
-// 	ptyProcess.close();
-// 	client.destroy();
-// });
+	let data = buffer.slice(13, buffer.length);
+	//console.log(`Got data - type: ${type} id: ${id} ack: ${ack} length: ${length} - data: |${data.toString("utf8")}|`);
+	ptyProcess.write(data);
+});
+
+client.on('close', () => {
+	log("close");
+	ptyProcess.close();
+	client.destroy();
+});

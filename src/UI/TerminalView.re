@@ -97,20 +97,20 @@ let%component make =
   let rows = ReveryTerminal.Screen.getVisibleRows(screen);
   let columns = ReveryTerminal.Screen.getColumns(screen);
 
-  prerr_endline(Printf.sprintf("Size: %d x %d", rows, columns));
-  for (row in 0 to rows - 1) {
-    for (column in 0 to columns - 1) {
-      let cell = ReveryTerminal.Screen.getCell(~row, ~column, screen);
-      prerr_endline(
-        Printf.sprintf(
-          "row: %d, column: %d - %s",
-          row,
-          column,
-          Zed_utf8.make(1, cell.char),
-        ),
-      );
-    };
-  };
+  // prerr_endline(Printf.sprintf("Size: %d x %d", rows, columns));
+  // for (row in 0 to rows - 1) {
+  //   for (column in 0 to columns - 1) {
+  //     let cell = ReveryTerminal.Screen.getCell(~row, ~column, screen);
+  //     prerr_endline(
+  //       Printf.sprintf(
+  //         "row: %d, column: %d - %s",
+  //         row,
+  //         column,
+  //         Zed_utf8.make(1, cell.char),
+  //       ),
+  //     );
+  //   };
+  // };
 
   let element = {
     let font =

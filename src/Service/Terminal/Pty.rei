@@ -4,6 +4,7 @@ type t;
 
 let start:
   (
+    ~setup: Setup.t,
     ~env: list((string, string)),
     ~cwd: string,
     ~rows: int,
