@@ -3,6 +3,8 @@ module NamedPipe = Exthost.NamedPipe;
 
 type model = {namedPipe: NamedPipe.t};
 
+module Log = (val Oni_Core.Log.withNamespace("Feature_ClientServer"));
+
 let create = () => {
   namedPipe:
     NamedPipe.create("clientserver:" ++ string_of_int(Luv.Pid.getpid())),
@@ -50,9 +52,6 @@ let update = (msg, model) => {
       };
     (model, eff);
   | Server(_) => (model, Nothing)
-  | _ =>
-    prerr_endline("MSG: " ++ show_msg(msg));
-    (model, Nothing);
   };
 };
 
@@ -70,15 +69,13 @@ module Sub =
     let id = namedPipe => NamedPipe.toString(namedPipe);
 
     let init = (~params as namedPipe, ~dispatch) => {
-      let res =
-        Exthost.Transport.start(
-          ~namedPipe=NamedPipe.toString(namedPipe),
-          ~dispatch,
-        );
+      let namedPipeStr = NamedPipe.toString(namedPipe);
+      Log.infof(m => m("Starting server: %s", namedPipeStr));
+      let res = Exthost.Transport.start(~namedPipe=namedPipeStr, ~dispatch);
 
       switch (res) {
-      | Ok(_transport) => prerr_endline("Started!")
-      | Error(msg) => prerr_endline("Failed to start: " ++ msg)
+      | Ok(_transport) => Log.info("Started pipe successfully")
+      | Error(msg) => Log.errorf(m => m("Failed to start pipe: %s", msg))
       };
       res;
     };
@@ -98,12 +95,6 @@ module Sub =
 let sub = ({namedPipe, _}) =>
   Sub.create(namedPipe) |> Isolinear.Sub.map(msg => Server(msg));
 
-module RemoteCommand = {
-  type t = unit;
-
-  let cli = _cli => ();
-};
-
 module Client = {
   let openFiles = (~server: string, ~files, ~folderToOpen) => {
     let (promise, resolve) = Lwt.task();
@@ -112,13 +103,11 @@ module Client = {
         {
           switch (msg) {
           | Connected =>
-            print_endline("Connected!");
+            Log.info("Connected!");
             Lwt.wakeup(resolve, ());
-          | Received({body, _}: Packet.t) =>
-            ();
-            body |> Protocol.fromBytes |> Protocol.show |> prerr_endline;
-          | Error(msg) => prerr_endline(msg)
-          | Disconnected => print_endline("Disconnected")
+          | Received(_) => ()
+          | Error(msg) => Log.error(msg)
+          | Disconnected => Log.info("Disconnected")
           };
         }
       );
