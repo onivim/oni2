@@ -57,7 +57,7 @@ let initializeLogging = () => {
 
 switch (eff) {
 | DoRemoteCommand({pipe, filesToOpen, folder}) =>
-  Cli.doRemoteCommand(~pipe, ~filesToOpen, ~folder) |> exit
+  Cli.doRemoteCommand(~pipe, ~files=filesToOpen, ~folderToOpen=folder) |> exit
 | PrintVersion => Cli.printVersion() |> exit
 | InstallExtension(name) => Cli.installExtension(name, cliOptions) |> exit
 | QueryExtension(name) => Cli.queryExtension(name, cliOptions) |> exit

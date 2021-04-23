@@ -370,7 +370,19 @@ let update =
     // TODO
     let eff =
       switch (outmsg) {
-      | _ => Isolinear.Effect.none
+      | Nothing => Isolinear.Effect.none
+      | OpenFilesAndFolders({files, folder}) =>
+        let folderEffect =
+          folder
+          |> Option.map(Internal.chdir)
+          |> Option.value(~default=Isolinear.Effect.none);
+
+        let openFileEffects =
+          files
+          |> List.map(FpExp.toString)
+          |> List.map(Internal.openFileEffect);
+
+        [folderEffect, ...openFileEffects] |> Isolinear.Effect.batch;
       };
 
     ({...state, clientServer}, eff);
@@ -1357,6 +1369,7 @@ let update =
             // However, if we're splitting, we need to clone the editor
             | SplitDirection.Horizontal
             | SplitDirection.Vertical(_)
+            | SplitDirection.Inactive
             | SplitDirection.NewTab => Editor.copy(ed)
             };
 
@@ -1374,6 +1387,19 @@ let update =
 
       let layout =
         switch (split) {
+        | SplitDirection.Inactive =>
+          // Do we have focus? If not, we can just use the existing split
+          if (FocusManager.current(state) != Focus.Editor) {
+            state.layout;
+          } else {
+            // TODO: Figure out if current editor is in vertical or horizontal split...
+            Feature_Layout.split(
+              ~shouldReuse=true,
+              ~editor,
+              `Vertical,
+              state.layout,
+            );
+          }
         | SplitDirection.Current => state.layout
         | SplitDirection.Horizontal =>
           Feature_Layout.split(
