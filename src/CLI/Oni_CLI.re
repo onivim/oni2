@@ -54,6 +54,11 @@ type t = {
 type eff =
   | PrintVersion
   | CheckHealth
+  | DoRemoteCommand({
+      pipe: string,
+      filesToOpen: list(string),
+      folder: option(string),
+    })
   | ListDisplays
   | ListExtensions
   | InstallExtension(string)
@@ -250,18 +255,6 @@ let parse = (~getenv: string => option(string), args) => {
     "",
   );
 
-  let shouldAlwaysAllocateConsole =
-    switch (eff^) {
-    | Run => false
-    | StartSyntaxServer(_) => false
-    | _ => true
-    };
-
-  let needsConsole =
-    (isSilent^ || Option.is_some(logLevel^))
-    && attachToForeground^
-    || shouldAlwaysAllocateConsole;
-
   let paths = additionalArgs^ |> List.rev;
 
   let isAnonymousExCommand = str => String.length(str) > 0 && str.[0] == '+';
@@ -330,6 +323,23 @@ let parse = (~getenv: string => option(string), args) => {
     | [first, ..._] => Some(first)
     | [] => None
     };
+
+  getenv("ONIVIM2_PARENT_PIPE")
+  |> Option.iter(v => {
+       eff := DoRemoteCommand({pipe: v, filesToOpen, folder})
+     });
+
+  let shouldAlwaysAllocateConsole =
+    switch (eff^) {
+    | Run => false
+    | StartSyntaxServer(_) => false
+    | _ => true
+    };
+
+  let needsConsole =
+    (isSilent^ || Option.is_some(logLevel^))
+    && attachToForeground^
+    || shouldAlwaysAllocateConsole;
 
   let cli = {
     folder,

@@ -15,6 +15,19 @@ module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 module OptionEx = Core.Utility.OptionEx;
 
+let doRemoteCommand = (~pipe, ~files, ~folderToOpen) => {
+  let result =
+    Feature_ClientServer.Client.openFiles(~server=pipe, ~files, ~folderToOpen)
+    |> LwtEx.sync;
+
+  switch (result) {
+  | Ok () => 0
+  | Error(msg) =>
+    prerr_endline("Error executing command: " ++ Printexc.to_string(msg));
+    1;
+  };
+};
+
 let installExtension =
     (path, Oni_CLI.{overriddenExtensionsDir, proxyServer: proxy, _}) => {
   let setup = Core.Setup.init();

@@ -8,7 +8,7 @@ let create = {
     if (Sys.win32) {
       Printf.sprintf("\\\\.\\pipe\\%s%s", pipeName, id);
     } else {
-      let name = Filename.temp_file("exthost-", "-sock" ++ id);
+      let name = Filename.temp_file(pipeName ++ "-", "-sock" ++ id);
       Unix.unlink(name);
       name;
     };

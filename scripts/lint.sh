@@ -12,7 +12,7 @@ echo "print_endline count: $PRINT_COUNT"
 echo "Printf.printf count: $PRINTF_COUNT"
 echo "magenta count: $MAGENTA_COUNT"
 
-if [ "$PRERR_COUNT" -ne "7" ]; then
+if [ "$PRERR_COUNT" -ne "8" ]; then
     echo "New prerr_endline introduced; please remove and re-check:"
     echo "---"
     echo "Output: $(git grep prerr_endline)"
