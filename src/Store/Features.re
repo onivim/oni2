@@ -379,7 +379,9 @@ let update =
         let openFileEffects =
           files
           |> List.map(FpExp.toString)
-          |> List.map(Internal.openFileEffect);
+          |> List.map(
+               Internal.openFileEffect(~direction=SplitDirection.Inactive),
+             );
 
         [folderEffect, ...openFileEffects] |> Isolinear.Effect.batch;
       };
@@ -1386,15 +1388,23 @@ let update =
 
       let previousActiveGroup = Feature_Layout.activeGroup(state.layout);
 
+      // Make any splits or changes to the layout based on the current split direction
       let layout =
         switch (split) {
         | SplitDirection.Inactive =>
-          // Do we have focus? If not, we can just use the existing split
-          if (FocusManager.current(state) != Focus.Editor) {
+          let isTerminalFocus =
+            switch (FocusManager.current(state)) {
+            | Terminal(_) => true
+            | _ => false
+            };
+          // Do we have focus? If not, we can just use the existing split -
+          // don't bother going to a different one.
+          if (FocusManager.current(state) != Focus.Editor && !isTerminalFocus) {
             state.layout;
           } else {
             let allGroups = Feature_Layout.activeLayoutGroups(state.layout);
 
+            // If there is only one split, make a new one for the editor.
             if (List.length(allGroups) == 1) {
               Feature_Layout.split(
                 ~shouldReuse=true,
@@ -1403,7 +1413,7 @@ let update =
                 state.layout,
               );
             } else {
-              // Pick the first group that is different
+              // Otherwise - just switch to an alternate group, temporarily.
               allGroups
               |> List.filter(group =>
                    Feature_Layout.Group.id(group)
@@ -1418,7 +1428,7 @@ let update =
                  })
               |> Option.value(~default=state.layout);
             };
-          }
+          };
         | SplitDirection.Current => state.layout
         | SplitDirection.Horizontal =>
           Feature_Layout.split(
@@ -1442,6 +1452,9 @@ let update =
            })
         |> Option.value(~default=editor);
 
+      // If we are using the 'Inactive' split direction strategy, the active
+      // split is temporarily switched to open the editor in a separate split -
+      // switch it back after the editor is open.
       let maybeRevertToPrevious = layout => {
         switch (split) {
         | SplitDirection.Inactive =>
