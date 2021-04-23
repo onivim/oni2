@@ -60,14 +60,7 @@ module Sub = {
 
       let init = (~params, ~dispatch) => {
         let launchConfig = params.launchConfig;
-        //          Exthost.ShellLaunchConfig.{
-        //            name: "Terminal",
-        //            executable: params.cmd,
-        //            arguments: params.arguments,
-        //            env: Strict(StringMap.add("abc2", "def2", StringMap.empty))
-        //          };
-
-        let isResizing = ref(false);
+        let maybePty = ref(None);
 
         let onEffect = eff =>
           switch (eff) {
@@ -75,70 +68,55 @@ module Sub = {
           | ReveryTerminal.ScreenUpdated(_) => ()
           | ReveryTerminal.CursorMoved(_) => ()
           | ReveryTerminal.Output(output) =>
-            Exthost.Request.TerminalService.acceptProcessInput(
-              ~id=params.id,
-              ~data=output,
-              params.extHostClient,
-            )
+            maybePty^ |> Option.iter(pty => Pty.write(pty, output))
           // TODO: Handle term prop changes
           | ReveryTerminal.TermPropChanged(_) => ()
           };
 
+        let rows = 10;
+
         let terminal =
           ReveryTerminal.make(
             ~scrollBackSize=512,
-            ~rows=params.rows,
+            ~rows,
             ~columns=params.columns,
             ~onEffect,
             (),
           );
+        ReveryTerminal.resize(~rows, ~columns=40, terminal);
+        let onData = data => {
+          prerr_endline("Got some data!");
+          ReveryTerminal.write(~input=data, terminal);
+          let cursor = ReveryTerminal.cursor(terminal);
+          let screen = ReveryTerminal.screen(terminal);
+          dispatch(ScreenUpdated({id: params.id, screen, cursor}));
+        };
+
+        let ptyResult =
+          Pty.start(
+            ~env=[],
+            ~cwd=Sys.getcwd(),
+            ~rows,
+            ~cols=40,
+            ~cmd="bash.exe",
+            onData,
+          );
+
+        switch (ptyResult) {
+        | Error(_) => ()
+        | Ok(pty) => maybePty := Some(pty)
+        };
+
+        let isResizing = ref(false);
 
         Hashtbl.replace(Internal.idToTerminal, params.id, terminal);
 
-        let dispatchIfMatches = (id, msg) =>
-          if (id == params.id) {
-            dispatch(msg);
+        let dispose = () => {
+          switch (maybePty^) {
+          | Some(pty) => Pty.close(pty)
+          | None => ()
           };
-
-        Exthost.Request.TerminalService.spawnExtHostProcess(
-          ~id=params.id,
-          ~shellLaunchConfig=launchConfig,
-          ~activeWorkspaceRoot=params.workspaceUri,
-          ~cols=params.columns,
-          ~rows=params.rows,
-          ~isWorkspaceShellAllowed=true,
-          params.extHostClient,
-        );
-
-        let dispose =
-          Revery.Event.subscribe(
-            Internal.onExtensionMessage,
-            (msg: Exthost.Msg.TerminalService.msg) => {
-            switch (msg) {
-            | SendProcessTitle({terminalId, title}) =>
-              dispatchIfMatches(
-                terminalId,
-                ProcessTitleChanged({id: terminalId, title}),
-              )
-            | SendProcessReady({terminalId, pid, _}) =>
-              dispatchIfMatches(
-                terminalId,
-                ProcessStarted({id: terminalId, pid}),
-              )
-            | SendProcessData({terminalId, data}) =>
-              if (terminalId == params.id) {
-                ReveryTerminal.write(~input=data, terminal);
-                let cursor = ReveryTerminal.cursor(terminal);
-                let screen = ReveryTerminal.screen(terminal);
-                dispatch(ScreenUpdated({id: params.id, screen, cursor}));
-              }
-            | SendProcessExit({terminalId, exitCode}) =>
-              dispatchIfMatches(
-                terminalId,
-                ProcessExit({id: terminalId, exitCode}),
-              )
-            }
-          });
+        };
 
         {
           dispose,
@@ -155,29 +133,35 @@ module Sub = {
         if (rows > 0
             && columns > 0
             && (rows != state.rows || columns != state.columns)) {
-          Exthost.Request.TerminalService.acceptProcessResize(
-            ~id=params.id,
-            ~cols=columns,
-            ~rows,
-            params.extHostClient,
-          );
+          {
+            // TODO: Resize
+            // Exthost.Request.TerminalService.acceptProcessResize(
+            //   ~id=params.id,
+            //   ~cols=columns,
+            //   ~rows,
+            //   params.extHostClient,
+            // );
 
-          state.isResizing := true;
-          ReveryTerminal.resize(~rows, ~columns, state.terminal);
-          state.isResizing := false;
-          {...state, rows, columns};
+            // state.isResizing := true;
+            // ReveryTerminal.resize(~rows, ~columns, state.terminal);
+            // state.isResizing := false;
+            ...state,
+            rows,
+            columns,
+          };
         } else {
           state;
         };
       };
 
       let dispose = (~params, ~state) => {
-        let () =
-          Exthost.Request.TerminalService.acceptProcessShutdown(
-            ~immediate=false,
-            ~id=params.id,
-            params.extHostClient,
-          );
+        // TODO: Dispose
+        // let () =
+        //   Exthost.Request.TerminalService.acceptProcessShutdown(
+        //     ~immediate=false,
+        //     ~id=params.id,
+        //     params.extHostClient,
+        //   );
 
         Hashtbl.remove(Internal.idToTerminal, params.id);
         state.dispose();

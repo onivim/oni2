@@ -5,10 +5,11 @@ type t;
 let start:
   (
     ~env: list((string, string)),
-    ~cwd: FpExp.t(FpExp.absolute),
+    ~cwd: string,
     ~rows: int,
-    ~height: int,
-    ~cmd: string
+    ~cols: int,
+    ~cmd: string,
+    string => unit
   ) =>
   result(t, string);
 
