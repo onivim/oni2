@@ -83,6 +83,7 @@
 - #3385 - Dependency: Revery -> 4337e2c
 - #3408 - Dependency: Revery -> 373b087
 - #3449 - Dependency: esy -> 0.6.10
+- #3446 - Dependency: Upgrade dune, isolinear, and revery-terminal to prep for compiler upgrade
 
 ### Infrastructure
 

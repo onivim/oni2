@@ -4,7 +4,7 @@
   "description": "Lightweight code editor",
   "license": "SEE LICENSE IN Outrun-Labs-EULA-v1.1.md",
   "esy": {
-    "build": "refmterr dune build -p libvim,textmate,treesitter,Oni2 -j4",
+    "build": "dune build -p libvim,textmate,treesitter,Oni2 -j4",
     "buildEnv": {
       "ONI2_ROOT": "#{self.root}",
       "ONI2_BUILD_MODE": "Debug",
@@ -370,7 +370,7 @@
     "@opam/charInfo_width": "*",
     "@opam/decoders-yojson": "^0.4.0",
     "@opam/dir": "*",
-    "@opam/dune": "2.5.0",
+    "@opam/dune": "^2.5.0",
     "@opam/dune-configurator": "2.5.1",
     "@opam/dune-private-libs": "2.5.1",
     "@opam/fmt": "^0.8.8",
@@ -406,9 +406,8 @@
     "isolinear": "^3.0.0",
     "libvim": "8.10869.87",
     "ocaml": "4.10.0",
-    "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
+    "reason-native-crash-utils": "onivim/reason-native-crash-utils#a80a9d9",
     "reason-fzy": "CrossR/reason-fzy#485cae1",
-    "refmterr": "*",
     "rench": "^1.9.1",
     "revery": "*",
     "revery-terminal": "*"
@@ -416,8 +415,8 @@
   "resolutions": {
     "revery": "revery-ui/revery#5a82f13",
     "esy-skia": "revery-ui/esy-skia#91c98f6",
-    "isolinear": "revery-ui/isolinear#53fc4eb",
-    "revery-terminal": "revery-ui/revery-terminal#a9cb168",
+    "isolinear": "revery-ui/isolinear#049ad1e",
+    "revery-terminal": "revery-ui/revery-terminal#6a58785",
     "@opam/fs": "bryphe/reason-native:fs.opam#e16590c",
     "@opam/fp": "bryphe/reason-native:fp.opam#e16590c",
     "@opam/dir": "bryphe/reason-native:dir.opam#e16590c",
@@ -427,7 +426,7 @@
     "@revery/esy-libvterm": "1.0.4"
   },
   "devDependencies": {
-    "ocaml": "4.10.0",
+    "ocaml": "~4.10",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",
