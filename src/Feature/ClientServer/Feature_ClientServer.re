@@ -11,7 +11,6 @@ let create = () => {
 };
 
 module Protocol = {
-  [@deriving show]
   type t =
     | OpenFilesAndFolder({
         files: list(string),

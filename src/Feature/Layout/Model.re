@@ -59,7 +59,7 @@ module Group: {
       incr(lastId);
 
       let selectedId = editors |> ListEx.last |> Option.get |> Editor.getId;
-        {id: lastId^, editors, selectedId};
+      {id: lastId^, editors, selectedId};
     };
   };
 
