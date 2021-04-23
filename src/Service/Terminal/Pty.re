@@ -15,7 +15,7 @@ type t = {
 };
 
 // Setup process
-let createProcess = (~setup, ~namedPipeStr) => {
+let createProcess = (~setup, ~namedPipeStr, ~command) => {
   let process = {
     open Base.Result.Let_syntax;
     let%bind stdoutPipe = Luv.Pipe.init();
@@ -31,7 +31,7 @@ let createProcess = (~setup, ~namedPipeStr) => {
 
     let scriptPath = Setup.getNodeScriptPath(~script="pty-helper.js", setup);
 
-    let args = [namedPipeStr, Sys.getcwd(), "bash"];
+    let args = [namedPipeStr, Sys.getcwd(), command];
     let%bind process =
       LuvEx.Process.spawn(
         ~on_exit,
@@ -117,7 +117,7 @@ let start = (~setup, ~env, ~cwd, ~rows, ~cols, ~cmd, onData) => {
     Exthost.Transport.send(~packet, server);
   };
 
-  let%bind process = createProcess(~setup, ~namedPipeStr);
+  let%bind process = createProcess(~setup, ~namedPipeStr, ~command=cmd);
 
   Ok({onData, write});
 };
