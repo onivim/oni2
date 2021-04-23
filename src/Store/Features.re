@@ -1384,6 +1384,8 @@ let update =
           )
         };
 
+      let previousActiveGroup = Feature_Layout.activeGroup(state.layout);
+
       let layout =
         switch (split) {
         | SplitDirection.Inactive =>
@@ -1391,13 +1393,31 @@ let update =
           if (FocusManager.current(state) != Focus.Editor) {
             state.layout;
           } else {
-            // TODO: Figure out if current editor is in vertical or horizontal split...
-            Feature_Layout.split(
-              ~shouldReuse=true,
-              ~editor,
-              `Vertical,
-              state.layout,
-            );
+            let allGroups = Feature_Layout.activeLayoutGroups(state.layout);
+
+            if (List.length(allGroups) == 1) {
+              Feature_Layout.split(
+                ~shouldReuse=true,
+                ~editor,
+                `Horizontal,
+                state.layout,
+              );
+            } else {
+              // Pick the first group that is different
+              allGroups
+              |> List.filter(group =>
+                   Feature_Layout.Group.id(group)
+                   != Feature_Layout.Group.id(previousActiveGroup)
+                 )
+              |> Utility.ListEx.nth_opt(0)
+              |> Option.map(newGroup => {
+                   Feature_Layout.setActiveGroup(
+                     Feature_Layout.Group.id(newGroup),
+                     state.layout,
+                   )
+                 })
+              |> Option.value(~default=state.layout);
+            };
           }
         | SplitDirection.Current => state.layout
         | SplitDirection.Horizontal =>
@@ -1422,9 +1442,21 @@ let update =
            })
         |> Option.value(~default=editor);
 
+      let maybeRevertToPrevious = layout => {
+        switch (split) {
+        | SplitDirection.Inactive =>
+          Feature_Layout.setActiveGroup(
+            Feature_Layout.Group.id(previousActiveGroup),
+            layout,
+          )
+        | _ => layout
+        };
+      };
+
       let layout' =
         layout
-        |> Feature_Layout.openEditor(~config=config(~fileType), editor');
+        |> Feature_Layout.openEditor(~config=config(~fileType), editor')
+        |> maybeRevertToPrevious;
 
       let cleanLayout =
         isPreview
