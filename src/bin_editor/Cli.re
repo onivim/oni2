@@ -15,6 +15,41 @@ module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 module OptionEx = Core.Utility.OptionEx;
 
+let doRemoteCommand = (~pipe, ~filesToOpen, ~folder) => {
+  let (promise, resolve) = Lwt.task();
+  let dispatch = msg =>
+    Exthost.Transport.(
+      {
+        switch (msg) {
+        | Connected =>
+          print_endline("Connected!");
+          Lwt.wakeup(resolve, ());
+        | Received(_) => print_endline("Received")
+        | Error(msg) => prerr_endline(msg)
+        | Disconnected => print_endline("Disconnected")
+        };
+      }
+    );
+  switch (Exthost.Transport.connect(~namedPipe=pipe, ~dispatch)) {
+  | Ok(transport) =>
+    let _ = promise |> LwtEx.sync;
+    transport
+    |> Exthost.Transport.(
+         send(
+           ~packet=
+             Packet.create(
+               ~id=0,
+               ~packetType=Packet.Regular,
+               ~bytes=Bytes.of_string("Hello, world!"),
+             ),
+         )
+       );
+    Exthost.Transport.close(transport);
+  | Error(msg) => prerr_endline("ERROR")
+  };
+  0;
+};
+
 let installExtension =
     (path, Oni_CLI.{overriddenExtensionsDir, proxyServer: proxy, _}) => {
   let setup = Core.Setup.init();

@@ -31,6 +31,11 @@ let default: t;
 type eff =
   | PrintVersion
   | CheckHealth
+  | DoRemoteCommand({
+      pipe: string,
+      filesToOpen: list(string),
+      folder: option(string),
+    })
   | ListDisplays
   | ListExtensions
   | InstallExtension(string)

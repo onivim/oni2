@@ -1815,6 +1815,7 @@ let update =
   | Terminal(msg) =>
     let (model, eff) =
       Feature_Terminal.update(
+        ~clientServer=state.clientServer,
         ~config=Selectors.configResolver(state),
         state.terminals,
         msg,
