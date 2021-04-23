@@ -367,7 +367,6 @@ let update =
     let (clientServer, outmsg) =
       Feature_ClientServer.update(msg, state.clientServer);
 
-    // TODO
     let eff =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
