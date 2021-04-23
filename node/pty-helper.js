@@ -12,6 +12,9 @@ log("Connected to pipe: " + pipe);
 log("Using cwd: " + cwd);
 log("Using cmd: " + cmd);
 
+const remainingArguments = process.argv.slice(5, process.argv.length);
+log("Using remaining arguments: " + JSON.stringify(remainingArguments));
+
 const client = net.connect(pipe, () => {
 	log("Connected.");
 });

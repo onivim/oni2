@@ -2,11 +2,60 @@ open Oni_Core;
 
 module Time = Revery.Time;
 
+module Log = (val Log.withNamespace("Service_Terminal"));
+
 module Internal = {
   let onExtensionMessage: Revery.Event.t(Exthost.Msg.TerminalService.msg) =
     Revery.Event.create();
 
   let idToTerminal: Hashtbl.t(int, ReveryTerminal.t) = Hashtbl.create(8);
+
+  let getEnvironmentFromConfiguration =
+      (env: Exthost.ShellLaunchConfig.environment) => {
+    let augmentExistingEnvironment = (variablesToAdd: StringMap.t(string)) => {
+      let existingEnv =
+        switch (Luv.Env.environ()) {
+        | Ok(env) =>
+          env
+          |> List.fold_left(
+               (stringMap, cur) => {
+                 let (key, v) = cur;
+                 StringMap.add(key, v, stringMap);
+               },
+               StringMap.empty,
+             )
+        | Error(msg) =>
+          Log.errorf(m =>
+            m("Error getting environment: %s", Luv.Error.strerror(msg))
+          );
+          StringMap.empty;
+        };
+
+      StringMap.merge(
+        (key, original, augmented) => {
+          switch (original, augmented) {
+          | (None, None) => None
+          | (Some(v), None) => Some(v)
+          | (None, Some(v)) => Some(v)
+          | (Some(_), Some(v)) => Some(v)
+          }
+        },
+        existingEnv,
+        variablesToAdd,
+      );
+    };
+
+    Exthost.ShellLaunchConfig.(
+      {
+        switch (env) {
+        | Inherit => augmentExistingEnvironment(StringMap.empty)
+        | Additive(augmentedEnv) => augmentExistingEnvironment(augmentedEnv)
+        | Strict(env) => env
+        };
+      }
+    )
+    |> StringMap.bindings;
+  };
 };
 
 [@deriving show({with_path: false})]
@@ -94,14 +143,17 @@ module Sub = {
           dispatch(ScreenUpdated({id: params.id, screen, cursor}));
         };
 
+        let env = Internal.getEnvironmentFromConfiguration(launchConfig.env);
+
         let ptyResult =
           Pty.start(
             ~setup=params.setup,
-            ~env=[],
+            ~env,
             ~cwd=Sys.getcwd(),
             ~rows,
             ~cols=columns,
             ~cmd=params.launchConfig.executable,
+            ~arguments=params.launchConfig.arguments,
             onData,
           );
 

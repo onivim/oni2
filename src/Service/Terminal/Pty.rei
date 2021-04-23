@@ -10,6 +10,7 @@ let start:
     ~rows: int,
     ~cols: int,
     ~cmd: string,
+    ~arguments: list(string),
     string => unit
   ) =>
   result(t, string);
