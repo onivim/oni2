@@ -16,6 +16,7 @@ let renderLine =
       ~selectionRanges,
       ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
       ~vim,
+      ~languageConfiguration,
       ~languageSupport,
       viewLine,
       _offset,
@@ -37,6 +38,31 @@ let renderLine =
     let item = EditorCoreTypes.LineNumber.toZeroBased(index);
 
     let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) => {
+      // If at single character, get the token under the cursor
+      let range =
+        if (diagnostic.range.start == diagnostic.range.stop) {
+          Editor.getTokenAt(
+            ~languageConfiguration,
+            diagnostic.range.start,
+            context.editor,
+          )
+          |> Option.map(range
+               // In addition, bump the end position out - the range returned from the editor is inclusive,
+               // but the squiggly rendering is exclusive.
+               =>
+                 CharacterRange.{
+                   start: range.start,
+                   stop: {
+                     ...range.stop,
+                     character: CharacterIndex.(range.stop.character + 1),
+                   },
+                 }
+               )
+          |> Option.value(~default=diagnostic.range);
+        } else {
+          diagnostic.range;
+        };
+
       let color =
         Exthost.Diagnostic.Severity.(
           switch (diagnostic.severity) {
@@ -46,7 +72,7 @@ let renderLine =
           | Info => colors.infoForeground
           }
         );
-      Draw.squiggly(~context, ~color, diagnostic.range);
+      Draw.squiggly(~context, ~color, range);
     };
 
     /* Draw error markers */
@@ -117,6 +143,7 @@ let renderEmbellishments =
       ~matchingPairs,
       ~vim,
       ~languageSupport,
+      ~languageConfiguration,
     ) =>
   Draw.renderImmediate(
     ~context,
@@ -129,6 +156,7 @@ let renderEmbellishments =
       ~matchingPairs,
       ~vim,
       ~languageSupport,
+      ~languageConfiguration,
     ),
   );
 
@@ -272,6 +300,7 @@ let render =
     ~matchingPairs,
     ~vim,
     ~languageSupport,
+    ~languageConfiguration,
   );
 
   let bufferId = Buffer.getId(buffer);
