@@ -3,17 +3,20 @@ const net = require("net");
 const pty = require('node-pty');
 
 process.stdout.write("Hello!");
+// let shouldLog = process.env["ONIVIM2_DEBUG_TERMINAL"];
 let shouldLog = process.env["ONIVIM2_DEBUG_TERMINAL"];
 const log = shouldLog ? (msg) => console.log(`[NODE] ${msg}`) : (_msg) => { };
 
 const pipe = process.argv[2];
 const cwd = process.argv[3];
 const cmd = process.argv[4];
+const initialRows = parseInt(process.argv[5]);
+const initialCols = parseInt(process.argv[6]);
 log("Connected to pipe: " + pipe);
 log("Using cwd: " + cwd);
 log("Using cmd: " + cmd);
 
-const remainingArguments = process.argv.slice(5, process.argv.length);
+const remainingArguments = process.argv.slice(7, process.argv.length);
 log("Using remaining arguments: " + JSON.stringify(remainingArguments));
 
 const client = net.connect(pipe, () => {
@@ -22,8 +25,8 @@ const client = net.connect(pipe, () => {
 
 const ptyProcess = pty.spawn(cmd, [], {
 	name: 'xterm-color',
-	cols: 80,
-	rows: 30,
+	cols: initialCols || 80,
+	rows: initialRows || 30,
 	cwd: cwd,
 	env: process.env,
 });

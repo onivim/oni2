@@ -56,7 +56,7 @@ type t = {
 module Internal = {
   // Setup process
   let createProcess =
-      (~cwd, ~env, ~setup, ~namedPipeStr, ~command, ~arguments) => {
+      (~cwd, ~env, ~rows, ~cols, ~setup, ~namedPipeStr, ~command, ~arguments) => {
     let process = {
       open Base.Result.Let_syntax;
 
@@ -69,7 +69,15 @@ module Internal = {
       let scriptPath =
         Setup.getNodeScriptPath(~script="pty-helper.js", setup);
 
-      let args = [namedPipeStr, cwd, command] @ arguments;
+      let args =
+        [
+          namedPipeStr,
+          cwd,
+          command,
+          string_of_int(rows),
+          string_of_int(cols),
+        ]
+        @ arguments;
       let%bind process =
         LuvEx.Process.spawn(
           ~on_exit,
@@ -143,6 +151,8 @@ let start =
   let%bind process =
     Internal.createProcess(
       ~setup,
+      ~rows,
+      ~cols,
       ~env,
       ~namedPipeStr,
       ~command=cmd,
