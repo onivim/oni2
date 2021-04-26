@@ -41,6 +41,9 @@ module Protocol = {
           Bytes.of_string(json),
         );
       };
+
+    let close =
+      Packet.create(~ack=2, ~packetType=Packet.Regular, ~id=0, Bytes.empty);
   };
 };
 
@@ -183,4 +186,8 @@ let resize = (~rows, ~cols, {write, _}) => {
   write(packet);
 };
 
-let close = pty => ();
+let close = ({write, _}) => {
+  prerr_endline("Trying to close");
+  let packet = Protocol.Outgoing.close;
+  write(packet);
+};

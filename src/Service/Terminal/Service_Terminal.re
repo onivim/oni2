@@ -180,16 +180,7 @@ module Sub = {
         if (rows > 0
             && columns > 0
             && (rows != state.rows || columns != state.columns)) {
-          // TODO: Resize
-          // Exthost.Request.TerminalService.acceptProcessResize(
-          //   ~id=params.id,
-          //   ~cols=columns,
-          //   ~rows,
-          //   params.extHostClient,
-          // );
-
           state.isResizing := true;
-          // ReveryTerminal.resize(~rows, ~columns, state.terminal);
           state.maybePty^ |> Option.iter(Pty.resize(~rows, ~cols=columns));
           ReveryTerminal.resize(~rows, ~columns, state.terminal);
           state.isResizing := false;
@@ -200,14 +191,6 @@ module Sub = {
       };
 
       let dispose = (~params, ~state) => {
-        // TODO: Dispose
-        // let () =
-        //   Exthost.Request.TerminalService.acceptProcessShutdown(
-        //     ~immediate=false,
-        //     ~id=params.id,
-        //     params.extHostClient,
-        //   );
-
         switch (state.maybePty^) {
         | None => ()
         | Some(pty) => Pty.close(pty)

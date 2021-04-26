@@ -29,6 +29,12 @@ const ptyProcess = pty.spawn(cmd, [], {
 
 let currentId = 0;
 
+const InMessageType = {
+	input: 0, // user input (string)
+	resize: 1, // json ({rows: ..., cols: ...})
+	kill: 2, // n/a
+}
+
 const OutMessageType = {
 	data: 0, // string
 	exit: 1, // json ({exitCode: })
@@ -74,15 +80,16 @@ client.on('data', (buffer) => {
 	// 0: User 
 
 	let data = buffer.slice(13, buffer.length);
-	//console.log(`Got data - type: ${type} id: ${id} ack: ${ack} length: ${length} - data: |${data.toString("utf8")}|`);
 	switch (ack) {
-		case 0: ptyProcess.write(data);
+		case InMessageType.input: ptyProcess.write(data);
 			break;
-		case 1:
+		case InMessageType.resize:
 			const size = JSON.parse(data);
 			console.log("DATA: " + data);
 			ptyProcess.resize(size.cols, size.rows);
 			break;
+		case InMessageType.kill:
+			ptyProcess.kill();
 		default:
 			// Unknown message type
 			break;
