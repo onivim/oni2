@@ -130,13 +130,13 @@ let start =
         |> Bytes.to_string
         |> int_of_string_opt
         |> Option.iter(onPidChanged)
-      | 3 => 
+      | 3 =>
         let process = body |> Bytes.to_string;
         if (Sys.win32 && process == "xterm-color") {
-          cmd |> onTitleChanged
+          cmd |> onTitleChanged;
         } else {
-          process |> onTitleChanged
-        }
+          process |> onTitleChanged;
+        };
       | unknownType =>
         Log.errorf(m => m("Unknown message type (ack): %d", unknownType))
       }
