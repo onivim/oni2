@@ -143,6 +143,10 @@ module Sub = {
           dispatch(ScreenUpdated({id: params.id, screen, cursor}));
         };
 
+        let onExit = (~exitCode) => {
+          dispatch(ProcessExit({id: params.id, exitCode}));
+        };
+
         let env = Internal.getEnvironmentFromConfiguration(launchConfig.env);
 
         let ptyResult =
@@ -154,7 +158,8 @@ module Sub = {
             ~cols=columns,
             ~cmd=params.launchConfig.executable,
             ~arguments=params.launchConfig.arguments,
-            onData,
+            ~onData,
+            ~onExit,
           );
 
         switch (ptyResult) {

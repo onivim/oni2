@@ -91,7 +91,8 @@ module Internal = {
   };
 };
 
-let start = (~setup, ~env, ~cwd, ~rows, ~cols, ~cmd, ~arguments, onData) => {
+let start =
+    (~setup, ~env, ~cwd, ~rows, ~cols, ~cmd, ~arguments, ~onData, ~onExit) => {
   open Base.Result.Let_syntax;
   let uniqueId = UniqueId.create(~friendlyName="Pty");
 
@@ -102,8 +103,16 @@ let start = (~setup, ~env, ~cwd, ~rows, ~cols, ~cmd, ~arguments, onData) => {
   let dispatch = (msg: Exthost.Transport.msg) => {
     switch (msg) {
     | Connected => prerr_endline("--connected")
-    | Received({body, _}: Exthost.Transport.Packet.t) =>
-      onData(Bytes.to_string(body))
+    | Received({body, header}: Exthost.Transport.Packet.t) =>
+      switch (header.ack) {
+      | 0 => onData(Bytes.to_string(body))
+      //  TODO: Parse exit code
+      | 1 => onExit(~exitCode=0)
+      | unknownType =>
+        prerr_endline(
+          "Unknown message type (ack): " ++ string_of_int(unknownType),
+        )
+      }
     | msg =>
       prerr_endline("unknown message: " ++ Exthost.Transport.show_msg(msg))
     };

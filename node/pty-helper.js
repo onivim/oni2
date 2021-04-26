@@ -29,12 +29,21 @@ const ptyProcess = pty.spawn(cmd, [], {
 
 let currentId = 0;
 
-const write = (str) => {
+const OutMessageType = {
+	data: 0, // string
+	exit: 1, // json ({exitCode: })
+};
+
+const write = (type, str) => {
 
 	let data = Buffer.alloc(str.length, str);
 	let length = Buffer.byteLength(data);
 	let header = Buffer.alloc(13);
-	const ack = 0;
+
+	// Protocol augmentation:
+	// The 'ack' field is being used to discriminiate between message types
+	const ack = type;
+
 	header.writeUInt8(1, 0);
 	header.writeUInt32BE(currentId++, 1);
 	header.writeUInt32BE(ack, 5);
@@ -46,9 +55,10 @@ const write = (str) => {
 	client.write(outBuffer)
 };
 
-ptyProcess.on('data', write);
+ptyProcess.on('data', (data) => write(OutMessageType.data, data));
 
 ptyProcess.on('exit', (exitCode) => {
+	write(OutMessageType.exit, JSON.stringify({ exitCode: exitCode }));
 	console.log("js: pty exited");
 });
 
@@ -58,6 +68,10 @@ client.on('data', (buffer) => {
 	let id = buffer.readUInt32BE(1);
 	let ack = buffer.readUInt32BE(5);
 	let length = buffer.readUInt32BE(9);
+
+	// Protocol augmentation:
+	// The 'ack' field is being used to discriminate between message types
+	// 0: User 
 
 	let data = buffer.slice(13, buffer.length);
 	//console.log(`Got data - type: ${type} id: ${id} ack: ${ack} length: ${length} - data: |${data.toString("utf8")}|`);

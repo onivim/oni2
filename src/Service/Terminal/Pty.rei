@@ -11,7 +11,8 @@ let start:
     ~cols: int,
     ~cmd: string,
     ~arguments: list(string),
-    string => unit
+    ~onData: string => unit,
+    ~onExit: (~exitCode: int) => unit,
   ) =>
   result(t, string);
 
