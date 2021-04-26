@@ -333,11 +333,12 @@ let update =
   };
 };
 
-let subscription = (~workspaceUri, extHostClient, model: t) => {
+let subscription = (~setup, ~workspaceUri, extHostClient, model: t) => {
   model
   |> toList
   |> List.map((terminal: terminal) => {
        Service_Terminal.Sub.terminal(
+         ~setup,
          ~id=terminal.id,
          ~launchConfig=terminal.launchConfig,
          ~rows=terminal.rows,

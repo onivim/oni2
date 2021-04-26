@@ -91,9 +91,9 @@ let%component make =
   let terminalTheme = Feature_Terminal.theme(theme);
   let defaultBackground = Feature_Terminal.defaultBackground(theme);
   let defaultForeground = Feature_Terminal.defaultForeground(theme);
+  let {screen, cursor, _}: Feature_Terminal.terminal = terminal;
 
   let element = {
-    let {screen, cursor, _}: Feature_Terminal.terminal = terminal;
     let font =
       ReveryTerminal.Font.make(~smoothing, ~size=fontSize, resolvedFont);
     ReveryTerminal.render(

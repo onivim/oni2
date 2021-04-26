@@ -150,10 +150,10 @@ native-watchdog@1.3.0:
   resolved "https://registry.yarnpkg.com/native-watchdog/-/native-watchdog-1.3.0.tgz#88cee94c9dc766b85c8506eda14c8bd8c9618e27"
   integrity sha512-WOjGRNGkYZ5MXsntcvCYrKtSYMaewlbCFplbcUVo9bE80LPVt8TAVFHYWB8+a6fWCGYheq21+Wtt6CJrUaCJhw==
 
-node-pty@^0.10.0-beta19:
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/node-pty/-/node-pty-0.10.0.tgz#c98d23967b076b35c9fb216c542a04d0b5db4821"
-  integrity sha512-Q65ookKbjhqWUYKmtZ6iPn0nnqNdzpm3YJOBmzwWJde/TrenBxK9FgqGGtSW0Wjz4YsR1grQF4a7RS5nBwuW9A==
+node-pty@0.11.0-beta5, node-pty@^0.10.0-beta19:
+  version "0.11.0-beta5"
+  resolved "https://registry.yarnpkg.com/node-pty/-/node-pty-0.11.0-beta5.tgz#de9c5296fd2a74ec7875c5e8acb50335e1b38a19"
+  integrity sha512-ZwBo5TviKYOBeUZvE+twH5negddJW9Ml03o5wLPr1WX+OzXkq6GXhPSOJm4zcXcuC/j0hn+lorvTzEyliDcsPA==
   dependencies:
     nan "^2.14.0"
 

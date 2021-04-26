@@ -11,6 +11,7 @@
     "@onivim/request-light": "0.4.1",
     "@onivim/vscode-exthost": "1.53.0",
     "fs-extra": "^8.1.0",
+    "node-pty": "0.11.0-beta5",
     "sudo-prompt": "^9.0.0",
     "yauzl": "^2.5.1"
   },
@@ -27,6 +28,7 @@
     "graceful-fs": "4.1.11",
     "debug": "3.2.6",
     "ms": "2.1.2",
-    "agent-base": "4.3.0"
+    "agent-base": "4.3.0",
+    "node-pty": "0.11.0-beta5"
   }
 }
