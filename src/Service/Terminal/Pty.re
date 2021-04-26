@@ -130,7 +130,19 @@ module Internal = {
 };
 
 let start =
-    (~setup, ~env, ~cwd, ~rows, ~cols, ~cmd, ~arguments, ~onData, ~onExit) => {
+    (
+      ~setup,
+      ~env,
+      ~cwd,
+      ~rows,
+      ~cols,
+      ~cmd,
+      ~arguments,
+      ~onData,
+      ~onPidChanged,
+      ~onTitleChanged,
+      ~onExit,
+    ) => {
   open Base.Result.Let_syntax;
   let uniqueId = UniqueId.create(~friendlyName="Pty");
 
@@ -146,6 +158,12 @@ let start =
       | 0 => onData(Bytes.to_string(body))
       //  TODO: Parse exit code
       | 1 => onExit(~exitCode=0)
+      | 2 =>
+        body
+        |> Bytes.to_string
+        |> int_of_string_opt
+        |> Option.iter(onPidChanged)
+      | 3 => body |> Bytes.to_string |> onTitleChanged
       | unknownType =>
         prerr_endline(
           "Unknown message type (ack): " ++ string_of_int(unknownType),

@@ -147,6 +147,14 @@ module Sub = {
           dispatch(ProcessExit({id: params.id, exitCode}));
         };
 
+        let onPidChanged = pid => {
+          dispatch(ProcessStarted({id: params.id, pid}));
+        };
+
+        let onTitleChanged = title => {
+          dispatch(ProcessTitleChanged({id: params.id, title}));
+        };
+
         let env = Internal.getEnvironmentFromConfiguration(launchConfig.env);
 
         let ptyResult =
@@ -160,6 +168,8 @@ module Sub = {
             ~arguments=params.launchConfig.arguments,
             ~onData,
             ~onExit,
+            ~onPidChanged,
+            ~onTitleChanged,
           );
 
         switch (ptyResult) {

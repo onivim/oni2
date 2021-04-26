@@ -38,6 +38,8 @@ const InMessageType = {
 const OutMessageType = {
 	data: 0, // string
 	exit: 1, // json ({exitCode: })
+	pidChanged: 2, // int (pid)
+	titleChanged: 3 // string (title)
 };
 
 const write = (type, str) => {
@@ -61,7 +63,24 @@ const write = (type, str) => {
 	client.write(outBuffer)
 };
 
-ptyProcess.on('data', (data) => write(OutMessageType.data, data));
+let currentPid = null;
+let currentTitle = null;
+
+ptyProcess.on('data', (data) => {
+	write(OutMessageType.data, data)
+
+	if (ptyProcess.process != currentTitle) {
+		currentTitle = ptyProcess.process;
+		console.log("TITLE CHANGED: " + ptyProcess.process);
+		write(OutMessageType.titleChanged, currentTitle)
+	}
+
+	if (ptyProcess.pid != currentPid) {
+		currentPid = ptyProcess.pid;
+		write(OutMessageType.pidChanged, JSON.stringify(currentPid));
+		console.log("PID CHANGED: " + ptyProcess.pid);
+	}
+});
 
 ptyProcess.on('exit', (exitCode) => {
 	write(OutMessageType.exit, JSON.stringify({ exitCode: exitCode }));
@@ -69,7 +88,6 @@ ptyProcess.on('exit', (exitCode) => {
 });
 
 client.on('data', (buffer) => {
-	console.log("Got input: " + Buffer.toString(buffer));
 	let type = buffer.readUInt8(0);
 	let id = buffer.readUInt32BE(1);
 	let ack = buffer.readUInt32BE(5);

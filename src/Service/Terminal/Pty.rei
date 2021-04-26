@@ -12,7 +12,9 @@ let start:
     ~cmd: string,
     ~arguments: list(string),
     ~onData: string => unit,
-    ~onExit: (~exitCode: int) => unit,
+    ~onPidChanged: int => unit,
+    ~onTitleChanged: string => unit,
+    ~onExit: (~exitCode: int) => unit
   ) =>
   result(t, string);
 
