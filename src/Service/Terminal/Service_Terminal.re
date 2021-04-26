@@ -32,7 +32,7 @@ module Internal = {
         };
 
       StringMap.merge(
-        (key, original, augmented) => {
+        (_key, original, augmented) => {
           switch (original, augmented) {
           | (None, None) => None
           | (Some(v), None) => Some(v)
@@ -136,7 +136,6 @@ module Sub = {
           );
         ReveryTerminal.resize(~rows, ~columns=40, terminal);
         let onData = data => {
-          prerr_endline("Got some data!");
           ReveryTerminal.write(~input=data, terminal);
           let cursor = ReveryTerminal.cursor(terminal);
           let screen = ReveryTerminal.screen(terminal);

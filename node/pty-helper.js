@@ -3,7 +3,8 @@ const net = require("net");
 const pty = require('node-pty');
 
 process.stdout.write("Hello!");
-const log = (msg) => console.log(`[NODE] ${msg}`)
+let shouldLog = process.env["ONIVIM2_DEBUG_TERMINAL"];
+const log = shouldLog ? (msg) => console.log(`[NODE] ${msg}`) : (_msg) => { };
 
 const pipe = process.argv[2];
 const cwd = process.argv[3];
@@ -58,8 +59,6 @@ const write = (type, str) => {
 	header.writeUInt32BE(length, 9);
 
 	let outBuffer = Buffer.concat([header, data]);
-	console.log(`Sending data - total length: ${outBuffer.length}`);
-	console.log(`data: ${str}`)
 	client.write(outBuffer)
 };
 
@@ -71,20 +70,20 @@ ptyProcess.on('data', (data) => {
 
 	if (ptyProcess.process != currentTitle) {
 		currentTitle = ptyProcess.process;
-		console.log("TITLE CHANGED: " + ptyProcess.process);
+		log("Title changed: " + ptyProcess.process);
 		write(OutMessageType.titleChanged, currentTitle)
 	}
 
 	if (ptyProcess.pid != currentPid) {
 		currentPid = ptyProcess.pid;
 		write(OutMessageType.pidChanged, JSON.stringify(currentPid));
-		console.log("PID CHANGED: " + ptyProcess.pid);
+		log("Pid changed: " + ptyProcess.pid);
 	}
 });
 
 ptyProcess.on('exit', (exitCode) => {
 	write(OutMessageType.exit, JSON.stringify({ exitCode: exitCode }));
-	console.log("js: pty exited");
+	log("js: pty exited");
 });
 
 client.on('data', (buffer) => {
@@ -95,21 +94,19 @@ client.on('data', (buffer) => {
 
 	// Protocol augmentation:
 	// The 'ack' field is being used to discriminate between message types
-	// 0: User 
-
 	let data = buffer.slice(13, buffer.length);
 	switch (ack) {
 		case InMessageType.input: ptyProcess.write(data);
 			break;
 		case InMessageType.resize:
 			const size = JSON.parse(data);
-			console.log("DATA: " + data);
 			ptyProcess.resize(size.cols, size.rows);
 			break;
 		case InMessageType.kill:
 			ptyProcess.kill();
 		default:
 			// Unknown message type
+			log("Unknown message type: " + ack);
 			break;
 	}
 });
