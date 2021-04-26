@@ -11,10 +11,10 @@
     https-proxy-agent "^2.2.4"
     vscode-nls "^4.1.2"
 
-"@onivim/vscode-exthost@1.53.0":
-  version "1.53.0"
-  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.53.0.tgz#86fff6a92163c40c37e5934719992f6d3b6fc26b"
-  integrity sha512-eg9Cprn6MyueU56kAZZ6/ovN8BK1Lq8rZuGXsSh4O/vRTXJc3RJACsHtYsHzJOPAXwnlWKYx9rvKtaJc0tTFzg==
+"@onivim/vscode-exthost@1.54.3000":
+  version "1.54.3000"
+  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.54.3000.tgz#07d6b5dfd1fdc6b49de072ee3e2cf8cfc74140db"
+  integrity sha512-gP/lEN9uXd0VutyZbe7Yinh5DlZDtbdjESQ4DdmwTeyVEldK8n1/e1HjkYKZKxrXXlF+v7ieYes/4eYykJLp/w==
   dependencies:
     graceful-fs "4.2.3"
     iconv-lite-umd "0.6.8"
