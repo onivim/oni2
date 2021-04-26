@@ -9,9 +9,44 @@ module UniqueId =
 
 module Log = (val Log.withNamespace("Service_Terminal.Pty"));
 
+module Protocol = {
+  module Outgoing = {
+    let userInput: string => Packet.t =
+      input => {
+        Packet.create(
+          ~packetType=Packet.Regular,
+          ~ack=0,
+          ~id=0,
+          Bytes.of_string(input),
+        );
+      };
+
+    let resize: (~rows: int, ~cols: int) => Packet.t =
+      (~rows, ~cols) => {
+        let json =
+          Printf.sprintf(
+            {|
+        {
+          "rows": %d,
+          "cols": %d
+        }
+      |},
+            rows,
+            cols,
+          );
+        Packet.create(
+          ~ack=1,
+          ~packetType=Packet.Regular,
+          ~id=0,
+          Bytes.of_string(json),
+        );
+      };
+  };
+};
+
 type t = {
   onData: string => unit,
-  write: string => unit,
+  write: Packet.t => unit,
 };
 
 module Internal = {
@@ -121,13 +156,7 @@ let start =
   let%bind server =
     Exthost.Transport.start(~namedPipe=namedPipeStr, ~dispatch);
 
-  let write = str => {
-    let packet =
-      Packet.create(
-        ~bytes=Bytes.of_string(str),
-        ~packetType=Packet.Regular,
-        ~id=0,
-      );
+  let write = packet => {
     Exthost.Transport.send(~packet, server);
   };
 
@@ -144,11 +173,14 @@ let start =
 };
 
 let write = ({write, _}, data) => {
-  write(data);
+  let packet = Protocol.Outgoing.userInput(data);
+  write(packet);
 };
 
-let resize = (~rows, ~cols, _pty) => {
-  prerr_endline("TODO: Resize!");
+let resize = (~rows, ~cols, {write, _}) => {
+  prerr_endline("Trying to resize");
+  let packet = Protocol.Outgoing.resize(~rows, ~cols);
+  write(packet);
 };
 
 let close = pty => ();

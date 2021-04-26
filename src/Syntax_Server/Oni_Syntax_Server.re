@@ -21,7 +21,7 @@ let start = (~parentPid, ~namedPipe, ~healthCheck) => {
 
   let write = (msg: Protocol.ServerToClient.t) => {
     let bytes = Marshal.to_bytes(msg, []);
-    let packet = Transport.Packet.create(~bytes, ~packetType=Regular, ~id=0);
+    let packet = Transport.Packet.create(~packetType=Regular, ~id=0, bytes);
 
     transport^ |> Option.iter(Transport.send(~packet));
   };

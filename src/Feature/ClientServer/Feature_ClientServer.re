@@ -121,10 +121,9 @@ module Client = {
                     Packet.create(
                       ~id=0,
                       ~packetType=Packet.Regular,
-                      ~bytes=
-                        Protocol.(
-                          toBytes(OpenFilesAndFolder({files, folderToOpen}))
-                        ),
+                      Protocol.(
+                        toBytes(OpenFilesAndFolder({files, folderToOpen}))
+                      ),
                     ),
                 )
               );

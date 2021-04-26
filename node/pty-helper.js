@@ -75,7 +75,18 @@ client.on('data', (buffer) => {
 
 	let data = buffer.slice(13, buffer.length);
 	//console.log(`Got data - type: ${type} id: ${id} ack: ${ack} length: ${length} - data: |${data.toString("utf8")}|`);
-	ptyProcess.write(data);
+	switch (ack) {
+		case 0: ptyProcess.write(data);
+			break;
+		case 1:
+			const size = JSON.parse(data);
+			console.log("DATA: " + data);
+			ptyProcess.resize(size.cols, size.rows);
+			break;
+		default:
+			// Unknown message type
+			break;
+	}
 });
 
 client.on('close', () => {

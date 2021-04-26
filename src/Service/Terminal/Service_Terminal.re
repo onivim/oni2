@@ -190,7 +190,7 @@ module Sub = {
 
           state.isResizing := true;
           // ReveryTerminal.resize(~rows, ~columns, state.terminal);
-          Pty.resize(~rows, ~cols=columns);
+          state.maybePty^ |> Option.iter(Pty.resize(~rows, ~cols=columns));
           ReveryTerminal.resize(~rows, ~columns, state.terminal);
           state.isResizing := false;
           {...state, rows, columns};
