@@ -415,6 +415,7 @@ type t = {
   bufferRenderers: BufferRenderers.t,
   changelog: Feature_Changelog.model,
   cli: Oni_CLI.t,
+  clientServer: Feature_ClientServer.model,
   clipboard: Feature_Clipboard.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
@@ -528,6 +529,7 @@ let initial =
     bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
     cli,
+    clientServer: Feature_ClientServer.create(),
     clipboard: Feature_Clipboard.initial,
     colorTheme:
       Feature_Theme.initial([

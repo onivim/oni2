@@ -250,6 +250,7 @@ let start =
 
     let terminalSubscription =
       Feature_Terminal.subscription(
+        ~setup,
         ~workspaceUri=
           Core.Uri.fromPath(
             Feature_Workspace.workingDirectory(state.workspace),
@@ -511,7 +512,12 @@ let start =
         Isolinear.Sub.none;
       };
 
+    let clientServerSub =
+      Feature_ClientServer.sub(state.clientServer)
+      |> Isolinear.Sub.map(msg => Model.Actions.ClientServer(msg));
+
     [
+      clientServerSub,
       menuBarSub,
       extHostSubscription,
       languageSupportSub,

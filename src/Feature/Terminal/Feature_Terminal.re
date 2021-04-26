@@ -170,7 +170,13 @@ let updateById = (id, f, model) => {
   {...model, idToTerminal};
 };
 
-let update = (~config: Config.resolver, model: t, msg) => {
+let update =
+    (
+      ~clientServer: Feature_ClientServer.model,
+      ~config: Config.resolver,
+      model: t,
+      msg,
+    ) => {
   switch (msg) {
   | Command(NewTerminal({cmd, splitDirection, closeOnExit})) =>
     let cmdToUse =
@@ -196,8 +202,12 @@ let update = (~config: Config.resolver, model: t, msg) => {
     let defaultEnvVariables =
       [
         ("ONIVIM_TERMINAL", BuildInfo.version),
-        // TODO:
-        // ("ONIVIM_SERVERNAME", ...)
+        (
+          "ONIVIM2_PARENT_PIPE",
+          clientServer
+          |> Feature_ClientServer.pipe
+          |> Exthost.NamedPipe.toString,
+        ),
       ]
       |> List.to_seq
       |> StringMap.of_seq;
@@ -323,11 +333,12 @@ let update = (~config: Config.resolver, model: t, msg) => {
   };
 };
 
-let subscription = (~workspaceUri, extHostClient, model: t) => {
+let subscription = (~setup, ~workspaceUri, extHostClient, model: t) => {
   model
   |> toList
   |> List.map((terminal: terminal) => {
        Service_Terminal.Sub.terminal(
+         ~setup,
          ~id=terminal.id,
          ~launchConfig=terminal.launchConfig,
          ~rows=terminal.rows,
