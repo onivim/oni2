@@ -802,7 +802,6 @@ module Contributions = {
     @ References.Contributions.keybindings
     @ SignatureHelp.Contributions.keybindings;
 
-
   // TODO: References
   let panes = [];
 
@@ -1148,3 +1147,4 @@ module View = {
       |> Revery.UI.React.listToElement;
     };
   };
+};
