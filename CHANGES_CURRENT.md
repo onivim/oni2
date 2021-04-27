@@ -64,6 +64,7 @@
 - #3451 - Terminal: Fix opening file using `oni2` from integrated terminal (fixes #2297)
 - #3456 - Diagnostics: Swift diagnostics not showing in editor surface (related #3434)
 - #3457 - Snippets: Fix parse error when colon is in placeholder (related #3434)
+- #3464 - Vim: Fix alternate-file keybinding (fixes #3455)
 
 ### Performance
 
