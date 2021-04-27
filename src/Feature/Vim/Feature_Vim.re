@@ -85,7 +85,10 @@ type msg =
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | SettingsChanged
+  | SettingsChanged({
+      name: string,
+      value: Vim.Setting.value,
+    })
   | ModeDidChange({
       allowAnimation: bool,
       mode: Vim.Mode.t,
@@ -156,7 +159,7 @@ module Effects = {
   };
 };
 
-let update = (msg, model: model) => {
+let update = (~vimContext, msg, model: model) => {
   switch (msg) {
   | ModeChanged({allowAnimation, mode, effects, subMode}) => (
       {...model, subMode} |> handleEffects(effects),
@@ -165,6 +168,7 @@ let update = (msg, model: model) => {
   | Pasted(text) =>
     let eff =
       Service_Vim.Effects.paste(
+        ~context=vimContext,
         ~toMsg=mode => PasteCompleted({mode: mode}),
         text,
       );
@@ -175,7 +179,7 @@ let update = (msg, model: model) => {
     )
   | SettingChanged({fullName, value, _}: Vim.Setting.t) => (
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
-      SettingsChanged,
+      SettingsChanged({name: fullName, value}),
     )
   | MacroRecordingStarted({register}) => (
       {...model, recordingMacro: Some(register)},
@@ -272,10 +276,21 @@ module Keybindings = {
       ~toKeys="<ESC>",
       ~condition=WhenExpr.Value(True),
     );
+
+  // Normalize the Ctrl-^ binding (alternate file) for libvim
+  // #3455: The Control+6 key gets sent as, actually, Ctrl-6, which isn't recognized
+  let controlCaretRemap =
+    remap(
+      ~allowRecursive=true,
+      ~fromKeys="<C-6>",
+      ~toKeys="<C-^>",
+      ~condition=WhenExpr.Value(True),
+    );
 };
 
 module Contributions = {
-  let keybindings = Keybindings.[controlSquareBracketRemap];
+  let keybindings =
+    Keybindings.[controlSquareBracketRemap, controlCaretRemap];
 
   let configuration = Configuration.[experimentalViml.spec];
 };

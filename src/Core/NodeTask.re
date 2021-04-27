@@ -39,7 +39,14 @@ module Internal = {
   };
 };
 
-let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
+let run =
+    (
+      ~additionalEnvironment=[],
+      ~name="Anonymous",
+      ~args=[],
+      ~setup: Setup.t,
+      script: string,
+    ) => {
   Log.info("Starting task: " ++ name);
   let (promise, resolver) = Lwt.task();
 
@@ -83,10 +90,13 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
       };
     };
 
+    let environment =
+      Internal.getFilteredEnvironment() @ additionalEnvironment;
+
     let%bind _: Luv.Process.t =
       LuvEx.Process.spawn(
         ~on_exit,
-        ~environment=Internal.getFilteredEnvironment(),
+        ~environment,
         ~redirect=[
           Luv.Process.to_parent_pipe(
             ~fd=Luv.Process.stdout,

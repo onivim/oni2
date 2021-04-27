@@ -192,6 +192,10 @@ let%component make =
     onEditorSizeChanged(editorId, width, height);
   };
 
+  let onBoundingBoxChanged = bbox => {
+    dispatch(Msg.BoundingBoxChanged({bbox: bbox}));
+  };
+
   let showYankHighlightAnimation = Config.yankHighlightEnabled.get(config);
   let maybeYankHighlights =
     showYankHighlightAnimation ? editor |> Editor.yankHighlight : None;
@@ -274,11 +278,10 @@ let%component make =
         ~uiFont,
         ~editorFont,
         ~model=languageSupport,
-        ~diagnostics,
         ~tokenTheme,
         ~grammars=grammarRepository,
         ~buffer,
-        ~editorId=Some(editorId),
+        ~editorId,
         ~languageInfo,
       );
 
@@ -321,7 +324,10 @@ let%component make =
   let horizontalScrollbarThickness =
     Editor.horizontalScrollbarThickness(editor);
 
-  <View style={Styles.container(~colors)} onDimensionsChanged>
+  <View
+    style={Styles.container(~colors)}
+    onDimensionsChanged
+    onBoundingBoxChanged>
     gutterView
     <SurfaceView
       buffer

@@ -13,12 +13,18 @@ type panel =
 module Group: {
   type t;
 
+  type id;
+
+  let id: t => id;
+
   let allEditors: t => list(Editor.t);
 };
 
 type model;
 
+let activeGroup: model => Group.t;
 let activeLayoutGroups: model => list(Group.t);
+let setActiveGroup: (Group.id, model) => model;
 
 let initial: list(Editor.t) => model;
 
@@ -120,11 +126,16 @@ module Commands: {
   let splitHorizontal: Command.t(msg);
 
   let closeActiveEditor: Command.t(msg);
+  let closeActiveSplit: Command.t(msg);
 
   let moveLeft: Command.t(msg);
   let moveRight: Command.t(msg);
   let moveUp: Command.t(msg);
   let moveDown: Command.t(msg);
+  let moveTopLeft: Command.t(msg);
+  let moveBottomRight: Command.t(msg);
+  let cycleForward: Command.t(msg);
+  let cycleBackward: Command.t(msg);
 
   let rotateForward: Command.t(msg);
   let rotateBackward: Command.t(msg);

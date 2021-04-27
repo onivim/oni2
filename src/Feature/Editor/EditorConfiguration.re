@@ -9,7 +9,6 @@ module CustomDecoders: {
     Config.Schema.codec([ | `All | `Boundary | `Selection | `None]);
   let lineNumbers:
     Config.Schema.codec([ | `On | `Relative | `RelativeOnly | `Off]);
-  let time: Config.Schema.codec(Time.t);
   let color: Config.Schema.codec(Revery.Color.t);
   let wordWrap: Config.Schema.codec([ | `Off | `On]);
 } = {
@@ -155,20 +154,6 @@ module CustomDecoders: {
           | `Relative => string("relative")
           | `RelativeOnly => string("relative-only")
           | `On => string("on")
-        ),
-    );
-
-  let time =
-    custom(
-      ~decode=Json.Decode.(int |> map(Time.ms)),
-      ~encode=
-        Json.Encode.(
-          t =>
-            t
-            |> Time.toFloatSeconds
-            |> (t => t *. 1000.)
-            |> int_of_float
-            |> int
         ),
     );
 };

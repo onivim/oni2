@@ -1,4 +1,6 @@
 open EditorCoreTypes;
+open Oni_Core;
+
 // EFFECTS
 module Effects: {
   module Commands: {
@@ -41,8 +43,15 @@ module Effects: {
   };
 
   module FileSystemEventService: {
-    let onFileEvent:
-      (~events: Exthost.Files.FileSystemEvents.t, Exthost.Client.t) =>
+    let onBufferChanged:
+      (~buffer: Oni_Core.Buffer.t, Exthost.Client.t) => Isolinear.Effect.t(_);
+
+    let onPathChanged:
+      (
+        ~path: FpExp.t(FpExp.absolute),
+        ~maybeStat: option(Luv.File.Stat.t),
+        Exthost.Client.t
+      ) =>
       Isolinear.Effect.t(_);
   };
 
@@ -150,6 +159,28 @@ module Sub: {
     (~activeEditorId: string, ~client: Exthost.Client.t) =>
     Isolinear.Sub.t(unit);
 
+  // let codeActionsBySelection:
+  //   (
+  //     ~handle: int,
+  //     ~context: Exthost.CodeAction.Context.t,
+  //     ~buffer: Oni_Core.Buffer.t,
+  //     ~range: CharacterRange.t,
+  //     ~toMsg: result(option(Exthost.CodeAction.List.t), string) => 'msg,
+  //     Exthost.Client.t
+  //   ) =>
+  //   Isolinear.Sub.t('msg);
+
+  let codeActionsByRange:
+    (
+      ~handle: int,
+      ~context: Exthost.CodeAction.Context.t,
+      ~buffer: Oni_Core.Buffer.t,
+      ~range: CharacterRange.t,
+      ~toMsg: result(option(Exthost.CodeAction.List.t), string) => 'msg,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('msg);
+
   let codeLenses:
     (
       ~handle: int,
@@ -163,7 +194,6 @@ module Sub: {
     Isolinear.Sub.t('a);
 
   let completionItems:
-    // TODO: ~base: option(string),
     (
       ~handle: int,
       ~context: Exthost.CompletionContext.t,

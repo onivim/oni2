@@ -16,6 +16,7 @@ module Make:
     let make:
       (
         ~key: Brisk_reconciler.Key.t=?,
+        ~proxy: Service_Net.Proxy.t,
         ~url: string,
         ~children: status => React.element(React.node),
         unit

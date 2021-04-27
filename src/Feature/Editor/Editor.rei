@@ -4,6 +4,12 @@ open Oni_Core;
 [@deriving show]
 type t;
 
+// A pixel position relative to the top, left of the current editor
+type relativePixelPosition = PixelPosition.t;
+
+// A pixel position relative to the top, left of the screen
+type absolutePixelPosition = PixelPosition.t;
+
 type scrollbarMetrics = {
   visible: bool,
   thumbSize: int,
@@ -60,6 +66,8 @@ let setInlineElementSize:
     t
   ) =>
   t;
+
+let setBoundingBox: (Revery.Math.BoundingBox2d.t, t) => t;
 
 let getInlineElements:
   (~line: EditorCoreTypes.LineNumber.t, t) => list(InlineElements.element);
@@ -166,6 +174,16 @@ let scrollX: t => float;
 let scrollY: t => float;
 let minimapScrollY: t => float;
 
+let pixelX: t => float;
+let pixelY: t => float;
+
+// `gutterWidth` returns the size of the gutter, which includes:
+// - Line number rendering
+// - Diff marker rendering
+// - Extra margin
+// (...later, vim signs & debugger breakpoints)
+let gutterWidth: (~editorFont: Service_Font.font, t) => float;
+
 let lineHeightInPixels: t => float;
 let linePaddingInPixels: t => float;
 let setLineHeight: (~lineHeight: LineHeight.t, t) => t;
@@ -227,9 +245,12 @@ let viewLineToPixelY: (int, t) => float;
 
 // They return both the pixel position, as well as the character width of the target character.
 let bufferBytePositionToPixel:
-  (~position: BytePosition.t, t) => (PixelPosition.t, float);
+  (~position: BytePosition.t, t) => (relativePixelPosition, float);
 let bufferCharacterPositionToPixel:
-  (~position: CharacterPosition.t, t) => (PixelPosition.t, float);
+  (~position: CharacterPosition.t, t) => (relativePixelPosition, float);
+
+let relativeToAbsolutePixel:
+  (relativePixelPosition, t) => absolutePixelPosition;
 
 // PROJECTION
 

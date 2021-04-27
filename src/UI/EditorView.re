@@ -123,6 +123,23 @@ module Parts = {
             dispatch={msg => dispatch(LanguageSupport(msg))}
             model={state.languageSupport}
           />,
+          <View
+            style=Revery.UI.Style.[
+              position(`Absolute),
+              top(0),
+              left(int_of_float(gutterWidth)),
+            ]>
+            <Feature_LanguageSupport.View.EditorWidgets
+              x={int_of_float(float(cursorPixelX) -. gutterWidth)}
+              y=cursorPixelY
+              editorId={Feature_Editor.Editor.getId(editor)}
+              theme
+              uiFont
+              editorFont
+              dispatch={msg => dispatch(LanguageSupport(msg))}
+              model={state.languageSupport}
+            />
+          </View>,
         ]
         |> React.listToElement;
       };
@@ -187,6 +204,7 @@ module Parts = {
       | ExtensionDetails =>
         <Feature_Extensions.DetailsView
           model={state.extensions}
+          proxy={state.proxy |> Feature_Proxy.proxy}
           tokenTheme={state.colorTheme |> Feature_Theme.tokenColors}
           theme
           font=uiFont

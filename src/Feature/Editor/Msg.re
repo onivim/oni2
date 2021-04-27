@@ -53,4 +53,5 @@ type t =
       line: EditorCoreTypes.LineNumber.t,
       height: int,
     })
+  | BoundingBoxChanged({bbox: [@opaque] Revery.Math.BoundingBox2d.t})
   | Internal(Editor.msg);

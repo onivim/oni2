@@ -15,6 +15,7 @@ module Internal = {
       | v when v == Revery.Key.Keycode.backspace => Some(Key.Backspace)
       | v when v == Revery.Key.Keycode.delete => Some(Key.Delete)
       | v when v == Revery.Key.Keycode.space => Some(Key.Space)
+      | v when v == 1073741881 => Some(Key.CapsLock)
       | v when v == 1073741897 => Some(Key.Insert)
       | v when v == 1073741898 => Some(Key.Home)
       | v when v == 1073741899 => Some(Key.PageUp)

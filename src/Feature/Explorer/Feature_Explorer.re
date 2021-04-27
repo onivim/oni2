@@ -58,7 +58,12 @@ type model = {
 };
 
 [@deriving show]
+type command =
+  | Reload;
+
+[@deriving show]
 type msg =
+  | Command(command)
   | KeyboardInput(string)
   | FileExplorer(Component_FileExplorer.msg)
   | SymbolOutline(Component_VimTree.msg)
@@ -86,7 +91,6 @@ let initial = (~rootPath) => {
   symbolOutline: Component_VimTree.create(~rowHeight=20),
   vimWindowNavigation: Component_VimWindows.initial,
 };
-
 let focusOutline = model => {
   ...model,
   focus: Outline,
@@ -127,6 +131,10 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
   | PreviewFile(string)
+  | WatchedPathChanged({
+      path: FpExp.t(FpExp.absolute),
+      stat: option(Luv.File.Stat.t),
+    })
   | GrabFocus
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)
@@ -134,6 +142,14 @@ type outmsg =
 
 let update = (~config, ~configuration, msg, model) => {
   switch (msg) {
+  | Command(Reload) => (
+      {
+        ...model,
+        fileExplorer:
+          model.fileExplorer |> Option.map(Component_FileExplorer.reload),
+      },
+      Nothing,
+    )
   | KeyboardInput(key) =>
     if (model.focus == FileExplorer) {
       if (model.fileExplorer == None) {
@@ -186,6 +202,8 @@ let update = (~config, ~configuration, msg, model) => {
            | Component_FileExplorer.PreviewFile(filePath) =>
              PreviewFile(filePath)
            | GrabFocus => GrabFocus
+           | Component_FileExplorer.WatchedPathChanged({path, stat}) =>
+             WatchedPathChanged({path, stat})
            };
 
          ({...model, fileExplorer: Some(fileExplorer)}, outmsg');
@@ -503,13 +521,25 @@ module View = {
   };
 };
 
-let sub = (~configuration, model) => {
+let sub = (~config, ~configuration, model) => {
   model.fileExplorer
   |> Option.map(explorer => {
-       Component_FileExplorer.sub(~configuration, explorer)
+       Component_FileExplorer.sub(~config, ~configuration, explorer)
        |> Isolinear.Sub.map(msg => FileExplorer(msg))
      })
   |> Option.value(~default=Isolinear.Sub.none);
+};
+
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let reload =
+    define(
+      ~category="Explorer",
+      ~title="Refresh",
+      "workbench.files.action.refreshFilesExplorer",
+      Command(Reload),
+    );
 };
 
 module Contributions = {
@@ -532,7 +562,7 @@ module Contributions = {
           |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
         : [];
 
-    explorerCommands @ vimNavCommands @ outlineCommands;
+    explorerCommands @ vimNavCommands @ outlineCommands @ Commands.[reload];
   };
 
   let contextKeys = (~isFocused, model) => {

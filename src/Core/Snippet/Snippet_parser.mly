@@ -38,6 +38,7 @@ additionalChoices }) }
 | DOLLAR; LB; text = TEXT; { Text("${" ^ text) }
 | text = TEXT { Text(text) }
 | COMMA; { Text(",") }
+| COLON; { Text(":") }
 | numberAsText = NUMBER { Text(string_of_int(numberAsText)) }
 | variableAsText = VARIABLE { Snippet_internal.Text(variableAsText) }
 

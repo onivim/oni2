@@ -32,6 +32,13 @@ let getActiveBuffer = (state: State.t) => {
   |> getBufferForEditor(state.buffers);
 };
 
+let getFocusedBuffer = (state: State.t) =>
+  if (FocusManager.current(state) == Focus.Editor) {
+    getActiveBuffer(state);
+  } else {
+    None;
+  };
+
 let withActiveBufferAndFileType = (state: State.t, f) => {
   let () =
     getActiveBuffer(state)

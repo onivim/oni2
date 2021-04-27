@@ -5,6 +5,16 @@ module Log = (val Log.withNamespace("Oni2.Service.Net"));
 exception ConnectionFailed;
 exception ResponseParseFailed;
 
+module Proxy = {
+  type t = {
+    httpUrl: option(string),
+    httpsUrl: option(string),
+    strictSSL: bool,
+  };
+
+  let none = {httpUrl: None, httpsUrl: None, strictSSL: false};
+};
+
 module Internal = {
   let getTemporaryFilePath = () => {
     open Base.Result.Let_syntax;
@@ -18,6 +28,28 @@ module Internal = {
     };
 
     ret |> Result.map_error(Luv.Error.strerror);
+  };
+
+  let proxyToEnvironmentVariables = (proxy: Proxy.t) => {
+    let initial = [
+      ("PROXY_ALLOW_INSECURE_SSL", proxy.strictSSL ? "0" : "1"),
+    ];
+
+    let addHttpProxy = current => {
+      switch (proxy.httpUrl) {
+      | None => current
+      | Some(url) => [("HTTP_PROXY", url), ...current]
+      };
+    };
+
+    let addHttpsProxy = current => {
+      switch (proxy.httpUrl) {
+      | None => current
+      | Some(url) => [("HTTPS_PROXY", url), ...current]
+      };
+    };
+
+    initial |> addHttpProxy |> addHttpsProxy;
   };
 };
 
@@ -39,9 +71,16 @@ module Cache = {
 };
 
 module Request = {
-  let json = (~setup, ~decoder: Json.decoder('a), url) => {
+  let json = (~proxy, ~setup, ~decoder: Json.decoder('a), url) => {
+    let additionalEnvironment = Internal.proxyToEnvironmentVariables(proxy);
     Lwt.try_bind(
-      () => NodeTask.run(~args=[url], ~setup, "request.js"),
+      () =>
+        NodeTask.run(
+          ~additionalEnvironment,
+          ~args=[url],
+          ~setup,
+          "request.js",
+        ),
       (output: string) => {
         let result: result('a, string) =
           output
@@ -58,7 +97,7 @@ module Request = {
     );
   };
 
-  let download = (~dest=?, ~setup, url) => {
+  let download = (~dest=?, ~proxy, ~setup, url) => {
     let run = maybeDest => {
       let destResult =
         switch (maybeDest) {
@@ -69,11 +108,19 @@ module Request = {
       switch (destResult) {
       | Error(msg) => Lwt.fail_with(msg)
       | Ok(dest) =>
-        NodeTask.run(~args=[url, dest], ~setup, "download.js")
+        let additionalEnvironment =
+          Internal.proxyToEnvironmentVariables(proxy);
+        NodeTask.run(
+          ~additionalEnvironment,
+          ~args=[url, dest],
+          ~setup,
+          "download.js",
+        )
+        |> Utility.LwtEx.tap(msg => {Log.info(msg)})
         |> Lwt.map(_ => {
              Cache.add(~url, dest);
              dest;
-           })
+           });
       };
     };
 

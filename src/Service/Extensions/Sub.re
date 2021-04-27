@@ -1,6 +1,7 @@
 open Oni_Core;
 type msg = result(Query.t, exn);
 type searchParams = {
+  proxy: Service_Net.Proxy.t,
   setup: Setup.t,
   query: Query.t,
 };
@@ -18,9 +19,14 @@ module SearchSub =
     };
 
     let init = (~params, ~dispatch) => {
-      let {query, setup} = params;
+      let {proxy, query, setup} = params;
       let result =
-        Catalog.search(~offset=query.offset, ~setup, query.searchText);
+        Catalog.search(
+          ~proxy,
+          ~offset=query.offset,
+          ~setup,
+          query.searchText,
+        );
 
       Lwt.on_success(
         result,
@@ -50,12 +56,13 @@ module SearchSub =
     };
   });
 
-let search = (~setup, ~query, ~toMsg) => {
-  SearchSub.create({query, setup}) |> Isolinear.Sub.map(toMsg);
+let search = (~proxy, ~setup, ~query, ~toMsg) => {
+  SearchSub.create({proxy, query, setup}) |> Isolinear.Sub.map(toMsg);
 };
 
 // DETAILS
 type detailParams = {
+  proxy: Service_Net.Proxy.t,
   setup: Setup.t,
   extensionId: string,
 };
@@ -76,12 +83,12 @@ module DetailsSub =
     };
 
     let init = (~params, ~dispatch) => {
-      let {extensionId, setup} = params;
+      let {extensionId, setup, proxy} = params;
       let maybeIdentifier = Catalog.Identifier.fromString(extensionId);
       switch (maybeIdentifier) {
       | None => dispatch(Error("Invalid id: " ++ extensionId))
       | Some(identifier) =>
-        let result = Catalog.details(~setup, identifier);
+        let result = Catalog.details(~proxy, ~setup, identifier);
 
         Lwt.on_success(result, (details: Catalog.Details.t) => {
           dispatch(Ok(details))
@@ -104,6 +111,11 @@ module DetailsSub =
   });
 
 let details =
-    (~setup, ~extensionId, ~toMsg: result(Catalog.Details.t, string) => 'a) => {
-  DetailsSub.create({extensionId, setup}) |> Isolinear.Sub.map(toMsg);
+    (
+      ~proxy,
+      ~setup,
+      ~extensionId,
+      ~toMsg: result(Catalog.Details.t, string) => 'a,
+    ) => {
+  DetailsSub.create({proxy, extensionId, setup}) |> Isolinear.Sub.map(toMsg);
 };

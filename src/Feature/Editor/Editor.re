@@ -3,6 +3,12 @@ open Oni_Core;
 open Utility;
 open Component_Animation;
 
+// A pixel position relative to the top, left of the current editor
+type relativePixelPosition = PixelPosition.t;
+
+// A pixel position relative to the top, left of the screen
+type absolutePixelPosition = PixelPosition.t;
+
 module GlobalState = {
   let lastId = ref(0);
 
@@ -110,6 +116,8 @@ type t = {
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   mode: [@opaque] Vim.Mode.t,
+  pixelX: float,
+  pixelY: float,
   pixelWidth: int,
   pixelHeight: int,
   yankHighlight: option(yankHighlight),
@@ -135,6 +143,14 @@ type t = {
   isAnimationOverride: option(bool),
   animationNonce: int,
 };
+
+let setBoundingBox = (bbox, editor) => {
+  let (left, top, _, _) = Revery.Math.BoundingBox2d.getBounds(bbox);
+  {...editor, pixelY: top, pixelX: left};
+};
+
+let pixelX = ({pixelX, _}) => pixelX;
+let pixelY = ({pixelY, _}) => pixelY;
 
 let verticalScrollbarThickness = ({scrollbarVerticalWidth, _}) => scrollbarVerticalWidth;
 let horizontalScrollbarThickness = ({scrollbarHorizontalWidth, _}) => scrollbarHorizontalWidth;
@@ -451,6 +467,13 @@ let bufferCharacterPositionToPixel =
   };
 };
 
+let relativeToAbsolutePixel = (relativePixel, editor) => {
+  PixelPosition.{
+    x: editor.pixelX +. relativePixel.x,
+    y: editor.pixelY +. relativePixel.y,
+  };
+};
+
 let getContentPixelWidth = editor => {
   let layout: EditorLayout.t = getLayout(editor);
   layout.bufferWidthInPixels;
@@ -569,6 +592,8 @@ let create = (~config, ~buffer, ~preview: bool, ()) => {
             byte: ByteIndex.zero,
           },
       }),
+    pixelX: 0.,
+    pixelY: 0.,
     pixelWidth: 1,
     pixelHeight: 1,
     yankHighlight: None,
@@ -1200,7 +1225,13 @@ let exposePrimaryCursor = (~disableAnimation=false, editor) =>
           editor,
         );
 
-      let scrollOffX = getCharacterWidth(editor) *. 2.;
+      // #3405 - When we're wrapping, don't consider horizontal scroll-off, otherwise
+      // the editor will seem to have less available width than it does in actuality,
+      // which could cause the editor to scroll even without wrapping.
+      let scrollOffX =
+        editor.wrapMode == WrapMode.Viewport
+          ? 0. : getCharacterWidth(editor) *. 2.;
+
       let scrollOffY =
         lineHeightInPixels(editor)
         *. float(max(editor.verticalScrollMargin, 0));
@@ -1316,39 +1347,8 @@ let getLeftVisibleColumn = view => {
 };
 
 let getTokenAt =
-    (~languageConfiguration, {line, character}: CharacterPosition.t, editor) => {
-  let lineNumber = line |> EditorCoreTypes.LineNumber.toZeroBased;
-
-  if (lineNumber < 0
-      || lineNumber >= EditorBuffer.numberOfLines(editor.buffer)) {
-    None;
-  } else {
-    let bufferLine = EditorBuffer.line(lineNumber, editor.buffer);
-    let f = uchar =>
-      LanguageConfiguration.isWordCharacter(uchar, languageConfiguration);
-    let startIndex =
-      BufferLine.traverse(
-        ~f,
-        ~direction=`Backwards,
-        ~index=character,
-        bufferLine,
-      )
-      |> Option.value(~default=character);
-    let stopIndex =
-      BufferLine.traverse(
-        ~f,
-        ~direction=`Forwards,
-        ~index=character,
-        bufferLine,
-      )
-      |> Option.value(~default=character);
-    Some(
-      CharacterRange.{
-        start: CharacterPosition.{line, character: startIndex},
-        stop: CharacterPosition.{line, character: stopIndex},
-      },
-    );
-  };
+    (~languageConfiguration, position: CharacterPosition.t, editor) => {
+  EditorBuffer.tokenAt(~languageConfiguration, position, editor.buffer);
 };
 
 let getContentPixelWidth = editor => {
@@ -2160,6 +2160,19 @@ let isMousePressedNearLeftEdge = ({isMouseDown, lastMouseScreenPosition, _}) => 
        int_of_float(x) < Constants.mouseAutoScrollBorder
      })
   |> Option.value(~default=false);
+};
+
+let gutterWidth = (~editorFont: Service_Font.font, {lineNumbers, buffer, _}) => {
+  let lineNumberWidth =
+    lineNumbers != `Off
+      ? LineNumber.getLineNumberPixelWidth(
+          ~lines=EditorBuffer.numberOfLines(buffer),
+          ~fontPixelWidth=editorFont.underscoreWidth,
+          (),
+        )
+      : 0.0;
+
+  lineNumberWidth +. Constants.diffMarkerWidth +. Constants.gutterMargin;
 };
 
 let isMousePressedNearRightEdge =

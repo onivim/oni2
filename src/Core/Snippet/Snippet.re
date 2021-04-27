@@ -165,4 +165,7 @@ let%test_module "parse" =
      let%test "sprintf parse bug (comma in placeholder)" = {
        parse("sprintf(${1:char *,})") |> Result.is_ok;
      };
+     let%test "colon parse bug" = {
+       parse("print(${1:items:Any..})") |> Result.is_ok;
+     };
    });

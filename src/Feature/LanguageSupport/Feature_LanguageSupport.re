@@ -1,6 +1,7 @@
 open EditorCoreTypes;
 
 type model = {
+  codeActions: CodeActions.model,
   codeLens: CodeLens.model,
   completion: Completion.model,
   definition: Definition.model,
@@ -15,6 +16,7 @@ type model = {
 };
 
 let initial = {
+  codeActions: CodeActions.initial,
   codeLens: CodeLens.initial,
   completion: Completion.initial,
   definition: Definition.initial,
@@ -37,6 +39,7 @@ type command =
 [@deriving show]
 type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
+  | CodeActions(CodeActions.msg)
   | Completion(Completion.msg)
   | Definition(Definition.msg)
   | DocumentHighlights(DocumentHighlights.msg)
@@ -58,6 +61,7 @@ type outmsg =
       insertText: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
+  | ApplyWorkspaceEdit(Exthost.WorkspaceEdit.t)
   | FormattingApplied({
       displayName: string,
       editCount: int,
@@ -96,6 +100,7 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     fun
     | Outmsg.ApplyCompletion({replaceSpan, insertText, additionalEdits}) =>
       ApplyCompletion({replaceSpan, insertText, additionalEdits})
+    | Outmsg.ApplyWorkspaceEdit(edit) => ApplyWorkspaceEdit(edit)
     | Outmsg.FormattingApplied({displayName, editCount, needsToSave}) =>
       FormattingApplied({displayName, editCount, needsToSave})
     | Outmsg.InsertSnippet({replaceSpan, snippet, additionalEdits}) =>
@@ -148,6 +153,7 @@ module Msg = {
 let update =
     (
       ~config,
+      ~diagnostics,
       ~extensions,
       ~languageConfiguration,
       ~maybeSelection,
@@ -203,6 +209,27 @@ let update =
     let documentSymbols' =
       DocumentSymbols.register(~handle, ~selector, model.documentSymbols);
     ({...model, documentSymbols: documentSymbols'}, Nothing);
+
+  | Exthost(
+      RegisterQuickFixSupport({
+        handle,
+        selector,
+        metadata,
+        displayName,
+        supportsResolve,
+      }),
+    ) =>
+    let codeActions' =
+      CodeActions.register(
+        ~handle,
+        ~selector,
+        ~metadata,
+        ~displayName,
+        ~supportsResolve,
+        model.codeActions,
+      );
+
+    ({...model, codeActions: codeActions'}, Nothing);
 
   | Exthost(RegisterReferenceSupport({handle, selector})) =>
     let references' =
@@ -295,6 +322,7 @@ let update =
   | Exthost(Unregister({handle})) => (
       {
         ...model,
+        codeActions: CodeActions.unregister(~handle, model.codeActions),
         codeLens: CodeLens.unregister(~handle, model.codeLens),
         completion: Completion.unregister(~handle, model.completion),
         definition: Definition.unregister(~handle, model.definition),
@@ -322,6 +350,22 @@ let update =
   | Exthost(_) =>
     // TODO:
     (model, Nothing)
+
+  | CodeActions(codeActionsMsg) =>
+    maybeBuffer
+    |> Option.map(buffer => {
+         let (codeActions', outmsg) =
+           CodeActions.update(
+             ~buffer,
+             ~editorId,
+             ~cursorLocation,
+             codeActionsMsg,
+             model.codeActions,
+           );
+         let outmsg' = outmsg |> map(msg => CodeActions(msg));
+         ({...model, codeActions: codeActions'}, outmsg');
+       })
+    |> Option.value(~default=(model, Nothing))
 
   | CodeLens(codeLensMsg) =>
     let (codeLens', eff) = CodeLens.update(codeLensMsg, model.codeLens);
@@ -385,9 +429,16 @@ let update =
     );
 
   | DocumentSymbols(documentSymbolsMsg) =>
-    let documentSymbols' =
-      DocumentSymbols.update(documentSymbolsMsg, model.documentSymbols);
-    ({...model, documentSymbols: documentSymbols'}, Nothing);
+    let (documentSymbols', outmsg) =
+      DocumentSymbols.update(
+        ~maybeBuffer,
+        documentSymbolsMsg,
+        model.documentSymbols,
+      );
+    (
+      {...model, documentSymbols: documentSymbols'},
+      outmsg |> map(msg => DocumentSymbols(msg)),
+    );
 
   | References(referencesMsg) =>
     let (references', outmsg) =
@@ -439,7 +490,9 @@ let update =
   | Hover(hoverMsg) =>
     let (hover', outMsg) =
       Hover.update(
+        ~languageConfiguration,
         ~cursorLocation,
+        ~diagnostics,
         ~maybeBuffer,
         ~editorId,
         ~extHostClient=client,
@@ -527,23 +580,36 @@ let bufferUpdated =
   {...model, completion, signatureHelp};
 };
 
-let bufferSaved = (~isLargeBuffer, ~buffer, ~config, ~activeBufferId, model) => {
-  let (formatting', formattingEffect) =
-    Formatting.bufferSaved(
+let bufferSaved =
+    (
+      ~reason,
       ~isLargeBuffer,
       ~buffer,
       ~config,
+      ~savedBufferId as _,
       ~activeBufferId,
-      model.formatting,
+      model,
+    ) =>
+  if (reason == Oni_Core.SaveReason.AutoSave) {
+    (model, Isolinear.Effect.none);
+  } else {
+    let (formatting', formattingEffect) =
+      Formatting.bufferSaved(
+        ~isLargeBuffer,
+        ~buffer,
+        ~config,
+        ~activeBufferId,
+        model.formatting,
+      );
+    (
+      {...model, formatting: formatting'},
+      formattingEffect |> Isolinear.Effect.map(msg => Formatting(msg)),
     );
-  (
-    {...model, formatting: formatting'},
-    formattingEffect |> Isolinear.Effect.map(msg => Formatting(msg)),
-  );
-};
+  };
 
 let configurationChanged = (~config, model) => {
   ...model,
+  codeActions: CodeActions.configurationChanged(~config, model.codeActions),
   completion: Completion.configurationChanged(~config, model.completion),
   documentHighlights:
     DocumentHighlights.configurationChanged(
@@ -553,7 +619,14 @@ let configurationChanged = (~config, model) => {
 };
 
 let cursorMoved =
-    (~languageConfiguration, ~buffer, ~previous, ~current, model) => {
+    (~editorId, ~languageConfiguration, ~buffer, ~previous, ~current, model) => {
+  let codeActions =
+    CodeActions.cursorMoved(
+      ~editorId,
+      ~buffer,
+      ~cursor=current,
+      model.codeActions,
+    );
   let completion =
     Completion.cursorMoved(
       ~languageConfiguration,
@@ -571,7 +644,7 @@ let cursorMoved =
 
   let signatureHelp =
     SignatureHelp.cursorMoved(~previous, ~current, model.signatureHelp);
-  {...model, completion, documentHighlights, signatureHelp};
+  {...model, codeActions, completion, documentHighlights, signatureHelp};
 };
 
 let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
@@ -643,11 +716,15 @@ module Contributions = {
 
   let colors = CodeLens.Contributions.colors @ Completion.Contributions.colors;
 
-  let commands =
+  let commands = model =>
     [Commands.close]
     @ (
       Completion.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Completion(msg)))
+    )
+    @ (
+      CodeActions.Contributions.commands(model.codeActions)
+      |> List.map(Oni_Core.Command.map(msg => CodeActions(msg)))
     )
     @ (
       Rename.Contributions.commands
@@ -660,6 +737,10 @@ module Contributions = {
     @ (
       DocumentHighlights.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => DocumentHighlights(msg)))
+    )
+    @ (
+      DocumentSymbols.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => DocumentSymbols(msg)))
     )
     @ (
       Hover.Contributions.commands
@@ -679,14 +760,15 @@ module Contributions = {
     );
 
   let configuration =
-    CodeLens.Contributions.configuration
+    CodeActions.Contributions.configuration
+    @ CodeLens.Contributions.configuration
     @ Completion.Contributions.configuration
     @ DocumentHighlights.Contributions.configuration
     @ Formatting.Contributions.configuration
     @ SignatureHelp.Contributions.configuration;
 
-  let contextKeys =
-    [
+  let contextKeys = {
+    let static = [
       Rename.Contributions.contextKeys
       |> fromList
       |> map(({rename, _}: model) => rename),
@@ -696,23 +778,37 @@ module Contributions = {
       SignatureHelp.Contributions.contextKeys
       |> fromList
       |> map(({signatureHelp, _}: model) => signatureHelp),
-    ]
-    |> unionMany;
+    ];
+    model => {
+      let staticContextKeys =
+        static |> unionMany |> WhenExpr.ContextKeys.fromSchema(model);
+
+      let codeActions =
+        CodeActions.Contributions.contextKeys(model.codeActions);
+
+      WhenExpr.ContextKeys.unionMany([staticContextKeys, codeActions]);
+    };
+  };
 
   let keybindings =
     Keybindings.[close]
     @ Rename.Contributions.keybindings
+    @ CodeActions.Contributions.keybindings
     @ Completion.Contributions.keybindings
     @ Definition.Contributions.keybindings
     @ DocumentHighlights.Contributions.keybindings
+    @ DocumentSymbols.Contributions.keybindings
     @ Formatting.Contributions.keybindings
     @ References.Contributions.keybindings
     @ SignatureHelp.Contributions.keybindings;
 
-  let menuGroups = Formatting.Contributions.menuGroups;
 
   // TODO: References
   let panes = [];
+
+  let menuGroups =
+    DocumentSymbols.Contributions.menuGroups
+    @ Formatting.Contributions.menuGroups;
 };
 
 module OldCompletion = Completion;
@@ -729,35 +825,6 @@ module Completion = {
 
   let availableCompletionCount = ({completion, _}: model) =>
     OldCompletion.availableCompletionCount(completion);
-
-  module View = {
-    let make =
-        (
-          ~buffer,
-          ~cursor,
-          ~x,
-          ~y,
-          ~lineHeight,
-          ~theme,
-          ~tokenTheme,
-          ~editorFont,
-          ~model,
-          (),
-        ) => {
-      OldCompletion.View.make(
-        ~buffer,
-        ~cursor,
-        ~x,
-        ~y,
-        ~lineHeight,
-        ~theme,
-        ~tokenTheme,
-        ~editorFont,
-        ~completions=model.completion,
-        (),
-      );
-    };
-  };
 };
 
 module SignatureHelp = {
@@ -837,7 +904,6 @@ module Hover = {
   module Popup = {
     let make =
         (
-          ~diagnostics,
           ~theme,
           ~tokenTheme,
           ~languageInfo,
@@ -850,7 +916,6 @@ module Hover = {
         ) => {
       let {hover, _} = model;
       OldHover.Popup.make(
-        ~diagnostics,
         ~theme,
         ~tokenTheme,
         ~languageInfo,
@@ -902,12 +967,16 @@ let sub =
       ~isInsertMode,
       ~isAnimatingScroll,
       ~activeBuffer,
+      ~activeEditor,
       ~activePosition,
+      ~lineHeightInPixels,
+      ~positionToRelativePixel,
       ~topVisibleBufferLine,
       ~bottomVisibleBufferLine,
       ~visibleBuffers,
       ~client,
       {
+        codeActions,
         codeLens,
         definition,
         completion,
@@ -929,6 +998,21 @@ let sub =
       codeLens,
     )
     |> Isolinear.Sub.map(msg => CodeLens(msg));
+
+  let codeActionsSub =
+    CodeActions.sub(
+      ~buffer=activeBuffer,
+      ~config,
+      ~activePosition,
+      ~activeEditor,
+      ~topVisibleBufferLine,
+      ~bottomVisibleBufferLine,
+      ~lineHeightInPixels,
+      ~positionToRelativePixel,
+      ~client,
+      codeActions,
+    )
+    |> Isolinear.Sub.map(msg => CodeActions(msg));
 
   let definitionSub =
     isInsertMode
@@ -977,6 +1061,7 @@ let sub =
     |> Isolinear.Sub.map(msg => SignatureHelp(msg));
 
   [
+    codeActionsSub,
     codeLensSub,
     completionSub,
     definitionSub,
@@ -995,3 +1080,71 @@ let extensionsAdded = (extensions, model) => {
 };
 
 module CompletionMeet = CompletionMeet;
+
+module View = {
+  module EditorWidgets = {
+    let make =
+        (
+          ~x,
+          ~y,
+          ~editorId,
+          ~theme,
+          ~model,
+          ~editorFont,
+          ~uiFont as _,
+          ~dispatch as _,
+          (),
+        ) => {
+      <CodeActions.View.EditorWidgets
+        x
+        y
+        editorId
+        editorFont
+        theme
+        model={model.codeActions}
+      />;
+    };
+  };
+
+  module Overlay = {
+    let make =
+        (
+          ~activeEditorId: int,
+          ~activeBuffer: Oni_Core.Buffer.t,
+          ~cursorPosition: CharacterPosition.t,
+          ~lineHeight: float,
+          ~toPixel,
+          ~theme,
+          ~tokenTheme,
+          ~model,
+          ~editorFont,
+          ~uiFont,
+          ~dispatch,
+          (),
+        ) => {
+      [
+        <CodeActions.View.Overlay
+          toPixel
+          theme
+          model={model.codeActions}
+          dispatch={msg => dispatch(CodeActions(msg))}
+          editorFont
+          uiFont
+        />,
+        <OldCompletion.View.Overlay
+          activeEditorId
+          cursorPosition
+          buffer=activeBuffer
+          toPixel
+          theme
+          lineHeight
+          tokenTheme
+          model={model.completion}
+          dispatch={msg => dispatch(Completion(msg))}
+          editorFont
+          uiFont
+        />,
+      ]
+      |> Revery.UI.React.listToElement;
+    };
+  };

@@ -9,6 +9,7 @@ let create:
     ~attachStdio: bool,
     ~config: Feature_Configuration.model,
     ~extensions: list(Scanner.ScanResult.t),
-    ~setup: Setup.t
+    ~setup: Setup.t,
+    ~proxy: Service_Net.Proxy.t
   ) =>
   (result(Exthost.Client.t, string), Isolinear.Stream.t(Actions.t));

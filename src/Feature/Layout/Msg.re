@@ -5,10 +5,15 @@ type command =
   | SplitVertical
   | SplitHorizontal
   | CloseActiveEditor
+  | CloseActiveGroup
   | MoveLeft
   | MoveRight
   | MoveUp
   | MoveDown
+  | MoveTopLeft
+  | MoveBottomRight
+  | CycleForward
+  | CycleBackward
   | RotateForward
   | RotateBackward
   | DecreaseSize

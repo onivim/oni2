@@ -35,6 +35,62 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
     |> Test.terminate
     |> Test.waitForProcessClosed;
   };
+  describe("CodeActions", ({test, _}) => {
+    test("gets code actions", ({expect, _}) => {
+      let codeActionsHandle = ref(-1);
+
+      let getCodeActions = client =>
+        Request.LanguageFeatures.provideCodeActionsBySelection(
+          ~handle=codeActionsHandle^,
+          ~resource=testUri,
+          ~selection=
+            Exthost.Selection.{
+              selectionStartLineNumber: 1,
+              selectionStartColumn: 1,
+              positionLineNumber: 1,
+              positionColumn: 1,
+            },
+          ~context=
+            Exthost.CodeAction.(
+              Context.{only: None, trigger: TriggerType.Manual}
+            ),
+          client,
+        );
+
+      let waitForRegisterCodeActionsSupport =
+        fun
+        | Msg.LanguageFeatures(RegisterQuickFixSupport({handle, _})) => {
+            codeActionsHandle := handle;
+            true;
+          }
+        | _ => false;
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterCodeActionsSupport",
+           waitForRegisterCodeActionsSupport,
+         )
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+      |> Test.withClientRequest(
+           ~name="Get code actions",
+           ~validate=
+             (codeLenses: option(Exthost.CodeAction.List.t)) => {
+               switch (codeLenses) {
+               | None => expect.equal(false, true)
+               | Some({actions, _}) =>
+                 expect.equal(actions |> List.length, 2)
+               };
+               true;
+             },
+           getCodeActions,
+         )
+      |> finishTest;
+    })
+  });
   describe("codelens", ({test, _}) => {
     test("gets codelens items", ({expect, _}) => {
       let codeLensHandle = ref(-1);

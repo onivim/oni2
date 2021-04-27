@@ -10,6 +10,26 @@ open Rench;
 module CoreLog = Log;
 module Log = (val Log.withNamespace("Oni2.Core.Cli"));
 
+type position = {
+  x: int,
+  y: int,
+};
+
+let parsePosition = str => {
+  switch (String.split_on_char(',', str)) {
+  | [] => None
+  | [single] =>
+    int_of_string_opt(single) |> Option.map(pos => {x: pos, y: pos})
+  | [xStr, yStr] =>
+    Utility.OptionEx.map2(
+      (x, y) => {{x, y}},
+      int_of_string_opt(xStr),
+      int_of_string_opt(yStr),
+    )
+  | _ => None
+  };
+};
+
 type t = {
   gpuAcceleration: [ | `Auto | `ForceSoftware | `ForceHardware],
   folder: option(string),
@@ -26,12 +46,20 @@ type t = {
   logFilter: option(string),
   logColorsEnabled: option(bool),
   needsConsole: bool,
+  proxyServer: Service_Net.Proxy.t,
   vimExCommands: list(string),
+  windowPosition: option(position),
 };
 
 type eff =
   | PrintVersion
   | CheckHealth
+  | DoRemoteCommand({
+      pipe: string,
+      filesToOpen: list(string),
+      folder: option(string),
+    })
+  | ListDisplays
   | ListExtensions
   | InstallExtension(string)
   | QueryExtension(string)
@@ -98,6 +126,8 @@ let parse = (~getenv: string => option(string), args) => {
   let logFile = ref(None);
   let logFilter = ref(None);
   let logColorsEnabled = ref(None);
+  let proxyServer =
+    ref(Service_Net.Proxy.{httpUrl: None, httpsUrl: None, strictSSL: true});
   let gpuAcceleration = ref(`Auto);
   let vimExCommands = ref([]);
 
@@ -118,6 +148,8 @@ let parse = (~getenv: string => option(string), args) => {
   let disableExtensionLoading = () => shouldLoadExtensions := false;
   let disableLoadConfiguration = () => shouldLoadConfiguration := false;
   let disableSyntaxHighlight = () => shouldSyntaxHighlight := false;
+
+  let windowPosition = ref(None);
 
   let setAttached = () => {
     attachToForeground := true;
@@ -166,8 +198,22 @@ let parse = (~getenv: string => option(string), args) => {
       ("--log-file", String(str => logFile := Some(str)), ""),
       ("--log-filter", String(str => logFilter := Some(str)), ""),
       ("--checkhealth", setEffect(CheckHealth), ""),
+      ("--list-displays", setEffect(ListDisplays), ""),
       ("--list-extensions", setEffect(ListExtensions), ""),
       ("--install-extension", setStringEffect(s => InstallExtension(s)), ""),
+      (
+        "--proxy-server",
+        String(
+          url =>
+            proxyServer :=
+              Service_Net.Proxy.{
+                httpsUrl: Some(url),
+                httpUrl: Some(url),
+                strictSSL: true,
+              },
+        ),
+        "",
+      ),
       ("--query-extension", setStringEffect(s => QueryExtension(s)), ""),
       (
         "--uninstall-extension",
@@ -194,22 +240,20 @@ let parse = (~getenv: string => option(string), args) => {
       ),
       ("--extensions-dir", String(setRef(extensionsDir)), ""),
       ("--force-device-scale-factor", Float(setRef(scaleFactor)), ""),
+      (
+        "--window-position",
+        String(
+          str => {
+            let maybePosition = parsePosition(str);
+            windowPosition := maybePosition;
+          },
+        ),
+        "",
+      ),
     ],
     arg => additionalArgs := [arg, ...additionalArgs^],
     "",
   );
-
-  let shouldAlwaysAllocateConsole =
-    switch (eff^) {
-    | Run => false
-    | StartSyntaxServer(_) => false
-    | _ => true
-    };
-
-  let needsConsole =
-    (isSilent^ || Option.is_some(logLevel^))
-    && attachToForeground^
-    || shouldAlwaysAllocateConsole;
 
   let paths = additionalArgs^ |> List.rev;
 
@@ -280,6 +324,23 @@ let parse = (~getenv: string => option(string), args) => {
     | [] => None
     };
 
+  getenv("ONIVIM2_PARENT_PIPE")
+  |> Option.iter(v => {
+       eff := DoRemoteCommand({pipe: v, filesToOpen, folder})
+     });
+
+  let shouldAlwaysAllocateConsole =
+    switch (eff^) {
+    | Run => false
+    | StartSyntaxServer(_) => false
+    | _ => true
+    };
+
+  let needsConsole =
+    (isSilent^ || Option.is_some(logLevel^))
+    && attachToForeground^
+    || shouldAlwaysAllocateConsole;
+
   let cli = {
     folder,
     filesToOpen,
@@ -298,7 +359,9 @@ let parse = (~getenv: string => option(string), args) => {
     logFilter: logFilter^,
     logColorsEnabled: logColorsEnabled^,
     needsConsole,
+    proxyServer: proxyServer^,
     vimExCommands: (vimExCommands^ |> List.rev) @ anonymousExCommands,
+    windowPosition: windowPosition^,
   };
 
   (cli, eff^);

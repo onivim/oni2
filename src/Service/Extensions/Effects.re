@@ -19,11 +19,12 @@ let uninstall = (~extensionsFolder, ~toMsg, extensionId) =>
   })
   |> Isolinear.Effect.map(toMsg);
 
-let install = (~extensionsFolder, ~toMsg, extensionId) =>
+let install = (~proxy, ~extensionsFolder, ~toMsg, extensionId) =>
   Isolinear.Effect.createWithDispatch(
     ~name="Service_Extensions.Effect.install", dispatch => {
     let promise =
       Management.Internal.installFromOpenVSX(
+        ~proxy,
         ~setup=Oni_Core.Setup.init(),
         ~extensionsFolder,
         extensionId,
@@ -36,11 +37,12 @@ let install = (~extensionsFolder, ~toMsg, extensionId) =>
   })
   |> Isolinear.Effect.map(toMsg);
 
-let update = (~extensionsFolder, ~toMsg, extensionId) =>
+let update = (~proxy, ~extensionsFolder, ~toMsg, extensionId) =>
   Isolinear.Effect.createWithDispatch(
     ~name="Service_Extensions.Effect.update", dispatch => {
     let promise =
       Management.update(
+        ~proxy,
         ~setup=Oni_Core.Setup.init(),
         ~extensionsFolder?,
         extensionId,
@@ -53,14 +55,14 @@ let update = (~extensionsFolder, ~toMsg, extensionId) =>
   })
   |> Isolinear.Effect.map(toMsg);
 
-let details = (~extensionId, ~toMsg) =>
+let details = (~proxy, ~extensionId, ~toMsg) =>
   Isolinear.Effect.createWithDispatch(
     ~name="Service_Extensions.Effect.details", dispatch => {
     let maybeIdentifier = Catalog.Identifier.fromString(extensionId);
     switch (maybeIdentifier) {
     | None => dispatch(toMsg(Error("Invalid identifier: " ++ extensionId)))
     | Some(id) =>
-      let promise = Catalog.details(~setup=Oni_Core.Setup.init(), id);
+      let promise = Catalog.details(~proxy, ~setup=Oni_Core.Setup.init(), id);
 
       Lwt.on_success(promise, details => {dispatch(toMsg(Ok(details)))});
 

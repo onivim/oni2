@@ -16,3 +16,5 @@ let (<=) = (a, b) => a <= b;
 let (>=) = (a, b) => a >= b;
 
 let max = max;
+
+let compare = (a, b) => a - b;

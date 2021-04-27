@@ -6,11 +6,14 @@ open Service_Net;
 
 let setup = Oni_Core.Setup.init();
 
+let proxy = Proxy.none;
+
 describe("Request", ({describe, _}) => {
   describe("json", ({test, _}) => {
     test("success", ({expect, _}) => {
       let response =
         Request.json(
+          ~proxy,
           ~setup,
           ~decoder=Json.Decode.value,
           "https://httpbin.org/json",
@@ -23,6 +26,7 @@ describe("Request", ({describe, _}) => {
     test("fail: 400", ({expect, _}) => {
       let response =
         Request.json(
+          ~proxy,
           ~setup,
           ~decoder=Json.Decode.value,
           "https://httpbin.org/status/404",
@@ -35,6 +39,7 @@ describe("Request", ({describe, _}) => {
     test("fail: 500", ({expect, _}) => {
       let response =
         Request.json(
+          ~proxy,
           ~setup,
           ~decoder=Json.Decode.value,
           "https://httpbin.org/status/500",
@@ -47,7 +52,7 @@ describe("Request", ({describe, _}) => {
   describe("download", ({test, _}) => {
     test("no path specified", ({expect, _}) => {
       let downloadPath =
-        Request.download(~setup, "https://httpbin.org/image/jpeg")
+        Request.download(~proxy, ~setup, "https://httpbin.org/image/jpeg")
         |> LwtEx.sync;
 
       expect.equal(Result.is_ok(downloadPath), true);
@@ -64,11 +69,11 @@ describe("Request", ({describe, _}) => {
     });
     test("returns same dest for multiple downloads (caching)", ({expect, _}) => {
       let downloadPath1 =
-        Request.download(~setup, "https://httpbin.org/image/jpeg")
+        Request.download(~proxy, ~setup, "https://httpbin.org/image/jpeg")
         |> LwtEx.sync;
 
       let downloadPath2 =
-        Request.download(~setup, "https://httpbin.org/image/jpeg")
+        Request.download(~proxy, ~setup, "https://httpbin.org/image/jpeg")
         |> LwtEx.sync;
 
       expect.equal(Result.is_ok(downloadPath2), true);

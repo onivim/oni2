@@ -147,6 +147,7 @@ let start =
       ~config=getState().config,
       ~extensions,
       ~setup,
+      ~proxy=getState().proxy |> Feature_Proxy.proxy,
     );
 
   // TODO: How to handle this correctly?
@@ -249,6 +250,7 @@ let start =
 
     let terminalSubscription =
       Feature_Terminal.subscription(
+        ~setup,
         ~workspaceUri=
           Core.Uri.fromPath(
             Feature_Workspace.workingDirectory(state.workspace),
@@ -344,8 +346,23 @@ let start =
       );
 
     let fileExplorerSub =
-      Feature_Explorer.sub(~configuration=state.config, state.fileExplorer)
+      Feature_Explorer.sub(
+        ~config,
+        ~configuration=state.config,
+        state.fileExplorer,
+      )
       |> Isolinear.Sub.map(msg => Model.Actions.FileExplorer(msg));
+
+    let positionToRelativePixel = position => {
+      let (pixelPosition, _) =
+        state.layout
+        |> Feature_Layout.activeEditor
+        |> Feature_Editor.Editor.bufferCharacterPositionToPixel(~position);
+      pixelPosition;
+    };
+
+    let lineHeightInPixels =
+      activeEditor |> Feature_Editor.Editor.lineHeightInPixels;
 
     let languageSupportSub =
       maybeActiveBuffer
@@ -355,7 +372,10 @@ let start =
              ~isInsertMode=isInsertOrSelectMode,
              ~isAnimatingScroll,
              ~activeBuffer,
+             ~activeEditor=activeEditorId,
              ~activePosition,
+             ~lineHeightInPixels,
+             ~positionToRelativePixel,
              ~topVisibleBufferLine,
              ~bottomVisibleBufferLine,
              ~visibleBuffers,
@@ -371,6 +391,7 @@ let start =
       Feature_SideBar.selected(state.sideBar) == Feature_SideBar.Extensions;
     let extensionsSub =
       Feature_Extensions.sub(
+        ~proxy=state.proxy |> Feature_Proxy.proxy,
         ~isVisible=isSideBarOpen && isExtensionsFocused,
         ~setup,
         state.extensions,
@@ -453,9 +474,15 @@ let start =
          })
       |> Isolinear.Sub.batch;
 
+    let maybeFocusedBuffer =
+      Model.Selectors.getFocusedBuffer(state)
+      |> Option.map(Oni_Core.Buffer.getId);
     let bufferSub =
       state.buffers
-      |> Feature_Buffers.sub
+      |> Feature_Buffers.sub(
+           ~isWindowFocused=state.windowIsFocused,
+           ~maybeFocusedBuffer,
+         )
       |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
 
     let quickmenuSub =
@@ -485,7 +512,12 @@ let start =
         Isolinear.Sub.none;
       };
 
+    let clientServerSub =
+      Feature_ClientServer.sub(state.clientServer)
+      |> Isolinear.Sub.map(msg => Model.Actions.ClientServer(msg));
+
     [
+      clientServerSub,
       menuBarSub,
       extHostSubscription,
       languageSupportSub,
@@ -580,8 +612,6 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Clipboard(msg))),
     Feature_Registers.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
-    Feature_LanguageSupport.Contributions.commands
-    |> List.map(Core.Command.map(msg => Model.Actions.LanguageSupport(msg))),
     Feature_Input.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Input(msg))),
     Feature_AutoUpdate.Contributions.commands

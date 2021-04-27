@@ -11,6 +11,8 @@ let defaultFontSize = 14.;
 let defaultFontFile = "JetBrainsMono-Regular.ttf";
 
 let paneRowHeight = 20;
+let diffMarkerWidth = 3.;
+let gutterMargin = 3.;
 
 let isDefaultFont = str => {
   // Before we switched to JetBrains Mono as the default font...

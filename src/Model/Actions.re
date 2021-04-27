@@ -16,6 +16,7 @@ type t =
   | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
   | Changelog(Feature_Changelog.msg)
+  | ClientServer(Feature_ClientServer.msg)
   | CommandInvoked({
       command: string,
       arguments: Yojson.Safe.t,

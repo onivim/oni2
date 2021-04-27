@@ -24,7 +24,7 @@ module Test = {
 
   let packetFromString = str => {
     let bytes = str |> Bytes.of_string;
-    let packet = Transport.Packet.create(~bytes, ~packetType=Regular, ~id=0);
+    let packet = Transport.Packet.create(~packetType=Regular, ~id=0, bytes);
     packet;
   };
 

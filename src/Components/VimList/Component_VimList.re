@@ -819,22 +819,24 @@ module View = {
       width(Constants.scrollBarThickness),
     ];
 
-    let viewport = (~isScrollbarVisible) => [
+    let viewport = [
       position(`Absolute),
       top(0),
       left(0),
       bottom(0),
-      right(isScrollbarVisible ? 0 : Constants.scrollBarThickness),
+      right(0),
     ];
 
-    let item = (~offset, ~rowHeight, ~bg) => [
-      position(`Absolute),
-      backgroundColor(bg),
-      top(offset),
-      left(0),
-      right(0),
-      height(rowHeight),
-    ];
+    let item = (~offset, ~rowHeight, ~bg) => {
+      [
+        position(`Absolute),
+        backgroundColor(bg),
+        top(offset),
+        left(0),
+        right(0),
+        height(rowHeight),
+      ];
+    };
 
     let searchBorder = (~color) => [
       position(`Absolute),
@@ -856,6 +858,7 @@ module View = {
         ~selectedBg,
         ~searchBg,
         ~focusBorder,
+        ~focusOutline,
         ~searchBorder,
         ~onMouseClick,
         ~onMouseDoubleClick,
@@ -912,6 +915,33 @@ module View = {
               />
             : React.empty;
 
+        let focusOutlineBorder =
+          isSelected
+            ? [
+                <View
+                  style=Style.[
+                    position(`Absolute),
+                    top(0),
+                    left(0),
+                    right(0),
+                    height(1),
+                    backgroundColor(focusOutline),
+                  ]
+                />,
+                <View
+                  style=Style.[
+                    position(`Absolute),
+                    bottom(0),
+                    left(0),
+                    right(0),
+                    height(1),
+                    backgroundColor(focusOutline),
+                  ]
+                />,
+              ]
+              |> React.listToElement
+            : React.empty;
+
         <Clickable
           onMouseEnter={_ => onMouseOver(i)}
           onMouseLeave={_ => onMouseOut(i)}
@@ -925,6 +955,7 @@ module View = {
              ~selected=selected == i,
              items[i],
            )}
+          focusOutlineBorder
           searchBorder
         </Clickable>;
       };
@@ -1033,6 +1064,10 @@ module View = {
             : Colors.List.inactiveFocusBackground.from(theme);
 
         let focusBorder = Colors.focusBorder.from(theme);
+        let focusOutline =
+          isActive
+            ? Colors.List.focusOutline.from(theme)
+            : Colors.List.inactiveFocusOutline.from(theme);
 
         let searchBg = Colors.List.filterMatchBackground.from(theme);
         let searchBorder = Colors.List.filterMatchBorder.from(theme);
@@ -1048,6 +1083,7 @@ module View = {
             ~searchBg,
             ~searchBorder,
             ~focusBorder,
+            ~focusOutline,
             ~onMouseOver,
             ~onMouseOut,
             ~onMouseClick,
@@ -1090,12 +1126,7 @@ module View = {
                       ? Some(contentHeight) : None,
                 )}
                 onMouseWheel=scroll>
-                <View
-                  style={Styles.viewport(
-                    ~isScrollbarVisible=scrollbar == React.empty,
-                  )}>
-                  items
-                </View>
+                <View style=Styles.viewport> items </View>
                 topShadow
                 bottomShadow
                 scrollbar

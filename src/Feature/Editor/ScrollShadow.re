@@ -24,7 +24,8 @@ let renderHorizontal = (~color, ~editor: Editor.t, ~width: float, ~context) => {
     );
   };
 
-  if (scrollX +. width < Editor.getTotalWidthInPixels(editor)) {
+  // Use 'floor' on total width - allow a fractional component, so we don't get a scroll shadow when word wrapped.
+  if (scrollX +. width < floor(Editor.getTotalWidthInPixels(editor))) {
     let () =
       Draw.Shadow.render(
         ~color,

@@ -82,14 +82,22 @@ module Catalog: {
     let toString: t => string;
   };
 
-  let details: (~setup: Setup.t, Identifier.t) => Lwt.t(Details.t);
+  let details:
+    (~proxy: Service_Net.Proxy.t, ~setup: Setup.t, Identifier.t) =>
+    Lwt.t(Details.t);
   let search:
-    (~offset: int, ~setup: Setup.t, string) => Lwt.t(SearchResponse.t);
+    (~proxy: Service_Net.Proxy.t, ~offset: int, ~setup: Setup.t, string) =>
+    Lwt.t(SearchResponse.t);
 };
 
 module Management: {
   let install:
-    (~setup: Setup.t, ~extensionsFolder: FpExp.t(FpExp.absolute)=?, string) =>
+    (
+      ~proxy: Service_Net.Proxy.t,
+      ~setup: Setup.t,
+      ~extensionsFolder: FpExp.t(FpExp.absolute)=?,
+      string
+    ) =>
     Lwt.t(unit);
 
   let uninstall:
@@ -122,6 +130,7 @@ module Effects: {
 
   let install:
     (
+      ~proxy: Service_Net.Proxy.t,
       ~extensionsFolder: option(FpExp.t(FpExp.absolute)),
       ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'a,
       string
@@ -130,6 +139,7 @@ module Effects: {
 
   let update:
     (
+      ~proxy: Service_Net.Proxy.t,
       ~extensionsFolder: option(FpExp.t(FpExp.absolute)),
       ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'msg,
       string
@@ -137,17 +147,27 @@ module Effects: {
     Isolinear.Effect.t('msg);
 
   let details:
-    (~extensionId: string, ~toMsg: result(Catalog.Details.t, string) => 'a) =>
+    (
+      ~proxy: Service_Net.Proxy.t,
+      ~extensionId: string,
+      ~toMsg: result(Catalog.Details.t, string) => 'a
+    ) =>
     Isolinear.Effect.t('a);
 };
 
 module Sub: {
   let search:
-    (~setup: Setup.t, ~query: Query.t, ~toMsg: result(Query.t, exn) => 'a) =>
+    (
+      ~proxy: Service_Net.Proxy.t,
+      ~setup: Setup.t,
+      ~query: Query.t,
+      ~toMsg: result(Query.t, exn) => 'a
+    ) =>
     Isolinear.Sub.t('a);
 
   let details:
     (
+      ~proxy: Service_Net.Proxy.t,
       ~setup: Setup.t,
       ~extensionId: string,
       ~toMsg: result(Catalog.Details.t, string) => 'a

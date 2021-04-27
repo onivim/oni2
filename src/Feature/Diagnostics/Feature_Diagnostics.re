@@ -268,6 +268,12 @@ let getDiagnosticsAtPosition = (instance, buffer, position) => {
        CharacterRange.contains(position, range)
      );
 };
+let getDiagnosticsInRange = (model, buffer, query) => {
+  getDiagnostics(model, buffer)
+  |> List.filter((Diagnostic.{range, _}) =>
+       CharacterRange.intersects(query, range)
+     );
+};
 
 let getDiagnosticsMap = (instance, buffer) => {
   getDiagnostics(instance, buffer) |> Internal.explodeDiagnostics(buffer);
