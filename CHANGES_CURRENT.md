@@ -89,6 +89,7 @@
 - #3446 - Dependency: Upgrade dune, isolinear, and revery-terminal to prep for compiler upgrade
 - #3447 - Terminal: Split out PTY - remove dependency on `$spawnExtHostProcess` API
 - #3461 - Dependency: vscode-exthost -> 1.54.3
+- #3462 - Dependency: vscode-exthost -> 1.55.2
 
 ### Infrastructure
 
