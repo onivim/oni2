@@ -119,10 +119,10 @@ get-uri@^3.0.2:
     fs-extra "^8.1.0"
     ftp "^0.3.10"
 
-graceful-fs@4.1.11, graceful-fs@4.2.3, graceful-fs@^4.1.6, graceful-fs@^4.2.0:
-  version "4.1.11"
-  resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.11.tgz#0e8bdfe4d1ddb8854d64e04ea7c00e2a026e5658"
-  integrity sha1-Dovf5NHduIVNZOBOp8AOKgJuVlg=
+graceful-fs@4.2.3, graceful-fs@4.2.4, graceful-fs@^4.1.6, graceful-fs@^4.2.0:
+  version "4.2.4"
+  resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.4.tgz#2256bde14d3632958c465ebc96dc467ca07a29fb"
+  integrity sha512-WjKPNJF79dtJAVniUlGGWHYGz2jWxT6VhN/4m1NdkbZ2nOsEF+cI1Edgql5zCRhs/VsQYRvrXctxktVXZUkixw==
 
 http-proxy-agent@4.0.1, http-proxy-agent@^2.1.0, http-proxy-agent@^4.0.1:
   version "4.0.1"
