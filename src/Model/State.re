@@ -415,6 +415,7 @@ type t = {
   bufferRenderers: BufferRenderers.t,
   changelog: Feature_Changelog.model,
   cli: Oni_CLI.t,
+  clientServer: Feature_ClientServer.model,
   clipboard: Feature_Clipboard.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
@@ -440,6 +441,7 @@ type t = {
   lifecycle: Lifecycle.t,
   menuBar: Feature_MenuBar.model,
   notifications: Feature_Notification.model,
+  proxy: Feature_Proxy.model,
   registers: Feature_Registers.model,
   scm: Feature_SCM.model,
   sneak: Feature_Sneak.model,
@@ -527,6 +529,7 @@ let initial =
     bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
     cli,
+    clientServer: Feature_ClientServer.create(),
     clipboard: Feature_Clipboard.initial,
     colorTheme:
       Feature_Theme.initial([
@@ -589,6 +592,7 @@ let initial =
     zen:
       Feature_Zen.initial(~isSingleFile=List.length(cli.filesToOpen) == 1),
     pane: Feature_Pane.initial,
+    proxy: Feature_Proxy.default,
     newQuickmenu: Feature_Quickmenu.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,

@@ -1856,8 +1856,6 @@ module Reply: {
   let toDebugString: t => string;
 };
 
-module Middleware: {let download: Msg.DownloadService.msg => Lwt.t(Reply.t);};
-
 module Client: {
   type t;
 

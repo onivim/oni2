@@ -195,6 +195,7 @@ module Internal = {
              ~config=resolver,
            );
 
+      let proxy = state.proxy |> Feature_Proxy.configurationChanged(resolver);
       let colorTheme =
         state.colorTheme |> Feature_Theme.configurationChanged(~resolver);
 
@@ -240,6 +241,7 @@ module Internal = {
           languageSupport,
           sideBar,
           layout,
+          proxy,
           vim,
           zen,
           zoom,
@@ -361,6 +363,30 @@ let update =
       action: Actions.t,
     ) =>
   switch (action) {
+  | ClientServer(msg) =>
+    let (clientServer, outmsg) =
+      Feature_ClientServer.update(msg, state.clientServer);
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | OpenFilesAndFolders({files, folder}) =>
+        let folderEffect =
+          folder
+          |> Option.map(Internal.chdir)
+          |> Option.value(~default=Isolinear.Effect.none);
+
+        let openFileEffects =
+          files
+          |> List.map(FpExp.toString)
+          |> List.map(
+               Internal.openFileEffect(~direction=SplitDirection.Inactive),
+             );
+
+        [folderEffect, ...openFileEffects] |> Isolinear.Effect.batch;
+      };
+
+    ({...state, clientServer}, eff);
   | Clipboard(msg) =>
     let (model, outmsg) = Feature_Clipboard.update(msg, state.clipboard);
 
@@ -419,7 +445,12 @@ let update =
 
   | Extensions(msg) =>
     let (model, outMsg) =
-      Feature_Extensions.update(~extHostClient, msg, state.extensions);
+      Feature_Extensions.update(
+        ~extHostClient,
+        ~proxy=state.proxy |> Feature_Proxy.proxy,
+        msg,
+        state.extensions,
+      );
     let state = {...state, extensions: model};
     let (state', effect) =
       Feature_Extensions.(
@@ -1013,7 +1044,11 @@ let update =
 
   | Registration(msg) =>
     let (state', outmsg) =
-      Feature_Registration.update(state.registration, msg);
+      Feature_Registration.update(
+        ~proxy=state.proxy |> Feature_Proxy.proxy,
+        state.registration,
+        msg,
+      );
 
     let effect =
       switch (outmsg) {
@@ -1267,6 +1302,11 @@ let update =
     switch (outmsg) {
     | Nothing => (state, Effect.none)
 
+    | Effect(eff) => (
+        state,
+        eff |> Isolinear.Effect.map(msg => Buffers(msg)),
+      )
+
     | ShowMenu(menuFn) =>
       let languageInfo =
         state.languageSupport |> Feature_LanguageSupport.languageInfo;
@@ -1284,11 +1324,6 @@ let update =
     | NotifyError(msg) => (
         state,
         Internal.notificationEffect(~kind=Error, msg),
-      )
-
-    | Effect(eff) => (
-        state,
-        eff |> Isolinear.Effect.map(msg => Buffers(msg)),
       )
 
     | BufferModifiedSet(id, _) =>
@@ -1335,6 +1370,7 @@ let update =
             // However, if we're splitting, we need to clone the editor
             | SplitDirection.Horizontal
             | SplitDirection.Vertical(_)
+            | SplitDirection.Inactive
             | SplitDirection.NewTab => Editor.copy(ed)
             };
 
@@ -1350,8 +1386,49 @@ let update =
           )
         };
 
+      let previousActiveGroup = Feature_Layout.activeGroup(state.layout);
+
+      // Make any splits or changes to the layout based on the current split direction
       let layout =
         switch (split) {
+        | SplitDirection.Inactive =>
+          let isTerminalFocus =
+            switch (FocusManager.current(state)) {
+            | Terminal(_) => true
+            | _ => false
+            };
+          // Do we have focus? If not, we can just use the existing split -
+          // don't bother going to a different one.
+          if (FocusManager.current(state) != Focus.Editor && !isTerminalFocus) {
+            state.layout;
+          } else {
+            let allGroups = Feature_Layout.activeLayoutGroups(state.layout);
+
+            // If there is only one split, make a new one for the editor.
+            if (List.length(allGroups) == 1) {
+              Feature_Layout.split(
+                ~shouldReuse=true,
+                ~editor,
+                `Horizontal,
+                state.layout,
+              );
+            } else {
+              // Otherwise - just switch to an alternate group, temporarily.
+              allGroups
+              |> List.filter(group =>
+                   Feature_Layout.Group.id(group)
+                   != Feature_Layout.Group.id(previousActiveGroup)
+                 )
+              |> Utility.ListEx.nth_opt(0)
+              |> Option.map(newGroup => {
+                   Feature_Layout.setActiveGroup(
+                     Feature_Layout.Group.id(newGroup),
+                     state.layout,
+                   )
+                 })
+              |> Option.value(~default=state.layout);
+            };
+          };
         | SplitDirection.Current => state.layout
         | SplitDirection.Horizontal =>
           Feature_Layout.split(
@@ -1375,9 +1452,24 @@ let update =
            })
         |> Option.value(~default=editor);
 
+      // If we are using the 'Inactive' split direction strategy, the active
+      // split is temporarily switched to open the editor in a separate split -
+      // switch it back after the editor is open.
+      let maybeRevertToPrevious = layout => {
+        switch (split) {
+        | SplitDirection.Inactive =>
+          Feature_Layout.setActiveGroup(
+            Feature_Layout.Group.id(previousActiveGroup),
+            layout,
+          )
+        | _ => layout
+        };
+      };
+
       let layout' =
         layout
-        |> Feature_Layout.openEditor(~config=config(~fileType), editor');
+        |> Feature_Layout.openEditor(~config=config(~fileType), editor')
+        |> maybeRevertToPrevious;
 
       let cleanLayout =
         isPreview
@@ -1443,7 +1535,7 @@ let update =
         };
 
       (state'', Effect.none);
-    | BufferSaved(buffer) =>
+    | BufferSaved({buffer, reason}) =>
       let eff =
         Service_Exthost.Effects.FileSystemEventService.onBufferChanged(
           ~buffer,
@@ -1491,9 +1583,11 @@ let update =
              let config = Selectors.configResolver(state);
              state.languageSupport
              |> Feature_LanguageSupport.bufferSaved(
+                  ~reason,
                   ~isLargeBuffer=
                     Feature_Buffers.isLargeFile(state.buffers, buffer),
                   ~activeBufferId,
+                  ~savedBufferId=Oni_Core.Buffer.getId(buffer),
                   ~config,
                   ~buffer,
                 );
@@ -1791,6 +1885,7 @@ let update =
   | Terminal(msg) =>
     let (model, eff) =
       Feature_Terminal.update(
+        ~clientServer=state.clientServer,
         ~config=Selectors.configResolver(state),
         state.terminals,
         msg,

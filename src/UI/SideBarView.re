@@ -134,6 +134,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
           let extensionDispatch = msg => dispatch(Actions.Extensions(msg));
           <Feature_Extensions.ListView
             model={state.extensions}
+            proxy={state.proxy |> Feature_Proxy.proxy}
             theme
             font
             isFocused={FocusManager.current(state) == Focus.Extensions}

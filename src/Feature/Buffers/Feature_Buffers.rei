@@ -76,7 +76,10 @@ type outmsg =
       oldBuffer: Oni_Core.Buffer.t,
       triggerKey: option(string),
     })
-  | BufferSaved(Oni_Core.Buffer.t)
+  | BufferSaved({
+      buffer: Oni_Core.Buffer.t,
+      reason: SaveReason.t,
+    })
   | CreateEditor({
       buffer: Oni_Core.Buffer.t,
       split: SplitDirection.t,
@@ -151,7 +154,9 @@ let vimSettingChanged:
   (~activeBufferId: int, ~name: string, ~value: Vim.Setting.value, model) =>
   Isolinear.Effect.t(msg);
 
-let sub: model => Isolinear.Sub.t(msg);
+let sub:
+  (~isWindowFocused: bool, ~maybeFocusedBuffer: option(int), model) =>
+  Isolinear.Sub.t(msg);
 
 module Contributions: {
   let commands: Command.Lookup.t(msg);

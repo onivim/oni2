@@ -276,10 +276,21 @@ module Keybindings = {
       ~toKeys="<ESC>",
       ~condition=WhenExpr.Value(True),
     );
+
+  // Normalize the Ctrl-^ binding (alternate file) for libvim
+  // #3455: The Control+6 key gets sent as, actually, Ctrl-6, which isn't recognized
+  let controlCaretRemap =
+    remap(
+      ~allowRecursive=true,
+      ~fromKeys="<C-6>",
+      ~toKeys="<C-^>",
+      ~condition=WhenExpr.Value(True),
+    );
 };
 
 module Contributions = {
-  let keybindings = Keybindings.[controlSquareBracketRemap];
+  let keybindings =
+    Keybindings.[controlSquareBracketRemap, controlCaretRemap];
 
   let configuration = Configuration.[experimentalViml.spec];
 };

@@ -7,6 +7,9 @@
 - #3381 - Language Support: Symbols - implement go-to buffer symbol menu
 - #3387 - Code Actions: Implement context menu for quick fixes
 - #3440 - Indentation: Easier space/tab indentation switching
+- #3337 - Proxy: Add configuration for proxies (fixes #3314, #2660)
+- #3419 - Buffers: Implement auto-save functionality (fixes #2431)
+- #3430 - Buffers: Implement workbench.action.quickOpenBuffer (fixes #3413)
 
 ### Bug Fixes
 
@@ -56,7 +59,12 @@
 - #3422 - Input: Fix terminal key binding not working as expected (fixes #2778)
 - #3435 - Completion: Fix various mouse interactions (fixes #3428)
 - #3439 - Hover: Remove textOverflow(Ellipsis) from hover
-- #3430 - Buffers: Implement action.workbench.quickOpenBuffer (fixes #3413)
+- #3442 - Buffers: Fix regression causing control+tab menu not to stay open (related #3442)
+- #3443 - App: Fix broken window positioning w/ multiple monitors (fixes #3349)
+- #3451 - Terminal: Fix opening file using `oni2` from integrated terminal (fixes #2297)
+- #3456 - Diagnostics: Swift diagnostics not showing in editor surface (related #3434)
+- #3457 - Snippets: Fix parse error when colon is in placeholder (related #3434)
+- #3464 - Vim: Fix alternate-file keybinding (fixes #3455)
 
 ### Performance
 
@@ -69,6 +77,8 @@
 - #3293 - Formatting: Initial formatting documentation
 - #3296 - Emmet: Add documentation on using Emmet for tsx/jsx files (fixes #3283)
 - #3411 - Vim Tips: Fix missing links (fixes #3407)
+- #2272 - Documentation: Fix AppImage installation instructions (thanks @mkenigs !)
+- #3458 - Documentation: Fix search motion key (thanks @Minnozz !)
 
 ### Refactoring
 
@@ -77,6 +87,11 @@
 - #3334 - Dependency: Revery -> b746d68 (thanks @timbertson !)
 - #3385 - Dependency: Revery -> 4337e2c
 - #3408 - Dependency: Revery -> 373b087
+- #3449 - Dependency: esy -> 0.6.10
+- #3446 - Dependency: Upgrade dune, isolinear, and revery-terminal to prep for compiler upgrade
+- #3447 - Terminal: Split out PTY - remove dependency on `$spawnExtHostProcess` API
+- #3461 - Dependency: vscode-exthost -> 1.54.3
+- #3462 - Dependency: vscode-exthost -> 1.55.2
 
 ### Infrastructure
 
@@ -84,3 +99,5 @@
 - #3313 - Packaging: Fix macOS Big Sur release bundling issues (fixes #2813, thanks @brdoney !)
 - #3369 - CI: Install python3 on CentOS dockerfile
 - #3429 - CI: Remove libtools dependency
+- #3450 - CI: Fix esy cache path after upgrade to 0.6.10
+- #3452 - CI: Fix concurrent artifact upload for macOS VMs

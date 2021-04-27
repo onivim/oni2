@@ -23,6 +23,7 @@ type msg =
 module Sub: {
   let terminal:
     (
+      ~setup: Setup.t,
       ~id: int,
       ~launchConfig: Exthost.ShellLaunchConfig.t,
       ~columns: int,

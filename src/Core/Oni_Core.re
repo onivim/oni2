@@ -54,6 +54,7 @@ module Ripgrep = Ripgrep;
 module Scheduler = Scheduler;
 module Decoration = Decoration;
 module Persistence = Persistence;
+module SaveReason = SaveReason;
 module Setup = Setup;
 module ShellUtility = ShellUtility;
 module SplitDirection = SplitDirection;

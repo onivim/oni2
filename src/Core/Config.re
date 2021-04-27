@@ -136,6 +136,19 @@ module Schema = {
     let float = {decode: Json.Decode.float, encode: Json.Encode.float};
     let int = {decode: Json.Decode.int, encode: Json.Encode.int};
     let string = {decode: Json.Decode.string, encode: Json.Encode.string};
+    let time = {
+      decode: Json.Decode.(int |> map(Time.ms)),
+      encode:
+        Json.Encode.(
+          t =>
+            t
+            |> Time.toFloatSeconds
+            |> (t => t *. 1000.)
+            |> int_of_float
+            |> int
+        ),
+    };
+
     let list = valueCodec => {
       decode: Json.Decode.list(valueCodec.decode),
       encode: Json.Encode.list(valueCodec.encode),

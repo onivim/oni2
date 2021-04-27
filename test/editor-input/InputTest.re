@@ -8,12 +8,24 @@ let aKeyNoModifiers =
     ~modifiers=Modifiers.none,
   );
 
+let ctrlAKey =
+  KeyPress.physicalKey(
+    ~key=Key.Character(Uchar.of_char('a')),
+    ~modifiers=Modifiers.{...none, control: true},
+  );
+
 let bKeyScancode = 102;
 
 let bKeyNoModifiers =
   KeyPress.physicalKey(
     ~key=Key.Character(Uchar.of_char('b')),
     ~modifiers=Modifiers.none,
+  );
+
+let ctrlBKey =
+  KeyPress.physicalKey(
+    ~key=Key.Character(Uchar.of_char('b')),
+    ~modifiers=Modifiers.{...none, control: true},
   );
 
 let cKeyScancode = 103;
@@ -30,6 +42,13 @@ let ucharNoModifiers = uchar =>
 let leaderKey = KeyPress.specialKey(SpecialKey.Leader);
 let plugKey = KeyPress.specialKey(SpecialKey.Plug);
 
+let leftControlKeyScancode = 901;
+let leftControlKey =
+  KeyPress.physicalKey(
+    ~key=Key.LeftControl,
+    ~modifiers=Modifiers.{...none, control: true},
+  );
+
 let candidate = keyPress => KeyCandidate.ofKeyPress(keyPress);
 
 module Input =
@@ -39,6 +58,56 @@ module Input =
   });
 
 describe("EditorInput", ({describe, _}) => {
+  describe("modifier keys", ({test, _}) => {
+    test("#2778: Modifier keys shouldn't interrupt binding", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([ctrlAKey, ctrlBKey]),
+             _ => true,
+             "testCommand",
+           );
+      let (bindings, _effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=leftControlKeyScancode,
+          ~key=candidate(leftControlKey),
+          bindings,
+        );
+      let (bindings, _effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=candidate(ctrlAKey),
+          bindings,
+        );
+      let (bindings, _effects) =
+        Input.keyUp(
+          ~context=true,
+          ~scancode=leftControlKeyScancode,
+          bindings,
+        );
+      // In #2778, this control-key press event in the midst of candidate bindings
+      // caused the bindings to be reset - this is the important part of
+      // exercising this case:
+      let (bindings, _effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=leftControlKeyScancode,
+          ~key=candidate(leftControlKey),
+          bindings,
+        );
+      let (_bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=bKeyScancode,
+          ~key=candidate(ctrlBKey),
+          bindings,
+        );
+
+      expect.equal(effects, [Execute("testCommand")]);
+    })
+  });
   describe("special keys", ({test, _}) => {
     test("special keys can participate in remap", ({expect, _}) => {
       // Add a <Plug>a -> "commandA" mapping

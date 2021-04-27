@@ -112,6 +112,14 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `files.exclude` __(_list of string_ default: `[".git", "_esy", "node_modules"]`)__ - When using `Quick Open` or `Find in files`, Onivim will ignore the files inside the directories listed here 
 
+- `files.autoSave` __(_string_ default: `"off"`)__ - controls when buffers are auto-saved:
+    - _"off"_ - Do not auto-save at all
+    - _"afterDelay"_ - Auto-save after the delay specified by `"files.autoSaveDelay"`
+    - _"onFocusChange"_ - Auto-save when changing focus between buffers
+    - _"onWindowChange"_ - Auto-save when the Onivim application window loses focus
+
+- `files.autoSaveDelay` __(_int_ default: `1000`)__ - specifies the time, in milliseconds, to wait to auto-save a buffer when `files.autoSave` is set to `"afterDelay"`
+
 - `search.exclude` __(_list of string_ default: `[]`)__ - When using `Find in files` Onivim will not look at files located at the directories listed here, this inherit all the values from `files.exclude`
 
 - `workbench.colorTheme` __(_string_ default:`"One Dark Pro"`)__ - Color theme to use.
@@ -155,6 +163,14 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `oni.layout.layoutTabPosition` __(_"top"|"bottom"_ default: `"bottom"`)__ - Controls the position of the layout tabs.
 
 - `oni.layout.singleTabMode` __(_bool_ default: `false`)__ - When `true`, groups will only hold a single editor, and closing this editor will always close the group. It will also hide the editor tabs, and therefore essentially hide the concept of editor groups.
+
+### Proxy
+
+Onivim 2 can be configured to send requests through an HTTP/HTTPs proxy with the following configuration:
+
+- `http.proxy` __(_string_ default: `null`) - A URL to be used as a proxy server, including the name and password. ie, `"http.proxy": "http://user@pass:127.0.0.1:8888"`
+
+- `https.proxy` - __(_string_ default: `null`) - A URL to be used as a proxy server for HTTPs requests. If not specified, Onivim will fall back to the `http.proxy` setting.
 
 ### Rendering
 

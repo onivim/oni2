@@ -37,7 +37,7 @@ module Packet: {
     body: Bytes.t,
   };
 
-  let create: (~bytes: Bytes.t, ~packetType: packetType, ~id: int) => t;
+  let create: (~ack: int=?, ~packetType: packetType, ~id: int, Bytes.t) => t;
   let toBytes: t => bytes;
   let equal: (t, t) => bool;
 

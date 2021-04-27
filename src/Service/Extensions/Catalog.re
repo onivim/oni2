@@ -171,9 +171,14 @@ module Details = {
   };
 };
 
-let details = (~setup, {publisher, name}: Identifier.t) => {
+let details = (~proxy, ~setup, {publisher, name}: Identifier.t) => {
   let url = Url.extensionInfo(publisher, name);
-  Service_Net.Request.json(~setup, ~decoder=Details.Decode.decode, url);
+  Service_Net.Request.json(
+    ~proxy,
+    ~setup,
+    ~decoder=Details.Decode.decode,
+    url,
+  );
 };
 
 module Summary = {
@@ -279,7 +284,12 @@ module SearchResponse = {
   };
 };
 
-let search = (~offset, ~setup, query) => {
+let search = (~proxy, ~offset, ~setup, query) => {
   let url = Url.search(~query, ~offset);
-  Service_Net.Request.json(~setup, ~decoder=SearchResponse.decode, url);
+  Service_Net.Request.json(
+    ~proxy,
+    ~setup,
+    ~decoder=SearchResponse.decode,
+    url,
+  );
 };

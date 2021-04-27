@@ -71,10 +71,18 @@ type outmsg =
       shouldClose: bool,
     });
 
-let update: (~config: Config.resolver, t, msg) => (t, outmsg);
+let update:
+  (
+    ~clientServer: Feature_ClientServer.model,
+    ~config: Config.resolver,
+    t,
+    msg
+  ) =>
+  (t, outmsg);
 
 let subscription:
-  (~workspaceUri: Uri.t, Exthost.Client.t, t) => Isolinear.Sub.t(msg);
+  (~setup: Setup.t, ~workspaceUri: Uri.t, Exthost.Client.t, t) =>
+  Isolinear.Sub.t(msg);
 
 let shellCmd: string;
 

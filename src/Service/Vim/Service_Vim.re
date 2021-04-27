@@ -243,6 +243,14 @@ module Effects = {
       dispatch(toMsg(~bufferId=Vim.Buffer.getId(newBuffer)));
     });
   };
+
+  let saveAll = toMsg => {
+    Isolinear.Effect.createWithDispatch(~name="loadBuffer", dispatch => {
+      let (_: Vim.Context.t, _effects: list(Vim.Effect.t)) =
+        Vim.command("wa!");
+      dispatch(toMsg());
+    });
+  };
 };
 
 module Sub = {
