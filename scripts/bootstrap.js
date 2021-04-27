@@ -24,16 +24,16 @@ const getCygwinPath = (inputPath) => {
 }
 
 if (isWindows) {
-    nodePath = getCygwinPath(path.join(vendorPath, "node-v12.17.0", "win-x64", "node.exe"))
+    nodePath = getCygwinPath(path.join(vendorPath, "node-v14.15.4", "win-x64", "node.exe"))
     nodeScriptPath = getCygwinPath(nodeScriptPath)
     extensionsPath = getCygwinPath(extensionsPath)
     developmentExtensionsPath = getCygwinPath(developmentExtensionsPath)
     rgPath = getCygwinPath(path.join(rgPath, "windows", "rg.exe"))
 } else if (isMac) {
-    nodePath = path.join(vendorPath, "node-v12.17.0", "osx", "node")
+    nodePath = path.join(vendorPath, "node-v14.15.4", "osx", "node")
     rgPath = path.join(rgPath, "mac", "rg")
 } else if (isLinux) {
-    nodePath = path.join(vendorPath, "node-v12.17.0", "linux-x64", "node")
+    nodePath = path.join(vendorPath, "node-v14.15.4", "linux-x64", "node")
     rgPath = path.join(rgPath, "linux", "rg")
 } else {
     console.error("Unknown OS...aborting.")

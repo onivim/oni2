@@ -64,6 +64,7 @@
 - #3451 - Terminal: Fix opening file using `oni2` from integrated terminal (fixes #2297)
 - #3456 - Diagnostics: Swift diagnostics not showing in editor surface (related #3434)
 - #3457 - Snippets: Fix parse error when colon is in placeholder (related #3434)
+- #3464 - Vim: Fix alternate-file keybinding (fixes #3455)
 - #3465 - Quickmenu: Remove darkening of background when menu is open (fixes #3459)
 
 ### Performance
@@ -78,6 +79,7 @@
 - #3296 - Emmet: Add documentation on using Emmet for tsx/jsx files (fixes #3283)
 - #3411 - Vim Tips: Fix missing links (fixes #3407)
 - #2272 - Documentation: Fix AppImage installation instructions (thanks @mkenigs !)
+- #3458 - Documentation: Fix search motion key (thanks @Minnozz !)
 
 ### Refactoring
 
