@@ -7,4 +7,4 @@
    Oni2.syntax_client Oni2.syntax_server Oni2.ui reason-sdl2 reason-harfbuzz
    Oni2.sparkle Oni2.KeyboardLayout fp dir.lib)
  (preprocess
-  (pps ppx_let lwt_ppx brisk-reconciler.ppx)))
+  (pps ppx_let ppx_deriving.show lwt_ppx brisk-reconciler.ppx)))
