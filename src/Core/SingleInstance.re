@@ -65,6 +65,13 @@ let lock =
       ~firstInstance: 'a => unit,
       ~additionalInstance: 'a => unit,
     ) => {
+  let name =
+    if (Sys.win32) {
+      Printf.sprintf("\\\\.\\pipe\\%s%s", name, "-sock");
+    } else {
+      Filename.get_temp_dir_name() ++ "/name.sock";
+    };
+  prerr_endline("Using socket: " ++ name);
   let pipe = Luv.Pipe.init() |> Result.get_ok;
   let tryConnect = tryToConnectToExistingServer(~name, pipe);
 
@@ -84,6 +91,7 @@ let lock =
 
     let _ = tryToCreateServer(~name, pipe);
     ();
+    firstInstance();
   };
   // TODO: Fix name
   // let%bind _ = Luv.Pipe.bind(server, "echo-pipe");
