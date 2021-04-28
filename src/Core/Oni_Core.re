@@ -57,6 +57,7 @@ module Persistence = Persistence;
 module SaveReason = SaveReason;
 module Setup = Setup;
 module ShellUtility = ShellUtility;
+module SingleInstance = SingleInstance;
 module SplitDirection = SplitDirection;
 module StringMap = Kernel.StringMap;
 module StringSet = Kernel.StringSet;

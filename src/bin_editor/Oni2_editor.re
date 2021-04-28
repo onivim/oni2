@@ -73,6 +73,15 @@ switch (eff) {
     HealthCheck.run(~checks=Common, cliOptions)
   )
 | Run =>
+  Core.SingleInstance.lock(
+    ~name="test-pipe.pipe",
+    ~arguments=(),
+    ~serialize=_ => Bytes.empty,
+    ~deserialize=_bytes => (),
+    ~firstInstance=() => {prerr_endline("First instance!")},
+    ~additionalInstance=() => {prerr_endline("Additional instance!")},
+  );
+
   initializeLogging();
 
   // #1161 - OSX - Make sure we're using the terminal / shell PATH.
