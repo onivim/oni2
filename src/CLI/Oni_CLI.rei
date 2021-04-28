@@ -10,6 +10,7 @@ type t = {
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
+  forceNewWindow: bool,
   overriddenExtensionsDir: option(FpExp.t(FpExp.absolute)),
   shouldLoadExtensions: bool,
   shouldLoadConfiguration: bool,

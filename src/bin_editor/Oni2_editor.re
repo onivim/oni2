@@ -595,19 +595,24 @@ switch (eff) {
     let deserialize = bytes => Marshal.from_bytes(bytes, 0);
   };
 
-  Core.SingleInstance.lock(
-    ~name="onivim2",
-    ~arguments=SingleInstanceData.fromCli(cliOptions),
-    ~serialize=SingleInstanceData.serialize,
-    ~deserialize=SingleInstanceData.deserialize,
-    ~firstInstance=(_: SingleInstanceData.t) => run(),
-    ~additionalInstance=
-      (args: SingleInstanceData.t) => {
-        win^ |> Option.iter(Window.raise);
-        globalDispatch^
-        |> Option.iter(dispatch => {
-             Model.Actions.FilesDropped({paths: args.filesToOpen}) |> dispatch
-           });
-      },
-  );
+  if (cliOptions.forceNewWindow) {
+    run();
+  } else {
+    Core.SingleInstance.lock(
+      ~name="onivim2",
+      ~arguments=SingleInstanceData.fromCli(cliOptions),
+      ~serialize=SingleInstanceData.serialize,
+      ~deserialize=SingleInstanceData.deserialize,
+      ~firstInstance=(_: SingleInstanceData.t) => run(),
+      ~additionalInstance=
+        (args: SingleInstanceData.t) => {
+          win^ |> Option.iter(Window.raise);
+          globalDispatch^
+          |> Option.iter(dispatch => {
+               Model.Actions.FilesDropped({paths: args.filesToOpen})
+               |> dispatch
+             });
+        },
+    );
+  };
 };
