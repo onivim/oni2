@@ -605,10 +605,6 @@ switch (eff) {
     ~additionalInstance=
       (args: SingleInstanceData.t) => {
         win^ |> Option.iter(Window.raise);
-        prerr_endline(
-          "Additional instance: " ++ SingleInstanceData.show(args),
-        );
-
         globalDispatch^
         |> Option.iter(dispatch => {
              Model.Actions.FilesDropped({paths: args.filesToOpen}) |> dispatch
