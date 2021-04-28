@@ -581,7 +581,6 @@ switch (eff) {
   };
 
   module SingleInstanceData = {
-    [@deriving show]
     type t = {
       filesToOpen: list(string),
       folderToOpen: option(string),
