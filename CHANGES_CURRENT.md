@@ -66,6 +66,7 @@
 - #3457 - Snippets: Fix parse error when colon is in placeholder (related #3434)
 - #3464 - Vim: Fix alternate-file keybinding (fixes #3455)
 - #3465 - Quickmenu: Remove darkening of background when menu is open (fixes #3459)
+- #3466 - Input: Fix `gt` binding parsing (fixes #3256)
 
 ### Performance
 
