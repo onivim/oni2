@@ -597,7 +597,7 @@ switch (eff) {
   };
 
   Core.SingleInstance.lock(
-    ~name="test-instance-name",
+    ~name="onivim2",
     ~arguments=SingleInstanceData.fromCli(cliOptions),
     ~serialize=SingleInstanceData.serialize,
     ~deserialize=SingleInstanceData.deserialize,
