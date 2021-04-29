@@ -34,24 +34,11 @@ type outmsg =
       stat: option(Luv.File.Stat.t),
     });
 
-let update:
-  (
-    ~config: Config.resolver,
-    ~configuration: Feature_Configuration.model,
-    msg,
-    model
-  ) =>
-  (model, outmsg);
+let update: (~config: Config.resolver, msg, model) => (model, outmsg);
 
 // SUBSCRIPTION
 
-let sub:
-  (
-    ~config: Config.resolver,
-    ~configuration: Feature_Configuration.model,
-    model
-  ) =>
-  Isolinear.Sub.t(msg);
+let sub: (~config: Config.resolver, model) => Isolinear.Sub.t(msg);
 
 // VIEW
 
