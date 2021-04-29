@@ -79,15 +79,12 @@ module Internal = {
 };
 
 module Effects = {
-  let load = (directory, configuration, ~onComplete) => {
+  let load = (directory, config, ~onComplete) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.load", dispatch => {
       let directoryStr = FpExp.toString(directory);
       Log.infof(m => m("Loading nodes for directory: %s", directoryStr));
       let ignored =
-        Feature_Configuration.Legacy.getValue(
-          c => c.filesExclude,
-          configuration,
-        );
+        Feature_Configuration.GlobalConfiguration.Files.exclude.get(config);
       let promise = Internal.getDirectoryTree(directory, ignored);
 
       Lwt.on_success(
@@ -191,7 +188,7 @@ let replaceNode = (node, model: model) =>
   | None => setTree(node, model)
   };
 
-let revealAndFocusPath = (~configuration, path, model: model) => {
+let revealAndFocusPath = (~config, path, model: model) => {
   switch (model.tree) {
   | Some(tree) =>
     switch (FsTreeNode.findNodesByPath(path, tree)) {
@@ -203,8 +200,7 @@ let revealAndFocusPath = (~configuration, path, model: model) => {
     | `Partial(lastNode) => (
         model,
         Effect(
-          Effects.load(
-            FsTreeNode.getPath(lastNode), configuration, ~onComplete=node =>
+          Effects.load(FsTreeNode.getPath(lastNode), config, ~onComplete=node =>
             FocusNodeLoaded(node)
           ),
         ),
@@ -254,7 +250,7 @@ let markNodeAsLoaded = (node, model) => {
 
 let reload = model => {...model, pathsToLoad: model.expandedPaths};
 
-let update = (~config, ~configuration, msg, model) => {
+let update = (~config, msg, model) => {
   switch (msg) {
   | FileWatcherEvent({path, event}) => (
       model |> expand(path),
@@ -272,7 +268,7 @@ let update = (~config, ~configuration, msg, model) => {
         switch (autoReveal) {
         | `HighlightAndScroll =>
           let model' = {...model, active: Some(path)};
-          revealAndFocusPath(~configuration, path, model');
+          revealAndFocusPath(~config, path, model');
         | `HighlightOnly =>
           let model = setActive(Some(path), model);
           (setFocus(Some(path), model), Nothing);
@@ -297,7 +293,7 @@ let update = (~config, ~configuration, msg, model) => {
       |> expand(FsTreeNode.getPath(node))
       |> replaceNode(node)
       |> markNodeAsLoaded(node)
-      |> revealAndFocusPath(~configuration, activePath)
+      |> revealAndFocusPath(~config, activePath)
 
     | None => (model, Nothing)
     }
@@ -343,14 +339,9 @@ let update = (~config, ~configuration, msg, model) => {
 
 module View = View;
 
-let sub =
-    (
-      ~config,
-      ~configuration,
-      {fileWatcherKey, expandedPaths, pathsToLoad, _},
-    ) => {
+let sub = (~config, {fileWatcherKey, expandedPaths, pathsToLoad, _}) => {
   let ignored =
-    Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
+    Feature_Configuration.GlobalConfiguration.Files.exclude.get(config);
 
   let toMsg = path =>
     fun

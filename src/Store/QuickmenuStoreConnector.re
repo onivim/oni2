@@ -555,12 +555,9 @@ let subscriptions = (ripgrep, dispatch) => {
     );
   };
 
-  let ripgrep = (workspace, languageInfo, iconTheme, configuration) => {
+  let ripgrep = (workspace, languageInfo, iconTheme, config) => {
     let filesExclude =
-      Feature_Configuration.Legacy.getValue(
-        c => c.filesExclude,
-        configuration,
-      );
+      Feature_Configuration.GlobalConfiguration.Files.exclude.get(config);
 
     switch (Feature_Workspace.openedFolder(workspace)) {
     | None =>
@@ -624,7 +621,7 @@ let subscriptions = (ripgrep, dispatch) => {
             state.workspace,
             state.languageSupport |> Feature_LanguageSupport.languageInfo,
             state.iconTheme,
-            state.config,
+            state |> Oni_Model.Selectors.configResolver,
           )
 
       | Wildmenu(_) => []
