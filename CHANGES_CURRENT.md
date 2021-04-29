@@ -69,6 +69,7 @@
 - #3466 - Input: Fix `gt` binding parsing (fixes #3256)
 - #3474 - Explorer: Reload explorer when `files.exclude` is updated (fixes #1104)
 - #3476 - UX: Ellipsize author in extensions item view
+- #3475 - Buffers: Fix ctrl-tab ordering (fixes #3433)
 
 ### Performance
 
