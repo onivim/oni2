@@ -609,8 +609,12 @@ switch (eff) {
           win^ |> Option.iter(Window.raise);
           globalDispatch^
           |> Option.iter(dispatch => {
-               Model.Actions.FilesDropped({paths: args.filesToOpen})
-               |> dispatch
+               let paths =
+                 switch (args.folderToOpen) {
+                 | None => args.filesToOpen
+                 | Some(folder) => [folder, ...args.filesToOpen]
+                 };
+               Model.Actions.FilesDropped({paths: paths}) |> dispatch;
              });
         },
     );
