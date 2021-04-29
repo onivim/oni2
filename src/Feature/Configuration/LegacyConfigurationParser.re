@@ -6,20 +6,6 @@
 open Oni_Core;
 open LegacyConfigurationValues;
 
-let parseStringList = json => {
-  switch (json) {
-  | `List(items) =>
-    List.filter_map(
-      fun
-      | `String(v) => Some(v)
-      | _ => None,
-      items,
-    )
-  | `String(v) => [v]
-  | _ => []
-  };
-};
-
 let parseVimUseSystemClipboardSetting = json => {
   let parseItems = items =>
     List.fold_left(
@@ -53,13 +39,8 @@ type configurationTuple = (string, parseFunction);
 
 let configurationParsers: list(configurationTuple) = [
   (
-    "files.exclude",
-    (config, json) => {...config, filesExclude: parseStringList(json)},
-  ),
-  (
     "vim.useSystemClipboard",
-    (config, json) => {
-      ...config,
+    (_config, json) => {
       vimUseSystemClipboard: parseVimUseSystemClipboardSetting(json),
     },
   ),

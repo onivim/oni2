@@ -98,6 +98,13 @@ let focusOutline = model => {
     ExpandedState.implicitlyOpen(model.isSymbolOutlineExpanded),
 };
 
+let configurationChanged = (~config as _, model) => {
+  let fileExplorer' =
+    model.fileExplorer |> Option.map(Component_FileExplorer.reload);
+
+  {...model, fileExplorer: fileExplorer'};
+};
+
 let setRoot = (~rootPath, model) =>
   if (Option.equal(
         FpExp.eq,
@@ -140,7 +147,7 @@ type outmsg =
   | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)
   | PickFolder;
 
-let update = (~config, ~configuration, msg, model) => {
+let update = (~config, msg, model) => {
   switch (msg) {
   | Command(Reload) => (
       {
@@ -188,7 +195,6 @@ let update = (~config, ~configuration, msg, model) => {
          let (fileExplorer, outmsg) =
            Component_FileExplorer.update(
              ~config,
-             ~configuration,
              fileExplorerMsg,
              fileExplorer,
            );
@@ -521,10 +527,10 @@ module View = {
   };
 };
 
-let sub = (~config, ~configuration, model) => {
+let sub = (~config, model) => {
   model.fileExplorer
   |> Option.map(explorer => {
-       Component_FileExplorer.sub(~config, ~configuration, explorer)
+       Component_FileExplorer.sub(~config, explorer)
        |> Isolinear.Sub.map(msg => FileExplorer(msg))
      })
   |> Option.value(~default=Isolinear.Sub.none);
