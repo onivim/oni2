@@ -20,6 +20,8 @@ let root: model => option(FpExp.t(FpExp.absolute));
 
 let focusOutline: model => model;
 
+let configurationChanged: (~config: Config.resolver, model) => model;
+
 // UPDATE
 
 type outmsg =
@@ -36,24 +38,11 @@ type outmsg =
   | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)
   | PickFolder;
 
-let update:
-  (
-    ~config: Config.resolver,
-    ~configuration: Feature_Configuration.model,
-    msg,
-    model
-  ) =>
-  (model, outmsg);
+let update: (~config: Config.resolver, msg, model) => (model, outmsg);
 
 // SUBSCRIPTION
 
-let sub:
-  (
-    ~config: Config.resolver,
-    ~configuration: Feature_Configuration.model,
-    model
-  ) =>
-  Isolinear.Sub.t(msg);
+let sub: (~config: Config.resolver, model) => Isolinear.Sub.t(msg);
 
 // VIEW
 
