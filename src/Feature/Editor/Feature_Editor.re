@@ -29,7 +29,8 @@ type msg = Msg.t;
 type outmsg =
   | Nothing
   | MouseHovered(option(CharacterPosition.t))
-  | MouseMoved(option(CharacterPosition.t));
+  | MouseMoved(option(CharacterPosition.t))
+  | CodeLensClicked(Feature_LanguageSupport.CodeLens.t);
 
 type model = Editor.t;
 
@@ -115,7 +116,14 @@ let update = (editor, msg) => {
       Editor.setPreview(~preview, editor),
       Nothing,
     )
-  | Internal(msg) => (Editor.update(msg, editor), Nothing)
+  | Internal(msg) =>
+    let (editor', outmsg) = Editor.update(msg, editor);
+    let outmsg' =
+      switch (outmsg) {
+      | Editor.Nothing => Nothing
+      | Editor.CodeLensClicked(c) => CodeLensClicked(c)
+      };
+    (editor', outmsg');
   | EditorMouseMoved({time, pixelX, pixelY}) =>
     let editor' = editor |> Editor.mouseMove(~time, ~pixelX, ~pixelY);
 

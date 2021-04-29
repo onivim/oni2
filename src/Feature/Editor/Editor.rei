@@ -307,6 +307,10 @@ module Slow: {
 [@deriving show]
 type msg;
 
-let update: (msg, t) => t;
+type outmsg =
+  | Nothing
+  | CodeLensClicked(Feature_LanguageSupport.CodeLens.t);
+
+let update: (msg, t) => (t, outmsg);
 
 let sub: t => Isolinear.Sub.t(msg);

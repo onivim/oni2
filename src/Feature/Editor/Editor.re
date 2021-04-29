@@ -2095,10 +2095,16 @@ type msg =
       deltaPixelX: float,
     });
 
+type outmsg =
+  | Nothing
+  | CodeLensClicked(Feature_LanguageSupport.CodeLens.t);
+
 let update = (msg, editor) => {
   switch (msg) {
-  | AutoScroll({deltaPixelY, deltaPixelX}) =>
-    autoScroll(~deltaPixelX, ~deltaPixelY, editor)
+  | AutoScroll({deltaPixelY, deltaPixelX}) => (
+      autoScroll(~deltaPixelX, ~deltaPixelY, editor),
+      Nothing,
+    )
 
   | Animation(msg) =>
     let yankHighlight' =
@@ -2124,13 +2130,16 @@ let update = (msg, editor) => {
       }
       |> synchronizeMinimapScroll(~animated=true);
 
-    editor'
-    |> withSteadyCursor(e =>
-         {
-           ...e,
-           inlineElements: InlineElements.animate(msg, editor.inlineElements),
-         }
-       );
+    let editor'' =
+      editor'
+      |> withSteadyCursor(e =>
+           {
+             ...e,
+             inlineElements:
+               InlineElements.animate(msg, editor.inlineElements),
+           }
+         );
+    (editor'', Nothing);
   };
 };
 

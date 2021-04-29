@@ -130,6 +130,9 @@ module Internal = {
       let effect =
         switch (outmsg) {
         | Nothing => Effect.none
+        | CodeLensClicked(codeLens) =>
+          prerr_endline("Code lens clicked");
+          Effect.none;
         | MouseHovered(maybeCharacterPosition) =>
           Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
             dispatch(

@@ -63,8 +63,6 @@ let%component make =
                 ~bufferPixelWidth,
                 ~windowIsFocused,
                 ~config,
-                ~uiFont,
-                ~theme,
                 (),
               ) => {
   let%hook maybeBbox = React.Hooks.ref(None);
@@ -72,35 +70,6 @@ let%component make =
   let indentation = Buffer.getIndentation(buffer);
 
   //let inlineElements = Editor.getInlineElements(editor);
-
-  let topVisibleLine = Editor.getTopVisibleBufferLine(editor);
-  let bottomVisibleLine = Editor.getBottomVisibleBufferLine(editor);
-
-  let rec getInlineElements = (acc: list(Revery.UI.element), lines) =>
-    switch (lines) {
-    | [] => acc
-    | [line, ...tail] =>
-      let isVisible = line >= topVisibleLine && line <= bottomVisibleLine;
-      getInlineElements(
-        [
-          <InlineElementView.Container
-            config
-            uiFont
-            theme
-            editor
-            line
-            dispatch
-            isVisible
-          />,
-          ...acc,
-        ],
-        tail,
-      );
-    };
-
-  let linesWithElements = Editor.linesWithInlineElements(editor);
-
-  let lensElements = getInlineElements([], linesWithElements);
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
     dispatch(
@@ -274,7 +243,6 @@ let%component make =
         };
       }}
     />
-    {lensElements |> React.listToElement}
     yankHighlightElement
     cursors
   </View>;
