@@ -47,6 +47,7 @@ module ExpandedState = {
 type model = {
   focus,
   isFileExplorerExpanded: ExpandedState.t,
+  excludeFiles: list(string),
   fileExplorer: option(Component_FileExplorer.model),
   isSymbolOutlineExpanded: ExpandedState.t,
   symbolOutline:
@@ -88,6 +89,7 @@ let initial = (~rootPath) => {
   fileExplorer:
     rootPath
     |> Option.map(rootPath => Component_FileExplorer.initial(~rootPath)),
+  excludeFiles: [],
   symbolOutline: Component_VimTree.create(~rowHeight=20),
   vimWindowNavigation: Component_VimWindows.initial,
 };
@@ -98,11 +100,18 @@ let focusOutline = model => {
     ExpandedState.implicitlyOpen(model.isSymbolOutlineExpanded),
 };
 
-let configurationChanged = (~config as _, model) => {
-  let fileExplorer' =
-    model.fileExplorer |> Option.map(Component_FileExplorer.reload);
+let configurationChanged = (~config, model) => {
+  let excludeFiles =
+    Feature_Configuration.GlobalConfiguration.Files.exclude.get(config);
 
-  {...model, fileExplorer: fileExplorer'};
+  if (excludeFiles != model.excludeFiles) {
+    let fileExplorer' =
+      model.fileExplorer |> Option.map(Component_FileExplorer.reload);
+
+    {...model, excludeFiles, fileExplorer: fileExplorer'};
+  } else {
+    model;
+  };
 };
 
 let setRoot = (~rootPath, model) =>
