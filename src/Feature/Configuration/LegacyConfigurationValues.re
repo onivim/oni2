@@ -11,7 +11,6 @@ type vimUseSystemClipboard = {
 };
 
 type t = {
-  filesExclude: list(string),
   vimUseSystemClipboard,
   // Experimental feature flags
   // These are 'use-at-your-own-risk' features
@@ -20,7 +19,6 @@ type t = {
 };
 
 let default = {
-  filesExclude: ["_esy", "node_modules", ".git"],
   vimUseSystemClipboard: {
     yank: true,
     delete: false,

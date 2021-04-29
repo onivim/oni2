@@ -47,6 +47,7 @@ module ExpandedState = {
 type model = {
   focus,
   isFileExplorerExpanded: ExpandedState.t,
+  excludeFiles: list(string),
   fileExplorer: option(Component_FileExplorer.model),
   isSymbolOutlineExpanded: ExpandedState.t,
   symbolOutline:
@@ -88,6 +89,7 @@ let initial = (~rootPath) => {
   fileExplorer:
     rootPath
     |> Option.map(rootPath => Component_FileExplorer.initial(~rootPath)),
+  excludeFiles: [],
   symbolOutline: Component_VimTree.create(~rowHeight=20),
   vimWindowNavigation: Component_VimWindows.initial,
 };
@@ -96,6 +98,20 @@ let focusOutline = model => {
   focus: Outline,
   isSymbolOutlineExpanded:
     ExpandedState.implicitlyOpen(model.isSymbolOutlineExpanded),
+};
+
+let configurationChanged = (~config, model) => {
+  let excludeFiles =
+    Feature_Configuration.GlobalConfiguration.Files.exclude.get(config);
+
+  if (excludeFiles != model.excludeFiles) {
+    let fileExplorer' =
+      model.fileExplorer |> Option.map(Component_FileExplorer.reload);
+
+    {...model, excludeFiles, fileExplorer: fileExplorer'};
+  } else {
+    model;
+  };
 };
 
 let setRoot = (~rootPath, model) =>
@@ -140,7 +156,7 @@ type outmsg =
   | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)
   | PickFolder;
 
-let update = (~config, ~configuration, msg, model) => {
+let update = (~config, msg, model) => {
   switch (msg) {
   | Command(Reload) => (
       {
@@ -188,7 +204,6 @@ let update = (~config, ~configuration, msg, model) => {
          let (fileExplorer, outmsg) =
            Component_FileExplorer.update(
              ~config,
-             ~configuration,
              fileExplorerMsg,
              fileExplorer,
            );
@@ -521,10 +536,10 @@ module View = {
   };
 };
 
-let sub = (~config, ~configuration, model) => {
+let sub = (~config, model) => {
   model.fileExplorer
   |> Option.map(explorer => {
-       Component_FileExplorer.sub(~config, ~configuration, explorer)
+       Component_FileExplorer.sub(~config, explorer)
        |> Isolinear.Sub.map(msg => FileExplorer(msg))
      })
   |> Option.value(~default=Isolinear.Sub.none);
