@@ -502,8 +502,19 @@ module View = {
       Feature_Configuration.GlobalConfiguration.Workbench.treeIndent.get(
         config,
       );
-    let activeIndentColor = Colors.List.activeIndentGuide.from(theme);
-    let inactiveIndentColor = Colors.List.inactiveIndentGuide.from(theme);
+    let showIndentGuides =
+      Feature_Configuration.GlobalConfiguration.Workbench.treeRenderIndentGuides.
+        get(
+        config,
+      );
+    let activeIndentColor =
+      showIndentGuides
+        ? Colors.List.activeIndentGuide.from(theme)
+        : Revery.Colors.transparentBlack;
+    let inactiveIndentColor =
+      showIndentGuides
+        ? Colors.List.inactiveIndentGuide.from(theme)
+        : Revery.Colors.transparentBlack;
 
     let makeIndent = (~activeLevel, level) => {
       indent(

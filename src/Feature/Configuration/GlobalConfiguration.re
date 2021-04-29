@@ -283,6 +283,9 @@ module Workbench = {
     setting("workbench.editor.enablePreview", bool, ~default=true);
 
   let treeIndent = setting("workbench.tree.indent", int, ~default=5);
+
+  let treeRenderIndentGuides =
+    setting("workbench.tree.renderIndentGuides", bool, ~default=true);
 };
 
 let contributions = [
@@ -299,4 +302,5 @@ let contributions = [
   Workbench.editorShowTabs.spec,
   Workbench.editorEnablePreview.spec,
   Workbench.treeIndent.spec,
+  Workbench.treeRenderIndentGuides.spec,
 ];
