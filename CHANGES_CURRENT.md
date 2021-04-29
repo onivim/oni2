@@ -68,6 +68,7 @@
 - #3465 - Quickmenu: Remove darkening of background when menu is open (fixes #3459)
 - #3466 - Input: Fix `gt` binding parsing (fixes #3256)
 - #3474 - Explorer: Reload explorer when `files.exclude` is updated (fixes #1104)
+- #3476 - UX: Ellipsize author in extensions item view
 
 ### Performance
 
