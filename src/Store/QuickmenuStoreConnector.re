@@ -535,9 +535,10 @@ let subscriptions = (ripgrep, dispatch) => {
   let (itemStream, addItems) = Isolinear.Stream.create();
 
   let filter = (query, items) => {
+    let queryWithoutSpaces = query |> StringEx.filterAscii(c => c != ' ');
     QuickmenuFilterSubscription.create(
       ~id="quickmenu-filter",
-      ~query,
+      ~query=queryWithoutSpaces,
       ~items=items |> Array.to_list, // TODO: This doesn't seem very efficient. Can Array.to_list be removed?
       ~itemStream,
       ~onUpdate=(items, ~progress) => {
