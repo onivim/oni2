@@ -535,6 +535,9 @@ let subscriptions = (ripgrep, dispatch) => {
   let (itemStream, addItems) = Isolinear.Stream.create();
 
   let filter = (query, items) => {
+    // HACK: Filter out spaces, so queries with spaces behave in a sane way.
+    // However, this won't be needed once Fzy has the full refine behavior,
+    // described in https://github.com/onivim/oni2/issues/3278
     let queryWithoutSpaces = query |> StringEx.filterAscii(c => c != ' ');
     QuickmenuFilterSubscription.create(
       ~id="quickmenu-filter",
