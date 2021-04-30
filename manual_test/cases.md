@@ -273,6 +273,30 @@ __Pass:__
 - [ ] OSX
 - [ ] Linux
 
+## 9.2 Open a file from integrated terminal
+
+- Open Onivim 2
+- Run `:term`
+- Run `oni2 test-file.ts`
+- Validate `test-file.ts` is opened in a new split
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 9.3 Open a folder from integrated terminal
+
+- Open Onivim2
+- Run `:term`
+- Run `oni2 ~/some-valid-folder`, replacing `some-valid-folder` with an actual folder on the filesystem
+- Validate the explorer has switched to the new folder
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
 # 10. Menubar
 
 ## 10.1 Verify simple command 
@@ -355,3 +379,38 @@ __Setup:__
 
 __Pass:__
 - [ ] Win
+
+# 13. CLI
+
+## 13.1 Single Instance - Open file in running instance
+
+- Open Onivim 2
+- From CLI, run `oni2 some-file-that-exists.txt`
+- Validate the file is opened in the current instance
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 13.2 Single Instance - Open folder in running instance
+
+- Open Onivim 2
+- From CLI, run `oni2 /some/folder/that/exists`
+- Validate the folder is opened in the current instance
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 13.3 Force new instance
+
+- Open Onivim 2
+- From CLI, run `oni2 --new-window test.txt`
+- Validate a new instance of Onivim is opened, with the specified file active
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux

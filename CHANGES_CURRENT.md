@@ -71,6 +71,7 @@
 - #3474 - Explorer: Reload explorer when `files.exclude` is updated (fixes #1104)
 - #3476 - UX: Ellipsize author in extensions item view
 - #3475 - Buffers: Fix ctrl-tab ordering (fixes #3433)
+- #3469 - CLI: Default to opening files in existing editor (fixes #1250, #2617, #2947, #3058)
 
 ### Performance
 
