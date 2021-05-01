@@ -221,44 +221,35 @@ let update = (~previewEnabled, model, msg) => {
 
 // SUBSCRIPTIONS
 
-module SearchSubscription =
-  SearchSubscription.Make({
-    type action = msg;
-  });
-
 let sub = (~config, ~workingDirectory, ~setup, model) => {
-  // TODO
-  Isolinear.Sub.none;
+  let query = model.query;
+
+  if (Utility.StringEx.isEmpty(query)) {
+    Isolinear.Sub.none;
+  } else {
+    let exclude =
+      Configuration.searchExclude.get(config)
+      |> List.append(
+           Feature_Configuration.GlobalConfiguration.Files.exclude.get(
+             config,
+           ),
+         );
+    let toMsg =
+      fun
+      | Service_Ripgrep.Sub.GotMatches(items) => Update(items)
+      | Service_Ripgrep.Sub.Completed => Complete
+      | Service_Ripgrep.Sub.Error(msg) => SearchError(msg);
+
+    Service_Ripgrep.Sub.findInFiles(
+      ~exclude,
+      ~directory=workingDirectory,
+      ~query=model.query,
+      ~uniqueId="NONCE",
+      ~setup,
+      toMsg,
+    );
+  };
 };
-
-// let subscriptions =
-//     (~config: Oni_Core.Config.resolver, ~workingDirectory, ripgrep, dispatch) => {
-//   let searchExclude =
-//     Configuration.searchExclude.get(config)
-//     |> List.append(
-//          Feature_Configuration.GlobalConfiguration.Files.exclude.get(config),
-//        );
-
-//   let search = query => {
-//     SearchSubscription.create(
-//       ~id="workspace-search",
-//       ~query,
-//       ~searchExclude,
-//       ~directory=workingDirectory,
-//       ~ripgrep,
-//       ~onUpdate=items => dispatch(Update(items)),
-//       ~onCompleted=() => Complete,
-//       ~onError=msg => SearchError(msg),
-//     );
-//   };
-
-//   model => {
-//     switch (model) {
-//     | {query: "", _} => []
-//     | {query, _} => [search(query)]
-//     };
-//   };
-// };
 
 // VIEW
 

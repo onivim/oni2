@@ -62,5 +62,7 @@ module Sub = {
         ~query: string,
         ~setup: Setup.t,
         toMsg,
-      ) => Isolinear.Sub.none;
+      ) =>
+    FindInFilesSub.create({uniqueId, exclude, directory, query, setup})
+    |> Isolinear.Sub.map(toMsg);
 };
