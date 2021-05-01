@@ -1,0 +1,6 @@
+(library
+ (name Service_Ripgrep)
+ (public_name Oni2.service.ripgrep)
+ (libraries Oni2.editor-core-types Oni2.core Revery isolinear base)
+ (preprocess
+  (pps ppx_let ppx_deriving.show)))
