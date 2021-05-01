@@ -422,6 +422,10 @@ module Focus = {
   };
 };
 
+let activePane = ({selected, panes, _}) => {
+  List.nth_opt(panes, selected);
+};
+
 let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
   switch (msg) {
   | Command(ClosePane)
@@ -467,7 +471,15 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
       ({...model, height, resizeDelta: 0}, Nothing);
     };
 
-  | KeyPressed(key) => (model, Nothing)
+  | KeyPressed(key) =>
+    let outmsg =
+      model
+      |> activePane
+      |> Option.map((pane: Schema.t('model, 'msg)) => {
+           NestedMessage(pane.keyPressed(key))
+         })
+      |> Option.value(~default=Nothing);
+    (model, outmsg);
   // switch (model.selected) {
   // | Notifications => (
   //     {
@@ -607,10 +619,6 @@ let initial = panes => {
   // locationsView: Component_VimTree.create(~rowHeight=20),
   // notificationsView: Component_VimList.create(~rowHeight=20),
   // outputPane: None,
-};
-
-let activePane = ({selected, panes, _}) => {
-  List.nth_opt(panes, selected);
 };
 
 let selected = ({selected, _}) => selected;
@@ -1083,18 +1091,10 @@ module Contributions = {
     //   )
     //   |> List.map(Oni_Core.Command.map(msg => OutputPane(msg)));
 
-    // let notificationsCommands =
-    //   (
-    //     isFocused && model.selected == Notifications
-    //       ? Component_VimList.Contributions.commands : []
-    //   )
-    //   |> List.map(Oni_Core.Command.map(msg => NotificationsList(msg)));
-
     isFocused
       ? common @ vimWindowCommands @ activePanelCommands
       // @ diagnosticsCommands
       // @ locationsCommands
-      // @ notificationsCommands
       // @ outputCommands
       : common;
   };
