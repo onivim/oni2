@@ -512,6 +512,12 @@ let start =
       Feature_ClientServer.sub(state.clientServer)
       |> Isolinear.Sub.map(msg => Model.Actions.ClientServer(msg));
 
+    let workingDirectory =
+      Feature_Workspace.workingDirectory(state.workspace);
+    let searchSub =
+      Feature_Search.sub(~config, ~workingDirectory, ~setup, state.searchPane)
+      |> Isolinear.Sub.map(msg => Model.Actions.Search(msg));
+
     [
       clientServerSub,
       menuBarSub,
@@ -536,6 +542,7 @@ let start =
       quickmenuSub,
       themeSub,
       vimBufferSub,
+      searchSub,
     ]
     |> Isolinear.Sub.batch;
   };

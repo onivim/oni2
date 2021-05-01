@@ -30,15 +30,14 @@ let update: (~previewEnabled: bool, model, msg) => (model, option(outmsg));
 
 let resetFocus: (~query: option(string), model) => model;
 
-let subscriptions:
+let sub:
   (
     ~config: Oni_Core.Config.resolver,
     ~workingDirectory: string,
-    Ripgrep.t,
-    msg => unit,
+    ~setup: Setup.t,
     model
   ) =>
-  list(Subscription.t(msg));
+  Isolinear.Sub.t(msg);
 
 let make:
   (

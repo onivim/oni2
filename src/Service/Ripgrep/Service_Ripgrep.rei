@@ -12,7 +12,7 @@ module Sub: {
       ~exclude: list(string),
       ~directory: string,
       ~query: string,
-      ~ripgrep: Ripgrep.t,
+      ~setup: Setup.t,
       findInFilesMsg => 'msg
     ) =>
     Isolinear.Sub.t('msg);

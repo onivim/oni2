@@ -2603,33 +2603,13 @@ module QuickmenuSubscriptionRunner =
     let id = "quickmenu-subscription";
   });
 
-module SearchSubscriptionRunner =
-  Subscription.Runner({
-    type action = Feature_Search.msg;
-    let id = "search-subscription";
-  });
-
 let updateSubscriptions = (setup: Setup.t) => {
   let ripgrep = Ripgrep.make(~executablePath=setup.rgPath);
 
   let quickmenuSubscriptions = QuickmenuStoreConnector.subscriptions(ripgrep);
 
-  let searchSubscriptions = Feature_Search.subscriptions(ripgrep);
-
   (state: State.t, dispatch) => {
-    let workingDirectory =
-      Feature_Workspace.workingDirectory(state.workspace);
     quickmenuSubscriptions(dispatch, state)
     |> QuickmenuSubscriptionRunner.run(~dispatch);
-
-    let searchDispatch = msg => dispatch(Search(msg));
-    let config = Selectors.configResolver(state);
-    searchSubscriptions(
-      ~config,
-      ~workingDirectory,
-      searchDispatch,
-      state.searchPane,
-    )
-    |> SearchSubscriptionRunner.run(~dispatch=searchDispatch);
   };
 };

@@ -11,7 +11,7 @@ module Sub = {
     directory: string,
     query: string,
     uniqueId: string,
-    ripgrep: Ripgrep.t,
+    setup: Setup.t,
   };
 
   module FindInFilesSub =
@@ -27,8 +27,14 @@ module Sub = {
         Printf.sprintf("%s:%s:%s", uniqueId, directory, query);
 
       let init = (~params, ~dispatch) => {
+        let ripgrep =
+          Ripgrep.make(
+            ~executablePath={
+              params.setup.rgPath;
+            },
+          );
         let dispose =
-          params.ripgrep.Ripgrep.findInFiles(
+          ripgrep.Ripgrep.findInFiles(
             ~searchExclude=params.exclude,
             ~directory=params.directory,
             ~query=params.query,
@@ -54,7 +60,7 @@ module Sub = {
         ~exclude: list(string),
         ~directory: string,
         ~query: string,
-        ~ripgrep: Ripgrep.t,
+        ~setup: Setup.t,
         toMsg,
       ) => Isolinear.Sub.none;
 };
