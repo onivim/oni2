@@ -1,18 +1,19 @@
 open Oni_Core;
 
 module Sub: {
-  type ripgrepMsg =
+  type findInFilesMsg =
     | GotMatches(list(Ripgrep.Match.t))
     | Completed
     | Error(string);
 
-  let ripgrep:
+  let findInFiles:
     (
+      ~uniqueId: string,
       ~exclude: list(string),
       ~directory: string,
       ~query: string,
       ~ripgrep: Ripgrep.t,
-      ripgrepMsg => 'msg
+      findInFilesMsg => 'msg
     ) =>
     Isolinear.Sub.t('msg);
 };
