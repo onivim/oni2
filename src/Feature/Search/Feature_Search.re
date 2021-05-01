@@ -11,6 +11,7 @@ type focus =
 type model = {
   findInput: Component_InputText.model,
   query: string,
+  searchNonce: int,
   hits: list(Ripgrep.Match.t),
   focus,
   vimWindowNavigation: Component_VimWindows.model,
@@ -33,6 +34,7 @@ let resetFocus = (~query: option(string), model) => {
 let initial = {
   findInput: Component_InputText.create(~placeholder="Search"),
   query: "",
+  searchNonce: 0,
   hits: [],
   focus: FindInput,
 
@@ -117,11 +119,12 @@ let update = (~previewEnabled, model, msg) => {
         switch (key) {
         | "<CR>" =>
           let findInputValue = model.findInput |> Component_InputText.value;
-          if (model.query == findInputValue) {
-            model; // Do nothing if the query hasn't changed
-          } else {
-            {...model, query: findInputValue} |> setHits([]);
-          };
+          {
+            ...model,
+            query: findInputValue,
+            searchNonce: model.searchNonce + 1,
+          }
+          |> setHits([]);
 
         | _ =>
           let findInput =
@@ -244,7 +247,7 @@ let sub = (~config, ~workingDirectory, ~setup, model) => {
       ~exclude,
       ~directory=workingDirectory,
       ~query=model.query,
-      ~uniqueId="NONCE",
+      ~uniqueId=string_of_int(model.searchNonce),
       ~setup,
       toMsg,
     );
