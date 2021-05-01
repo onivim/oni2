@@ -898,34 +898,6 @@ module View = {
           </View>
           <View style=Styles.header>
             <View style=Styles.tabs> paneTabs </View>
-            // <PaneTab
-            //   uiFont
-            //   theme
-            //   title="Problems"
-            //   onClick=problemsTabClicked
-            //   isActive={isSelected(Diagnostics, pane)}
-            // />
-            // <PaneTab
-            //   uiFont
-            //   theme
-            //   title="Notifications"
-            //   onClick=notificationsTabClicked
-            //   isActive={isSelected(Notifications, pane)}
-            // />
-            // <PaneTab
-            //   uiFont
-            //   theme
-            //   title="Locations"
-            //   onClick=locationsTabClicked
-            //   isActive={isSelected(Locations, pane)}
-            // />
-            // <PaneTab
-            //   uiFont
-            //   theme
-            //   title="Output"
-            //   onClick=outputTabClicked
-            //   isActive={isSelected(Output, pane)}
-            // />
             <View style=Styles.buttons>
               <paneButton dispatch theme pane={pane.selected} />
               <closeButton dispatch theme />
