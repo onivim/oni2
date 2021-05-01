@@ -111,7 +111,6 @@ type msg('inner) =
   | VimWindowNav(Component_VimWindows.msg);
 // | DiagnosticsList(Component_VimTree.msg)
 // | LocationsList(Component_VimTree.msg)
-// | NotificationsList(Component_VimList.msg)
 // | OutputPane(Component_Output.msg)
 // | DismissNotificationClicked(Feature_Notification.notification);
 // | LocationFileLoaded({
@@ -1061,13 +1060,6 @@ module Contributions = {
     //       |> Option.value(~default=empty)
     //     : empty;
 
-    // let notificationsKeys =
-    //   isFocused && model.selected == Notifications
-    //     ? Component_VimList.Contributions.contextKeys(
-    //         model.notificationsView,
-    //       )
-    //     : empty;
-
     // let activePanel =
     //   (
     //     isFocused
@@ -1098,7 +1090,6 @@ module Contributions = {
       vimNavKeys,
       // diagnosticsKeys,
       // locationsKeys,
-      // notificationsKeys,
       // outputKeys,
     ]
     |> unionMany;
