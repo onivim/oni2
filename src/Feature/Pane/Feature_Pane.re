@@ -14,6 +14,7 @@ module Schema = {
     title: string,
     id: option(string),
     contextKeys: (~isFocused: bool, 'model) => WhenExpr.ContextKeys.t,
+    commands: 'model => list(Command.t('msg)),
     view:
       (
         ~config: Config.resolver,
@@ -28,9 +29,9 @@ module Schema = {
     uniqueId,
   };
 
-  let panel = (~title, ~id, ~contextKeys, ~view, ~keyPressed) => {
+  let panel = (~title, ~id, ~contextKeys, ~commands, ~view, ~keyPressed) => {
     incr(nextId);
-    {title, id, contextKeys, view, keyPressed, uniqueId: nextId^};
+    {title, id, contextKeys, view, keyPressed, commands, uniqueId: nextId^};
   };
 
   let map = (~msg as mapMsg, ~model as mapModel, pane) => {
@@ -40,6 +41,7 @@ module Schema = {
       let mappedDispatch = msg => {
         mapMsg(msg) |> dispatch;
       };
+
       pane.view(
         ~config,
         ~font,
@@ -55,6 +57,12 @@ module Schema = {
       pane.contextKeys(~isFocused, mappedModel);
     };
 
+    let commands' = model => {
+      let mappedModel = mapModel(model);
+      let commands = pane.commands(mappedModel);
+      commands |> List.map(Command.map(mapMsg));
+    };
+
     let keyPressed' = str => {
       pane.keyPressed(str) |> mapMsg;
     };
@@ -63,6 +71,7 @@ module Schema = {
       title: pane.title,
       id: pane.id,
       contextKeys: contextKeys',
+      commands: commands',
       view: view',
       keyPressed: keyPressed',
       uniqueId: pane.uniqueId,
@@ -1040,11 +1049,18 @@ module Keybindings = {
 };
 
 module Contributions = {
-  let commands = (~isFocused, model) => {
+  let commands = (~isFocused, model: 'model, pane: model('model, 'msg)) => {
     let common = Commands.[problems, closePane];
     let vimWindowCommands =
       Component_VimWindows.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)));
+
+    let activePanelCommands =
+      pane
+      |> activePane
+      |> Option.map((p: Schema.t('model, 'msg)) => {p.commands(model)})
+      |> Option.value(~default=[])
+      |> List.map(Oni_Core.Command.map(msg => NestedMsg(msg)));
 
     // let diagnosticsCommands = []
     //   (
@@ -1075,7 +1091,7 @@ module Contributions = {
     //   |> List.map(Oni_Core.Command.map(msg => NotificationsList(msg)));
 
     isFocused
-      ? common @ vimWindowCommands
+      ? common @ vimWindowCommands @ activePanelCommands
       // @ diagnosticsCommands
       // @ locationsCommands
       // @ notificationsCommands

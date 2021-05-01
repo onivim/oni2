@@ -75,6 +75,11 @@ module Pane = {
     | VimList(Component_VimList.msg)
     | KeyPressed(string);
 
+  let commands = _model => {
+    Component_VimList.Contributions.commands
+    |> List.map(Oni_Core.Command.map(msg => VimList(msg)));
+  };
+
   let initial = {
     notificationsView:
       Component_VimList.create(~rowHeight=Constants.paneRowHeight),
@@ -694,7 +699,7 @@ module Contributions = {
 
   open Feature_Pane.Schema;
 
-  let pane = {
+  let pane: Feature_Pane.Schema.t(model, msg) = {
     let contextKeys = (~isFocused, model) => {
       isFocused
         ? Component_VimList.Contributions.contextKeys(
@@ -707,6 +712,7 @@ module Contributions = {
       panel(
         ~title="Notifications",
         ~id=Some("workbench.panel.notifications"),
+        ~commands=Pane.commands,
         ~contextKeys,
         ~view=
           (~config, ~font, ~isFocused, ~theme, ~dispatch, ~model) =>
@@ -714,11 +720,12 @@ module Contributions = {
               uiFont=font
               isFocused
               theme
-              dispatch={msg => dispatch(Pane(msg))}
+              dispatch
               model={model.pane}
             />,
         ~keyPressed=key => failwith("TODO"),
       )
+      |> map(~model=Fun.id, ~msg=msg => Pane(msg))
     );
   };
 };

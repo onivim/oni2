@@ -64,6 +64,7 @@ let current = {
         ~isFocused={
           focus == Focus.Pane;
         },
+        state,
         state.pane,
       )
       |> Command.Lookup.fromList

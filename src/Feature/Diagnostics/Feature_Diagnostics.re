@@ -355,6 +355,7 @@ module Pane = {
     panel(
       ~title="Problems",
       ~id=Some("workbench.panel.markers"),
+      ~commands=_ => [],
       ~contextKeys,
       ~view=
         (~config, ~font, ~isFocused, ~theme, ~dispatch, ~model) =>
