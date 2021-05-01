@@ -128,6 +128,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `workbench.tree.indent` __(_int_ default: `5`)__ - Indentation of the tree explorer.
 
+- `workbench.tree.renderIndentGuides` __(_bool_ default: `true`)__ - Controls whether indent guide lines are rendered in tree views.
+
 - `vim.highlightedyank.enable` __(_bool_ default: `true`)__ - When `true`, briefly highlight yanks on the editor surface.
 
 - `vim.highlightedyank.color` __(_string_)__ - Hex string defining a color, ie `#FF00FFFF`.

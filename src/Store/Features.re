@@ -187,6 +187,9 @@ module Internal = {
       let resolver = Selectors.configResolver(state);
       let maybeRoot = Feature_Explorer.root(state.fileExplorer);
 
+      let fileExplorer =
+        state.fileExplorer
+        |> Feature_Explorer.configurationChanged(~config=resolver);
       let zen = Feature_Zen.configurationChanged(resolver, state.zen);
       let sideBar =
         state.sideBar
@@ -238,6 +241,7 @@ module Internal = {
           ...state,
           buffers,
           colorTheme,
+          fileExplorer,
           languageSupport,
           sideBar,
           layout,
@@ -528,12 +532,7 @@ let update =
   | FileExplorer(msg) =>
     let config = Selectors.configResolver(state);
     let (model, outmsg) =
-      Feature_Explorer.update(
-        ~config,
-        ~configuration=state.config,
-        msg,
-        state.fileExplorer,
-      );
+      Feature_Explorer.update(~config, msg, state.fileExplorer);
 
     let state = {...state, fileExplorer: model};
 
