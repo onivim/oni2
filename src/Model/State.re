@@ -594,11 +594,11 @@ let initial =
     pane:
       Feature_Pane.initial(
         [
-          // Feature_Diagnostics.Contributions.pane
-          // |> Feature_Pane.Schema.map(
-          //      ~msg=msg => Actions.Diagnostics(msg),
-          //      ~model=state => state.diagnostics,
-          //    ),
+          Feature_Diagnostics.Contributions.pane
+          |> Feature_Pane.Schema.map(
+               ~msg=msg => Actions.Diagnostics(msg),
+               ~model=state => state.diagnostics,
+             ),
           Feature_Notification.Contributions.pane
           |> Feature_Pane.Schema.map(
                ~msg=msg => Actions.Notification(msg),

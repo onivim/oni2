@@ -80,6 +80,8 @@ module Pane = {
     |> List.map(Oni_Core.Command.map(msg => VimList(msg)));
   };
 
+  let keyPress = key => KeyPressed(key);
+
   let initial = {
     notificationsView:
       Component_VimList.create(~rowHeight=Constants.paneRowHeight),
@@ -723,7 +725,7 @@ module Contributions = {
               dispatch
               model={model.pane}
             />,
-        ~keyPressed=key => failwith("TODO"),
+        ~keyPressed=Pane.keyPress,
       )
       |> map(~model=Fun.id, ~msg=msg => Pane(msg))
     );
