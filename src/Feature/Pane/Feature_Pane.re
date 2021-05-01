@@ -918,11 +918,9 @@ module View = {
               model
               // diagnosticsList={pane.diagnosticsView}
               // locationsList={pane.locationsView}
-              // notificationsList={pane.notificationsView}
               // outputPane={pane.outputPane}
               // diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
               // locationsDispatch={msg => dispatch(LocationsList(msg))}
-              // notificationsDispatch={msg => dispatch(NotificationsList(msg))}
               workingDirectory
               // outputDispatch={msg => dispatch(OutputPane(msg))}
             />
