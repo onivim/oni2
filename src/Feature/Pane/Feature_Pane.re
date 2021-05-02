@@ -455,14 +455,6 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
   //     Nothing,
   //   )
 
-  // | Diagnostics => (
-  //     {
-  //       ...model,
-  //       diagnosticsView:
-  //         Component_VimTree.keyPress(key, model.diagnosticsView),
-  //     },
-  //     Nothing,
-  //   )
   // | Locations => (
   //     {
   //       ...model,
@@ -569,7 +561,6 @@ let initial = panes => {
   panes,
 
   vimWindowNavigation: Component_VimWindows.initial,
-  // diagnosticsView: Component_VimTree.create(~rowHeight=20),
   // locationNodes: [],
   // locationsView: Component_VimTree.create(~rowHeight=20),
   // notificationsView: Component_VimList.create(~rowHeight=20),
@@ -729,8 +720,6 @@ module View = {
         // ~outputPane,
         // ~locationsList,
         // ~locationsDispatch: Component_VimTree.msg => unit,
-        // ~diagnosticDispatch: Component_VimTree.msg => unit,
-        // ~diagnosticsList: Component_VimTree.model(string, LocationListItem.t),
         // ~outputDispatch: Component_Output.msg => unit,
         ~workingDirectory,
         (),
@@ -894,7 +883,6 @@ module View = {
               model
               // locationsList={pane.locationsView}
               // outputPane={pane.outputPane}
-              // diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
               // locationsDispatch={msg => dispatch(LocationsList(msg))}
               workingDirectory
               // outputDispatch={msg => dispatch(OutputPane(msg))}
@@ -1051,7 +1039,6 @@ module Contributions = {
       activePanelContextKeys,
       paneFocus,
       vimNavKeys,
-      // diagnosticsKeys,
       // locationsKeys,
       // outputKeys,
     ]
