@@ -44,7 +44,8 @@ module DiagnosticEntry = {
 [@deriving show]
 type msg =
   | Set([@opaque] list(DiagnosticEntry.t))
-  | Clear({owner: string});
+  | Clear({owner: string})
+  | Pane(Pane.msg);
 
 module Msg = {
   let exthost =
@@ -73,12 +74,14 @@ type model = {
   // Keep a cached count so we don't have to recalculate when
   // querying UI
   count: int,
+  pane: Pane.model,
 };
 
 let initial = {
   keyToUri: StringMap.empty,
   diagnosticsMap: StringMap.empty,
   count: 0,
+  pane: Pane.initial,
 };
 
 // UPDATE
@@ -219,6 +222,7 @@ let change = (instance, uri, diagKey, diagnostics) => {
 
 let update = (msg, model) =>
   switch (msg) {
+  | Pane(msg) => {...model, pane: Pane.update(msg, model.pane)}
   | Clear({owner}) => clear(model, owner)
   | Set(entries) =>
     entries
@@ -343,27 +347,11 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model: model) => {
   );
 };
 
-module Pane = {
-  open Feature_Pane.Schema;
-
-  let contextKeys = (~isFocused, model) => {
-    // TODO
-    WhenExpr.ContextKeys.empty;
-  };
-
-  let pane =
-    panel(
-      ~title="Problems",
-      ~id=Some("workbench.panel.markers"),
-      ~commands=_ => [],
-      ~contextKeys,
-      ~view=
-        (~config, ~font, ~isFocused, ~theme, ~dispatch, ~model) =>
-          Revery.UI.React.empty,
-      ~keyPressed=key => failwith("TODO"),
-    );
-};
-
 module Contributions = {
-  let pane = Pane.pane;
+  let pane =
+    Pane.pane
+    |> Feature_Pane.Schema.map(
+         ~msg=msg => Pane(msg),
+         ~model=({pane, _}) => pane,
+       );
 };
