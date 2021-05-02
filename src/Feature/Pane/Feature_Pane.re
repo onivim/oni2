@@ -20,6 +20,9 @@ module Schema = {
         ~config: Config.resolver,
         ~font: UiFont.t,
         ~isFocused: bool,
+        ~iconTheme: IconTheme.t,
+        ~languageInfo: Exthost.LanguageInfo.t,
+        ~workingDirectory: string,
         ~theme: ColorTheme.Colors.t,
         ~dispatch: 'msg => unit,
         ~model: 'model
@@ -35,7 +38,18 @@ module Schema = {
   };
 
   let map = (~msg as mapMsg, ~model as mapModel, pane) => {
-    let view' = (~config, ~font, ~isFocused, ~theme, ~dispatch, ~model) => {
+    let view' =
+        (
+          ~config,
+          ~font,
+          ~isFocused,
+          ~iconTheme,
+          ~languageInfo,
+          ~workingDirectory,
+          ~theme,
+          ~dispatch,
+          ~model,
+        ) => {
       let mappedModel = mapModel(model);
 
       let mappedDispatch = msg => {
@@ -46,6 +60,9 @@ module Schema = {
         ~config,
         ~font,
         ~isFocused,
+        ~iconTheme,
+        ~languageInfo,
+        ~workingDirectory,
         ~theme,
         ~dispatch=mappedDispatch,
         ~model=mappedModel,
@@ -760,7 +777,15 @@ module View = {
       Schema.(
         {
           paneSchema.view(
-            ~config, ~font=uiFont, ~isFocused, ~theme, ~model, ~dispatch=msg =>
+            ~config,
+            ~font=uiFont,
+            ~isFocused,
+            ~iconTheme,
+            ~languageInfo,
+            ~workingDirectory,
+            ~theme,
+            ~model,
+            ~dispatch=msg =>
             dispatch(NestedMsg(msg))
           );
         }
@@ -781,18 +806,6 @@ module View = {
   //     dispatch=locationsDispatch
   //   />
 
-  // | Diagnostics =>
-  //   <DiagnosticsPaneView
-  //     config
-  //     isFocused
-  //     diagnosticsList
-  //     iconTheme
-  //     languageInfo
-  //     theme
-  //     uiFont
-  //     workingDirectory
-  //     dispatch=diagnosticDispatch
-  //   />
   // | Output =>
   //   outputPane
   //   |> Option.map(model => {
@@ -915,7 +928,6 @@ module View = {
               editorFont
               activePane
               model
-              // diagnosticsList={pane.diagnosticsView}
               // locationsList={pane.locationsView}
               // outputPane={pane.outputPane}
               // diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
@@ -1000,7 +1012,6 @@ module Contributions = {
 
     isFocused
       ? common @ vimWindowCommands @ activePanelCommands
-      // @ diagnosticsCommands
       // @ locationsCommands
       // @ outputCommands
       : common;

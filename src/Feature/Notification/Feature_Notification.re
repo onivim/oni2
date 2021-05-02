@@ -717,7 +717,17 @@ module Contributions = {
         ~commands=Pane.commands,
         ~contextKeys,
         ~view=
-          (~config, ~font, ~isFocused, ~theme, ~dispatch, ~model) =>
+          (
+            ~config,
+            ~font,
+            ~isFocused,
+            ~iconTheme,
+            ~languageInfo,
+            ~workingDirectory,
+            ~theme,
+            ~dispatch,
+            ~model,
+          ) =>
             <Pane.View
               uiFont=font
               isFocused

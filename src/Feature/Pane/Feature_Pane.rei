@@ -18,6 +18,9 @@ module Schema: {
                ~config: Config.resolver,
                ~font: UiFont.t,
                ~isFocused: bool,
+               ~iconTheme: IconTheme.t,
+               ~languageInfo: Exthost.LanguageInfo.t,
+               ~workingDirectory: string,
                ~theme: ColorTheme.Colors.t,
                ~dispatch: 'msg => unit,
                ~model: 'model
