@@ -984,13 +984,6 @@ module Contributions = {
       |> Option.value(~default=[])
       |> List.map(Oni_Core.Command.map(msg => NestedMsg(msg)));
 
-    // let diagnosticsCommands = []
-    //   (
-    //     isFocused && model.selected == Diagnostics
-    //       ? Component_VimTree.Contributions.commands : []
-    //   )
-    //   |> List.map(Oni_Core.Command.map(msg => DiagnosticsList(msg)));
-
     // let locationsCommands =
     //   (
     //     isFocused && model.selected == Locations
@@ -1041,11 +1034,6 @@ module Contributions = {
            pane.contextKeys(~isFocused, model)
          })
       |> Option.value(~default=empty);
-    // let diagnosticsKeys =
-    //   isFocused && model.selected == Diagnostics
-    //     ? Component_VimTree.Contributions.contextKeys(model.diagnosticsView)
-    //     : empty;
-
     // let locationsKeys =
     //   isFocused && model.selected == Locations
     //     ? Component_VimTree.Contributions.contextKeys(model.locationsView)
