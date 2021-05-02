@@ -14,11 +14,30 @@ type msg =
 
 let update = (msg, model) =>
   switch (msg) {
-  // TODO
-  | DiagnosticsTree(msg) => model
-  // TODO:
-  | KeyPress(key) => model
+  | DiagnosticsTree(treeMsg) =>
+    // TODO
+    let (tree', _outmsg) = Component_VimTree.update(treeMsg, model.tree);
+    {...model, tree: tree'};
+  | KeyPress(key) => {tree: Component_VimTree.keyPress(key, model.tree)}
   };
+
+let setDiagnostics = (locations, model) => {
+  let diagLocList = locations |> Oni_Components.LocationListItem.toTrees;
+
+  let tree' =
+    Component_VimTree.set(
+      ~uniqueId=path => path,
+      ~searchText=
+        Component_VimTree.(
+          fun
+          | Node({data, _}) => data
+          | Leaf({data, _}) => Oni_Components.LocationListItem.(data.text)
+        ),
+      diagLocList,
+      model.tree,
+    );
+  {...model, tree: tree'};
+};
 
 let contextKeys = (~isFocused, model) =>
   if (isFocused) {

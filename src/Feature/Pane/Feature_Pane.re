@@ -126,7 +126,6 @@ type msg('inner) =
   | ResizeCommitted
   | KeyPressed(string)
   | VimWindowNav(Component_VimWindows.msg);
-// | DiagnosticsList(Component_VimTree.msg)
 // | LocationsList(Component_VimTree.msg)
 // | OutputPane(Component_Output.msg)
 // | DismissNotificationClicked(Feature_Notification.notification);
@@ -332,41 +331,6 @@ type model('model, 'msg) = {
 //      })
 //   |> Option.value(~default=model');
 // };
-// let diagnosticToLocList =
-//     (diagWithUri: (Uri.t, Feature_Diagnostics.Diagnostic.t)) => {
-//   let (uri, diag) = diagWithUri;
-//   let file = Uri.toFileSystemPath(uri);
-//   let location = Feature_Diagnostics.Diagnostic.(diag.range.start);
-//   Oni_Components.LocationListItem.{
-//     file,
-//     location,
-//     text: diag.message,
-//     highlight: None,
-//   };
-// };
-
-// let setDiagnostics = (diagnostics, model) => {
-//   let diagLocList =
-//     diagnostics
-//     |> Feature_Diagnostics.getAllDiagnostics
-//     |> List.map(diagnosticToLocList)
-//     |> Oni_Components.LocationListItem.toTrees;
-
-//   let diagnosticsView' =
-//     Component_VimTree.set(
-//       ~uniqueId=path => path,
-//       ~searchText=
-//         Component_VimTree.(
-//           fun
-//           | Node({data, _}) => data
-//           | Leaf({data, _}) => Oni_Components.LocationListItem.(data.text)
-//         ),
-//       diagLocList,
-//       model.diagnosticsView,
-//     );
-//   {...model, diagnosticsView: diagnosticsView'};
-// };
-
 let height = ({height, resizeDelta, _}) => {
   let candidateHeight = height + resizeDelta;
   if (candidateHeight < Constants.minHeight) {

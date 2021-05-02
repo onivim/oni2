@@ -220,34 +220,21 @@ let change = (instance, uri, diagKey, diagnostics) => {
   |> Internal.recalculateCount;
 };
 
-let update = (msg, model) =>
-  switch (msg) {
-  | Pane(msg) => {...model, pane: Pane.update(msg, model.pane)}
-  | Clear({owner}) => clear(model, owner)
-  | Set(entries) =>
-    entries
-    |> List.fold_left(
-         (acc, curr: DiagnosticEntry.t) => {
-           change(acc, curr.uri, curr.owner, curr.diagnostics)
-         },
-         model,
-       )
-  };
-
-let getDiagnostics = ({diagnosticsMap, _}, buffer) => {
-  let f = ((_key, v)) => v;
-  let bufferKey = getKeyForBuffer(buffer);
-  switch (StringMap.find_opt(bufferKey, diagnosticsMap)) {
-  | None => []
-  | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten
+let diagnosticToLocList = (diagWithUri: (Uri.t, Diagnostic.t)) => {
+  let (uri, diag) = diagWithUri;
+  let file = Uri.toFileSystemPath(uri);
+  let location = Diagnostic.(diag.range.start);
+  Oni_Components.LocationListItem.{
+    file,
+    location,
+    text: diag.message,
+    highlight: None,
   };
 };
 
-let _value = ((_key, v)) => v;
-
 let getAllDiagnostics = (diagnostics: model) => {
   let extractBindings = map => {
-    StringMap.bindings(map) |> List.map(_value) |> List.flatten;
+    StringMap.bindings(map) |> List.map(snd) |> List.flatten;
   };
 
   StringMap.fold(
@@ -264,6 +251,35 @@ let getAllDiagnostics = (diagnostics: model) => {
     [],
   )
   |> List.flatten;
+};
+
+let syncPane = (model: model) => {
+  let locations = model |> getAllDiagnostics |> List.map(diagnosticToLocList);
+  {...model, pane: Pane.setDiagnostics(locations, model.pane)};
+};
+
+let update = (msg, model) =>
+  switch (msg) {
+  | Pane(msg) => {...model, pane: Pane.update(msg, model.pane)}
+  | Clear({owner}) => clear(model, owner) |> syncPane
+  | Set(entries) =>
+    entries
+    |> List.fold_left(
+         (acc, curr: DiagnosticEntry.t) => {
+           change(acc, curr.uri, curr.owner, curr.diagnostics)
+         },
+         model,
+       )
+    |> syncPane
+  };
+
+let getDiagnostics = ({diagnosticsMap, _}, buffer) => {
+  let f = ((_key, v)) => v;
+  let bufferKey = getKeyForBuffer(buffer);
+  switch (StringMap.find_opt(bufferKey, diagnosticsMap)) {
+  | None => []
+  | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten
+  };
 };
 
 let getDiagnosticsAtPosition = (instance, buffer, position) => {
