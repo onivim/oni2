@@ -1,3 +1,4 @@
+module PaneColors = Colors;
 open Revery;
 open Oni_Core;
 
@@ -14,251 +15,8 @@ module Internal = {
   };
 };
 
-// MODEL
-
-[@deriving show({with_path: false})]
-type kind =
-  | Info
-  | Warning
-  | Error;
-
-[@deriving show({with_path: false})]
-type notification = {
-  id: int,
-  kind,
-  message: string,
-  source: option(string),
-  yOffset: float,
-  // If `ephemeral` is true, don't store in notification list
-  ephemeral: bool,
-};
-
-// COLORS
-
-module Colors = {
-  open ColorTheme.Schema;
-  include Feature_Theme.Colors;
-
-  let infoBackground =
-    define("oni.notification.infoBackground", all(hex("#209CEE")));
-  let infoForeground =
-    define("oni.notification.infoForeground", all(hex("#FFF")));
-  let warningBackground =
-    define("oni.notification.warningBackground", all(hex("#FFDD57")));
-  let warningForeground =
-    define("oni.notification.warningForeground", all(hex("#333")));
-  let errorBackground =
-    define("oni.notification.errorBackground", all(hex("#FF3860")));
-  let errorForeground =
-    define("oni.notification.errorForeground", all(hex("#FFF")));
-
-  let backgroundFor = (notification: notification) =>
-    switch (notification.kind) {
-    | Warning => warningBackground
-    | Error => errorBackground
-    | Info => infoBackground
-    };
-
-  let foregroundFor = (notification: notification) =>
-    switch (notification.kind) {
-    | Warning => warningForeground
-    | Error => errorForeground
-    | Info => infoForeground
-    };
-};
-
-module Pane = {
-  type t = {notificationsView: Component_VimList.model(notification)};
-
-  [@deriving show]
-  type msg =
-    | VimList(Component_VimList.msg)
-    | KeyPressed(string)
-    | Dismissed({id: int});
-
-  let commands = _model => {
-    Component_VimList.Contributions.commands
-    |> List.map(Oni_Core.Command.map(msg => VimList(msg)));
-  };
-
-  let keyPress = key => KeyPressed(key);
-
-  let initial = {
-    notificationsView:
-      Component_VimList.create(~rowHeight=Constants.paneRowHeight),
-  };
-
-  let update = (msg, model) => {
-    switch (msg) {
-    | VimList(listMsg) =>
-      let (notificationsView', _outmsg) =
-        Component_VimList.update(listMsg, model.notificationsView);
-      {notificationsView: notificationsView'};
-
-    | KeyPressed(key) =>
-      let notificationsView' =
-        Component_VimList.keyPress(key, model.notificationsView);
-      {notificationsView: notificationsView'};
-    };
-  };
-
-  let set = (notifications: list(notification), model) => {
-    let searchText = (notification: notification) => {
-      notification.message;
-    };
-    let notificationsArray = notifications |> Array.of_list;
-
-    let notificationsView' =
-      model.notificationsView
-      |> Component_VimList.set(~searchText, notificationsArray);
-    {notificationsView: notificationsView'};
-  };
-
-  module View = {
-    open Revery.UI;
-    open Oni_Components;
-    module Item = {
-      module Styles = {
-        open Style;
-
-        let container = [
-          flexDirection(`Row),
-          alignItems(`Center),
-          paddingHorizontal(10),
-          paddingVertical(5),
-        ];
-
-        let text = (~foreground) => [
-          textWrap(TextWrapping.NoWrap),
-          marginLeft(6),
-          color(foreground),
-        ];
-
-        let message = (~foreground) => [flexGrow(1), ...text(~foreground)];
-
-        let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
-      };
-
-      let colorFor = (item: notification, ~theme) =>
-        switch (item.kind) {
-        | Warning => Colors.warningBackground.from(theme)
-        | Error => Colors.errorBackground.from(theme)
-        | Info => Colors.infoBackground.from(theme)
-        };
-
-      let iconFor = (item: notification) =>
-        switch (item.kind) {
-        | Warning => FontAwesome.exclamationTriangle
-        | Error => FontAwesome.exclamationCircle
-        | Info => FontAwesome.infoCircle
-        };
-
-      let make =
-          (
-            ~notification: notification,
-            ~theme,
-            ~font: UiFont.t,
-            ~dispatch,
-            (),
-          ) => {
-        let foreground = Feature_Theme.Colors.foreground.from(theme);
-
-        let icon = () =>
-          <FontIcon
-            icon={iconFor(notification)}
-            fontSize=12.
-            color={colorFor(notification, ~theme)}
-          />;
-
-        let source = () =>
-          switch (notification.source) {
-          | Some(text) =>
-            let foreground = Color.multiplyAlpha(0.5, foreground);
-            <Text
-              style={Styles.text(~foreground)}
-              fontFamily={font.family}
-              fontSize=11.
-              text
-            />;
-          | None => React.empty
-          };
-
-        let closeButton = () => {
-          let onClick = () => dispatch(Dismissed({id: notification.id}));
-
-          <Revery.UI.Components.Clickable onClick style=Styles.closeButton>
-            <FontIcon icon=FontAwesome.times fontSize=13. color=foreground />
-          </Revery.UI.Components.Clickable>;
-        };
-
-        <View style=Styles.container>
-          <icon />
-          <source />
-          <Text
-            style={Styles.message(~foreground)}
-            fontFamily={font.family}
-            fontSize=11.
-            text={notification.message}
-          />
-          <closeButton />
-        </View>;
-      };
-    };
-    module Styles = {
-      open Style;
-      let pane = [flexGrow(1), flexDirection(`Row)];
-      let noResultsContainer = [
-        flexGrow(1),
-        alignItems(`Center),
-        justifyContent(`Center),
-      ];
-      let title = (~theme) => [
-        color(Colors.PanelTitle.activeForeground.from(theme)),
-        margin(8),
-      ];
-    };
-    let make =
-        (
-          ~isFocused: bool,
-          ~model: t,
-          ~theme,
-          ~uiFont: UiFont.t,
-          ~dispatch,
-          (),
-        ) => {
-      let innerElement =
-        if (Component_VimList.count(model.notificationsView) == 0) {
-          <View style=Styles.noResultsContainer>
-            <Text
-              style={Styles.title(~theme)}
-              fontFamily={uiFont.family}
-              fontSize={uiFont.size}
-              text="No notifications."
-            />
-          </View>;
-        } else {
-          <Component_VimList.View
-            font=uiFont
-            isActive=isFocused
-            focusedIndex=None
-            theme
-            model={model.notificationsView}
-            dispatch={msg => dispatch(VimList(msg))}
-            render={(
-              ~availableWidth as _,
-              ~index as _,
-              ~hovered as _,
-              ~selected as _,
-              item,
-            ) =>
-              <Item notification=item font=uiFont theme dispatch />
-            }
-          />;
-        };
-      <View style=Styles.pane> innerElement </View>;
-    };
-  };
-};
+include Model;
+module Colors = PaneColors;
 
 [@deriving show({with_path: false})]
 type internal = {
@@ -339,8 +97,8 @@ let updateColorTransition = (~config, ~theme, model) => {
   let (desiredBackground, desiredForeground) = {
     switch (active(model)) {
     | [notification, ..._] =>
-      let bg = Colors.backgroundFor(notification);
-      let fg = Colors.foregroundFor(notification);
+      let bg = PaneColors.backgroundFor(notification);
+      let fg = PaneColors.foregroundFor(notification);
       (bg.from(theme), fg.from(theme));
     | [] => (
         Feature_Theme.Colors.StatusBar.background.from(theme),
@@ -685,7 +443,7 @@ module View = {
 
 module Contributions = {
   let colors =
-    Colors.[
+    PaneColors.[
       infoBackground,
       infoForeground,
       warningBackground,
