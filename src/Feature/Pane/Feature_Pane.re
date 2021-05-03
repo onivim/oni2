@@ -111,7 +111,6 @@ module Constants = {
 
 [@deriving show({with_path: false})]
 type command =
-  | ToggleMessages
   | ClosePane;
 
 [@deriving show({with_path: false})]
@@ -138,7 +137,6 @@ module Msg = {
   let resizeHandleDragged = v => ResizeHandleDragged(v);
   let resizeCommitted = ResizeCommitted;
 
-  let toggleMessages = Command(ToggleMessages);
   let toggle = (~paneId: string) => Toggle({paneId: paneId});
 };
 
@@ -441,25 +439,8 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
   | TabClicked({index}) => ({...model, selected: index}, Nothing)
 
   | Toggle({paneId}) => toggle(~paneId, model)
-  // | Command(ToggleProblems) => (model, Nothing)
-  // if (!model.isOpen) {
-  //   (show(~pane=Diagnostics, model), GrabFocus);
-  // } else if (model.selected == Diagnostics) {
-  //   (close(model), ReleaseFocus);
-  // } else {
-  //   (show(~pane=Diagnostics, model), Nothing);
-  // }
 
   //| PaneButtonClicked(pane) => (model, PaneButton(pane))
-
-  | Command(ToggleMessages) => (model, Nothing)
-  // if (!model.isOpen) {
-  //   (show(~pane=Notifications, model), GrabFocus);
-  // } else if (model.selected == Notifications) {
-  //   (close(model), ReleaseFocus);
-  // } else {
-  //   (show(~pane=Notifications, model), Nothing);
-  // }
 
   | ResizeHandleDragged(delta) => (
       {...model, allowAnimation: false, resizeDelta: (-1) * delta},

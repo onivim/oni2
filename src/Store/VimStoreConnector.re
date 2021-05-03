@@ -144,7 +144,11 @@ let start =
       dispatch(Actions.SideBar(Feature_SideBar.(Command(GotoOutline))))
 
     | Vim.Goto.Messages =>
-      dispatch(Actions.Pane(Feature_Pane.Msg.toggleMessages))
+      dispatch(
+        Actions.Pane(
+          Feature_Pane.Msg.toggle(~paneId="workbench.panel.notifications"),
+        ),
+      )
 
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>

@@ -49,7 +49,6 @@ module Msg: {
   let keyPressed: string => msg(_);
   let resizeHandleDragged: int => msg(_);
   let resizeCommitted: msg(_);
-  let toggleMessages: msg(_);
 
   let toggle: (~paneId: string) => msg(_);
 };
