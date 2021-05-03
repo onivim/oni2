@@ -119,7 +119,6 @@ type command =
 type msg('inner) =
   | TabClicked({index: int})
   | CloseButtonClicked
-  //| PaneButtonClicked(pane)
   | NestedMsg([@opaque] 'inner)
   | Command(command)
   | ResizeHandleDragged(int)
@@ -181,8 +180,6 @@ type model('model, 'msg) = {
   height: int,
   resizeDelta: int,
   vimWindowNavigation: Component_VimWindows.model,
-  // diagnosticsView:
-  //   Component_VimTree.model(string, Oni_Components.LocationListItem.t),
   // locationNodes:
   //   list(
   //     Tree.t(LocationsPaneView.location, Oni_Components.LocationListItem.t),
@@ -445,15 +442,6 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
          })
       |> Option.value(~default=Nothing);
     (model, outmsg);
-  // switch (model.selected) {
-  // | Notifications => (
-  //     {
-  //       ...model,
-  //       notificationsView:
-  //         Component_VimList.keyPress(key, model.notificationsView),
-  //     },
-  //     Nothing,
-  //   )
 
   // | Locations => (
   //     {
@@ -538,7 +526,6 @@ let initial = panes => {
   height: Constants.defaultHeight,
   resizeDelta: 0,
   allowAnimation: true,
-  // selected: Diagnostics,
   selected: 0,
   isOpen: false,
   panes,
@@ -1000,7 +987,6 @@ module Contributions = {
     //       ? [
     //         Schema.string("activePanel", model =>
     //           switch (model.selected) {
-    //           | Diagnostics => "workbench.panel.markers"
     //           | Output => "workbench.panel.output"
     //           | Notifications => "workbench.panel.notifications"
     //           | Locations => "workbench.panel.locations"
