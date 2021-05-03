@@ -177,15 +177,6 @@ type model('model, 'msg) = {
   height: int,
   resizeDelta: int,
   vimWindowNavigation: Component_VimWindows.model,
-  // locationNodes:
-  //   list(
-  //     Tree.t(LocationsPaneView.location, Oni_Components.LocationListItem.t),
-  //   ),
-  // locationsView:
-  //   Component_VimTree.model(
-  //     LocationsPaneView.location,
-  //     Oni_Components.LocationListItem.t,
-  //   ),
   // outputPane: option(Component_Output.model),
 };
 

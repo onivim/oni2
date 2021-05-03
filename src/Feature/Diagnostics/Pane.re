@@ -176,4 +176,3 @@ let pane: Feature_Pane.Schema.t(model, msg) =
       },
     ~keyPressed=key => KeyPress(key),
   );
-
