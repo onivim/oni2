@@ -126,7 +126,6 @@ type msg('inner) =
   | Toggle({paneId: string});
 // | LocationsList(Component_VimTree.msg)
 // | OutputPane(Component_Output.msg)
-// | DismissNotificationClicked(Feature_Notification.notification);
 // | LocationFileLoaded({
 //     filePath: string,
 //     lines: array(string),
@@ -168,7 +167,6 @@ type outmsg('msg) =
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
   | ReleaseFocus;
-// | NotificationDismissed(Feature_Notification.notification)
 // | Effect(Isolinear.Effect.t(msg));
 
 type model('model, 'msg) = {
@@ -431,11 +429,6 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
   | Command(ClosePane)
   | CloseButtonClicked => ({...model, isOpen: false}, ReleaseFocus)
 
-  // | DismissNotificationClicked(notification) => (model, Nothing)
-  //   model,
-  //   NotificationDismissed(notification),
-  // )
-
   | TabClicked({index}) => ({...model, selected: index}, Nothing)
 
   | Toggle({paneId}) => toggle(~paneId, model)
@@ -555,7 +548,6 @@ let initial = panes => {
   vimWindowNavigation: Component_VimWindows.initial,
   // locationNodes: [],
   // locationsView: Component_VimTree.create(~rowHeight=20),
-  // notificationsView: Component_VimList.create(~rowHeight=20),
   // outputPane: None,
 };
 
@@ -981,23 +973,6 @@ module Contributions = {
     //          )
     //       |> Option.value(~default=empty)
     //     : empty;
-
-    // let activePanel =
-    //   (
-    //     isFocused
-    //       ? [
-    //         Schema.string("activePanel", model =>
-    //           switch (model.selected) {
-    //           | Output => "workbench.panel.output"
-    //           | Notifications => "workbench.panel.notifications"
-    //           | Locations => "workbench.panel.locations"
-    //           }
-    //         ),
-    //       ]
-    //       : []
-    //   )
-    //   |> Schema.fromList
-    //   |> fromSchema(model);
 
     let paneFocus =
       [Schema.bool("paneFocus", _ => isFocused)]
