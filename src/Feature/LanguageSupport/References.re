@@ -34,7 +34,18 @@ let get = ({state, _}) =>
   | Found(items) => items
   };
 
-let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) => {
+let update =
+    (
+      ~font,
+      ~buffers,
+      ~languageInfo,
+      ~previewEnabled,
+      ~maybeBuffer,
+      ~cursorLocation,
+      ~client,
+      msg,
+      model,
+    ) => {
   switch (msg) {
   | Command(FindAll) =>
     let eff =
@@ -63,7 +74,21 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) => {
 
   | ReferencesNotAvailable => (model, Outmsg.Nothing)
 
-  | Pane(paneMsg) => (model, Outmsg.Nothing)
+  | Pane(paneMsg) =>
+    let (pane', outmsg) =
+      ReferencesPane.update(
+        ~previewEnabled,
+        ~languageInfo,
+        ~buffers,
+        ~font,
+        paneMsg,
+        model.pane,
+      );
+
+    (
+      {...model, pane: pane'},
+      outmsg |> Outmsg.map(paneMsg => Pane(paneMsg)),
+    );
 
   | ReferencesFound(locations) =>
     let state' =
@@ -72,7 +97,16 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) => {
       | InProgress => Found(locations)
       | Found(prevLocations) => Found(locations @ prevLocations)
       };
-    ({...model, state: state'}, Outmsg.ReferencesAvailable);
+
+    let model' = {...model, state: state'};
+    let locations = get(model');
+    let pane' =
+      ReferencesPane.setLocations(
+        ~maybeActiveBuffer=maybeBuffer,
+        ~locations,
+        model.pane,
+      );
+    ({...model', pane: pane'}, Outmsg.ReferencesAvailable);
   };
 };
 

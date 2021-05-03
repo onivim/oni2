@@ -154,14 +154,22 @@ module Msg = {
   };
 };
 
+// ~previewEnabled,
+// ~languageInfo,
+// ~buffers,
+// ~font,
 let update =
     (
+      ~buffers,
       ~config,
       ~diagnostics,
       ~extensions,
+      ~font,
       ~languageConfiguration,
+      ~languageInfo,
       ~maybeSelection,
       ~maybeBuffer,
+      ~previewEnabled,
       ~editorId,
       ~cursorLocation,
       ~client,
@@ -447,6 +455,10 @@ let update =
   | References(referencesMsg) =>
     let (references', outmsg) =
       References.update(
+        ~buffers,
+        ~font,
+        ~languageInfo,
+        ~previewEnabled,
         ~maybeBuffer,
         ~cursorLocation,
         ~client,

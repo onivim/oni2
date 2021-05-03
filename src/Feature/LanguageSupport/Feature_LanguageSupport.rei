@@ -99,12 +99,16 @@ type outmsg =
 
 let update:
   (
+    ~buffers: Feature_Buffers.model,
     ~config: Oni_Core.Config.resolver,
     ~diagnostics: Feature_Diagnostics.model,
     ~extensions: Feature_Extensions.model,
+    ~font: Service_Font.font,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
+    ~languageInfo: Exthost.LanguageInfo.t,
     ~maybeSelection: option(CharacterRange.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~previewEnabled: bool,
     ~editorId: int,
     ~cursorLocation: CharacterPosition.t,
     ~client: Exthost.Client.t,

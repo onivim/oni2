@@ -684,12 +684,21 @@ let update =
       editor |> Feature_Editor.Editor.byteRangeToCharacterRange(selection);
 
     let config = Selectors.configResolver(state);
+    let previewEnabled =
+      Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+        get(
+        config,
+      );
 
     let (languageSupport, outmsg) =
       Feature_LanguageSupport.update(
+        ~buffers=state.buffers,
         ~config,
         ~diagnostics=state.diagnostics,
+        ~languageInfo,
+        ~font=state.editorFont,
         ~languageConfiguration,
+        ~previewEnabled,
         ~extensions=state.extensions,
         ~maybeBuffer,
         ~maybeSelection=characterSelection,

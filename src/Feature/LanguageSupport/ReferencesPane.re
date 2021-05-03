@@ -19,112 +19,133 @@ let initial = {
 
 [@deriving show]
 type msg =
-  | LocationTree(Component_VimTree.msg)
+  | LocationsList(Component_VimTree.msg)
+  | LocationFileLoaded({
+      filePath: string,
+      lines: array(string),
+    })
   | KeyPress(string);
 
 type outmsg =
   Component_VimTree.outmsg(location, Oni_Components.LocationListItem.t);
 
-let locationsToReferences = (locations: list(Exthost.Location.t)) => {
-  let map =
-    List.fold_left(
-      (acc, curr: Exthost.Location.t) => {
-        let {range, uri}: Exthost.Location.t = curr;
+module Internal = {
+  let locationsToReferences = (locations: list(Exthost.Location.t)) => {
+    let map =
+      List.fold_left(
+        (acc, curr: Exthost.Location.t) => {
+          let {range, uri}: Exthost.Location.t = curr;
 
-        let range = range |> Exthost.OneBasedRange.toRange;
+          let range = range |> Exthost.OneBasedRange.toRange;
 
-        let path = Oni_Core.Uri.toFileSystemPath(uri);
+          let path = Oni_Core.Uri.toFileSystemPath(uri);
 
-        acc
-        |> StringMap.update(
-             path,
-             fun
-             | None => Some([range])
-             | Some(ranges) => Some([range, ...ranges]),
-           );
-      },
-      StringMap.empty,
-      locations,
-    );
+          acc
+          |> StringMap.update(
+               path,
+               fun
+               | None => Some([range])
+               | Some(ranges) => Some([range, ...ranges]),
+             );
+        },
+        StringMap.empty,
+        locations,
+      );
 
-  map |> StringMap.bindings |> List.map(((path, ranges)) => {path, ranges});
-};
-
-let updateLocationTree = (nodes, model) => {
-  let locationsView' =
-    Component_VimTree.set(
-      ~uniqueId=({path, _}) => path,
-      ~searchText=
-        Component_VimTree.(
-          fun
-          | Node({data, _}) => data.path
-          | Leaf({data, _}) => Oni_Components.LocationListItem.(data.text)
-        ),
-      nodes,
-      model.locationsView,
-    );
-
-  {locationNodes: nodes, locationsView: locationsView'};
-};
-
-let expandLocation = (~filePath, ~lines, model) => {
-  let characterIndexToIndex = (idx: CharacterIndex.t) => {
-    idx |> CharacterIndex.toInt |> Index.fromZeroBased;
+    map
+    |> StringMap.bindings
+    |> List.map(((path, ranges)) => {path, ranges});
   };
 
-  let expandChildren = (location: location) => {
-    let lineCount = Array.length(lines);
-    location.ranges
-    |> List.filter_map((range: CharacterRange.t) => {
-         let line = range.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
-         if (line >= 0 && line < lineCount) {
-           let highlight =
-             if (range.start.line == range.stop.line) {
-               Some((
-                 range.start.character |> characterIndexToIndex,
-                 range.stop.character |> characterIndexToIndex,
-               ));
-             } else {
-               None;
-             };
-           Some(
-             Oni_Components.LocationListItem.{
-               file: filePath,
-               location: range.start,
-               text: lines[line],
-               highlight,
-             },
-           );
-         } else {
-           None;
-         };
-       })
-    |> List.sort(
-         (
-           a: Oni_Components.LocationListItem.t,
-           b: Oni_Components.LocationListItem.t,
-         ) => {
-         (a.location.line |> EditorCoreTypes.LineNumber.toZeroBased)
-         - (b.location.line |> EditorCoreTypes.LineNumber.toZeroBased)
-       });
+  let updateLocationTree = (nodes, model) => {
+    let locationsView' =
+      Component_VimTree.set(
+        ~uniqueId=({path, _}) => path,
+        ~searchText=
+          Component_VimTree.(
+            fun
+            | Node({data, _}) => data.path
+            | Leaf({data, _}) => Oni_Components.LocationListItem.(data.text)
+          ),
+        nodes,
+        model.locationsView,
+      );
+
+    {locationNodes: nodes, locationsView: locationsView'};
   };
+  let expandLocation = (~filePath, ~lines, model) => {
+    let characterIndexToIndex = (idx: CharacterIndex.t) => {
+      idx |> CharacterIndex.toInt |> Index.fromZeroBased;
+    };
 
-  let locationNodes' =
-    model.locationNodes
-    |> List.map(
-         fun
-         | Tree.Leaf(_) as leaf => leaf
-         | Tree.Node({data, _} as prev) =>
-           if (data.path == filePath) {
-             let children = data |> expandChildren |> List.map(Tree.leaf);
-
-             Node({expanded: true, data, children});
+    let expandChildren = (location: location) => {
+      let lineCount = Array.length(lines);
+      location.ranges
+      |> List.filter_map((range: CharacterRange.t) => {
+           let line =
+             range.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
+           if (line >= 0 && line < lineCount) {
+             let highlight =
+               if (range.start.line == range.stop.line) {
+                 Some((
+                   range.start.character |> characterIndexToIndex,
+                   range.stop.character |> characterIndexToIndex,
+                 ));
+               } else {
+                 None;
+               };
+             Some(
+               Oni_Components.LocationListItem.{
+                 file: filePath,
+                 location: range.start,
+                 text: lines[line],
+                 highlight,
+               },
+             );
            } else {
-             Node(prev);
-           },
-       );
+             None;
+           };
+         })
+      |> List.sort(
+           (
+             a: Oni_Components.LocationListItem.t,
+             b: Oni_Components.LocationListItem.t,
+           ) => {
+           (a.location.line |> EditorCoreTypes.LineNumber.toZeroBased)
+           - (b.location.line |> EditorCoreTypes.LineNumber.toZeroBased)
+         });
+    };
 
-  model |> updateLocationTree(locationNodes');
+    let locationNodes' =
+      model.locationNodes
+      |> List.map(
+           fun
+           | Tree.Leaf(_) as leaf => leaf
+           | Tree.Node({data, _} as prev) =>
+             if (data.path == filePath) {
+               let children = data |> expandChildren |> List.map(Tree.leaf);
+
+               Node({expanded: true, data, children});
+             } else {
+               Node(prev);
+             },
+         );
+
+    model |> updateLocationTree(locationNodes');
+  };
+};
+
+module Effects = {
+  let expandLocationPath = (~font, ~languageInfo, ~buffers, ~filePath) => {
+    let toMsg = lines => LocationFileLoaded({filePath, lines});
+    Feature_Buffers.Effects.loadFile(
+      ~font,
+      ~languageInfo,
+      ~filePath,
+      ~toMsg,
+      buffers,
+    );
+  };
 };
 
 let collapseLocations = model => {
@@ -133,7 +154,7 @@ let collapseLocations = model => {
 };
 
 let setLocations = (~maybeActiveBuffer, ~locations, model) => {
-  let references = locationsToReferences(locations);
+  let references = Internal.locationsToReferences(locations);
 
   let nodes =
     references
@@ -145,7 +166,7 @@ let setLocations = (~maybeActiveBuffer, ~locations, model) => {
     model
     // Un-expand all the nodes
     |> collapseLocations
-    |> updateLocationTree(nodes);
+    |> Internal.updateLocationTree(nodes);
 
   // Try to expand the current buffer, if it's available
   maybeActiveBuffer
@@ -154,14 +175,62 @@ let setLocations = (~maybeActiveBuffer, ~locations, model) => {
        | None => None
        | Some(filePath) =>
          let lines = Buffer.getLines(buffer);
-         Some(model' |> expandLocation(~filePath, ~lines));
+         Some(model' |> Internal.expandLocation(~filePath, ~lines));
        }
      })
   |> Option.value(~default=model');
 };
 
-let update = (msg, model) => {
-  (model, Component_VimTree.Nothing);
+let update = (~previewEnabled, ~languageInfo, ~buffers, ~font, msg, model) => {
+  switch (msg) {
+  | LocationsList(listMsg) =>
+    let (locationsView, outmsg) =
+      Component_VimTree.update(listMsg, model.locationsView);
+    let eff =
+      switch (outmsg) {
+      | Component_VimTree.Nothing => Outmsg.Nothing
+      | Component_VimTree.Touched(item) =>
+        previewEnabled
+          ? Outmsg.PreviewFile({
+              filePath: item.file,
+              position: item.location,
+            })
+          : Outmsg.OpenFile({
+              filePath: item.file,
+              location: Some(item.location),
+              direction: SplitDirection.Current,
+            })
+      | Component_VimTree.Selected(item) =>
+        Outmsg.OpenFile({
+          filePath: item.file,
+          location: Some(item.location),
+          direction: SplitDirection.Current,
+        })
+      | Component_VimTree.SelectedNode(_) => Nothing
+      | Component_VimTree.Collapsed(_) => Nothing
+      | Component_VimTree.Expanded({path, _}) =>
+        Outmsg.Effect(
+          Effects.expandLocationPath(
+            ~font,
+            ~languageInfo,
+            ~buffers,
+            ~filePath=path,
+          ),
+        )
+      };
+    ({...model, locationsView}, eff);
+  | LocationFileLoaded({filePath, lines}) => (
+      model |> Internal.expandLocation(~filePath, ~lines),
+      Outmsg.Nothing,
+    )
+  | KeyPress(key) => (
+      {
+        ...model,
+        locationsView: Component_VimTree.keyPress(key, model.locationsView),
+      },
+      Outmsg.Nothing,
+    )
+  };
 };
 
 module PaneView = {
@@ -272,7 +341,7 @@ let pane: Feature_Pane.Schema.t(model, msg) =
     ~commands=
       pane => {
         Component_VimTree.Contributions.commands
-        |> List.map(Oni_Core.Command.map(msg => LocationTree(msg)))
+        |> List.map(Oni_Core.Command.map(msg => LocationsList(msg)))
       },
     ~contextKeys,
     ~view=
@@ -296,7 +365,7 @@ let pane: Feature_Pane.Schema.t(model, msg) =
           iconTheme
           languageInfo
           workingDirectory
-          dispatch={msg => dispatch(LocationTree(msg))}
+          dispatch={msg => dispatch(LocationsList(msg))}
         />
       },
     ~keyPressed=key => KeyPress(key),
