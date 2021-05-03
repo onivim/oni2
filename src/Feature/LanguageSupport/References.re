@@ -11,9 +11,10 @@ type state =
 type model = {
   state,
   providers: list(provider),
+  pane: ReferencesPane.model,
 };
 
-let initial = {state: Empty, providers: []};
+let initial = {state: Empty, providers: [], pane: ReferencesPane.initial};
 
 [@deriving show]
 type command =
@@ -22,6 +23,7 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
+  | Pane(ReferencesPane.msg)
   | ReferencesNotAvailable
   | ReferencesFound([@opaque] list(Exthost.Location.t));
 
@@ -58,7 +60,11 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) => {
         |> Isolinear.Effect.batch
       };
     ({...model, state: InProgress}, Outmsg.Effect(eff));
+
   | ReferencesNotAvailable => (model, Outmsg.Nothing)
+
+  | Pane(paneMsg) => (model, Outmsg.Nothing)
+
   | ReferencesFound(locations) =>
     let state' =
       switch (model.state) {
@@ -105,4 +111,11 @@ module Keybindings = {
 module Contributions = {
   let commands = Commands.[findAll];
   let keybindings = Keybindings.[shiftF12];
+
+  let pane =
+    ReferencesPane.pane
+    |> Feature_Pane.Schema.map(
+         ~msg=msg => Pane(msg),
+         ~model=({pane, _}) => pane,
+       );
 };
