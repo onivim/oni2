@@ -245,7 +245,13 @@ let update = (~theme, ~config, model, msg) => {
     |> updateColorTransition(~config, ~theme)
     |> updatePane
 
-  | Pane(paneMsg) => {...model, pane: Pane.update(paneMsg, model.pane)}
+  | Pane(paneMsg) =>
+    let (pane', outmsg) = Pane.update(paneMsg, model.pane);
+    let model' = {...model, pane: pane'};
+    switch (outmsg) {
+    | Nothing => model'
+    | DismissNotification({id}) => model' |> dismiss(~theme, ~config, ~id)
+    };
 
   | AnimateYOffset({id, msg}) => {
       ...model,

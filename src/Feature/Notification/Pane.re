@@ -9,6 +9,10 @@ type msg =
   | KeyPressed(string)
   | Dismissed({id: int});
 
+type outmsg =
+  | Nothing
+  | DismissNotification({id: int});
+
 let commands = _model => {
   Component_VimList.Contributions.commands
   |> List.map(Oni_Core.Command.map(msg => VimList(msg)));
@@ -26,12 +30,14 @@ let update = (msg, model) => {
   | VimList(listMsg) =>
     let (notificationsView', _outmsg) =
       Component_VimList.update(listMsg, model.notificationsView);
-    {notificationsView: notificationsView'};
+    ({notificationsView: notificationsView'}, Nothing);
 
   | KeyPressed(key) =>
     let notificationsView' =
       Component_VimList.keyPress(key, model.notificationsView);
-    {notificationsView: notificationsView'};
+    ({notificationsView: notificationsView'}, Nothing);
+
+  | Dismissed({id}) => (model, DismissNotification({id: id}))
   };
 };
 
@@ -72,7 +78,11 @@ module View = {
 
       let message = (~foreground) => [flexGrow(1), ...text(~foreground)];
 
-      let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
+      let closeButton = [
+        alignSelf(`Stretch),
+        paddingLeft(5),
+        paddingRight(3),
+      ];
     };
 
     let colorFor = (item: notification, ~theme) =>
