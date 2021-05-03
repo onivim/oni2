@@ -806,8 +806,13 @@ module Contributions = {
     @ References.Contributions.keybindings
     @ SignatureHelp.Contributions.keybindings;
 
-  // TODO: References
-  let panes = [];
+  let panes = [
+    References.Contributions.pane
+    |> Feature_Pane.Schema.map(
+         ~msg=msg => References(msg),
+         ~model=({references, _}) => references,
+       ),
+  ];
 
   let menuGroups =
     DocumentSymbols.Contributions.menuGroups

@@ -819,18 +819,14 @@ let update =
           |> Isolinear.Effect.batch;
         (state, eff);
       | ReferencesAvailable =>
-        let references =
-          Feature_LanguageSupport.References.get(languageSupport);
-        let pane = state.pane;
-        // let pane =
-        //   state.pane
-        //   |> Feature_Pane.setLocations(
-        //        ~maybeActiveBuffer=maybeBuffer,
-        //        ~locations=references,
-        //      )
-        //   |> Feature_Pane.show(~pane=Locations);
-        let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
-        (state', Isolinear.Effect.none);
+        let effect =
+          EffectEx.value(
+            ~name="Feature_LanguageSupport.References.Effect.togglePane",
+            Actions.Pane(
+              Feature_Pane.Msg.toggle(~paneId="workbench.panel.locations"),
+            ),
+          );
+        (state, effect);
       | InsertSnippet({replaceSpan, snippet, _}) =>
         let editor = Feature_Layout.activeEditor(state.layout);
         // let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
