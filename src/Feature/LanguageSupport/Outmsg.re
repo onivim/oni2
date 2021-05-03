@@ -24,6 +24,10 @@ type internalMsg('a) =
       location: option(CharacterPosition.t),
       direction: SplitDirection.t,
     })
+  | PreviewFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    })
   | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)

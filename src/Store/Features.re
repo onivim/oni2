@@ -854,6 +854,10 @@ let update =
           )
           |> Isolinear.Effect.map(msg => Snippets(msg)),
         );
+      | PreviewFile({filePath, position}) => (
+          state,
+          Internal.previewFileEffect(~position=Some(position), filePath),
+        )
       | OpenFile({filePath, location, direction}) => (
           state,
           Internal.openFileEffect(~direction, ~position=location, filePath),
