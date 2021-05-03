@@ -42,7 +42,8 @@ type outmsg =
   | PreviewFile({
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
-    });
+    })
+  | TogglePane({paneId: string});
 
 module Msg: {
   let exthost: Exthost.Msg.Diagnostics.msg => msg;
@@ -81,4 +82,10 @@ let getDiagnosticsMap: (model, Buffer.t) => IntMap.t(list(Diagnostic.t));
 
 let getAllDiagnostics: model => list((Uri.t, Diagnostic.t));
 
-module Contributions: {let pane: Feature_Pane.Schema.t(model, msg);};
+module Contributions: {
+  let commands: list(Command.t(msg));
+
+  let keybindings: list(Feature_Input.Schema.keybinding);
+
+  let pane: Feature_Pane.Schema.t(model, msg);
+};

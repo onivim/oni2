@@ -402,7 +402,8 @@ let defaultKeyBindings =
   @ Component_VimList.Contributions.keybindings
   @ Component_VimTree.Contributions.keybindings
   @ Feature_Snippets.Contributions.keybindings
-  @ Feature_Vim.Contributions.keybindings;
+  @ Feature_Vim.Contributions.keybindings
+  @ Feature_Diagnostics.Contributions.keybindings;
 
 type windowDisplayMode =
   | Minimized

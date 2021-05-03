@@ -42,10 +42,15 @@ module DiagnosticEntry = {
 };
 
 [@deriving show]
+type command =
+  | ToggleProblemsPane;
+
+[@deriving show]
 type msg =
   | Set([@opaque] list(DiagnosticEntry.t))
   | Clear({owner: string})
-  | Pane(Pane.msg);
+  | Pane(Pane.msg)
+  | Command(command);
 
 type outmsg =
   | Nothing
@@ -56,7 +61,8 @@ type outmsg =
   | PreviewFile({
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
-    });
+    })
+  | TogglePane({paneId: string});
 
 module Msg = {
   let exthost =
@@ -271,6 +277,10 @@ let syncPane = (model: model) => {
 
 let update = (~previewEnabled, msg, model) => {
   switch (msg) {
+  | Command(ToggleProblemsPane) => (
+      model,
+      TogglePane({paneId: "workbench.panel.markers"}),
+    )
   | Pane(msg) =>
     let (pane', outmsg) = Pane.update(msg, model.pane);
     let eff =
@@ -392,7 +402,39 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model: model) => {
   );
 };
 
+module Commands = {
+  open Feature_Commands.Schema;
+  let problems =
+    define(
+      ~category="View",
+      ~title="Toggle Problems (Errors, Warnings)",
+      "workbench.actions.view.problems",
+      Command(ToggleProblemsPane),
+    );
+};
+
+module Keybindings = {
+  open Feature_Input.Schema;
+  let toggleProblems =
+    bind(
+      ~key="<S-C-M>",
+      ~command=Commands.problems.id,
+      ~condition=WhenExpr.Value(True),
+    );
+
+  let toggleProblemsOSX =
+    bind(
+      ~key="<D-S-M>",
+      ~command=Commands.problems.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
+};
+
 module Contributions = {
+  let commands = Commands.[problems];
+
+  let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX];
+
   let pane =
     Pane.pane
     |> Feature_Pane.Schema.map(

@@ -434,15 +434,26 @@ let update =
     let (diagnostics, outmsg) =
       Feature_Diagnostics.update(~previewEnabled, msg, state.diagnostics);
 
-    let eff =
-      switch (outmsg) {
-      | Nothing => Isolinear.Effect.none
-      | OpenFile({filePath, position}) =>
-        Internal.openFileEffect(~position=Some(position), filePath)
-      | PreviewFile({filePath, position}) =>
-        Internal.previewFileEffect(~position=Some(position), filePath)
-      };
-    ({...state, diagnostics}, eff);
+    let state' = {...state, diagnostics};
+    switch (outmsg) {
+    | Nothing => (state', Isolinear.Effect.none)
+    | OpenFile({filePath, position}) => (
+        state',
+        Internal.openFileEffect(~position=Some(position), filePath),
+      )
+    | PreviewFile({filePath, position}) => (
+        state',
+        Internal.previewFileEffect(~position=Some(position), filePath),
+      )
+
+    | TogglePane({paneId}) => (
+        state',
+        EffectEx.value(
+          ~name="Feature_Diagnostics.Effect.togglePane",
+          Actions.Pane(Feature_Pane.Msg.toggle(~paneId)),
+        ),
+      )
+    };
 
   | Exthost(msg) =>
     let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);

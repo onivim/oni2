@@ -50,6 +50,8 @@ module Msg: {
   let resizeHandleDragged: int => msg(_);
   let resizeCommitted: msg(_);
   let toggleMessages: msg(_);
+
+  let toggle: (~paneId: string) => msg(_);
 };
 
 type outmsg('msg) =
@@ -89,11 +91,9 @@ let isOpen: model(_, _) => bool;
 
 //let setPane: (~pane: pane, model) => model;
 //let show: (~pane: pane, model) => model;
-//let toggle: (~pane: pane, model) => model;
 
 let close: model('model, 'msg) => model('model, 'msg);
 
-// let setDiagnostics: (Feature_Diagnostics.model, model) => model;
 // let setLocations:
 //   (
 //     ~maybeActiveBuffer: option(Oni_Core.Buffer.t),

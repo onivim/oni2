@@ -111,7 +111,6 @@ module Constants = {
 
 [@deriving show({with_path: false})]
 type command =
-  | ToggleProblems
   | ToggleMessages
   | ClosePane;
 
@@ -124,7 +123,8 @@ type msg('inner) =
   | ResizeHandleDragged(int)
   | ResizeCommitted
   | KeyPressed(string)
-  | VimWindowNav(Component_VimWindows.msg);
+  | VimWindowNav(Component_VimWindows.msg)
+  | Toggle({paneId: string});
 // | LocationsList(Component_VimTree.msg)
 // | OutputPane(Component_Output.msg)
 // | DismissNotificationClicked(Feature_Notification.notification);
@@ -139,6 +139,7 @@ module Msg = {
   let resizeCommitted = ResizeCommitted;
 
   let toggleMessages = Command(ToggleMessages);
+  let toggle = (~paneId: string) => Toggle({paneId: paneId});
 };
 
 // module Effects = {
@@ -341,13 +342,52 @@ let height = ({height, resizeDelta, _}) => {
 
 let setPane = (~pane, model) => {...model, selected: pane};
 
-let show = (~pane, model) => {
-  ...model,
-  allowAnimation: true,
-  isOpen: true,
-  selected: pane,
+let indexOfPane = (~paneId: string, model: model('model, 'msg)) => {
+  let (maybeFound, _) =
+    model.panes
+    |> List.fold_left(
+         (acc, curr: Schema.t('model, 'msg)) => {
+           let (maybeFound, idx) = acc;
+           switch (maybeFound) {
+           | Some(_) as found => (found, idx)
+           | None =>
+             if (curr.id == Some(paneId)) {
+               (Some(idx), idx);
+             } else {
+               (None, idx + 1);
+             }
+           };
+         },
+         (None, 0),
+       );
+  maybeFound;
+};
+
+let show = (~paneId, model) => {
+  let maybeSelected = indexOfPane(~paneId, model);
+
+  maybeSelected
+  |> Option.map(selected => {
+       {...model, allowAnimation: true, isOpen: true, selected}
+     })
+  |> Option.value(~default=model);
 };
 let close = model => {...model, allowAnimation: false, isOpen: false};
+
+let toggle = (~paneId: string, model) => {
+  let maybeSelected = indexOfPane(~paneId, model);
+  switch (maybeSelected) {
+  | None => (close(model), ReleaseFocus)
+  | Some(selected) =>
+    if (!model.isOpen) {
+      (show(~paneId, model), GrabFocus);
+    } else if (model.selected == selected) {
+      (close(model), ReleaseFocus);
+    } else {
+      (show(~paneId, model), Nothing);
+    }
+  };
+};
 
 // let setOutput = (_cmd, maybeContents, model) => {
 //   let outputPane' =
@@ -400,7 +440,8 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
 
   | TabClicked({index}) => ({...model, selected: index}, Nothing)
 
-  | Command(ToggleProblems) => (model, Nothing)
+  | Toggle({paneId}) => toggle(~paneId, model)
+  // | Command(ToggleProblems) => (model, Nothing)
   // if (!model.isOpen) {
   //   (show(~pane=Diagnostics, model), GrabFocus);
   // } else if (model.selected == Diagnostics) {
@@ -864,13 +905,6 @@ module View = {
 
 module Commands = {
   open Feature_Commands.Schema;
-  let problems =
-    define(
-      ~category="View",
-      ~title="Toggle Problems (Errors, Warnings)",
-      "workbench.actions.view.problems",
-      Command(ToggleProblems),
-    );
 
   let closePane =
     define(
@@ -882,20 +916,6 @@ module Commands = {
 
 module Keybindings = {
   open Feature_Input.Schema;
-  let toggleProblems =
-    bind(
-      ~key="<S-C-M>",
-      ~command=Commands.problems.id,
-      ~condition=WhenExpr.Value(True),
-    );
-
-  let toggleProblemsOSX =
-    bind(
-      ~key="<D-S-M>",
-      ~command=Commands.problems.id,
-      ~condition="isMac" |> WhenExpr.parse,
-    );
-
   let escKey =
     bind(
       ~key="<ESC>",
@@ -906,7 +926,7 @@ module Keybindings = {
 
 module Contributions = {
   let commands = (~isFocused, model: 'model, pane: model('model, 'msg)) => {
-    let common = Commands.[problems, closePane];
+    let common = Commands.[closePane];
     let vimWindowCommands =
       Component_VimWindows.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)));
@@ -1014,5 +1034,5 @@ module Contributions = {
     |> unionMany;
   };
 
-  let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX, escKey];
+  let keybindings = Keybindings.[escKey];
 };
