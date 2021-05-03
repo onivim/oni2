@@ -73,7 +73,8 @@ module Pane = {
   [@deriving show]
   type msg =
     | VimList(Component_VimList.msg)
-    | KeyPressed(string);
+    | KeyPressed(string)
+    | Dismissed({id: int});
 
   let commands = _model => {
     Component_VimList.Contributions.commands
@@ -157,7 +158,7 @@ module Pane = {
             ~notification: notification,
             ~theme,
             ~font: UiFont.t,
-            ~onDismiss,
+            ~dispatch,
             (),
           ) => {
         let foreground = Feature_Theme.Colors.foreground.from(theme);
@@ -183,10 +184,7 @@ module Pane = {
           };
 
         let closeButton = () => {
-          // TODO: Bring back
-          //let onClick = () => dispatch(Dismissed({id: item.id}));
-
-          let onClick = onDismiss;
+          let onClick = () => dispatch(Dismissed({id: notification.id}));
 
           <Revery.UI.Components.Clickable onClick style=Styles.closeButton>
             <FontIcon icon=FontAwesome.times fontSize=13. color=foreground />
@@ -226,7 +224,6 @@ module Pane = {
           ~theme,
           ~uiFont: UiFont.t,
           ~dispatch,
-          //~onDismiss: Feature_Notification.notification => unit,
           (),
         ) => {
       let innerElement =
@@ -254,12 +251,7 @@ module Pane = {
               ~selected as _,
               item,
             ) =>
-              <Item
-                notification=item
-                font=uiFont
-                theme
-                onDismiss={() => ()} //onDismiss(item)}
-              />
+              <Item notification=item font=uiFont theme dispatch />
             }
           />;
         };
@@ -449,6 +441,16 @@ module Msg = {
   let clear = count => Clear({count: count});
 };
 
+let dismiss = (~theme, ~config, ~id, model) => {
+  {
+    ...model,
+    all: List.filter(it => it.id != id, model.all),
+    activeNotifications: IntSet.remove(id, model.activeNotifications),
+  }
+  |> updateColorTransition(~config, ~theme)
+  |> updatePane;
+};
+
 let update = (~theme, ~config, model, msg) => {
   let animationsEnabled =
     Feature_Configuration.GlobalConfiguration.animation.get(config);
@@ -475,14 +477,7 @@ let update = (~theme, ~config, model, msg) => {
     |> updateColorTransition(~config, ~theme)
     |> updatePane;
 
-  | Dismissed({id}) =>
-    {
-      ...model,
-      all: List.filter(it => it.id != id, model.all),
-      activeNotifications: IntSet.remove(id, model.activeNotifications),
-    }
-    |> updateColorTransition(~config, ~theme)
-    |> updatePane
+  | Dismissed({id}) => model |> dismiss(~theme, ~config, ~id)
 
   | Expire({id}) =>
     {
