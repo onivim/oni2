@@ -425,15 +425,24 @@ let update =
     (state, eff);
 
   | Diagnostics(msg) =>
-    let diagnostics = Feature_Diagnostics.update(msg, state.diagnostics);
-    (
-      {
-        ...state,
-        diagnostics,
-        // pane: Feature_Pane.setDiagnostics(diagnostics, state.pane),
-      },
-      Isolinear.Effect.none,
-    );
+    let config = Selectors.configResolver(state);
+    let previewEnabled =
+      Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+        get(
+        config,
+      );
+    let (diagnostics, outmsg) =
+      Feature_Diagnostics.update(~previewEnabled, msg, state.diagnostics);
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | OpenFile({filePath, position}) =>
+        Internal.openFileEffect(~position=Some(position), filePath)
+      | PreviewFile({filePath, position}) =>
+        Internal.previewFileEffect(~position=Some(position), filePath)
+      };
+    ({...state, diagnostics}, eff);
 
   | Exthost(msg) =>
     let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);

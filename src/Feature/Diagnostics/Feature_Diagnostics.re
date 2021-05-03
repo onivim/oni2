@@ -47,6 +47,17 @@ type msg =
   | Clear({owner: string})
   | Pane(Pane.msg);
 
+type outmsg =
+  | Nothing
+  | OpenFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    })
+  | PreviewFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    });
+
 module Msg = {
   let exthost =
     fun
@@ -258,20 +269,38 @@ let syncPane = (model: model) => {
   {...model, pane: Pane.setDiagnostics(locations, model.pane)};
 };
 
-let update = (msg, model) =>
+let update = (~previewEnabled, msg, model) => {
   switch (msg) {
-  | Pane(msg) => {...model, pane: Pane.update(msg, model.pane)}
-  | Clear({owner}) => clear(model, owner) |> syncPane
+  | Pane(msg) =>
+    let (pane', outmsg) = Pane.update(msg, model.pane);
+    let eff =
+      switch (outmsg) {
+      | Component_VimTree.Nothing => Nothing
+      | Component_VimTree.Touched(item) =>
+        previewEnabled
+          ? PreviewFile({filePath: item.file, position: item.location})
+          : OpenFile({filePath: item.file, position: item.location})
+      | Component_VimTree.SelectedNode(_) => Nothing
+      | Component_VimTree.Selected(item) =>
+        OpenFile({filePath: item.file, position: item.location})
+      | Component_VimTree.Collapsed(_) => Nothing
+      | Component_VimTree.Expanded(_) => Nothing
+      };
+    ({...model, pane: pane'}, eff);
+  | Clear({owner}) => (clear(model, owner) |> syncPane, Nothing)
   | Set(entries) =>
-    entries
-    |> List.fold_left(
-         (acc, curr: DiagnosticEntry.t) => {
-           change(acc, curr.uri, curr.owner, curr.diagnostics)
-         },
-         model,
-       )
-    |> syncPane
+    let model' =
+      entries
+      |> List.fold_left(
+           (acc, curr: DiagnosticEntry.t) => {
+             change(acc, curr.uri, curr.owner, curr.diagnostics)
+           },
+           model,
+         )
+      |> syncPane;
+    (model', Nothing);
   };
+};
 
 let getDiagnostics = ({diagnosticsMap, _}, buffer) => {
   let f = ((_key, v)) => v;

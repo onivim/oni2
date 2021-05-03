@@ -519,23 +519,6 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
   //     model |> expandLocation(~filePath, ~lines),
   //     Nothing,
   //   )
-  // | DiagnosticsList(listMsg) =>
-  //   let (diagnosticsView, outmsg) =
-  //     Component_VimTree.update(listMsg, model.diagnosticsView);
-  //   let eff =
-  //     switch (outmsg) {
-  //     | Component_VimTree.Nothing => Nothing
-  //     | Component_VimTree.Touched(item) =>
-  //       previewEnabled
-  //         ? PreviewFile({filePath: item.file, position: item.location})
-  //         : OpenFile({filePath: item.file, position: item.location})
-  //     | Component_VimTree.SelectedNode(_) => Nothing
-  //     | Component_VimTree.Selected(item) =>
-  //       OpenFile({filePath: item.file, position: item.location})
-  //     | Component_VimTree.Collapsed(_) => Nothing
-  //     | Component_VimTree.Expanded(_) => Nothing
-  //     };
-  //   ({...model, diagnosticsView}, eff);
   // | OutputPane(outputMsg) =>
   //   model.outputPane
   //   |> Option.map(outputPane => {

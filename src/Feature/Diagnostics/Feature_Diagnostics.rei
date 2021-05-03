@@ -33,6 +33,17 @@ module Diagnostic: {
 [@deriving show]
 type msg;
 
+type outmsg =
+  | Nothing
+  | OpenFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    })
+  | PreviewFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    });
+
 module Msg: {
   let exthost: Exthost.Msg.Diagnostics.msg => msg;
   let diagnostics: (Uri.t, string, list(Diagnostic.t)) => msg;
@@ -45,17 +56,7 @@ let initial: model;
 
 // UPDATE
 
-let update: (msg, model) => model;
-
-/*
- * Change diagnostics for a buffer+diagnostic key pair
- */
-let change: (model, Uri.t, string, list(Diagnostic.t)) => model;
-
-/*
- * [clear(diagnostics, key)] removes diagnostics with the key named [key] across all buffers
- */
-let clear: (model, string) => model;
+let update: (~previewEnabled: bool, msg, model) => (model, outmsg);
 
 /*
  * [count(diagnostics)] gets the total count of all diagnostics across buffers

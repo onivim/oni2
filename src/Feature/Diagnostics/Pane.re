@@ -12,13 +12,18 @@ type msg =
   | DiagnosticsTree(Component_VimTree.msg)
   | KeyPress(string);
 
+type outmsg =
+  Component_VimTree.outmsg(string, Oni_Components.LocationListItem.t);
+
 let update = (msg, model) =>
   switch (msg) {
   | DiagnosticsTree(treeMsg) =>
-    // TODO
-    let (tree', _outmsg) = Component_VimTree.update(treeMsg, model.tree);
-    {...model, tree: tree'};
-  | KeyPress(key) => {tree: Component_VimTree.keyPress(key, model.tree)}
+    let (tree', outmsg) = Component_VimTree.update(treeMsg, model.tree);
+    ({tree: tree'}, outmsg);
+  | KeyPress(key) => (
+      {tree: Component_VimTree.keyPress(key, model.tree)},
+      Nothing,
+    )
   };
 
 let setDiagnostics = (locations, model) => {
