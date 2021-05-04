@@ -623,6 +623,11 @@ let initial =
                ~msg=msg => Actions.Output(msg),
                ~model=state => state.output,
              ),
+          Feature_Terminal.Contributions.pane
+          |> Feature_Pane.Schema.map(
+               ~msg=msg => Actions.Terminal(msg),
+               ~model=state => state.terminals,
+             ),
         ],
       ),
     proxy: Feature_Proxy.default,

@@ -365,7 +365,6 @@ let sub = (model: model) => {
 
 module View = {
   open Revery.UI;
-  open Revery.UI.Components;
 
   module FontAwesome = Oni_Components.FontAwesome;
   module FontIcon = Oni_Components.FontIcon;
@@ -458,8 +457,6 @@ module Contributions = {
       errorForeground,
     ];
 
-  open Feature_Pane.Schema;
-
   let pane: Feature_Pane.Schema.t(model, msg) = {
     let contextKeys = (~isFocused, model) => {
       isFocused
@@ -477,13 +474,13 @@ module Contributions = {
         ~contextKeys,
         ~view=
           (
-            ~config,
+            ~config as _,
             ~editorFont as _,
             ~font,
             ~isFocused,
-            ~iconTheme,
-            ~languageInfo,
-            ~workingDirectory,
+            ~iconTheme as _,
+            ~languageInfo as _,
+            ~workingDirectory as _,
             ~theme,
             ~dispatch,
             ~model,

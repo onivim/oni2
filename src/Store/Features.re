@@ -983,35 +983,12 @@ let update =
     (state, eff);
 
   | Pane(msg) =>
-    let config = Selectors.configResolver(state);
-    let languageInfo =
-      state.languageSupport |> Feature_LanguageSupport.languageInfo;
-    let (model, outmsg) =
-      Feature_Pane.update(
-        ~font=state.editorFont,
-        ~languageInfo,
-        ~buffers=state.buffers,
-        ~previewEnabled=
-          Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
-            get(
-            config,
-          ),
-        msg,
-        state.pane,
-      );
+    let (model, outmsg) = Feature_Pane.update(msg, state.pane);
 
     let state = {...state, pane: model};
 
     switch (outmsg) {
     | Nothing => (state, Isolinear.Effect.none)
-    // | OpenFile({filePath, position}) => (
-    //     state,
-    //     Internal.openFileEffect(~position=Some(position), filePath),
-    //   )
-    // | PreviewFile({filePath, position}) => (
-    //     state,
-    //     Internal.previewFileEffect(~position=Some(position), filePath),
-    //   )
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -1029,11 +1006,6 @@ let update =
         state,
         EffectEx.value(~name="Feature_Pane.NestedMessage", msg),
       )
-    // | NotificationDismissed(notification) => (
-    //     state,
-    //     Feature_Notification.Effects.dismiss(notification)
-    //     |> Isolinear.Effect.map(msg => Notification(msg)),
-    //   )
     // | PaneButton(pane) =>
     //   switch (pane) {
     //   | Notifications => (
@@ -1043,7 +1015,6 @@ let update =
     //     )
     //   | _ => (state, Isolinear.Effect.none)
     //   }
-    // | Effect(eff) => (state, eff |> Isolinear.Effect.map(msg => Pane(msg)))
     };
 
   | Registers(msg) =>

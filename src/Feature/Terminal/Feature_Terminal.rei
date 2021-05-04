@@ -41,22 +41,21 @@ type command =
   | InsertMode;
 
 [@deriving show({with_path: false})]
-type msg =
-  | Command(command)
-  | Resized({
-      id: int,
-      rows: int,
-      columns: int,
-    })
-  | KeyPressed({
-      id: int,
-      key: string,
-    })
-  | Pasted({
-      id: int,
-      text: string,
-    })
-  | Service(Service_Terminal.msg);
+type msg; // | Command(command)
+// | Resized({
+//     id: int,
+//     rows: int,
+//     columns: int,
+//   })
+// | KeyPressed({
+//     id: int,
+//     key: string,
+//   })
+// | Pasted({
+//     id: int,
+//     text: string,
+//   })
+// | Service(Service_Terminal.msg);
 
 type outmsg =
   | Nothing
@@ -152,6 +151,8 @@ module Configuration: {
   let fontLigatures: Config.Schema.setting(option(FontLigatures.t));
 };
 
+module TerminalView = TerminalView;
+
 // CONTRIBUTIONS
 
 module Contributions: {
@@ -159,4 +160,6 @@ module Contributions: {
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
   let keybindings: list(Feature_Input.Schema.keybinding);
+
+  let pane: Feature_Pane.Schema.t(t, msg);
 };

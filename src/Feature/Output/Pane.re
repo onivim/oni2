@@ -1,5 +1,3 @@
-open Oni_Core;
-
 type t = {output: option(Component_Output.model)};
 
 [@deriving show]
@@ -23,7 +21,7 @@ let contextKeys = (~isFocused, model) => {
     : WhenExpr.ContextKeys.empty;
 };
 
-let set = (~cmd, ~maybeContents, model) => {
+let set = (~cmd, ~maybeContents, _model) => {
   let output' =
     maybeContents
     |> Option.map(output =>
@@ -44,7 +42,7 @@ let update = (msg, model) => {
     |> Option.map(outputPane => {
          let (outputPane, outmsg) =
            Component_Output.update(outputMsg, outputPane);
-         let model' = {...model, output: Some(outputPane)};
+         let model' = {output: Some(outputPane)};
          switch (outmsg) {
          | Nothing => (model', Nothing)
          // Emulate Vim behavior on space enter close;
@@ -82,13 +80,13 @@ let pane = {
       ~contextKeys,
       ~view=
         (
-          ~config,
+          ~config as _,
           ~editorFont,
           ~font,
           ~isFocused,
-          ~iconTheme,
-          ~languageInfo,
-          ~workingDirectory,
+          ~iconTheme as _,
+          ~languageInfo as _,
+          ~workingDirectory as _,
           ~theme,
           ~dispatch,
           ~model,

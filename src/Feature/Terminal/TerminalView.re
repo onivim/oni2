@@ -4,11 +4,13 @@
  * Component for the 'terminal' buffer renderer
  */
 
+module TerminalColors = Colors;
 open Revery;
 open Revery.UI;
-open Oni_Model;
 
-module Colors = Feature_Terminal.Colors;
+open Model;
+
+module Colors = TerminalColors;
 module Theme = Feature_Theme;
 
 module Constants = {
@@ -26,9 +28,10 @@ let%component make =
               (
                 ~isActive,
                 ~config,
-                ~terminal: Feature_Terminal.terminal,
+                ~terminal: terminal,
                 ~font: Service_Font.font,
                 ~theme: Oni_Core.ColorTheme.Colors.t,
+                ~dispatch,
                 (),
               ) => {
   let resolvedFont =
@@ -56,11 +59,7 @@ let%component make =
       () => {
         lastDimensions^
         |> Option.iter(((rows, columns)) => {
-             GlobalContext.current().dispatch(
-               Actions.Terminal(
-                 Feature_Terminal.Resized({id: terminal.id, rows, columns}),
-               ),
-             )
+             dispatch(Resized({id: terminal.id, rows, columns}))
            });
 
         None;
@@ -81,17 +80,13 @@ let%component make =
       float_of_int(width) /. terminalFont.characterWidth |> int_of_float;
 
     lastDimensions := Some((rows, columns));
-    GlobalContext.current().dispatch(
-      Actions.Terminal(
-        Feature_Terminal.Resized({id: terminal.id, rows, columns}),
-      ),
-    );
+    dispatch(Resized({id: terminal.id, rows, columns}));
   };
 
-  let terminalTheme = Feature_Terminal.theme(theme);
-  let defaultBackground = Feature_Terminal.defaultBackground(theme);
-  let defaultForeground = Feature_Terminal.defaultForeground(theme);
-  let {screen, cursor, _}: Feature_Terminal.terminal = terminal;
+  let terminalTheme = TerminalColors.theme(theme);
+  let defaultBackground = TerminalColors.defaultBackground(theme);
+  let defaultForeground = TerminalColors.defaultForeground(theme);
+  let {screen, cursor, _}: terminal = terminal;
 
   let element = {
     let font =

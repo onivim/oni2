@@ -1,70 +1,7 @@
 open Oni_Core;
 
 // MODEL
-
-type terminal = {
-  id: int,
-  launchConfig: Exthost.ShellLaunchConfig.t,
-  rows: int,
-  columns: int,
-  pid: option(int),
-  title: option(string),
-  screen: ReveryTerminal.Screen.t,
-  cursor: ReveryTerminal.Cursor.t,
-  closeOnExit: bool,
-};
-
-type t = {
-  idToTerminal: IntMap.t(terminal),
-  nextId: int,
-};
-
-let initial = {idToTerminal: IntMap.empty, nextId: 0};
-
-let getBufferName = (id, cmd) =>
-  Printf.sprintf("oni://terminal/%d/%s", id, cmd);
-
-let toList = ({idToTerminal, _}) =>
-  idToTerminal |> IntMap.bindings |> List.map(snd);
-
-let getTerminalOpt = (id, {idToTerminal, _}) =>
-  IntMap.find_opt(id, idToTerminal);
-
-// UPDATE
-
-[@deriving show({with_path: false})]
-type splitDirection =
-  | Vertical
-  | Horizontal
-  | Current;
-
-[@deriving show({with_path: false})]
-type command =
-  | NewTerminal({
-      cmd: option(string),
-      splitDirection,
-      closeOnExit: bool,
-    })
-  | NormalMode
-  | InsertMode;
-
-[@deriving show({with_path: false})]
-type msg =
-  | Command(command)
-  | Resized({
-      id: int,
-      rows: int,
-      columns: int,
-    })
-  | KeyPressed({
-      id: int,
-      key: string,
-    })
-  | Pasted({
-      id: int,
-      text: string,
-    })
-  | Service(Service_Terminal.msg);
+include Model;
 
 type outmsg =
   | Nothing
@@ -178,6 +115,9 @@ let update =
       msg,
     ) => {
   switch (msg) {
+  // TODO
+  | Pane(paneMsg) => (model, Nothing)
+
   | Command(NewTerminal({cmd, splitDirection, closeOnExit})) =>
     let cmdToUse =
       switch (cmd) {
@@ -352,31 +292,7 @@ let subscription = (~setup, ~workspaceUri, extHostClient, model: t) => {
 };
 
 // COLORS
-module Colors = Feature_Theme.Colors.Terminal;
-
-let theme = theme =>
-  fun
-  | 0 => Colors.ansiBlack.from(theme)
-  | 1 => Colors.ansiRed.from(theme)
-  | 2 => Colors.ansiGreen.from(theme)
-  | 3 => Colors.ansiYellow.from(theme)
-  | 4 => Colors.ansiBlue.from(theme)
-  | 5 => Colors.ansiMagenta.from(theme)
-  | 6 => Colors.ansiCyan.from(theme)
-  | 7 => Colors.ansiWhite.from(theme)
-  | 8 => Colors.ansiBrightBlack.from(theme)
-  | 9 => Colors.ansiBrightRed.from(theme)
-  | 10 => Colors.ansiBrightGreen.from(theme)
-  | 11 => Colors.ansiBrightYellow.from(theme)
-  | 12 => Colors.ansiBrightBlue.from(theme)
-  | 13 => Colors.ansiBrightMagenta.from(theme)
-  | 14 => Colors.ansiBrightCyan.from(theme)
-  | 15 => Colors.ansiBrightWhite.from(theme)
-  // For 256 colors, fall back to defaults
-  | idx => ReveryTerminal.Theme.default(idx);
-
-let defaultBackground = theme => Colors.background.from(theme);
-let defaultForeground = theme => Colors.foreground.from(theme);
+include Colors;
 
 let getFirstNonEmptyLine =
     (~start: int, ~direction: int, lines: array(string)) => {
@@ -701,4 +617,10 @@ module Contributions = {
       ),
     ];
   };
+
+  let pane =
+    Pane.pane
+    |> Feature_Pane.Schema.map(~msg=msg => Pane(msg), ~model=model => ());
 };
+
+module TerminalView = TerminalView;

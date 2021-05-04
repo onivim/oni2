@@ -2,7 +2,6 @@
  * Feature_Pane.re
  */
 
-open EditorCoreTypes;
 open Oni_Core;
 
 module Schema = {
@@ -192,8 +191,6 @@ let height = ({height, resizeDelta, _}) => {
   };
 };
 
-let setPane = (~pane, model) => {...model, selected: pane};
-
 let indexOfPane = (~paneId: string, model: model('model, 'msg)) => {
   let (maybeFound, _) =
     model.panes
@@ -271,7 +268,7 @@ let activePane = ({selected, panes, _}) => {
   List.nth_opt(panes, selected);
 };
 
-let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
+let update = (msg, model) =>
   switch (msg) {
   | Command(ClosePane)
   | CloseButtonClicked => ({...model, isOpen: false}, ReleaseFocus)
@@ -333,21 +330,9 @@ let initial = panes => {
   panes,
 
   vimWindowNavigation: Component_VimWindows.initial,
-  // locationNodes: [],
-  // locationsView: Component_VimTree.create(~rowHeight=20),
 };
 
-let selected = ({selected, _}) => selected;
-
-let isSelected = (pane, model) => model.selected == pane;
 let isOpen = ({isOpen, _}) => isOpen;
-
-let toggle = (~pane, model) =>
-  if (model.isOpen && model.selected == pane) {
-    {...model, isOpen: false};
-  } else {
-    {...model, isOpen: true, selected: pane};
-  };
 
 let close = model => {...model, isOpen: false};
 

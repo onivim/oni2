@@ -41,7 +41,7 @@ let setDiagnostics = (locations, model) => {
       diagLocList,
       model.tree,
     );
-  {...model, tree: tree'};
+  {tree: tree'};
 };
 
 let contextKeys = (~isFocused, model) =>
@@ -145,7 +145,7 @@ let pane: Feature_Pane.Schema.t(model, msg) =
     ~title="Problems",
     ~id=Some("workbench.panel.markers"),
     ~commands=
-      pane => {
+      _pane => {
         Component_VimTree.Contributions.commands
         |> List.map(Oni_Core.Command.map(msg => DiagnosticsTree(msg)))
       },

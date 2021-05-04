@@ -339,7 +339,7 @@ let pane: Feature_Pane.Schema.t(model, msg) =
     ~title="Locations",
     ~id=Some("workbench.panel.locations"),
     ~commands=
-      pane => {
+      _pane => {
         Component_VimTree.Contributions.commands
         |> List.map(Oni_Core.Command.map(msg => LocationsList(msg)))
       },
@@ -347,7 +347,7 @@ let pane: Feature_Pane.Schema.t(model, msg) =
     ~view=
       (
         ~config,
-        ~editorFont,
+        ~editorFont as _,
         ~font,
         ~isFocused,
         ~iconTheme,

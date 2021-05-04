@@ -36,13 +36,6 @@ module Schema: {
     t('modelA, 'msgB);
 };
 
-// [@deriving show({with_path: false})]
-// type pane =
-//   | Diagnostics
-//   | Notifications
-//   | Locations
-//   | Output;
-
 [@deriving show({with_path: false})]
 type msg('inner);
 
@@ -64,15 +57,7 @@ type outmsg('msg) =
 type model('model, 'msg);
 
 let update:
-  (
-    ~buffers: Feature_Buffers.model,
-    ~font: Service_Font.font,
-    ~languageInfo: Exthost.LanguageInfo.t,
-    ~previewEnabled: bool,
-    msg('msg),
-    model('model, 'msg)
-  ) =>
-  (model('model, 'msg), outmsg('msg));
+  (msg('msg), model('model, 'msg)) => (model('model, 'msg), outmsg('msg));
 
 module Contributions: {
   let commands:
@@ -86,24 +71,11 @@ module Contributions: {
 let initial: list(Schema.t('model, 'msg)) => model('model, 'msg);
 
 let height: model(_, _) => int;
-//let selected: model(_, _) => pane;
 let isOpen: model(_, _) => bool;
 
-//let setPane: (~pane: pane, model) => model;
 let show: (~paneId: string, model('model, 'msg)) => model('model, 'msg);
 
 let close: model('model, 'msg) => model('model, 'msg);
-
-// let setLocations:
-//   (
-//     ~maybeActiveBuffer: option(Oni_Core.Buffer.t),
-//     ~locations: list(Exthost.Location.t),
-//     model
-//   ) =>
-//   model;
-// let setNotifications: (Feature_Notification.model, model) => model;
-
-// let setOutput: (string, option(string), model) => model;
 
 module View: {
   let make:
