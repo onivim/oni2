@@ -15,10 +15,19 @@ module Diagnostic: {
     range: CharacterRange.t,
     message: string,
     severity: Severity.t,
+    isUnused: bool,
+    isDeprecated: bool,
+    tags: list(Exthost.Diagnostic.Tag.t),
   };
 
   let create:
-    (~range: CharacterRange.t, ~message: string, ~severity: Severity.t) => t;
+    (
+      ~range: CharacterRange.t,
+      ~message: string,
+      ~severity: Severity.t,
+      ~tags: list(Tag.t)
+    ) =>
+    t;
 
   /*
     [explode(buffer, diagnostic)] splits up a multi-line diagnostic into a diagnostic per-line
