@@ -7,7 +7,7 @@ open Helpers;
 
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 
-let renderLine =
+let renderDiagnostics =
     (
       ~context: Draw.context,
       ~buffer,
@@ -72,7 +72,13 @@ let renderLine =
           | Info => colors.infoForeground
           }
         );
-      Draw.squiggly(~context, ~color, range);
+
+      if (diagnostic.isDeprecated) {
+        let color = colors.editorForeground;
+        Draw.strikethrough(~context, ~color, range);
+      } else {
+        Draw.squiggly(~context, ~color, range);
+      };
     };
 
     /* Draw error markers */
@@ -80,6 +86,37 @@ let renderLine =
     | None => ()
     | Some(diagnostics) => List.iter(renderDiagnostics(colors), diagnostics)
     };
+  };
+};
+
+let renderLine =
+    (
+      ~context: Draw.context,
+      ~buffer,
+      ~colors: Colors.t,
+      ~diagnosticsMap,
+      ~selectionRanges,
+      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
+      ~vim,
+      ~languageConfiguration,
+      ~languageSupport,
+      viewLine,
+      _offset,
+    ) => {
+  let topViewLine = Editor.getTopViewLine(context.editor);
+  let bottomViewLine = Editor.getBottomViewLine(context.editor);
+
+  // Since this drawing logic is per-buffer-line, we only want to draw
+  // each buffer once. So, we'll draw the _primary_ view line (the
+  // first one for a buffer line), or the top/bottom if we're in the middle
+  // of a buffer line.
+  let shouldRenderViewLine =
+    Editor.viewLineIsPrimary(viewLine, context.editor)
+    || viewLine == topViewLine
+    || viewLine == bottomViewLine;
+
+  if (shouldRenderViewLine) {
+    let index = Editor.viewLineToBufferLine(viewLine, context.editor);
 
     switch (Hashtbl.find_opt(selectionRanges, index)) {
     | None => ()
@@ -330,5 +367,20 @@ let render =
     ~matchingPairs,
     ~bufferSyntaxHighlights,
     ~shouldRenderWhitespace,
+  );
+
+  Draw.renderImmediate(
+    ~context,
+    renderDiagnostics(
+      ~context,
+      ~buffer,
+      ~colors,
+      ~diagnosticsMap,
+      ~selectionRanges,
+      ~matchingPairs,
+      ~vim,
+      ~languageSupport,
+      ~languageConfiguration,
+    ),
   );
 };
