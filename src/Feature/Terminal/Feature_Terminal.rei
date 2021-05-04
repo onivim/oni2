@@ -26,31 +26,7 @@ let getTerminalOpt: (int, t) => option(terminal);
 // UPDATE
 
 [@deriving show({with_path: false})]
-type command =
-  | NewTerminal({
-      cmd: option(string),
-      splitDirection: SplitDirection.t,
-      closeOnExit: bool,
-    })
-  | NormalMode
-  | InsertMode;
-
-[@deriving show({with_path: false})]
-type msg; // | Command(command)
-// | Resized({
-//     id: int,
-//     rows: int,
-//     columns: int,
-//   })
-// | KeyPressed({
-//     id: int,
-//     key: string,
-//   })
-// | Pasted({
-//     id: int,
-//     text: string,
-//   })
-// | Service(Service_Terminal.msg);
+type msg;
 
 module Msg: {
   let terminalCreatedFromVim:
@@ -69,6 +45,7 @@ module Msg: {
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | TogglePane({paneId: string})
   | TerminalCreated({
       name: string,
       splitDirection: SplitDirection.t,

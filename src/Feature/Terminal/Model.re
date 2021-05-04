@@ -40,6 +40,7 @@ type command =
       splitDirection: SplitDirection.t,
       closeOnExit: bool,
     })
+  | ToggleIntegratedTerminal
   | NormalMode
   | InsertMode;
 

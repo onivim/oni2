@@ -6,6 +6,7 @@ include Model;
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | TogglePane({paneId: string})
   | TerminalCreated({
       name: string,
       splitDirection: SplitDirection.t,
@@ -115,6 +116,11 @@ let update =
       msg,
     ) => {
   switch (msg) {
+  | Command(ToggleIntegratedTerminal) => (
+      model,
+      TogglePane({paneId: "workbench.panel.terminal"}),
+    )
+
   | StartPaneTerminal =>
     let cmdToUse =
       switch (Revery.Environment.os) {
@@ -569,6 +575,14 @@ let bufferRendererReducer = (state, action) => {
 module Commands = {
   open Feature_Commands.Schema;
 
+  let toggleIntegratedTerminal =
+    define(
+      ~category="Terminal",
+      ~title="Toggle Integrated Terminal",
+      "workbench.action.terminal.toggleTerminal",
+      Command(ToggleIntegratedTerminal),
+    );
+
   module New = {
     let horizontal =
       define(
@@ -644,6 +658,7 @@ module Contributions = {
 
   let commands =
     Commands.[
+      toggleIntegratedTerminal,
       New.horizontal,
       New.vertical,
       New.current,
@@ -668,6 +683,12 @@ module Contributions = {
 
   let keybindings = {
     Feature_Input.Schema.[
+      // Global
+      bind(
+        ~key="<C-`>",
+        ~command=Commands.toggleIntegratedTerminal.id,
+        ~condition=WhenExpr.Value(True),
+      ),
       // Insert mode -> normal mdoe
       bind(
         ~key="<C-\\><C-N>",

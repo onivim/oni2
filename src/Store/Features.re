@@ -1904,6 +1904,13 @@ let update =
           state,
           eff |> Effect.map(msg => Actions.Terminal(msg)),
         )
+      | TogglePane({paneId}) => (
+          state,
+          Feature_Pane.Msg.toggle(~paneId)
+          |> EffectEx.value(~name="Feature_Terminal.togglePane")
+          |> Effect.map(msg => Pane(msg)),
+        )
+
       | TerminalCreated({name, splitDirection}) =>
         let windowTreeDirection = splitDirection;
 
