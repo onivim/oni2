@@ -14,6 +14,7 @@ module Schema = {
     id: option(string),
     contextKeys: (~isFocused: bool, 'model) => WhenExpr.ContextKeys.t,
     commands: 'model => list(Command.t('msg)),
+    sub: (~isFocused: bool, 'model) => Isolinear.Sub.t('msg),
     view:
       (
         ~config: Config.resolver,
@@ -32,9 +33,18 @@ module Schema = {
     uniqueId,
   };
 
-  let panel = (~title, ~id, ~contextKeys, ~commands, ~view, ~keyPressed) => {
+  let panel = (~sub, ~title, ~id, ~contextKeys, ~commands, ~view, ~keyPressed) => {
     incr(nextId);
-    {title, id, contextKeys, view, keyPressed, commands, uniqueId: nextId^};
+    {
+      title,
+      id,
+      contextKeys,
+      view,
+      keyPressed,
+      commands,
+      uniqueId: nextId^,
+      sub,
+    };
   };
 
   let map = (~msg as mapMsg, ~model as mapModel, pane) => {
@@ -82,6 +92,14 @@ module Schema = {
       commands |> List.map(Command.map(mapMsg));
     };
 
+    let sub' = (~isFocused, model) => {
+      let mappedModel = mapModel(model);
+
+      let sub = pane.sub(~isFocused, mappedModel);
+
+      sub |> Isolinear.Sub.map(mapMsg);
+    };
+
     let keyPressed' = str => {
       pane.keyPressed(str) |> mapMsg;
     };
@@ -94,16 +112,10 @@ module Schema = {
       view: view',
       keyPressed: keyPressed',
       uniqueId: pane.uniqueId,
+      sub: sub',
     };
   };
 };
-
-// [@deriving show({with_path: false})]
-// type pane =
-//   | Diagnostics
-//   | Notifications
-//   | Locations
-//   | Output;
 
 module Constants = {
   let defaultHeight = 225;
@@ -688,4 +700,14 @@ module Contributions = {
   };
 
   let keybindings = Keybindings.[escKey];
+};
+
+let sub = (~isFocused, outerModel, pane) => {
+  pane
+  |> activePane
+  |> Option.map((pane: Schema.t('model, 'msg)) => {
+       pane.sub(~isFocused, outerModel)
+       |> Isolinear.Sub.map(msg => NestedMsg(msg))
+     })
+  |> Option.value(~default=Isolinear.Sub.none);
 };

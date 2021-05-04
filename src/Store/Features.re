@@ -1905,12 +1905,7 @@ let update =
           eff |> Effect.map(msg => Actions.Terminal(msg)),
         )
       | TerminalCreated({name, splitDirection}) =>
-        let windowTreeDirection =
-          switch (splitDirection) {
-          | Horizontal => SplitDirection.Horizontal
-          | Vertical => SplitDirection.Vertical({shouldReuse: false})
-          | Current => SplitDirection.Current
-          };
+        let windowTreeDirection = splitDirection;
 
         let eff =
           Isolinear.Effect.createWithDispatch(

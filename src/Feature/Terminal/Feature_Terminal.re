@@ -8,7 +8,7 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | TerminalCreated({
       name: string,
-      splitDirection,
+      splitDirection: SplitDirection.t,
     })
   | TerminalExit({
       terminalId: int,
@@ -115,9 +115,109 @@ let update =
       msg,
     ) => {
   switch (msg) {
-  // TODO
-  | Pane(paneMsg) => (model, Nothing)
+  | StartPaneTerminal =>
+    let cmdToUse =
+      switch (Revery.Environment.os) {
+      | Windows(_) => Configuration.Shell.windows.get(config)
+      | Mac(_) => Configuration.Shell.osx.get(config)
+      | Linux(_) => Configuration.Shell.linux.get(config)
+      | _ => shellCmd
+      };
 
+    let arguments =
+      switch (Revery.Environment.os) {
+      | Windows(_) => Configuration.ShellArgs.windows.get(config)
+      | Mac(_) => Configuration.ShellArgs.osx.get(config)
+      | Linux(_) => Configuration.ShellArgs.linux.get(config)
+      | _ => []
+      };
+
+    let defaultEnvVariables =
+      [
+        ("ONIVIM_TERMINAL", BuildInfo.version),
+        (
+          "ONIVIM2_PARENT_PIPE",
+          clientServer
+          |> Feature_ClientServer.pipe
+          |> Exthost.NamedPipe.toString,
+        ),
+      ]
+      |> List.to_seq
+      |> StringMap.of_seq;
+
+    let env =
+      Exthost.ShellLaunchConfig.(
+        switch (Revery.Environment.os) {
+        // Windows - simply inherit from the running process
+        | Windows(_) => Additive(defaultEnvVariables)
+
+        // Mac - inherit (we rely on the '-l' flag to pick up user config)
+        | Mac(_) => Additive(defaultEnvVariables)
+
+        // For Linux, there's a few stray variables that may come in from the AppImage
+        // for example - LD_LIBRARY_PATH in issue #2040. We need to clear those out.
+        | Linux(_) =>
+          switch (
+            Sys.getenv_opt("ONI2_ORIG_PATH"),
+            Sys.getenv_opt("ONI2_ORIG_LD_LIBRARY_PATH"),
+          ) {
+          // We're running from the AppImage, which tracks the original env.
+          | (Some(origPath), Some(origLdLibPath)) =>
+            let envVariables =
+              [("PATH", origPath), ("LD_LIBRARY_PATH", origLdLibPath)]
+              |> List.to_seq
+              |> StringMap.of_seq;
+
+            let merge = (maybeA, maybeB) =>
+              switch (maybeA, maybeB) {
+              | (Some(_) as a, Some(_)) => a
+              | (Some(_) as a, _) => a
+              | (None, Some(_) as b) => b
+              | (None, None) => None
+              };
+            let allVariables =
+              StringMap.merge(
+                _key => merge,
+                envVariables,
+                defaultEnvVariables,
+              );
+
+            Additive(allVariables);
+
+          // All other cases - just inherit. Maybe not running from AppImage.
+          | _ => Additive(defaultEnvVariables)
+          }
+
+        | _ => Additive(defaultEnvVariables)
+        }
+      );
+
+    let launchConfig =
+      Exthost.ShellLaunchConfig.{
+        name: "Terminal",
+        arguments,
+        executable: cmdToUse,
+        env,
+      };
+
+    let id = model.nextId;
+    let idToTerminal =
+      IntMap.add(
+        id,
+        {
+          id,
+          launchConfig,
+          rows: 40,
+          columns: 40,
+          pid: None,
+          title: None,
+          screen: ReveryTerminal.Screen.initial,
+          cursor: ReveryTerminal.Cursor.initial,
+          closeOnExit: true,
+        },
+        model.idToTerminal,
+      );
+    ({idToTerminal, nextId: id + 1, paneTerminalId: Some(id)}, Nothing);
   | Command(NewTerminal({cmd, splitDirection, closeOnExit})) =>
     let cmdToUse =
       switch (cmd) {
@@ -225,13 +325,26 @@ let update =
         model.idToTerminal,
       );
     (
-      {idToTerminal, nextId: id + 1},
+      {...model, idToTerminal, nextId: id + 1},
       TerminalCreated({name: getBufferName(id, cmdToUse), splitDirection}),
     );
 
   | Command(InsertMode | NormalMode) =>
     // Used for the renderer state
     (model, Nothing)
+
+  | PaneKeyPressed(key) =>
+    let eff =
+      model.paneTerminalId
+      |> Option.map(id => {
+           let inputEffect =
+             Service_Terminal.Effect.input(~id, key)
+             |> Isolinear.Effect.map(msg => Service(msg));
+
+           Effect(inputEffect);
+         })
+      |> Option.value(~default=Nothing);
+    (model, eff);
 
   | KeyPressed({id, key}) =>
     let inputEffect =
@@ -478,7 +591,7 @@ module Commands = {
         Command(
           NewTerminal({
             cmd: None,
-            splitDirection: Vertical,
+            splitDirection: Vertical({shouldReuse: false}),
             closeOnExit: true,
           }),
         ),
@@ -618,9 +731,54 @@ module Contributions = {
     ];
   };
 
-  let pane =
-    Pane.pane
-    |> Feature_Pane.Schema.map(~msg=msg => Pane(msg), ~model=model => ());
+  let pane: Feature_Pane.Schema.t(t, msg) = {
+    Feature_Pane.Schema.(
+      panel(
+        ~title="Terminal",
+        ~id=Some("workbench.panel.terminal"),
+        ~commands=_model => [],
+        ~contextKeys=(~isFocused, _model) => WhenExpr.ContextKeys.empty,
+        ~sub=
+          (~isFocused, model) =>
+            if (isFocused && model.paneTerminalId == None) {
+              SubEx.value(
+                ~uniqueId="Feature_Terminal.Pane.start",
+                StartPaneTerminal,
+              );
+            } else {
+              Isolinear.Sub.none;
+            },
+        ~view=
+          (
+            ~config,
+            ~editorFont,
+            ~font,
+            ~isFocused,
+            ~iconTheme as _,
+            ~languageInfo as _,
+            ~workingDirectory as _,
+            ~theme,
+            ~dispatch,
+            ~model,
+          ) => {
+            model.paneTerminalId
+            |> Utility.OptionEx.flatMap(id => getTerminalOpt(id, model))
+            |> Option.map(terminal => {
+                 <TerminalView.Terminal
+                   isActive=isFocused
+                   config
+                   terminal
+                   font=editorFont
+                   theme
+                   dispatch
+                 />
+               })
+            |> Option.value(~default=Revery.UI.React.empty)
+          },
+        ~keyPressed=key => PaneKeyPressed(key),
+      )
+    );
+  };
 };
 
 module TerminalView = TerminalView;

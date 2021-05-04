@@ -472,6 +472,7 @@ module Contributions = {
         ~id=Some("workbench.panel.notifications"),
         ~commands=Pane.commands,
         ~contextKeys,
+        ~sub=(~isFocused as _, _model) => Isolinear.Sub.none,
         ~view=
           (
             ~config as _,

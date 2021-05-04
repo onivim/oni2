@@ -78,6 +78,7 @@ let pane = {
       ~id=Some("workbench.panel.output"),
       ~commands,
       ~contextKeys,
+      ~sub=(~isFocused as _, _model) => Isolinear.Sub.none,
       ~view=
         (
           ~config as _,

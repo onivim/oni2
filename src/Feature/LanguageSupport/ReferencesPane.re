@@ -344,6 +344,7 @@ let pane: Feature_Pane.Schema.t(model, msg) =
         |> List.map(Oni_Core.Command.map(msg => LocationsList(msg)))
       },
     ~contextKeys,
+    ~sub=(~isFocused as _, _model) => Isolinear.Sub.none,
     ~view=
       (
         ~config,

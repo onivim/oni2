@@ -518,6 +518,14 @@ let start =
       Feature_Search.sub(~config, ~workingDirectory, ~setup, state.searchPane)
       |> Isolinear.Sub.map(msg => Model.Actions.Search(msg));
 
+    let paneSub =
+      Feature_Pane.sub(
+        ~isFocused=Model.FocusManager.current(state) == Model.Focus.Pane,
+        state,
+        state.pane,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.Pane(msg));
+
     [
       clientServerSub,
       menuBarSub,
@@ -543,6 +551,7 @@ let start =
       themeSub,
       vimBufferSub,
       searchSub,
+      paneSub,
     ]
     |> Isolinear.Sub.batch;
   };

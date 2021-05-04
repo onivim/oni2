@@ -17,9 +17,10 @@ type terminal = {
 type t = {
   idToTerminal: IntMap.t(terminal),
   nextId: int,
+  paneTerminalId: option(int),
 };
 
-let initial = {idToTerminal: IntMap.empty, nextId: 0};
+let initial = {idToTerminal: IntMap.empty, nextId: 0, paneTerminalId: None};
 
 let getBufferName = (id, cmd) =>
   Printf.sprintf("oni://terminal/%d/%s", id, cmd);
@@ -33,16 +34,10 @@ let getTerminalOpt = (id, {idToTerminal, _}) =>
 // UPDATE
 
 [@deriving show({with_path: false})]
-type splitDirection =
-  | Vertical
-  | Horizontal
-  | Current;
-
-[@deriving show({with_path: false})]
 type command =
   | NewTerminal({
       cmd: option(string),
-      splitDirection,
+      splitDirection: SplitDirection.t,
       closeOnExit: bool,
     })
   | NormalMode
@@ -51,7 +46,6 @@ type command =
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
-  | Pane(Pane.msg)
   | Resized({
       id: int,
       rows: int,
@@ -61,8 +55,19 @@ type msg =
       id: int,
       key: string,
     })
+  | PaneKeyPressed(string)
+  | StartPaneTerminal
   | Pasted({
       id: int,
       text: string,
     })
   | Service(Service_Terminal.msg);
+
+module Msg = {
+  let terminalCreatedFromVim = (~cmd, ~splitDirection, ~closeOnExit) =>
+    Command(NewTerminal({cmd, splitDirection, closeOnExit}));
+
+  let keyPressed = (~id, key) => KeyPressed({id, key});
+
+  let pasted = (~id, text) => Pasted({id, text});
+};

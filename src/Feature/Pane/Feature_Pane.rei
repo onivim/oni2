@@ -10,6 +10,7 @@ module Schema: {
 
   let panel:
     (
+      ~sub: (~isFocused: bool, 'model) => Isolinear.Sub.t('msg),
       ~title: string,
       ~id: option(string),
       ~contextKeys: (~isFocused: bool, 'model) => WhenExpr.ContextKeys.t,
@@ -95,3 +96,7 @@ module View: {
     ) =>
     Revery.UI.element;
 };
+
+let sub:
+  (~isFocused: bool, 'model, model('model, 'msg)) =>
+  Isolinear.Sub.t(msg('msg));

@@ -25,16 +25,11 @@ let getTerminalOpt: (int, t) => option(terminal);
 
 // UPDATE
 
-type splitDirection =
-  | Vertical
-  | Horizontal
-  | Current;
-
 [@deriving show({with_path: false})]
 type command =
   | NewTerminal({
       cmd: option(string),
-      splitDirection,
+      splitDirection: SplitDirection.t,
       closeOnExit: bool,
     })
   | NormalMode
@@ -57,12 +52,26 @@ type msg; // | Command(command)
 //   })
 // | Service(Service_Terminal.msg);
 
+module Msg: {
+  let terminalCreatedFromVim:
+    (
+      ~cmd: option(string),
+      ~splitDirection: SplitDirection.t,
+      ~closeOnExit: bool
+    ) =>
+    msg;
+
+  let keyPressed: (~id: int, string) => msg;
+
+  let pasted: (~id: int, string) => msg;
+};
+
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | TerminalCreated({
       name: string,
-      splitDirection,
+      splitDirection: SplitDirection.t,
     })
   | TerminalExit({
       terminalId: int,
@@ -151,7 +160,20 @@ module Configuration: {
   let fontLigatures: Config.Schema.setting(option(FontLigatures.t));
 };
 
-module TerminalView = TerminalView;
+module TerminalView: {
+  let make:
+    (
+      ~isActive: bool,
+      ~config: Config.resolver,
+      ~id: int,
+      ~terminals: t,
+      ~font: Service_Font.font,
+      ~theme: Oni_Core.ColorTheme.Colors.t,
+      ~dispatch: msg => unit,
+      unit
+    ) =>
+    Revery.UI.element;
+};
 
 // CONTRIBUTIONS
 
