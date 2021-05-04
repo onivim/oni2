@@ -373,10 +373,13 @@ module Diagnostics = {
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
     | ("$changeMany", `List([`String(owner), diagnosticsJson])) =>
+      prerr_endline(
+        "Diagnostics: " ++ Yojson.Safe.to_string(diagnosticsJson),
+      );
       diagnosticsJson
       |> Json.Decode.decode_value(Json.Decode.list(Decode.entry))
       |> Result.map(entries => ChangeMany({owner, entries}))
-      |> Result.map_error(Json.Decode.string_of_error)
+      |> Result.map_error(Json.Decode.string_of_error);
 
     | ("$clear", `List([`String(owner)])) => Ok(Clear({owner: owner}))
     | _ => Error("Unhandled method: " ++ method)
