@@ -8,6 +8,7 @@
    Oni2.feature.help Oni2.feature.buffers Oni2.feature.clipboard
    Oni2.feature.configuration Oni2.feature.diagnostics Oni2.feature.explorer
    Oni2.feature.exthost Oni2.feature.extensions Oni2.feature.messages
+   Oni2.feature.output
    Oni2.feature.theme Oni2.feature.notification Oni2.feature.changelog
    Oni2.feature.clientServer Oni2.feature.commands Oni2.feature.decorations
    Oni2.feature.input Oni2.feature.logging Oni2.component.inputText

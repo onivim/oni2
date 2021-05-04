@@ -2161,6 +2161,19 @@ let update =
       Internal.notificationEffect(~kind=Error, message),
     )
 
+  | Output(msg) =>
+    let (output', outmsg) = Feature_Output.update(msg, state.output);
+
+    let state' = {...state, output: output'};
+    switch (outmsg) {
+    | Nothing => (state', Isolinear.Effect.none)
+
+    | ClosePane => (
+        {...state', pane: Feature_Pane.close(state'.pane)},
+        Isolinear.Effect.none,
+      )
+    };
+
   | Quickmenu(msg) =>
     let (quickmenu', outmsg) =
       Feature_Quickmenu.update(msg, state.newQuickmenu);

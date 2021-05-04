@@ -69,6 +69,7 @@ type t =
     })
   | Notification(Feature_Notification.msg)
   | Messages(Feature_Messages.msg)
+  | Output(Feature_Output.msg)
   | Editor({
       scope: EditorScope.t,
       msg: Feature_Editor.msg,

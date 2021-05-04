@@ -429,6 +429,7 @@ type t = {
   input: Feature_Input.model,
   logging: Feature_Logging.model,
   messages: Feature_Messages.model,
+  output: Feature_Output.model,
   terminalFont: Service_Font.font,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
@@ -573,6 +574,7 @@ let initial =
           @ Feature_SideBar.Contributions.menuGroups
           @ Feature_Help.Contributions.menuGroups,
       ),
+    output: Feature_Output.initial,
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,
     registers: Feature_Registers.initial,
