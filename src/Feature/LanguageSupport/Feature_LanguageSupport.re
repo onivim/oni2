@@ -115,6 +115,8 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     | Outmsg.ReferencesAvailable => ReferencesAvailable
     | Outmsg.OpenFile({filePath, location, direction}) =>
       OpenFile({filePath, location, direction})
+    | Outmsg.PreviewFile({filePath, position}) =>
+      PreviewFile({filePath, position})
     | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
     | Outmsg.CodeLensesChanged({
         handle,

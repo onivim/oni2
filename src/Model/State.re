@@ -616,7 +616,14 @@ let initial =
                  ~model=state => state.languageSupport,
                ),
              )
-        ),
+        )
+        @ [
+          Feature_Output.Contributions.pane
+          |> Feature_Pane.Schema.map(
+               ~msg=msg => Actions.Output(msg),
+               ~model=state => state.output,
+             ),
+        ],
       ),
     proxy: Feature_Proxy.default,
     newQuickmenu: Feature_Quickmenu.initial,
