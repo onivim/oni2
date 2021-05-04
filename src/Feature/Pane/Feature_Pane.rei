@@ -16,6 +16,7 @@ module Schema: {
       ~commands: 'model => list(Command.t('msg)),
       ~view: (
                ~config: Config.resolver,
+               ~editorFont: Service_Font.font,
                ~font: UiFont.t,
                ~isFocused: bool,
                ~iconTheme: IconTheme.t,

@@ -18,6 +18,7 @@ module Schema = {
     view:
       (
         ~config: Config.resolver,
+        ~editorFont: Service_Font.font,
         ~font: UiFont.t,
         ~isFocused: bool,
         ~iconTheme: IconTheme.t,
@@ -41,6 +42,7 @@ module Schema = {
     let view' =
         (
           ~config,
+          ~editorFont,
           ~font,
           ~isFocused,
           ~iconTheme,
@@ -58,6 +60,7 @@ module Schema = {
 
       pane.view(
         ~config,
+        ~editorFont,
         ~font,
         ~isFocused,
         ~iconTheme,
@@ -366,7 +369,6 @@ let initial = panes => {
   vimWindowNavigation: Component_VimWindows.initial,
   // locationNodes: [],
   // locationsView: Component_VimTree.create(~rowHeight=20),
-  // outputPane: None,
 };
 
 let selected = ({selected, _}) => selected;
@@ -519,7 +521,6 @@ module View = {
         ~uiFont,
         ~dispatch,
         ~model,
-        // ~outputPane,
         // ~outputDispatch: Component_Output.msg => unit,
         ~workingDirectory,
         (),
@@ -531,6 +532,7 @@ module View = {
         {
           paneSchema.view(
             ~config,
+            ~editorFont,
             ~font=uiFont,
             ~isFocused,
             ~iconTheme,

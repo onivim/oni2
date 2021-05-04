@@ -347,6 +347,7 @@ let pane: Feature_Pane.Schema.t(model, msg) =
     ~view=
       (
         ~config,
+        ~editorFont,
         ~font,
         ~isFocused,
         ~iconTheme,

@@ -153,6 +153,7 @@ let pane: Feature_Pane.Schema.t(model, msg) =
     ~view=
       (
         ~config,
+        ~editorFont as _,
         ~font,
         ~isFocused,
         ~iconTheme,

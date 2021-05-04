@@ -478,6 +478,7 @@ module Contributions = {
         ~view=
           (
             ~config,
+            ~editorFont as _,
             ~font,
             ~isFocused,
             ~iconTheme,
