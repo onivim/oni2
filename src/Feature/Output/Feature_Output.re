@@ -15,6 +15,12 @@ let update = (msg, model) =>
     ({pane: pane'}, outmsg);
   };
 
+let setProcessOutput = (~cmd, ~output, model) => {
+  let pane' = Pane.set(~cmd, ~maybeContents=output, model.pane);
+
+  {pane: pane'};
+};
+
 module Contributions = {
   let pane: Feature_Pane.Schema.t(model, msg) = {
     Pane.pane

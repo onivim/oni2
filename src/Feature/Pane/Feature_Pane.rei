@@ -90,7 +90,7 @@ let height: model(_, _) => int;
 let isOpen: model(_, _) => bool;
 
 //let setPane: (~pane: pane, model) => model;
-//let show: (~pane: pane, model) => model;
+let show: (~paneId: string, model('model, 'msg)) => model('model, 'msg);
 
 let close: model('model, 'msg) => model('model, 'msg);
 

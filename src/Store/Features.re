@@ -2539,10 +2539,12 @@ let update =
     | ModeDidChange({allowAnimation, mode, effects}) =>
       Internal.updateMode(~allowAnimation, state, mode, effects)
     | Output({cmd, output}) =>
-      // let pane' = state.pane |> Feature_Pane.setOutput(cmd, output);
-      let pane' = state.pane;
+      let output' =
+        state.output |> Feature_Output.setProcessOutput(~cmd, ~output);
+      let pane' =
+        state.pane |> Feature_Pane.show(~paneId="workbench.panel.output");
       (
-        {...state, pane: pane'} |> FocusManager.push(Pane),
+        {...state, pane: pane', output: output'} |> FocusManager.push(Pane),
         Isolinear.Effect.none,
       );
     };

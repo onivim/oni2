@@ -23,11 +23,11 @@ let contextKeys = (~isFocused, model) => {
     : WhenExpr.ContextKeys.empty;
 };
 
-let set = (~cmd as _, ~maybeContents, model) => {
+let set = (~cmd, ~maybeContents, model) => {
   let output' =
     maybeContents
     |> Option.map(output =>
-         Component_Output.set(output, Component_Output.initial)
+         Component_Output.set(cmd ++ "\n" ++ output, Component_Output.initial)
        );
   {output: output'};
 };

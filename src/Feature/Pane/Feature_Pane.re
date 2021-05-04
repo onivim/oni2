@@ -170,7 +170,6 @@ type outmsg('msg) =
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
   | ReleaseFocus;
-// | Effect(Isolinear.Effect.t(msg));
 
 type model('model, 'msg) = {
   panes: list(Schema.t('model, 'msg)),
@@ -180,7 +179,6 @@ type model('model, 'msg) = {
   height: int,
   resizeDelta: int,
   vimWindowNavigation: Component_VimWindows.model,
-  // outputPane: option(Component_Output.model),
 };
 
 let height = ({height, resizeDelta, _}) => {
@@ -242,15 +240,6 @@ let toggle = (~paneId: string, model) => {
     }
   };
 };
-
-// let setOutput = (_cmd, maybeContents, model) => {
-//   let outputPane' =
-//     maybeContents
-//     |> Option.map(output =>
-//          Component_Output.set(output, Component_Output.initial)
-//        );
-//   {...model, outputPane: outputPane'} |> setPane(~pane=Output);
-// };
 
 module Focus = {
   let cycleForward = model => {
@@ -316,16 +305,6 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
       |> Option.value(~default=Nothing);
     (model, outmsg);
 
-  // | Output => (
-  //     {
-  //       ...model,
-  //       outputPane:
-  //         model.outputPane |> Option.map(Component_Output.keyPress(key)),
-  //     },
-  //     Nothing,
-  //   )
-  // }
-
   | NestedMsg(msg) => (model, NestedMessage(msg))
 
   | VimWindowNav(navMsg) =>
@@ -343,19 +322,6 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
     | NextTab => (model' |> Focus.cycleForward, Nothing)
     | PreviousTab => (model' |> Focus.cycleBackward, Nothing)
     };
-  // | OutputPane(outputMsg) =>
-  //   model.outputPane
-  //   |> Option.map(outputPane => {
-  //        let (outputPane, outmsg) =
-  //          Component_Output.update(outputMsg, outputPane);
-  //        let model' = {...model, outputPane: Some(outputPane)};
-  //        switch (outmsg) {
-  //        | Nothing => (model', Nothing)
-  // Emulate Vim behavior on space / enter - close pane
-  //        | Selected => ({...model', isOpen: false}, ReleaseFocus)
-  //        };
-  //      })
-  //   |> Option.value(~default=(model, Nothing))
   };
 
 let initial = panes => {
@@ -521,7 +487,6 @@ module View = {
         ~uiFont,
         ~dispatch,
         ~model,
-        // ~outputDispatch: Component_Output.msg => unit,
         ~workingDirectory,
         (),
       ) => {
@@ -547,21 +512,6 @@ module View = {
       )
     };
   };
-  // switch (selected) {
-  // | Output =>
-  //   outputPane
-  //   |> Option.map(model => {
-  //        <Component_Output.View
-  //          model
-  //          isActive=isFocused
-  //          editorFont
-  //          uiFont
-  //          theme
-  //          dispatch=outputDispatch
-  //        />
-  //      })
-  //   |> Option.value(~default=React.empty)
-  // };
 
   let closeButton = (~theme, ~dispatch, ()) => {
     <Sneakable
@@ -670,9 +620,7 @@ module View = {
               editorFont
               activePane
               model
-              // outputPane={pane.outputPane}
               workingDirectory
-              // outputDispatch={msg => dispatch(OutputPane(msg))}
             />
           </View>
         </View>;
@@ -714,17 +662,7 @@ module Contributions = {
       |> Option.value(~default=[])
       |> List.map(Oni_Core.Command.map(msg => NestedMsg(msg)));
 
-    // let outputCommands =
-    //   (
-    //     isFocused && model.selected == Output
-    //       ? Component_Output.Contributions.commands : []
-    //   )
-    //   |> List.map(Oni_Core.Command.map(msg => OutputPane(msg)));
-
-    isFocused
-      ? common @ vimWindowCommands @ activePanelCommands
-      // @ outputCommands
-      : common;
+    isFocused ? common @ vimWindowCommands @ activePanelCommands : common;
   };
 
   let contextKeys = (~isFocused, model: 'model, pane: model('model, 'msg)) => {
@@ -756,28 +694,12 @@ module Contributions = {
          })
       |> Option.value(~default=empty);
 
-    // let outputKeys =
-    //   isFocused && model.selected == Output
-    //     ? model.outputPane
-    //       |> Option.map(outputPane =>
-    //            Component_Output.Contributions.contextKeys(outputPane)
-    //          )
-    //       |> Option.value(~default=empty)
-    //     : empty;
-
     let paneFocus =
       [Schema.bool("paneFocus", _ => isFocused)]
       |> Schema.fromList
       |> fromSchema(pane);
 
-    [
-      activePanel,
-      activePanelContextKeys,
-      paneFocus,
-      vimNavKeys,
-      // outputKeys,
-    ]
-    |> unionMany;
+    [activePanel, activePanelContextKeys, paneFocus, vimNavKeys] |> unionMany;
   };
 
   let keybindings = Keybindings.[escKey];
