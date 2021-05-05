@@ -6,6 +6,7 @@ include Model;
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | SwitchToNormalMode
   | TogglePane({paneId: string})
   | TerminalCreated({
       name: string,
@@ -335,9 +336,11 @@ let update =
       TerminalCreated({name: getBufferName(id, cmdToUse), splitDirection}),
     );
 
-  | Command(InsertMode | NormalMode) =>
+  | Command(InsertMode) =>
     // Used for the renderer state
     (model, Nothing)
+
+  | Command(NormalMode) => (model, SwitchToNormalMode)
 
   | PaneKeyPressed(key) =>
     let eff =

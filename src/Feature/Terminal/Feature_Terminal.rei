@@ -45,6 +45,7 @@ module Msg: {
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | SwitchToNormalMode
   | TogglePane({paneId: string})
   | TerminalCreated({
       name: string,

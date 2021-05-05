@@ -1911,6 +1911,94 @@ let update =
           |> Effect.map(msg => Pane(msg)),
         )
 
+      | SwitchToNormalMode =>
+        let maybeBufferId =
+          state
+          |> Selectors.getActiveBuffer
+          |> Option.map(Oni_Core.Buffer.getId);
+
+        let maybeTerminalId =
+          maybeBufferId
+          |> Option.map(id =>
+               BufferRenderers.getById(id, state.bufferRenderers)
+             )
+          |> OptionEx.flatMap(
+               fun
+               | BufferRenderer.Terminal({id, _}) => Some(id)
+               | _ => None,
+             );
+
+        let editorId =
+          Feature_Layout.activeEditor(state.layout)
+          |> Feature_Editor.Editor.getId;
+
+        let (state, effect) =
+          OptionEx.map2(
+            (bufferId, terminalId) => {
+              let colorTheme = Feature_Theme.colors(state.colorTheme);
+              let (lines, highlights) =
+                Feature_Terminal.getLinesAndHighlights(
+                  ~colorTheme,
+                  ~terminalId,
+                );
+              let syntaxHighlights =
+                List.fold_left(
+                  (acc, curr) => {
+                    let (line, tokens) = curr;
+                    Feature_Syntax.setTokensForLine(
+                      ~bufferId,
+                      ~line,
+                      ~tokens,
+                      acc,
+                    );
+                  },
+                  state.syntaxHighlights,
+                  highlights,
+                );
+
+              let syntaxHighlights =
+                syntaxHighlights |> Feature_Syntax.ignore(~bufferId);
+
+              let layout =
+                Feature_Layout.map(
+                  editor =>
+                    if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
+                      state.buffers
+                      |> Feature_Buffers.get(bufferId)
+                      |> Option.map(buffer => {
+                           let updatedBuffer =
+                             buffer
+                             |> Oni_Core.Buffer.setFont(state.terminalFont)
+                             |> Feature_Editor.EditorBuffer.ofBuffer;
+                           Feature_Editor.Editor.setBuffer(
+                             ~buffer=updatedBuffer,
+                             editor,
+                           );
+                         })
+                      |> Option.value(~default=editor);
+                    } else {
+                      editor;
+                    },
+                  state.layout,
+                );
+
+              (
+                {...state, layout, syntaxHighlights},
+                Feature_Vim.Effects.setTerminalLines(
+                  ~bufferId,
+                  ~editorId,
+                  lines,
+                )
+                |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
+              );
+            },
+            maybeBufferId,
+            maybeTerminalId,
+          )
+          |> Option.value(~default=(state, Isolinear.Effect.none));
+
+        (state, effect);
+
       | TerminalCreated({name, splitDirection}) =>
         let windowTreeDirection = splitDirection;
 
