@@ -10,14 +10,9 @@ module Diagnostic = Feature_Diagnostics.Diagnostic;
 let renderDiagnostics =
     (
       ~context: Draw.context,
-      ~buffer,
       ~colors: Colors.t,
       ~diagnosticsMap,
-      ~selectionRanges,
-      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
-      ~vim,
       ~languageConfiguration,
-      ~languageSupport,
       viewLine,
       _offset,
     ) => {
@@ -73,19 +68,17 @@ let renderDiagnostics =
           }
         );
 
-      if (diagnostic.isDeprecated) {
+      if (diagnostic.isDeprecated
+          && Editor.shouldShowDeprecated(context.editor)) {
         let color = colors.editorForeground;
         Draw.strikethrough(~context, ~color, range);
-      } else if (diagnostic.isUnused)  {
+      } else if (diagnostic.isUnused
+                 && Editor.shouldShowUnused(context.editor)) {
         let invAlpha = colors.unnecessaryCodeOpacity |> Revery.Color.getAlpha;
         let alpha = 1.0 -. invAlpha;
-        let color = colors.editorBackground
-        |> Revery.Color.multiplyAlpha(alpha);
-        Draw.rangeCharacter(
-          ~context,
-          ~color,
-          range
-        )
+        let color =
+          colors.editorBackground |> Revery.Color.multiplyAlpha(alpha);
+        Draw.rangeCharacter(~context, ~color, range);
       } else {
         Draw.squiggly(~context, ~color, range);
       };
@@ -104,11 +97,9 @@ let renderLine =
       ~context: Draw.context,
       ~buffer,
       ~colors: Colors.t,
-      ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
       ~vim,
-      ~languageConfiguration,
       ~languageSupport,
       viewLine,
       _offset,
@@ -185,12 +176,10 @@ let renderEmbellishments =
       ~context,
       ~buffer,
       ~colors,
-      ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
       ~vim,
       ~languageSupport,
-      ~languageConfiguration,
     ) =>
   Draw.renderImmediate(
     ~context,
@@ -198,12 +187,10 @@ let renderEmbellishments =
       ~context,
       ~buffer,
       ~colors,
-      ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
       ~vim,
       ~languageSupport,
-      ~languageConfiguration,
     ),
   );
 
@@ -342,12 +329,10 @@ let render =
     ~context,
     ~buffer,
     ~colors,
-    ~diagnosticsMap,
     ~selectionRanges,
     ~matchingPairs,
     ~vim,
     ~languageSupport,
-    ~languageConfiguration,
   );
 
   let bufferId = Buffer.getId(buffer);
@@ -383,13 +368,8 @@ let render =
     ~context,
     renderDiagnostics(
       ~context,
-      ~buffer,
       ~colors,
       ~diagnosticsMap,
-      ~selectionRanges,
-      ~matchingPairs,
-      ~vim,
-      ~languageSupport,
       ~languageConfiguration,
     ),
   );

@@ -238,8 +238,6 @@ let strikethrough =
       context.editor,
     );
 
-  let paddingY = context.editor |> Editor.linePaddingInPixels;
-
   drawRect(
     ~context,
     ~x=startPixelX -. 1.,

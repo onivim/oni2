@@ -17,6 +17,7 @@ let singleDiagnostic = [
     ~range=zeroRange,
     ~message="single error",
     ~severity=Exthost.Diagnostic.Severity.Error,
+    ~tags=[],
   ),
 ];
 
@@ -25,11 +26,13 @@ let doubleDiagnostic = [
     ~range=zeroRange,
     ~message="error 1",
     ~severity=Exthost.Diagnostic.Severity.Error,
+    ~tags=[],
   ),
   Diagnostic.create(
     ~range=zeroRange,
     ~message="error 2",
     ~severity=Exthost.Diagnostic.Severity.Error,
+    ~tags=[],
   ),
 ];
 
@@ -100,6 +103,7 @@ describe("Diagnostics", ({describe, _}) => {
             },
           ~message="single error",
           ~severity=Exthost.Diagnostic.Severity.Error,
+          ~tags=[],
         ),
       ];
 
