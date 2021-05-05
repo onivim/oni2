@@ -92,4 +92,5 @@ module Contributions: {
 
 module Testing: {
   let change: (model, Uri.t, string, list(Diagnostic.t)) => model;
+  let clear: (model, string) => model;
 };

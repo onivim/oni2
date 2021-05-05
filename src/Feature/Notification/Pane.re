@@ -207,7 +207,7 @@ module View = {
         justifyContent(`Center),
       ];
     };
-    let make = (~font, ~theme, ~dispatch, ~model, ()) => {
+    let make = (~font as _, ~theme, ~dispatch, ~model as _, ()) => {
       <Sneakable
         sneakId="dismissNotifications"
         onClick={() => dispatch(ClearNotificationsButtonClicked)}

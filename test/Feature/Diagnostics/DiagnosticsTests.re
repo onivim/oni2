@@ -55,7 +55,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.Testing.change(v, uri, "test_key2", doubleDiagnostic);
       expect.int(Diagnostics.count(v)).toBe(3);
 
-      let v = Diagnostics.clear(v, "test_key1");
+      let v = Diagnostics.Testing.clear(v, "test_key1");
       expect.int(Diagnostics.count(v)).toBe(2);
     });
 
@@ -69,7 +69,7 @@ describe("Diagnostics", ({describe, _}) => {
 
       expect.int(Diagnostics.count(v)).toBe(3);
 
-      let v = Diagnostics.clear(v, "test_key1");
+      let v = Diagnostics.Testing.clear(v, "test_key1");
       expect.int(Diagnostics.count(v)).toBe(0);
     });
   });
@@ -186,7 +186,7 @@ describe("Diagnostics", ({describe, _}) => {
       let v = Diagnostics.initial;
       let v =
         Diagnostics.Testing.change(v, uri, "test_key1", singleDiagnostic);
-      let v = Diagnostics.clear(v, "test_key1");
+      let v = Diagnostics.Testing.clear(v, "test_key1");
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 
@@ -200,7 +200,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.Testing.change(v, uri, "test_key1", singleDiagnostic);
       let v =
         Diagnostics.Testing.change(v, uri, "test_key2", doubleDiagnostic);
-      let v = Diagnostics.clear(v, "test_key1");
+      let v = Diagnostics.Testing.clear(v, "test_key1");
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 

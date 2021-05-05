@@ -445,4 +445,5 @@ module Contributions = {
 
 module Testing = {
   let change = change;
+  let clear = clear;
 };

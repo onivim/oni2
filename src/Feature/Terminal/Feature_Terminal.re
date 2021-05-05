@@ -761,7 +761,7 @@ module Contributions = {
           (~font as _, ~theme as _, ~dispatch as _, ~model as _) =>
             Revery.UI.React.empty,
         ~commands=_model => [],
-        ~contextKeys=(~isFocused, _model) => WhenExpr.ContextKeys.empty,
+        ~contextKeys=(~isFocused as _, _model) => WhenExpr.ContextKeys.empty,
         ~sub=
           (~isFocused, model) =>
             if (isFocused && model.paneTerminalId == None) {
@@ -776,7 +776,7 @@ module Contributions = {
           (
             ~config,
             ~editorFont,
-            ~font,
+            ~font as _,
             ~isFocused,
             ~iconTheme as _,
             ~languageInfo as _,

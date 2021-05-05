@@ -319,12 +319,6 @@ module View = {
       justifyContent(`Center),
     ];
 
-    let paneButton = [
-      width(32),
-      alignItems(`Center),
-      justifyContent(`Center),
-    ];
-
     let resizer = [height(4), position(`Relative), flexGrow(0)];
 
     let content = [flexDirection(`Column), flexGrow(1)];
@@ -334,7 +328,6 @@ module View = {
         ~activePane,
         ~config,
         ~isFocused,
-        ~selected,
         ~theme,
         ~iconTheme,
         ~languageInfo,
@@ -482,7 +475,6 @@ module View = {
               isFocused
               iconTheme
               languageInfo
-              selected
               theme
               dispatch
               uiFont
