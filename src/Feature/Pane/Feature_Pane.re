@@ -153,30 +153,9 @@ module Msg = {
   let toggle = (~paneId: string) => Toggle({paneId: paneId});
 };
 
-// module Effects = {
-//   let expandLocationPath = (~font, ~languageInfo, ~buffers, ~filePath) => {
-//     let toMsg = lines => LocationFileLoaded({filePath, lines});
-//     Feature_Buffers.Effects.loadFile(
-//       ~font,
-//       ~languageInfo,
-//       ~filePath,
-//       ~toMsg,
-//       buffers,
-//     );
-//   };
-// };
-
 type outmsg('msg) =
   | Nothing
   // | PaneButton(pane)
-  // | OpenFile({
-  //     filePath: string,
-  //     position: EditorCoreTypes.CharacterPosition.t,
-  //   })
-  // | PreviewFile({
-  //     filePath: string,
-  //     position: EditorCoreTypes.CharacterPosition.t,
-  //   })
   | NestedMessage('msg)
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
@@ -252,27 +231,15 @@ let toggle = (~paneId: string, model) => {
 
 module Focus = {
   let cycleForward = model => {
-    model;
-    // let pane =
-    //   switch (model.selected) {
-    //   | Diagnostics => Notifications
-    //   | Notifications => Locations
-    //   | Locations => Output
-    //   | Output => Diagnostics
-    //   };
-    // {...model, selected: pane};
+    let hi = List.length(model.panes) - 1;
+    let selected = Utility.IntEx.wrap(~lo=0, ~hi, model.selected + 1);
+    {...model, selected};
   };
 
   let cycleBackward = model => {
-    model;
-    // let pane =
-    //   switch (model.selected) {
-    //   | Output => Locations
-    //   | Notifications => Diagnostics
-    //   | Locations => Notifications
-    //   | Diagnostics => Output
-    //   };
-    // {...model, selected: pane};
+    let hi = List.length(model.panes) - 1;
+    let selected = Utility.IntEx.wrap(~lo=0, ~hi, model.selected - 1);
+    {...model, selected};
   };
 };
 
