@@ -242,6 +242,22 @@ module EditorError = {
   let defaults = [foreground, border];
 };
 
+module EditorUnnecessaryCode = {
+  let border = define(
+    "editorUnnecessaryCode.border",
+    {dark: unspecified, light: unspecified, hc: hex("#fff") |> transparent(0.8)}
+  );
+
+  let opacity = define(
+    "editorUnnecessaryCode.opacity",
+    {
+      dark: hex("#000a"), light: hex("#0007"), hc: unspecified
+    }
+  );
+
+  let defaults = [border, opacity];
+};
+
 module EditorWarning = {
   let foreground =
     define(
