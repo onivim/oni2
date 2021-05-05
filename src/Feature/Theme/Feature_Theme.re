@@ -24,6 +24,7 @@ let defaults =
     Colors.Dropdown.defaults,
     Colors.Editor.defaults,
     Colors.EditorError.defaults,
+    Colors.EditorUnnecessaryCode.defaults,
     Colors.EditorWarning.defaults,
     Colors.EditorInfo.defaults,
     Colors.EditorHint.defaults,

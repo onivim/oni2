@@ -49,6 +49,10 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.largeFileOptimizations` __(_bool_ default: `true`)__ - When `true`, Onivim will turn off certain settings like syntax highlighting for large files.
 
+- `editor.showDeprecated` __(_bool_ default: `true`)__ - When `true`, Onivim will render deprecated code with a strike-through.
+
+- `editor.showUnused` __(_bool_ default: `true`)__ - When `true`, Onivim will fade out unused code.
+
 - `workbench.editor.enablePreview` __(_bool_ default: `true`)__ - When `true`, Onivim will open files in _preview mode_ unless a change is made or the tab is double-clicked. In _preview mode_, the editor tab will be re-used.
 
 - `editor.lightBulb.enabled` __(_bool_ default: `true`)__ - When `true`, show a lightbulb icon in the editor if there are quick fixes or refactorings available.

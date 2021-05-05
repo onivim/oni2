@@ -11,6 +11,7 @@
 - #3419 - Buffers: Implement auto-save functionality (fixes #2431)
 - #3430 - Buffers: Implement workbench.action.quickOpenBuffer (fixes #3413)
 - #3481 - UX: Add 'workbench.tree.renderIndentGuides' setting
+- #3499 - Editor: Render deprecated ranges with strikethrough (fixes #3485)
 
 ### Bug Fixes
 
