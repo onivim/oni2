@@ -32,6 +32,7 @@ type t = {
   scrollbarSliderBackground: Color.t,
   scrollbarSliderHoverBackground: Color.t,
   normalModeBackground: Color.t,
+  unnecessaryCodeOpacity: Color.t,
   // Minimap
   minimapBackground: Color.t,
   minimapSliderBackground: Color.t,
@@ -71,6 +72,7 @@ let precompute = theme => {
   scrollbarSliderBackground: ScrollbarSlider.background.from(theme),
   scrollbarSliderHoverBackground: ScrollbarSlider.hoverBackground.from(theme),
   normalModeBackground: Oni.normalModeBackground.from(theme),
+  unnecessaryCodeOpacity: EditorUnnecessaryCode.opacity.from(theme),
   // Minimap
   minimapSliderBackground: MinimapSlider.background.from(theme),
   minimapSliderHoverBackground: MinimapSlider.hoverBackground.from(theme),

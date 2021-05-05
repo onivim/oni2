@@ -76,6 +76,16 @@ let renderDiagnostics =
       if (diagnostic.isDeprecated) {
         let color = colors.editorForeground;
         Draw.strikethrough(~context, ~color, range);
+      } else if (diagnostic.isUnused)  {
+        let invAlpha = colors.unnecessaryCodeOpacity |> Revery.Color.getAlpha;
+        let alpha = 1.0 -. invAlpha;
+        let color = colors.editorBackground
+        |> Revery.Color.multiplyAlpha(alpha);
+        Draw.rangeCharacter(
+          ~context,
+          ~color,
+          range
+        )
       } else {
         Draw.squiggly(~context, ~color, range);
       };

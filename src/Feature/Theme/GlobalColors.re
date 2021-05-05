@@ -251,7 +251,7 @@ module EditorUnnecessaryCode = {
   let opacity = define(
     "editorUnnecessaryCode.opacity",
     {
-      dark: hex("#000a"), light: hex("#0007"), hc: unspecified
+      dark: hex("#0007"), light: hex("#000a"), hc: unspecified
     }
   );
 
