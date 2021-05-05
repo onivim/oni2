@@ -430,7 +430,6 @@ type t = {
   logging: Feature_Logging.model,
   messages: Feature_Messages.model,
   output: Feature_Output.model,
-  terminalFont: Service_Font.font,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
   sideBar: Feature_SideBar.model,
@@ -547,7 +546,6 @@ let initial =
       Feature_Input.initial(~loader=keybindingsLoader, defaultKeyBindings),
     quickmenu: None,
     editorFont: defaultEditorFont,
-    terminalFont: defaultEditorFont,
     extensions:
       Feature_Extensions.initial(
         ~globalPersistence=extensionGlobalPersistence,

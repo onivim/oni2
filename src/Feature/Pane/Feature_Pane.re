@@ -205,7 +205,6 @@ let close = model => {...model, isOpen: false};
 
 module View = {
   open Revery.UI;
-  open Revery.UI.Components;
   open Oni_Components;
 
   module FontIcon = Oni_Components.FontIcon;

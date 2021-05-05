@@ -6,6 +6,7 @@ include Model;
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | NotifyError(string)
   | SwitchToNormalMode
   | TogglePane({paneId: string})
   | TerminalCreated({
@@ -117,6 +118,13 @@ let update =
       msg,
     ) => {
   switch (msg) {
+  | Font(Service_Font.FontLoaded(font)) => ({...model, font}, Nothing)
+
+  | Font(Service_Font.FontLoadError(message)) => (
+      model,
+      NotifyError(message),
+    )
+
   | Command(ToggleIntegratedTerminal) => (
       model,
       TogglePane({paneId: "workbench.panel.terminal"}),
@@ -224,7 +232,10 @@ let update =
         },
         model.idToTerminal,
       );
-    ({idToTerminal, nextId: id + 1, paneTerminalId: Some(id)}, Nothing);
+    (
+      {...model, idToTerminal, nextId: id + 1, paneTerminalId: Some(id)},
+      Nothing,
+    );
   | Command(NewTerminal({cmd, splitDirection, closeOnExit})) =>
     let cmdToUse =
       switch (cmd) {
@@ -395,22 +406,68 @@ let update =
   };
 };
 
-let subscription = (~setup, ~workspaceUri, extHostClient, model: t) => {
-  model
-  |> toList
-  |> List.map((terminal: terminal) => {
-       Service_Terminal.Sub.terminal(
-         ~setup,
-         ~id=terminal.id,
-         ~launchConfig=terminal.launchConfig,
-         ~rows=terminal.rows,
-         ~columns=terminal.columns,
-         ~workspaceUri,
-         ~extHostClient,
-       )
-     })
-  |> Isolinear.Sub.batch
-  |> Isolinear.Sub.map(msg => Service(msg));
+let subscription =
+    (
+      ~defaultFontFamily: string,
+      ~defaultFontSize: float,
+      ~defaultFontWeight: Revery.Font.Weight.t,
+      ~defaultLigatures: FontLigatures.t,
+      ~defaultSmoothing: FontSmoothing.t,
+      ~config,
+      ~setup,
+      ~workspaceUri,
+      extHostClient,
+      model: t,
+    ) => {
+  let terminalFontFamily =
+    Configuration.fontFamily.get(config)
+    |> Option.value(~default=defaultFontFamily);
+
+  let terminalFontSize =
+    Configuration.fontSize.get(config)
+    |> Option.value(~default=defaultFontSize);
+
+  let terminalFontWeight =
+    Configuration.fontWeight.get(config)
+    |> Option.value(~default=defaultFontWeight);
+
+  let terminalFontLigatures =
+    Configuration.fontLigatures.get(config)
+    |> Option.value(~default=defaultLigatures);
+
+  let terminalFontSmoothing =
+    Configuration.fontSmoothing.get(config)
+    |> Option.value(~default=defaultSmoothing);
+
+  let fontSubscription =
+    Service_Font.Sub.font(
+      ~uniqueId="Feature_Terminal.font",
+      ~fontFamily=terminalFontFamily,
+      ~fontSize=terminalFontSize,
+      ~fontWeight=terminalFontWeight,
+      ~fontSmoothing=terminalFontSmoothing,
+      ~fontLigatures=terminalFontLigatures,
+    )
+    |> Isolinear.Sub.map(msg => Font(msg));
+
+  let subs =
+    model
+    |> toList
+    |> List.map((terminal: terminal) => {
+         Service_Terminal.Sub.terminal(
+           ~setup,
+           ~id=terminal.id,
+           ~launchConfig=terminal.launchConfig,
+           ~rows=terminal.rows,
+           ~columns=terminal.columns,
+           ~workspaceUri,
+           ~extHostClient,
+         )
+       })
+    |> Isolinear.Sub.batch
+    |> Isolinear.Sub.map(msg => Service(msg));
+
+  [fontSubscription, subs] |> Isolinear.Sub.batch;
 };
 
 // COLORS
@@ -778,7 +835,7 @@ module Contributions = {
         ~view=
           (
             ~config,
-            ~editorFont,
+            ~editorFont as _,
             ~font as _,
             ~isFocused,
             ~iconTheme as _,
@@ -795,7 +852,7 @@ module Contributions = {
                    isActive=isFocused
                    config
                    terminal
-                   font=editorFont
+                   font={model.font}
                    theme
                    dispatch
                  />

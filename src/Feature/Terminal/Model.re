@@ -18,9 +18,16 @@ type t = {
   idToTerminal: IntMap.t(terminal),
   nextId: int,
   paneTerminalId: option(int),
+  font: Service_Font.font,
 };
 
-let initial = {idToTerminal: IntMap.empty, nextId: 0, paneTerminalId: None};
+let font = ({font, _}) => font;
+let initial = {
+  idToTerminal: IntMap.empty,
+  nextId: 0,
+  paneTerminalId: None,
+  font: Service_Font.default(),
+};
 
 let getBufferName = (id, cmd) =>
   Printf.sprintf("oni://terminal/%d/%s", id, cmd);
@@ -47,6 +54,7 @@ type command =
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
+  | Font(Service_Font.msg)
   | Resized({
       id: int,
       rows: int,

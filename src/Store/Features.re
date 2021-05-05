@@ -1892,6 +1892,12 @@ let update =
           state,
           eff |> Effect.map(msg => Actions.Terminal(msg)),
         )
+
+      | NotifyError(msg) => (
+          state,
+          Internal.notificationEffect(~kind=Error, msg),
+        )
+
       | TogglePane({paneId}) => (
           state,
           Feature_Pane.Msg.toggle(~paneId)
@@ -1947,6 +1953,7 @@ let update =
               let syntaxHighlights =
                 syntaxHighlights |> Feature_Syntax.ignore(~bufferId);
 
+              let terminalFont = Feature_Terminal.font(state.terminals);
               let layout =
                 Feature_Layout.map(
                   editor =>
@@ -1956,7 +1963,7 @@ let update =
                       |> Option.map(buffer => {
                            let updatedBuffer =
                              buffer
-                             |> Oni_Core.Buffer.setFont(state.terminalFont)
+                             |> Oni_Core.Buffer.setFont(terminalFont)
                              |> Feature_Editor.EditorBuffer.ofBuffer;
                            Feature_Editor.Editor.setBuffer(
                              ~buffer=updatedBuffer,
@@ -2403,16 +2410,6 @@ let update =
       },
       eff,
     );
-
-  // TODO: This should live in the terminal feature project
-  | TerminalFont(Service_Font.FontLoaded(font)) => (
-      {...state, terminalFont: font},
-      Isolinear.Effect.none,
-    )
-  | TerminalFont(Service_Font.FontLoadError(message)) => (
-      state,
-      Internal.notificationEffect(~kind=Error, message),
-    )
 
   | TitleBar(titleBarMsg) =>
     let eff =

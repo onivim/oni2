@@ -179,7 +179,7 @@ module Parts = {
           theme
           terminals={state.terminals}
           id
-          font={state.terminalFont}
+          font={Feature_Terminal.font(state.terminals)}
           dispatch={msg => dispatch(Actions.Terminal(msg))}
         />;
 

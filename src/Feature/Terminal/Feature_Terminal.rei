@@ -23,6 +23,9 @@ let toList: t => list(terminal);
 
 let getTerminalOpt: (int, t) => option(terminal);
 
+// Font to be used for terminals
+let font: t => Service_Font.font;
+
 // UPDATE
 
 [@deriving show({with_path: false})]
@@ -45,6 +48,7 @@ module Msg: {
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | NotifyError(string)
   | SwitchToNormalMode
   | TogglePane({paneId: string})
   | TerminalCreated({
@@ -67,7 +71,18 @@ let update:
   (t, outmsg);
 
 let subscription:
-  (~setup: Setup.t, ~workspaceUri: Uri.t, Exthost.Client.t, t) =>
+  (
+    ~defaultFontFamily: string,
+    ~defaultFontSize: float,
+    ~defaultFontWeight: Revery.Font.Weight.t,
+    ~defaultLigatures: FontLigatures.t,
+    ~defaultSmoothing: FontSmoothing.t,
+    ~config: Oni_Core.Config.resolver,
+    ~setup: Setup.t,
+    ~workspaceUri: Uri.t,
+    Exthost.Client.t,
+    t
+  ) =>
   Isolinear.Sub.t(msg);
 
 let shellCmd: string;
