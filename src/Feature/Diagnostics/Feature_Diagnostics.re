@@ -27,7 +27,12 @@ module DiagnosticEntry = {
       extDiag => {
         let range = Exthost.OneBasedRange.toRange(extDiag.range);
         let message = extDiag.message;
-        Diagnostic.create(~range, ~message, ~severity=extDiag.severity);
+        Diagnostic.create(
+          ~range,
+          ~message,
+          ~severity=extDiag.severity,
+          ~tags=extDiag.tags,
+        );
       };
 
     let exthostEntryToEntry: Exthost.Msg.Diagnostics.entry => t =

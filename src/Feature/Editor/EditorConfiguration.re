@@ -327,6 +327,11 @@ let scrolloff =
     ~default=1,
   );
 let scrollShadow = setting("editor.scrollShadow", bool, ~default=true);
+
+let showDeprecated = setting("editor.showDeprecated", bool, ~default=true);
+
+let showUnused = setting("editor.showUnused", bool, ~default=true);
+
 let smoothScroll =
   setting(
     ~vim=VimSettings.smoothScroll,
@@ -406,6 +411,8 @@ let contributions = [
   rulers.spec,
   scrollShadow.spec,
   scrolloff.spec,
+  showDeprecated.spec,
+  showUnused.spec,
   smoothScroll.spec,
   tabSize.spec,
   wordWrap.spec,
