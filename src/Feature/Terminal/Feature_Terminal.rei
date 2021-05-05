@@ -163,3 +163,13 @@ module Contributions: {
 
   let pane: Feature_Pane.Schema.t(t, msg);
 };
+
+module Testing: {
+  let newTerminalMsg:
+    (
+      ~cmd: option(string),
+      ~splitDirection: SplitDirection.t,
+      ~closeOnExit: bool
+    ) =>
+    msg;
+};

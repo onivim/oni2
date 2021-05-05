@@ -158,7 +158,7 @@ module Effects = {
     });
   };
 
-  let setTerminalLines = (~editorId, ~bufferId, lines) => {
+  let setTerminalLines = (~editorId as _, ~bufferId, lines) => {
     Isolinear.Effect.createWithDispatch(
       ~name="vim.setTerminalLinesEffect", dispatch => {
       let () =

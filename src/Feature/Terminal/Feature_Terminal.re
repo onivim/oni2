@@ -809,3 +809,7 @@ module Contributions = {
 };
 
 module TerminalView = TerminalView;
+
+module Testing = {
+  let newTerminalMsg = Msg.terminalCreatedFromVim;
+};
