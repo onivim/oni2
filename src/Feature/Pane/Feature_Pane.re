@@ -257,7 +257,7 @@ module View = {
 
     let make = (~uiFont: UiFont.t, ~theme, ~title, ~onClick, ~isActive, ()) => {
       <View style={Styles.container(~isActive, ~theme)}>
-        <Clickable onClick style=Styles.clickable>
+        <Sneakable sneakId={"Pane:" ++ title} onClick style=Styles.clickable>
           <Text
             style={Styles.text(~isActive, ~theme)}
             fontFamily={uiFont.family}
@@ -265,7 +265,7 @@ module View = {
             fontSize={uiFont.size}
             text=title
           />
-        </Clickable>
+        </Sneakable>
       </View>;
     };
   };
