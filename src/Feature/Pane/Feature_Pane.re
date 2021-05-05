@@ -4,118 +4,7 @@
 
 open Oni_Core;
 
-module Schema = {
-  type uniqueId = int;
-
-  let nextId = ref(0);
-
-  type t('model, 'msg) = {
-    title: string,
-    id: option(string),
-    contextKeys: (~isFocused: bool, 'model) => WhenExpr.ContextKeys.t,
-    commands: 'model => list(Command.t('msg)),
-    sub: (~isFocused: bool, 'model) => Isolinear.Sub.t('msg),
-    view:
-      (
-        ~config: Config.resolver,
-        ~editorFont: Service_Font.font,
-        ~font: UiFont.t,
-        ~isFocused: bool,
-        ~iconTheme: IconTheme.t,
-        ~languageInfo: Exthost.LanguageInfo.t,
-        ~workingDirectory: string,
-        ~theme: ColorTheme.Colors.t,
-        ~dispatch: 'msg => unit,
-        ~model: 'model
-      ) =>
-      Revery.UI.element,
-    keyPressed: string => 'msg,
-    uniqueId,
-  };
-
-  let panel = (~sub, ~title, ~id, ~contextKeys, ~commands, ~view, ~keyPressed) => {
-    incr(nextId);
-    {
-      title,
-      id,
-      contextKeys,
-      view,
-      keyPressed,
-      commands,
-      uniqueId: nextId^,
-      sub,
-    };
-  };
-
-  let map = (~msg as mapMsg, ~model as mapModel, pane) => {
-    let view' =
-        (
-          ~config,
-          ~editorFont,
-          ~font,
-          ~isFocused,
-          ~iconTheme,
-          ~languageInfo,
-          ~workingDirectory,
-          ~theme,
-          ~dispatch,
-          ~model,
-        ) => {
-      let mappedModel = mapModel(model);
-
-      let mappedDispatch = msg => {
-        mapMsg(msg) |> dispatch;
-      };
-
-      pane.view(
-        ~config,
-        ~editorFont,
-        ~font,
-        ~isFocused,
-        ~iconTheme,
-        ~languageInfo,
-        ~workingDirectory,
-        ~theme,
-        ~dispatch=mappedDispatch,
-        ~model=mappedModel,
-      );
-    };
-
-    let contextKeys' = (~isFocused, model) => {
-      let mappedModel = mapModel(model);
-      pane.contextKeys(~isFocused, mappedModel);
-    };
-
-    let commands' = model => {
-      let mappedModel = mapModel(model);
-      let commands = pane.commands(mappedModel);
-      commands |> List.map(Command.map(mapMsg));
-    };
-
-    let sub' = (~isFocused, model) => {
-      let mappedModel = mapModel(model);
-
-      let sub = pane.sub(~isFocused, mappedModel);
-
-      sub |> Isolinear.Sub.map(mapMsg);
-    };
-
-    let keyPressed' = str => {
-      pane.keyPressed(str) |> mapMsg;
-    };
-
-    {
-      title: pane.title,
-      id: pane.id,
-      contextKeys: contextKeys',
-      commands: commands',
-      view: view',
-      keyPressed: keyPressed',
-      uniqueId: pane.uniqueId,
-      sub: sub',
-    };
-  };
-};
+module Schema = Schema;
 
 module Constants = {
   let defaultHeight = 225;
@@ -131,6 +20,7 @@ type command =
 type msg('inner) =
   | TabClicked({index: int})
   | CloseButtonClicked
+  | ToggleMaximizeButtonClicked
   | NestedMsg([@opaque] 'inner)
   | Command(command)
   | ResizeHandleDragged(int)
@@ -138,12 +28,6 @@ type msg('inner) =
   | KeyPressed(string)
   | VimWindowNav(Component_VimWindows.msg)
   | Toggle({paneId: string});
-// | LocationsList(Component_VimTree.msg)
-// | OutputPane(Component_Output.msg)
-// | LocationFileLoaded({
-//     filePath: string,
-//     lines: array(string),
-//   });
 
 module Msg = {
   let keyPressed = key => KeyPressed(key);
@@ -155,7 +39,6 @@ module Msg = {
 
 type outmsg('msg) =
   | Nothing
-  // | PaneButton(pane)
   | NestedMessage('msg)
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
@@ -169,6 +52,7 @@ type model('model, 'msg) = {
   height: int,
   resizeDelta: int,
   vimWindowNavigation: Component_VimWindows.model,
+  isMaximized: bool,
 };
 
 let height = ({height, resizeDelta, _}) => {
@@ -252,11 +136,14 @@ let update = (msg, model) =>
   | Command(ClosePane)
   | CloseButtonClicked => ({...model, isOpen: false}, ReleaseFocus)
 
+  | ToggleMaximizeButtonClicked => (
+      {...model, isMaximized: !model.isMaximized},
+      Nothing,
+    )
+
   | TabClicked({index}) => ({...model, selected: index}, Nothing)
 
   | Toggle({paneId}) => toggle(~paneId, model)
-
-  //| PaneButtonClicked(pane) => (model, PaneButton(pane))
 
   | ResizeHandleDragged(delta) => (
       {...model, allowAnimation: false, resizeDelta: (-1) * delta},
@@ -307,6 +194,7 @@ let initial = panes => {
   selected: 0,
   isOpen: false,
   panes,
+  isMaximized: false,
 
   vimWindowNavigation: Component_VimWindows.initial,
 };
@@ -385,11 +273,10 @@ module View = {
   module Styles = {
     open Style;
 
-    let pane = (~opacity, ~isFocused, ~theme, ~height) => {
+    let pane = (~isMaximized, ~opacity, ~isFocused, ~theme, ~height) => {
       let common = [
         Style.opacity(opacity),
         flexDirection(`Column),
-        Style.height(height),
         borderTop(
           ~color=
             isFocused
@@ -400,7 +287,10 @@ module View = {
         backgroundColor(Colors.Panel.background.from(theme)),
       ];
 
-      if (isFocused) {
+      if (isMaximized) {
+        common
+        @ [position(`Absolute), top(0), bottom(0), left(0), right(0)];
+      } else if (isFocused) {
         [
           boxShadow(
             ~xOffset=0.,
@@ -409,10 +299,11 @@ module View = {
             ~spreadRadius=0.,
             ~color=Revery.Color.rgba(0., 0., 0., 0.5),
           ),
+          Style.height(height),
           ...common,
         ];
       } else {
-        common;
+        [Style.height(height), ...common];
       };
     };
 
@@ -482,35 +373,25 @@ module View = {
       sneakId="close"
       onClick={() => dispatch(CloseButtonClicked)}
       style=Styles.closeButton>
-      <FontIcon
-        icon=FontAwesome.times
+      <Codicon
+        icon=Codicon.close
         color={Colors.Tab.activeForeground.from(theme)}
-        fontSize=12.
       />
     </Sneakable>;
   };
 
-  let paneButton = (~theme, ~dispatch, ~pane, ()) => React.empty;
-  // TODO: Custom button view
-  // switch (pane) {
-  // | Notifications =>
-  //   <Sneakable
-  //     sneakId="paneButton"
-  //     onClick={() => dispatch(PaneButtonClicked(pane))}
-  //     style=Styles.paneButton>
-  //     <FontIcon
-  //       icon={
-  //         switch (pane) {
-  //         | Notifications => FontAwesome.bellSlash
-  //         | _ => FontAwesome.cross
-  //         }
-  //       }
-  //       color={Colors.Tab.activeForeground.from(theme)}
-  //       fontSize=12.
-  //     />
-  //   </Sneakable>
-  // | _ => React.empty
-  // };
+  let toggleMaximizeButton = (~isMaximized: bool, ~theme, ~dispatch, ()) => {
+    <Sneakable
+      sneakId="toggle"
+      onClick={() => dispatch(ToggleMaximizeButtonClicked)}
+      style=Styles.closeButton>
+      <Codicon
+        icon={isMaximized ? Codicon.chevronDown : Codicon.chevronUp}
+        color={Colors.Tab.activeForeground.from(theme)}
+      />
+    </Sneakable>;
+  };
+
   let make =
       (
         ~config,
@@ -547,6 +428,18 @@ module View = {
 
     let activePane = activePane(pane);
 
+    let customPaneButtons =
+      activePane
+      |> Option.map((pane: Schema.t('model, 'msg)) =>
+           pane.buttons(
+             ~font=uiFont,
+             ~theme,
+             ~dispatch=msg => dispatch(NestedMsg(msg)),
+             ~model,
+           )
+         )
+      |> Option.value(~default=React.empty);
+
     let opacity =
       isFocused
         ? 1.0
@@ -555,7 +448,14 @@ module View = {
           );
     height == 0
       ? React.empty
-      : <View style={Styles.pane(~opacity, ~isFocused, ~theme, ~height)}>
+      : <View
+          style={Styles.pane(
+            ~isMaximized=pane.isMaximized,
+            ~opacity,
+            ~isFocused,
+            ~theme,
+            ~height,
+          )}>
           <View style=Styles.resizer>
             <ResizeHandle.Horizontal
               onDrag={delta =>
@@ -567,7 +467,12 @@ module View = {
           <View style=Styles.header>
             <View style=Styles.tabs> paneTabs </View>
             <View style=Styles.buttons>
-              <paneButton dispatch theme pane={pane.selected} />
+              customPaneButtons
+              <toggleMaximizeButton
+                isMaximized={pane.isMaximized}
+                dispatch
+                theme
+              />
               <closeButton dispatch theme />
             </View>
           </View>

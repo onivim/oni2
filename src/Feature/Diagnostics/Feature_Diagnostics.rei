@@ -89,3 +89,7 @@ module Contributions: {
 
   let pane: Feature_Pane.Schema.t(model, msg);
 };
+
+module Testing: {
+  let change: (model, Uri.t, string, list(Diagnostic.t)) => model;
+};

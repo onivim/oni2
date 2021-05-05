@@ -13,6 +13,13 @@ module Schema: {
       ~sub: (~isFocused: bool, 'model) => Isolinear.Sub.t('msg),
       ~title: string,
       ~id: option(string),
+      ~buttons: (
+                  ~font: UiFont.t,
+                  ~theme: ColorTheme.Colors.t,
+                  ~dispatch: 'msg => unit,
+                  ~model: 'model
+                ) =>
+                Revery.UI.element,
       ~contextKeys: (~isFocused: bool, 'model) => WhenExpr.ContextKeys.t,
       ~commands: 'model => list(Command.t('msg)),
       ~view: (

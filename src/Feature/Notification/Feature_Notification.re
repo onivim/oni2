@@ -209,20 +209,23 @@ let dismiss = (~theme, ~config, ~id, model) => {
   |> updatePane;
 };
 
+let clear = (~count, ~config, ~theme, model) => {
+  let all =
+    if (count == 0) {
+      [];
+    } else {
+      Utility.ListEx.firstk(count, model.all);
+    };
+  {...model, all, activeNotifications: IntSet.empty}
+  |> updateColorTransition(~config, ~theme)
+  |> updatePane;
+};
+
 let update = (~theme, ~config, model, msg) => {
   let animationsEnabled =
     Feature_Configuration.GlobalConfiguration.animation.get(config);
   switch (msg) {
-  | Clear({count}) =>
-    let all =
-      if (count == 0) {
-        [];
-      } else {
-        Utility.ListEx.firstk(count, model.all);
-      };
-    {...model, all, activeNotifications: IntSet.empty}
-    |> updateColorTransition(~config, ~theme)
-    |> updatePane;
+  | Clear({count}) => model |> clear(~count, ~theme, ~config)
   | Created(item) =>
     let yOffsetAnimation =
       animationsEnabled
@@ -251,6 +254,7 @@ let update = (~theme, ~config, model, msg) => {
     switch (outmsg) {
     | Nothing => model'
     | DismissNotification({id}) => model' |> dismiss(~theme, ~config, ~id)
+    | ClearNotifications => model' |> clear(~theme, ~config, ~count=0)
     };
 
   | AnimateYOffset({id, msg}) => {
@@ -470,6 +474,10 @@ module Contributions = {
       panel(
         ~title="Notifications",
         ~id=Some("workbench.panel.notifications"),
+        ~buttons=
+          (~font, ~theme, ~dispatch, ~model) => {
+            <Pane.View.Buttons font theme dispatch model={model.pane} />
+          },
         ~commands=Pane.commands,
         ~contextKeys,
         ~sub=(~isFocused as _, _model) => Isolinear.Sub.none,

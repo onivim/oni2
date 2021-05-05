@@ -7,10 +7,12 @@ type t = {notificationsView: Component_VimList.model(notification)};
 type msg =
   | VimList(Component_VimList.msg)
   | KeyPressed(string)
+  | ClearNotificationsButtonClicked
   | Dismissed({id: int});
 
 type outmsg =
   | Nothing
+  | ClearNotifications
   | DismissNotification({id: int});
 
 let commands = _model => {
@@ -31,6 +33,8 @@ let update = (msg, model) => {
     let (notificationsView', _outmsg) =
       Component_VimList.update(listMsg, model.notificationsView);
     ({notificationsView: notificationsView'}, Nothing);
+
+  | ClearNotificationsButtonClicked => (model, ClearNotifications)
 
   | KeyPressed(key) =>
     let notificationsView' =
@@ -189,5 +193,31 @@ module View = {
         />;
       };
     <View style=Styles.pane> innerElement </View>;
+  };
+
+  module Buttons = {
+    module Sneakable = Feature_Sneak.View.Sneakable;
+    module Colors = Feature_Theme.Colors;
+
+    module Styles = {
+      open Style;
+      let paneButton = [
+        width(32),
+        alignItems(`Center),
+        justifyContent(`Center),
+      ];
+    };
+    let make = (~font, ~theme, ~dispatch, ~model, ()) => {
+      <Sneakable
+        sneakId="dismissNotifications"
+        onClick={() => dispatch(ClearNotificationsButtonClicked)}
+        style=Styles.paneButton>
+        <FontIcon
+          icon=FontAwesome.bellSlash
+          color={Colors.Tab.activeForeground.from(theme)}
+          fontSize=12.
+        />
+      </Sneakable>;
+    };
   };
 };

@@ -442,3 +442,7 @@ module Contributions = {
          ~model=({pane, _}) => pane,
        );
 };
+
+module Testing = {
+  let change = change;
+};

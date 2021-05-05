@@ -76,6 +76,9 @@ let pane = {
     panel(
       ~title="Output",
       ~id=Some("workbench.panel.output"),
+      ~buttons=
+        (~font as _, ~theme as _, ~dispatch as _, ~model as _) =>
+          Revery.UI.React.empty,
       ~commands,
       ~contextKeys,
       ~sub=(~isFocused as _, _model) => Isolinear.Sub.none,

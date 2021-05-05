@@ -757,6 +757,9 @@ module Contributions = {
       panel(
         ~title="Terminal",
         ~id=Some("workbench.panel.terminal"),
+        ~buttons=
+          (~font as _, ~theme as _, ~dispatch as _, ~model as _) =>
+            Revery.UI.React.empty,
         ~commands=_model => [],
         ~contextKeys=(~isFocused, _model) => WhenExpr.ContextKeys.empty,
         ~sub=

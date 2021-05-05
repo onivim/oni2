@@ -338,6 +338,9 @@ let pane: Feature_Pane.Schema.t(model, msg) =
   panel(
     ~title="Locations",
     ~id=Some("workbench.panel.locations"),
+    ~buttons=
+      (~font as _, ~theme as _, ~dispatch as _, ~model as _) =>
+        Revery.UI.React.empty,
     ~commands=
       _pane => {
         Component_VimTree.Contributions.commands
