@@ -1230,15 +1230,9 @@ let update =
       | Nothing => (state', Effect.none)
       | ToggleProblems => (
           state',
-          // {
-          //   ...state',
-          //   pane:
-          //     Feature_Pane.toggle(
-          //       ~pane=Feature_Pane.Diagnostics,
-          //       state'.pane,
-          //     ),
-          // },
-          Effect.none,
+          Feature_Pane.Msg.toggle(~paneId="workbench.panel.markers")
+          |> EffectEx.value(~name="Feature_StatusBar.toggleProblems")
+          |> Effect.map(msg => Pane(msg)),
         )
 
       | ClearNotifications => (
@@ -1247,15 +1241,9 @@ let update =
         )
       | ToggleNotifications => (
           state,
-          // {
-          //   ...state',
-          //   pane:
-          //     Feature_Pane.toggle(
-          //       ~pane=Feature_Pane.Notifications,
-          //       state'.pane,
-          //     ),
-          // },
-          Effect.none,
+          Feature_Pane.Msg.toggle(~paneId="workbench.panel.notifications")
+          |> EffectEx.value(~name="Feature_StatusBar.toggleNotifications")
+          |> Effect.map(msg => Pane(msg)),
         )
       | ShowFileTypePicker =>
         let bufferId =
