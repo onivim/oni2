@@ -50,6 +50,7 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | NotifyError(string)
   | SwitchToNormalMode
+  | ClosePane({paneId: string})
   | TogglePane({paneId: string})
   | TerminalCreated({
       name: string,

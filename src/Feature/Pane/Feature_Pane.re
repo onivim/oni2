@@ -27,6 +27,7 @@ type msg('inner) =
   | ResizeCommitted
   | KeyPressed(string)
   | VimWindowNav(Component_VimWindows.msg)
+  | CloseRequested({paneId: string})
   | Toggle({paneId: string});
 
 module Msg = {
@@ -35,6 +36,8 @@ module Msg = {
   let resizeCommitted = ResizeCommitted;
 
   let toggle = (~paneId: string) => Toggle({paneId: paneId});
+
+  let close = (~paneId: string) => CloseRequested({paneId: paneId});
 };
 
 type outmsg('msg) =
@@ -144,6 +147,18 @@ let update = (msg, model) =>
   | TabClicked({index}) => ({...model, selected: index}, Nothing)
 
   | Toggle({paneId}) => toggle(~paneId, model)
+
+  | CloseRequested({paneId}) =>
+    model
+    |> activePane
+    |> Utility.OptionEx.flatMap((pane: Schema.t('model, 'msg)) =>
+         if (pane.id == Some(paneId) && model.isOpen) {
+           Some(toggle(~paneId, model));
+         } else {
+           None;
+         }
+       )
+    |> Option.value(~default=(model, Nothing))
 
   | ResizeHandleDragged(delta) => (
       {...model, allowAnimation: false, resizeDelta: (-1) * delta},

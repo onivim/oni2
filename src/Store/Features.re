@@ -1898,6 +1898,12 @@ let update =
           Internal.notificationEffect(~kind=Error, msg),
         )
 
+      | ClosePane({paneId}) => (
+          state,
+          Feature_Pane.Msg.close(~paneId)
+          |> EffectEx.value(~name="Feature_Terminal.closePane")
+          |> Effect.map(msg => Pane(msg)),
+        )
       | TogglePane({paneId}) => (
           state,
           Feature_Pane.Msg.toggle(~paneId)

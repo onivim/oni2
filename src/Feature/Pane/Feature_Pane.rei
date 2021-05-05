@@ -53,6 +53,7 @@ module Msg: {
   let resizeCommitted: msg(_);
 
   let toggle: (~paneId: string) => msg(_);
+  let close: (~paneId: string) => msg(_);
 };
 
 type outmsg('msg) =

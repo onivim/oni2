@@ -8,6 +8,7 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | NotifyError(string)
   | SwitchToNormalMode
+  | ClosePane({paneId: string})
   | TogglePane({paneId: string})
   | TerminalCreated({
       name: string,
@@ -395,14 +396,22 @@ let update =
     let newModel = updateById(id, term => {...term, screen, cursor}, model);
     (newModel, Nothing);
 
-  | Service(ProcessExit({id, exitCode})) => (
-      model,
-      TerminalExit({
-        terminalId: id,
-        exitCode,
-        shouldClose: shouldClose(~id, model),
-      }),
-    )
+  | Service(ProcessExit({id, exitCode})) =>
+    if (Some(id) == model.paneTerminalId) {
+      (
+        {...model, paneTerminalId: None},
+        ClosePane({paneId: "workbench.panel.terminal"}),
+      );
+    } else {
+      (
+        model,
+        TerminalExit({
+          terminalId: id,
+          exitCode,
+          shouldClose: shouldClose(~id, model),
+        }),
+      );
+    }
   };
 };
 
