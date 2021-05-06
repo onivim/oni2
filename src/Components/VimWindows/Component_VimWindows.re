@@ -66,7 +66,8 @@ module Keybindings = {
   let commandCondition = "vimWindowNavigation" |> WhenExpr.parse;
 
   let noTextInputCondition =
-    "!textInputFocus && vimWindowNavigation" |> WhenExpr.parse;
+    "!terminalFocus && !textInputFocus && vimWindowNavigation"
+    |> WhenExpr.parse;
 
   let keybindings =
     Feature_Input.Schema.[

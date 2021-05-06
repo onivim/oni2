@@ -821,6 +821,14 @@ module Contributions = {
     ];
   };
 
+  let focusedContextKeys = {
+    WhenExpr.ContextKeys.(
+      [Schema.bool("terminalFocus", _ => true)]
+      |> Schema.fromList
+      |> fromSchema()
+    );
+  };
+
   let pane: Feature_Pane.Schema.t(t, msg) = {
     Feature_Pane.Schema.(
       panel(
@@ -830,7 +838,11 @@ module Contributions = {
           (~font as _, ~theme as _, ~dispatch as _, ~model as _) =>
             Revery.UI.React.empty,
         ~commands=_model => [],
-        ~contextKeys=(~isFocused as _, _model) => WhenExpr.ContextKeys.empty,
+        ~contextKeys=
+          (~isFocused, _model) =>
+            if (isFocused) {focusedContextKeys} else {
+              WhenExpr.ContextKeys.empty
+            },
         ~sub=
           (~isFocused, model) =>
             if (isFocused && model.paneTerminalId == None) {
