@@ -37,11 +37,7 @@ let setTheme: (~themeId: string, model) => model;
 let configurationChanged: (~resolver: Config.resolver, model) => model;
 
 let colors:
-  (
-    ~extensionDefaults: list(ColorTheme.Defaults.t)=?,
-    ~customizations: ColorTheme.Colors.t=?,
-    model
-  ) =>
+  (~extensionDefaults: list(ColorTheme.Defaults.t)=?, model) =>
   ColorTheme.Colors.t;
 
 let tokenColors: model => Oni_Syntax.TokenTheme.t;

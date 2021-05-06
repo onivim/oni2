@@ -7,6 +7,8 @@ type t(+'a);
 let empty: t('a);
 let is_empty: t('a) => bool;
 
+let bindings: t('a) => list((key, 'a));
+
 let mem: (key, t('a)) => bool;
 let add: (key, 'a, t('a)) => t('a);
 let update: (key, option('a) => option('a), t('a)) => t('a);

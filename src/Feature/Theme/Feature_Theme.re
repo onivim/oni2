@@ -12,6 +12,7 @@ type model = {
   theme: ColorTheme.t,
   tokenColors: Oni_Syntax.TokenTheme.t,
   selectedThemeId: option(string),
+  userCustomizations: ColorTheme.Colors.t,
 };
 
 let variant = ({theme, _}) => theme.variant;
@@ -75,6 +76,8 @@ let initial = contributions => {
   theme: ColorTheme.{variant: Dark, colors: ColorTheme.Colors.empty},
   tokenColors: Oni_Syntax.TokenTheme.empty,
   selectedThemeId: None,
+
+  userCustomizations: ColorTheme.Colors.empty,
 };
 
 let tokenColors = ({tokenColors, _}) => tokenColors;
@@ -82,13 +85,12 @@ let tokenColors = ({tokenColors, _}) => tokenColors;
 let colors =
     (
       ~extensionDefaults as _=[], // TODO
-      ~customizations=ColorTheme.Colors.empty, // TODO
       model,
     ) => {
-  let {schema, theme, _} = model;
+  let {schema, theme, userCustomizations, _} = model;
 
   let rec resolve = key => {
-    switch (ColorTheme.Colors.get(key, customizations)) {
+    switch (ColorTheme.Colors.get(key, userCustomizations)) {
     | Some(color) => Some(color)
     | None =>
       switch (ColorTheme.Colors.get(key, theme.colors)) {
@@ -122,7 +124,7 @@ let colors =
        )
     |> ColorTheme.Colors.fromList;
 
-  ColorTheme.Colors.unionMany([defaults, theme.colors, customizations]);
+  ColorTheme.Colors.unionMany([defaults, theme.colors, userCustomizations]);
 };
 
 [@deriving show({with_path: false})]
@@ -235,10 +237,24 @@ module Configuration = {
 
   let colorTheme =
     setting("workbench.colorTheme", string, ~default=Constants.defaultTheme);
+
+  let userCustomizations =
+    setting(
+      "workbench.colorCustomizations",
+      custom(
+        ~decode=ColorTheme.Colors.decode,
+        ~encode=ColorTheme.Colors.encode,
+      ),
+      ~default=ColorTheme.Colors.empty,
+    );
 };
 
 let configurationChanged = (~resolver, model) => {
-  {...model, selectedThemeId: Some(Configuration.colorTheme.get(resolver))};
+  {
+    ...model,
+    userCustomizations: Configuration.userCustomizations.get(resolver),
+    selectedThemeId: Some(Configuration.colorTheme.get(resolver)),
+  };
 };
 
 module Commands = {
@@ -256,5 +272,6 @@ module Commands = {
 module Contributions = {
   let commands = [Commands.selectTheme];
 
-  let configuration = Configuration.[colorTheme.spec];
+  let configuration =
+    Configuration.[colorTheme.spec, userCustomizations.spec];
 };
