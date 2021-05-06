@@ -117,11 +117,13 @@ let update = (~maybeBuffer, msg, model) => {
              let itemRenderer =
                Feature_Quickmenu.Schema.Renderer.defaultWithIcon(itemToIcon);
              Outmsg.ShowMenu(
-               Feature_Quickmenu.Schema.menu(
-                 ~onItemSelected,
-                 ~toString=(symbol: symbol) => symbol.name,
-                 ~itemRenderer,
-                 allItems,
+               Feature_Quickmenu.Schema.(
+                 menu(
+                   ~onItemSelected,
+                   ~toString=(symbol: symbol) => symbol.name,
+                   ~itemRenderer,
+                   Data.static(allItems),
+                 )
                ),
              );
            },

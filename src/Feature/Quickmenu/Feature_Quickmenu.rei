@@ -14,6 +14,21 @@ module Schema: {
       (~fontSize: float=?, ~color: ColorTheme.Schema.definition=?, int) => t;
   };
 
+  module Data: {
+    type t('item, 'dataModel, 'dataMsg);
+
+    let static: list('item) => t('item, unit, unit);
+
+    let dynamic:
+      (
+        ~updater: ('msg, 'model) => 'model,
+        ~extractor: 'model => list('item),
+        ~sub: (~query: string, 'model) => Isolinear.Sub.t('msg),
+        'model
+      ) =>
+      t('item, 'model, 'msg);
+  };
+
   module Renderer: {
     type t('item) =
       (
@@ -38,7 +53,7 @@ module Schema: {
       ~placeholderText: string=?,
       ~itemRenderer: Renderer.t('item)=?,
       ~toString: 'item => string,
-      list('item)
+      Data.t('item, 'dataModel, 'dataMsg)
     ) =>
     menu('outmsg);
 

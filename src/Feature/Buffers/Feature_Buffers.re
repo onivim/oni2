@@ -580,10 +580,8 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
 
     let menuFn =
         (_languageInfo: Exthost.LanguageInfo.t, _iconTheme: IconTheme.t) => {
-      Feature_Quickmenu.Schema.menu(
-        ~onItemSelected=snd,
-        ~toString=fst,
-        items,
+      Feature_Quickmenu.Schema.(
+        menu(~onItemSelected=snd, ~toString=fst, Data.static(items))
       );
     };
     (model, ShowMenu(menuFn));
@@ -594,17 +592,19 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       let items = List.init(8, idx => idx + 1);
       let menuFn =
           (_languageInfo: Exthost.LanguageInfo.t, _iconTheme: IconTheme.t) => {
-        Feature_Quickmenu.Schema.menu(
-          ~onItemSelected=
-            size =>
-              IndentationChanged({
-                id: activeBufferId,
-                size,
-                mode,
-                didBufferGetModified: false,
-              }),
-          ~toString=string_of_int,
-          items,
+        Feature_Quickmenu.Schema.(
+          menu(
+            ~onItemSelected=
+              size =>
+                IndentationChanged({
+                  id: activeBufferId,
+                  size,
+                  mode,
+                  didBufferGetModified: false,
+                }),
+            ~toString=string_of_int,
+            Data.static(items),
+          )
         );
       };
       (model, ShowMenu(menuFn));
@@ -626,17 +626,19 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         let itemToIcon = item => {
           item |> snd |> Option.map(Feature_Quickmenu.Schema.Icon.seti);
         };
-        Feature_Quickmenu.Schema.menu(
-          ~itemRenderer=
-            Feature_Quickmenu.Schema.Renderer.defaultWithIcon(itemToIcon),
-          ~onItemSelected=
-            language =>
-              FileTypeChanged({
-                id: bufferId,
-                fileType: Buffer.FileType.explicit(fst(language)),
-              }),
-          ~toString=fst,
-          languages,
+        Feature_Quickmenu.Schema.(
+          menu(
+            ~itemRenderer=
+              Feature_Quickmenu.Schema.Renderer.defaultWithIcon(itemToIcon),
+            ~onItemSelected=
+              language =>
+                FileTypeChanged({
+                  id: bufferId,
+                  fileType: Buffer.FileType.explicit(fst(language)),
+                }),
+            ~toString=fst,
+            Data.static(languages),
+          )
         );
       };
       (model, ShowMenu(menuFn));

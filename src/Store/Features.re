@@ -39,21 +39,23 @@ module Internal = {
     let id = theme => Contributions.Theme.id(theme);
 
     let menu =
-      Feature_Quickmenu.Schema.menu(
-        ~onItemFocused=
-          theme => {
-            Actions.Theme(
-              Feature_Theme.Msg.menuPreviewTheme(~themeId=id(theme)),
-            )
-          },
-        ~onItemSelected=
-          theme => {
-            Actions.Theme(
-              Feature_Theme.Msg.menuCommitTheme(~themeId=id(theme)),
-            )
-          },
-        ~toString=theme => "Theme: " ++ label(theme),
-        themes,
+      Feature_Quickmenu.Schema.(
+        menu(
+          ~onItemFocused=
+            theme => {
+              Actions.Theme(
+                Feature_Theme.Msg.menuPreviewTheme(~themeId=id(theme)),
+              )
+            },
+          ~onItemSelected=
+            theme => {
+              Actions.Theme(
+                Feature_Theme.Msg.menuCommitTheme(~themeId=id(theme)),
+              )
+            },
+          ~toString=theme => "Theme: " ++ label(theme),
+          Data.static(themes),
+        )
       );
     {
       ...state,

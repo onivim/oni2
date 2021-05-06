@@ -16,6 +16,37 @@ module Icon = {
     Codicon({fontSize, color, icon});
 };
 
+module Data = {
+  type t('item, 'dataModel, 'dataMsg) = {
+    model: 'dataModel,
+    updater: ('dataMsg, 'dataModel) => 'dataModel,
+    sub: (~query: string, 'dataModel) => Isolinear.Sub.t('dataMsg),
+    extractor: 'dataModel => list('item),
+  };
+
+  let static = items => {
+    model: (),
+    updater: ((), ()) => (),
+    sub: (~query as _, ()) => Isolinear.Sub.none,
+    extractor: () => items,
+  };
+
+  let dynamic =
+      (
+        ~updater: ('dataMsg, 'dataModel) => 'dataModel,
+        ~extractor: 'dataModel => list('item),
+        ~sub: (~query: string, 'dataModel) => Isolinear.Sub.t('dataMsg),
+        initial: 'dataModel,
+      ) => {
+    updater,
+    extractor,
+    sub,
+    model: initial,
+  };
+
+  let items = ({extractor, model, _}) => extractor(model);
+};
+
 module Renderer = {
   open Revery;
   open Revery.UI;
@@ -122,18 +153,18 @@ module Renderer = {
   };
 };
 
-type internal('item, 'outmsg) = {
+type internal('item, 'outmsg, 'dataModel, 'dataMsg) = {
   onItemFocused: option('item => 'outmsg),
   onItemSelected: option('item => 'outmsg),
   onCancelled: option(unit => 'outmsg),
   placeholderText: string,
   itemRenderer: Renderer.t('item),
   toString: 'item => string,
-  items: list('item),
+  data: Data.t('item, 'dataModel, 'dataMsg),
 };
 
 type menu('outmsg) =
-  | Menu(internal('item, 'outmsg)): menu('outmsg);
+  | Menu(internal('item, 'outmsg, 'dataModel, 'dataMsg)): menu('outmsg);
 
 let menu:
   (
@@ -143,7 +174,7 @@ let menu:
     ~placeholderText: string=?,
     ~itemRenderer: Renderer.t('item)=?,
     ~toString: 'item => string,
-    list('item)
+    Data.t('item, 'dataModel, 'dataMsg)
   ) =>
   menu('outmsg) =
   (
@@ -153,7 +184,7 @@ let menu:
     ~placeholderText="type to search...",
     ~itemRenderer=Renderer.default,
     ~toString,
-    initialItems,
+    data,
   ) => {
     Menu({
       onItemFocused,
@@ -162,7 +193,7 @@ let menu:
       placeholderText,
       itemRenderer,
       toString,
-      items: initialItems,
+      data,
     });
   };
 
@@ -187,7 +218,7 @@ let map: ('a => 'b, menu('a)) => menu('b) =
 module Instance = {
   type t('outmsg) =
     | Instance({
-        schema: internal('item, 'outmsg),
+        schema: internal('item, 'outmsg, 'dataModel, 'dataMsg),
         text: Component_InputText.model,
         allItems: list('item),
         filteredItems: array(Filter.result('item)),
@@ -359,7 +390,7 @@ let instantiate: menu('outmsg) => Instance.t('outmsg) =
         |> Component_InputText.setPlaceholder(
              ~placeholder=internal.placeholderText,
            ),
-      allItems: internal.items,
+      allItems: Data.items(internal.data),
       filteredItems: [||],
       focused: None,
     })

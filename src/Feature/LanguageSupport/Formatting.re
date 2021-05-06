@@ -229,11 +229,13 @@ module Internal = {
            ExtensionId.toString(extensionId)
          );
 
-    Feature_Quickmenu.Schema.menu(
-      ~onItemSelected=toMsg,
-      ~toString=Fun.id,
-      ~placeholderText="Select a default formatter...",
-      itemNames,
+    Feature_Quickmenu.Schema.(
+      menu(
+        ~onItemSelected=toMsg,
+        ~toString=Fun.id,
+        ~placeholderText="Select a default formatter...",
+        Data.static(itemNames),
+      )
     );
   };
 
