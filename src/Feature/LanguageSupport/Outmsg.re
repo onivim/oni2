@@ -24,6 +24,10 @@ type internalMsg('a) =
       location: option(CharacterPosition.t),
       direction: SplitDirection.t,
     })
+  | PreviewFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    })
   | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
@@ -42,7 +46,21 @@ type internalMsg('a) =
   | TransformConfiguration(Oni_Core.ConfigurationTransformer.t)
   | Effect(Isolinear.Effect.t('a));
 
-let map = f =>
-  fun
-  | Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
-  | outmsg => outmsg;
+let map: ('a => 'b, internalMsg('a)) => internalMsg('b) =
+  f =>
+    fun
+    | Nothing => Nothing
+    | ApplyCompletion(v) => ApplyCompletion(v)
+    | ApplyWorkspaceEdit(v) => ApplyWorkspaceEdit(v)
+    | FormattingApplied(v) => FormattingApplied(v)
+    | InsertSnippet(v) => InsertSnippet(v)
+    | OpenFile(v) => OpenFile(v)
+    | PreviewFile(v) => PreviewFile(v)
+    | ReferencesAvailable => ReferencesAvailable
+    | NotifySuccess(v) => NotifySuccess(v)
+    | NotifyFailure(v) => NotifyFailure(v)
+    | CodeLensesChanged(v) => CodeLensesChanged(v)
+    | SetSelections(v) => SetSelections(v)
+    | TransformConfiguration(v) => TransformConfiguration(v)
+    | ShowMenu(v) => ShowMenu(v |> Feature_Quickmenu.Schema.map(f))
+    | Effect(eff) => Effect(eff |> Isolinear.Effect.map(f));

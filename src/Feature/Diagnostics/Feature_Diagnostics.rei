@@ -42,6 +42,18 @@ module Diagnostic: {
 [@deriving show]
 type msg;
 
+type outmsg =
+  | Nothing
+  | OpenFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    })
+  | PreviewFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    })
+  | TogglePane({paneId: string});
+
 module Msg: {
   let exthost: Exthost.Msg.Diagnostics.msg => msg;
   let diagnostics: (Uri.t, string, list(Diagnostic.t)) => msg;
@@ -54,17 +66,7 @@ let initial: model;
 
 // UPDATE
 
-let update: (msg, model) => model;
-
-/*
- * Change diagnostics for a buffer+diagnostic key pair
- */
-let change: (model, Uri.t, string, list(Diagnostic.t)) => model;
-
-/*
- * [clear(diagnostics, key)] removes diagnostics with the key named [key] across all buffers
- */
-let clear: (model, string) => model;
+let update: (~previewEnabled: bool, msg, model) => (model, outmsg);
 
 /*
  * [count(diagnostics)] gets the total count of all diagnostics across buffers
@@ -88,3 +90,16 @@ let getDiagnosticsInRange:
 let getDiagnosticsMap: (model, Buffer.t) => IntMap.t(list(Diagnostic.t));
 
 let getAllDiagnostics: model => list((Uri.t, Diagnostic.t));
+
+module Contributions: {
+  let commands: list(Command.t(msg));
+
+  let keybindings: list(Feature_Input.Schema.keybinding);
+
+  let pane: Feature_Pane.Schema.t(model, msg);
+};
+
+module Testing: {
+  let change: (model, Uri.t, string, list(Diagnostic.t)) => model;
+  let clear: (model, string) => model;
+};

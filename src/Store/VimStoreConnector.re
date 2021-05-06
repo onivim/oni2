@@ -144,7 +144,11 @@ let start =
       dispatch(Actions.SideBar(Feature_SideBar.(Command(GotoOutline))))
 
     | Vim.Goto.Messages =>
-      dispatch(Actions.Pane(Feature_Pane.Msg.toggleMessages))
+      dispatch(
+        Actions.Pane(
+          Feature_Pane.Msg.toggle(~paneId="workbench.panel.notifications"),
+        ),
+      )
 
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
@@ -401,14 +405,16 @@ let start =
   let _: unit => unit =
     Vim.onTerminal(({cmd, curwin, closeOnFinish, _}) => {
       let splitDirection =
-        if (curwin) {Feature_Terminal.Current} else {
-          Feature_Terminal.Horizontal
+        if (curwin) {Oni_Core.SplitDirection.Current} else {
+          Oni_Core.SplitDirection.Horizontal
         };
 
       dispatch(
         Actions.Terminal(
-          Command(
-            NewTerminal({cmd, splitDirection, closeOnExit: closeOnFinish}),
+          Feature_Terminal.Msg.terminalCreatedFromVim(
+            ~cmd,
+            ~splitDirection,
+            ~closeOnExit=closeOnFinish,
           ),
         ),
       );
@@ -777,38 +783,6 @@ let start =
       ();
     });
 
-  let setTerminalLinesEffect = (~editorId, ~bufferId, lines: array(string)) => {
-    Isolinear.Effect.create(~name="vim.setTerminalLinesEffect", () => {
-      let () =
-        bufferId
-        |> Vim.Buffer.getById
-        |> Option.iter(buf => {
-             Vim.Buffer.setModifiable(~modifiable=true, buf);
-             Vim.Buffer.setLines(~shouldAdjustCursors=false, ~lines, buf);
-             Vim.Buffer.setModifiable(~modifiable=false, buf);
-             Vim.Buffer.setReadOnly(~readOnly=true, buf);
-           });
-
-      // Clear out previous mode
-      let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
-      let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
-      // Jump to bottom
-      let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.input("g");
-      let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.input("g");
-      let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.input("G");
-      let ({mode, _}: Vim.Context.t, effects) = Vim.input("$");
-
-      // Update the editor, which is the source of truth for cursor position
-      let scope = EditorScope.Editor(editorId);
-      dispatch(
-        Actions.Editor({
-          scope,
-          msg: ModeChanged({allowAnimation: true, mode, effects}),
-        }),
-      );
-    });
-  };
-
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | SynchronizeExperimentalViml(lines) => (state, synchronizeViml(lines))
@@ -846,85 +820,6 @@ let start =
       (state, eff);
 
     | Init => (state, initEffect)
-    | Terminal(Command(NormalMode)) =>
-      let maybeBufferId =
-        state
-        |> Selectors.getActiveBuffer
-        |> Option.map(Oni_Core.Buffer.getId);
-
-      let maybeTerminalId =
-        maybeBufferId
-        |> Option.map(id =>
-             BufferRenderers.getById(id, state.bufferRenderers)
-           )
-        |> OptionEx.flatMap(
-             fun
-             | BufferRenderer.Terminal({id, _}) => Some(id)
-             | _ => None,
-           );
-
-      let editorId =
-        Feature_Layout.activeEditor(state.layout) |> Editor.getId;
-
-      let (state, effect) =
-        OptionEx.map2(
-          (bufferId, terminalId) => {
-            let colorTheme = Feature_Theme.colors(state.colorTheme);
-            let (lines, highlights) =
-              Feature_Terminal.getLinesAndHighlights(
-                ~colorTheme,
-                ~terminalId,
-              );
-            let syntaxHighlights =
-              List.fold_left(
-                (acc, curr) => {
-                  let (line, tokens) = curr;
-                  Feature_Syntax.setTokensForLine(
-                    ~bufferId,
-                    ~line,
-                    ~tokens,
-                    acc,
-                  );
-                },
-                state.syntaxHighlights,
-                highlights,
-              );
-
-            let syntaxHighlights =
-              syntaxHighlights |> Feature_Syntax.ignore(~bufferId);
-
-            let layout =
-              Feature_Layout.map(
-                editor =>
-                  if (Editor.getBufferId(editor) == bufferId) {
-                    state.buffers
-                    |> Feature_Buffers.get(bufferId)
-                    |> Option.map(buffer => {
-                         let updatedBuffer =
-                           buffer
-                           |> Oni_Core.Buffer.setFont(state.terminalFont)
-                           |> Feature_Editor.EditorBuffer.ofBuffer;
-                         Editor.setBuffer(~buffer=updatedBuffer, editor);
-                       })
-                    |> Option.value(~default=editor);
-                  } else {
-                    editor;
-                  },
-                state.layout,
-              );
-
-            (
-              {...state, layout, syntaxHighlights},
-              setTerminalLinesEffect(~bufferId, ~editorId, lines),
-            );
-          },
-          maybeBufferId,
-          maybeTerminalId,
-        )
-        |> Option.value(~default=(state, Isolinear.Effect.none));
-
-      (state, effect);
-
     | KeyboardInput({isText, input}) => (state, inputEffect(~isText, input))
 
     | CopyActiveFilepathToClipboard => (

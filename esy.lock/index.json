@@ -1,5 +1,5 @@
 {
-  "checksum": "d2fb167ca8c8b0400f85ec29c6bde417",
+  "checksum": "fcc4dbe87b90ed19126e9327280a4b13",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -91,21 +91,21 @@
       ],
       "devDependencies": []
     },
-    "revery-terminal@github:revery-ui/revery-terminal#6a58785@d41d8cd9": {
+    "revery-terminal@github:revery-ui/revery-terminal#7823010@d41d8cd9": {
       "id":
-        "revery-terminal@github:revery-ui/revery-terminal#6a58785@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#7823010@d41d8cd9",
       "name": "revery-terminal",
-      "version": "github:revery-ui/revery-terminal#6a58785",
+      "version": "github:revery-ui/revery-terminal#7823010",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery-terminal#6a58785" ]
+        "source": [ "github:revery-ui/revery-terminal#7823010" ]
       },
       "overrides": [],
       "dependencies": [
         "revery@github:revery-ui/revery#e0c12e7@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#049ad1e@d41d8cd9",
         "@revery/timber@2.0.0@d41d8cd9",
-        "@revery/esy-libvterm@1.0.4@d41d8cd9",
+        "@revery/esy-libvterm@1.0.5@d41d8cd9",
         "@onivim/reason-native-crash-utils@1.0.2@d41d8cd9"
       ],
       "devDependencies": []
@@ -892,7 +892,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery-terminal@github:revery-ui/revery-terminal#6a58785@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#7823010@d41d8cd9",
         "revery@github:revery-ui/revery#e0c12e7@d41d8cd9",
         "rench@1.10.0@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#a80a9d9@d41d8cd9",
@@ -959,14 +959,14 @@
       ],
       "devDependencies": []
     },
-    "@revery/esy-libvterm@1.0.4@d41d8cd9": {
-      "id": "@revery/esy-libvterm@1.0.4@d41d8cd9",
+    "@revery/esy-libvterm@1.0.5@d41d8cd9": {
+      "id": "@revery/esy-libvterm@1.0.5@d41d8cd9",
       "name": "@revery/esy-libvterm",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/@revery/esy-libvterm/-/esy-libvterm-1.0.4.tgz#sha1:10af4b9124bf55bb56f19a3fc0075f5f12ce516f"
+          "archive:https://registry.npmjs.org/@revery/esy-libvterm/-/esy-libvterm-1.0.5.tgz#sha1:c44fde3e768d27568b90b709835ee8ba6795c49f"
         ]
       },
       "overrides": [],

@@ -248,8 +248,22 @@ let start =
           |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg))
         : Isolinear.Sub.none;
 
+    let fontFamily = Feature_Editor.Configuration.fontFamily.get(config);
+    let fontSize = Feature_Editor.Configuration.fontSize.get(config);
+    let fontWeight = Feature_Editor.Configuration.fontWeight.get(config);
+    let fontLigatures =
+      Feature_Editor.Configuration.fontLigatures.get(config);
+    let fontSmoothing =
+      Feature_Editor.Configuration.fontSmoothing.get(config);
+
     let terminalSubscription =
       Feature_Terminal.subscription(
+        ~defaultFontFamily=fontFamily,
+        ~defaultFontSize=fontSize,
+        ~defaultFontWeight=fontWeight,
+        ~defaultLigatures=fontLigatures,
+        ~defaultSmoothing=fontSmoothing,
+        ~config,
         ~setup,
         ~workspaceUri=
           Core.Uri.fromPath(
@@ -259,15 +273,6 @@ let start =
         state.terminals,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.Terminal(msg));
-
-    let fontFamily = Feature_Editor.Configuration.fontFamily.get(config);
-    let fontSize = Feature_Editor.Configuration.fontSize.get(config);
-    let fontWeight = Feature_Editor.Configuration.fontWeight.get(config);
-    let fontLigatures =
-      Feature_Editor.Configuration.fontLigatures.get(config);
-
-    let fontSmoothing =
-      Feature_Editor.Configuration.fontSmoothing.get(config);
 
     let editorFontSubscription =
       Service_Font.Sub.font(
@@ -279,37 +284,6 @@ let start =
         ~fontLigatures,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.EditorFont(msg));
-
-    let terminalFontFamily =
-      Feature_Terminal.Configuration.fontFamily.get(config)
-      |> Option.value(~default=fontFamily);
-
-    let terminalFontSize =
-      Feature_Terminal.Configuration.fontSize.get(config)
-      |> Option.value(~default=fontSize);
-
-    let terminalFontWeight =
-      Feature_Terminal.Configuration.fontWeight.get(config)
-      |> Option.value(~default=fontWeight);
-
-    let terminalFontLigatures =
-      Feature_Terminal.Configuration.fontLigatures.get(config)
-      |> Option.value(~default=fontLigatures);
-
-    let terminalFontSmoothing =
-      Feature_Terminal.Configuration.fontSmoothing.get(config)
-      |> Option.value(~default=fontSmoothing);
-
-    let terminalFontSubscription =
-      Service_Font.Sub.font(
-        ~uniqueId="terminalFont",
-        ~fontFamily=terminalFontFamily,
-        ~fontSize=terminalFontSize,
-        ~fontWeight=terminalFontWeight,
-        ~fontSmoothing=terminalFontSmoothing,
-        ~fontLigatures=terminalFontLigatures,
-      )
-      |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 
     let visibleEditors = Feature_Layout.visibleEditors(state.layout);
 
@@ -518,6 +492,14 @@ let start =
       Feature_Search.sub(~config, ~workingDirectory, ~setup, state.searchPane)
       |> Isolinear.Sub.map(msg => Model.Actions.Search(msg));
 
+    let paneSub =
+      Feature_Pane.sub(
+        ~isFocused=Model.FocusManager.current(state) == Model.Focus.Pane,
+        state,
+        state.pane,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.Pane(msg));
+
     [
       clientServerSub,
       menuBarSub,
@@ -526,7 +508,6 @@ let start =
       syntaxSubscription,
       terminalSubscription,
       editorFontSubscription,
-      terminalFontSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
       fileExplorerSub,
@@ -543,6 +524,7 @@ let start =
       themeSub,
       vimBufferSub,
       searchSub,
+      paneSub,
     ]
     |> Isolinear.Sub.batch;
   };

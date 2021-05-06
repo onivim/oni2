@@ -49,26 +49,30 @@ describe("Diagnostics", ({describe, _}) => {
   describe("count", ({test, _}) => {
     test("change single buffer, multiple keys", ({expect, _}) => {
       let v = Diagnostics.initial;
-      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
+      let v =
+        Diagnostics.Testing.change(v, uri, "test_key1", singleDiagnostic);
 
       expect.int(Diagnostics.count(v)).toBe(1);
 
-      let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
+      let v =
+        Diagnostics.Testing.change(v, uri, "test_key2", doubleDiagnostic);
       expect.int(Diagnostics.count(v)).toBe(3);
 
-      let v = Diagnostics.clear(v, "test_key1");
+      let v = Diagnostics.Testing.clear(v, "test_key1");
       expect.int(Diagnostics.count(v)).toBe(2);
     });
 
     test("change multiple buffers, multiple keys", ({expect, _}) => {
       let v = Diagnostics.initial;
 
-      let v = Diagnostics.change(v, uri1, "test_key1", singleDiagnostic);
-      let v = Diagnostics.change(v, uri2, "test_key1", doubleDiagnostic);
+      let v =
+        Diagnostics.Testing.change(v, uri1, "test_key1", singleDiagnostic);
+      let v =
+        Diagnostics.Testing.change(v, uri2, "test_key1", doubleDiagnostic);
 
       expect.int(Diagnostics.count(v)).toBe(3);
 
-      let v = Diagnostics.clear(v, "test_key1");
+      let v = Diagnostics.Testing.clear(v, "test_key1");
       expect.int(Diagnostics.count(v)).toBe(0);
     });
   });
@@ -109,7 +113,8 @@ describe("Diagnostics", ({describe, _}) => {
 
       let v = Diagnostics.initial;
 
-      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
+      let v =
+        Diagnostics.Testing.change(v, uri, "test_key1", singleDiagnostic);
 
       let diags =
         Diagnostics.getDiagnosticsAtPosition(
@@ -183,8 +188,9 @@ describe("Diagnostics", ({describe, _}) => {
       let buffer = Buffer.ofLines(~font=Font.default(), [||]);
 
       let v = Diagnostics.initial;
-      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
-      let v = Diagnostics.clear(v, "test_key1");
+      let v =
+        Diagnostics.Testing.change(v, uri, "test_key1", singleDiagnostic);
+      let v = Diagnostics.Testing.clear(v, "test_key1");
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 
@@ -194,9 +200,11 @@ describe("Diagnostics", ({describe, _}) => {
       let buffer = Buffer.ofLines(~font=Font.default(), [||]);
 
       let v = Diagnostics.initial;
-      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
-      let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
-      let v = Diagnostics.clear(v, "test_key1");
+      let v =
+        Diagnostics.Testing.change(v, uri, "test_key1", singleDiagnostic);
+      let v =
+        Diagnostics.Testing.change(v, uri, "test_key2", doubleDiagnostic);
+      let v = Diagnostics.Testing.clear(v, "test_key1");
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 
@@ -209,7 +217,8 @@ describe("Diagnostics", ({describe, _}) => {
       let buffer = Buffer.ofLines(~font=Font.default(), [||]);
       let v = Diagnostics.initial;
 
-      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
+      let v =
+        Diagnostics.Testing.change(v, uri, "test_key1", singleDiagnostic);
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 
@@ -220,8 +229,10 @@ describe("Diagnostics", ({describe, _}) => {
       let buffer = Buffer.ofLines(~font=Font.default(), [||]);
       let v = Diagnostics.initial;
 
-      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
-      let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
+      let v =
+        Diagnostics.Testing.change(v, uri, "test_key1", singleDiagnostic);
+      let v =
+        Diagnostics.Testing.change(v, uri, "test_key2", doubleDiagnostic);
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 
@@ -234,9 +245,11 @@ describe("Diagnostics", ({describe, _}) => {
       let buffer = Buffer.ofLines(~font=Font.default(), [||]);
       let v = Diagnostics.initial;
 
-      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
-      let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
-      let v = Diagnostics.change(v, uri, "test_key1", []);
+      let v =
+        Diagnostics.Testing.change(v, uri, "test_key1", singleDiagnostic);
+      let v =
+        Diagnostics.Testing.change(v, uri, "test_key2", doubleDiagnostic);
+      let v = Diagnostics.Testing.change(v, uri, "test_key1", []);
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 

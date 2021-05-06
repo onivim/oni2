@@ -425,15 +425,35 @@ let update =
     (state, eff);
 
   | Diagnostics(msg) =>
-    let diagnostics = Feature_Diagnostics.update(msg, state.diagnostics);
-    (
-      {
-        ...state,
-        diagnostics,
-        pane: Feature_Pane.setDiagnostics(diagnostics, state.pane),
-      },
-      Isolinear.Effect.none,
-    );
+    let config = Selectors.configResolver(state);
+    let previewEnabled =
+      Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+        get(
+        config,
+      );
+    let (diagnostics, outmsg) =
+      Feature_Diagnostics.update(~previewEnabled, msg, state.diagnostics);
+
+    let state' = {...state, diagnostics};
+    switch (outmsg) {
+    | Nothing => (state', Isolinear.Effect.none)
+    | OpenFile({filePath, position}) => (
+        state',
+        Internal.openFileEffect(~position=Some(position), filePath),
+      )
+    | PreviewFile({filePath, position}) => (
+        state',
+        Internal.previewFileEffect(~position=Some(position), filePath),
+      )
+
+    | TogglePane({paneId}) => (
+        state',
+        EffectEx.value(
+          ~name="Feature_Diagnostics.Effect.togglePane",
+          Actions.Pane(Feature_Pane.Msg.toggle(~paneId)),
+        ),
+      )
+    };
 
   | Exthost(msg) =>
     let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
@@ -664,12 +684,21 @@ let update =
       editor |> Feature_Editor.Editor.byteRangeToCharacterRange(selection);
 
     let config = Selectors.configResolver(state);
+    let previewEnabled =
+      Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+        get(
+        config,
+      );
 
     let (languageSupport, outmsg) =
       Feature_LanguageSupport.update(
+        ~buffers=state.buffers,
         ~config,
         ~diagnostics=state.diagnostics,
+        ~languageInfo,
+        ~font=state.editorFont,
         ~languageConfiguration,
+        ~previewEnabled,
         ~extensions=state.extensions,
         ~maybeBuffer,
         ~maybeSelection=characterSelection,
@@ -799,17 +828,14 @@ let update =
           |> Isolinear.Effect.batch;
         (state, eff);
       | ReferencesAvailable =>
-        let references =
-          Feature_LanguageSupport.References.get(languageSupport);
-        let pane =
-          state.pane
-          |> Feature_Pane.setLocations(
-               ~maybeActiveBuffer=maybeBuffer,
-               ~locations=references,
-             )
-          |> Feature_Pane.show(~pane=Locations);
-        let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
-        (state', Isolinear.Effect.none);
+        let effect =
+          EffectEx.value(
+            ~name="Feature_LanguageSupport.References.Effect.togglePane",
+            Actions.Pane(
+              Feature_Pane.Msg.toggle(~paneId="workbench.panel.locations"),
+            ),
+          );
+        (state, effect);
       | InsertSnippet({replaceSpan, snippet, _}) =>
         let editor = Feature_Layout.activeEditor(state.layout);
         // let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
@@ -833,6 +859,10 @@ let update =
           )
           |> Isolinear.Effect.map(msg => Snippets(msg)),
         );
+      | PreviewFile({filePath, position}) => (
+          state,
+          Internal.previewFileEffect(~position=Some(position), filePath),
+        )
       | OpenFile({filePath, location, direction}) => (
           state,
           Internal.openFileEffect(~direction, ~position=location, filePath),
@@ -953,35 +983,12 @@ let update =
     (state, eff);
 
   | Pane(msg) =>
-    let config = Selectors.configResolver(state);
-    let languageInfo =
-      state.languageSupport |> Feature_LanguageSupport.languageInfo;
-    let (model, outmsg) =
-      Feature_Pane.update(
-        ~font=state.editorFont,
-        ~languageInfo,
-        ~buffers=state.buffers,
-        ~previewEnabled=
-          Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
-            get(
-            config,
-          ),
-        msg,
-        state.pane,
-      );
+    let (model, outmsg) = Feature_Pane.update(msg, state.pane);
 
     let state = {...state, pane: model};
 
     switch (outmsg) {
     | Nothing => (state, Isolinear.Effect.none)
-    | OpenFile({filePath, position}) => (
-        state,
-        Internal.openFileEffect(~position=Some(position), filePath),
-      )
-    | PreviewFile({filePath, position}) => (
-        state,
-        Internal.previewFileEffect(~position=Some(position), filePath),
-      )
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -995,23 +1002,19 @@ let update =
         Isolinear.Effect.none,
       )
 
-    | NotificationDismissed(notification) => (
+    | NestedMessage(msg) => (
         state,
-        Feature_Notification.Effects.dismiss(notification)
-        |> Isolinear.Effect.map(msg => Notification(msg)),
+        EffectEx.value(~name="Feature_Pane.NestedMessage", msg),
       )
-
-    | PaneButton(pane) =>
-      switch (pane) {
-      | Notifications => (
-          state,
-          Feature_Notification.Effects.clear()
-          |> Isolinear.Effect.map(msg => Notification(msg)),
-        )
-      | _ => (state, Isolinear.Effect.none)
-      }
-
-    | Effect(eff) => (state, eff |> Isolinear.Effect.map(msg => Pane(msg)))
+    // | PaneButton(pane) =>
+    //   switch (pane) {
+    //   | Notifications => (
+    //       state,
+    //       Feature_Notification.Effects.clear()
+    //       |> Isolinear.Effect.map(msg => Notification(msg)),
+    //     )
+    //   | _ => (state, Isolinear.Effect.none)
+    //   }
     };
 
   | Registers(msg) =>
@@ -1226,15 +1229,10 @@ let update =
       switch ((maybeOutmsg: Feature_StatusBar.outmsg)) {
       | Nothing => (state', Effect.none)
       | ToggleProblems => (
-          {
-            ...state',
-            pane:
-              Feature_Pane.toggle(
-                ~pane=Feature_Pane.Diagnostics,
-                state'.pane,
-              ),
-          },
-          Effect.none,
+          state',
+          Feature_Pane.Msg.toggle(~paneId="workbench.panel.markers")
+          |> EffectEx.value(~name="Feature_StatusBar.toggleProblems")
+          |> Effect.map(msg => Pane(msg)),
         )
 
       | ClearNotifications => (
@@ -1242,15 +1240,10 @@ let update =
           Effect.none,
         )
       | ToggleNotifications => (
-          {
-            ...state',
-            pane:
-              Feature_Pane.toggle(
-                ~pane=Feature_Pane.Notifications,
-                state'.pane,
-              ),
-          },
-          Effect.none,
+          state,
+          Feature_Pane.Msg.toggle(~paneId="workbench.panel.notifications")
+          |> EffectEx.value(~name="Feature_StatusBar.toggleNotifications")
+          |> Effect.map(msg => Pane(msg)),
         )
       | ShowFileTypePicker =>
         let bufferId =
@@ -1899,13 +1892,116 @@ let update =
           state,
           eff |> Effect.map(msg => Actions.Terminal(msg)),
         )
+
+      | NotifyError(msg) => (
+          state,
+          Internal.notificationEffect(~kind=Error, msg),
+        )
+
+      | ClosePane({paneId}) => (
+          state,
+          Feature_Pane.Msg.close(~paneId)
+          |> EffectEx.value(~name="Feature_Terminal.closePane")
+          |> Effect.map(msg => Pane(msg)),
+        )
+      | TogglePane({paneId}) => (
+          state,
+          Feature_Pane.Msg.toggle(~paneId)
+          |> EffectEx.value(~name="Feature_Terminal.togglePane")
+          |> Effect.map(msg => Pane(msg)),
+        )
+
+      | SwitchToNormalMode =>
+        let maybeBufferId =
+          state
+          |> Selectors.getActiveBuffer
+          |> Option.map(Oni_Core.Buffer.getId);
+
+        let maybeTerminalId =
+          maybeBufferId
+          |> Option.map(id =>
+               BufferRenderers.getById(id, state.bufferRenderers)
+             )
+          |> OptionEx.flatMap(
+               fun
+               | BufferRenderer.Terminal({id, _}) => Some(id)
+               | _ => None,
+             );
+
+        let editorId =
+          Feature_Layout.activeEditor(state.layout)
+          |> Feature_Editor.Editor.getId;
+
+        let (state, effect) =
+          OptionEx.map2(
+            (bufferId, terminalId) => {
+              let colorTheme = Feature_Theme.colors(state.colorTheme);
+              let (lines, highlights) =
+                Feature_Terminal.getLinesAndHighlights(
+                  ~colorTheme,
+                  ~terminalId,
+                );
+              let syntaxHighlights =
+                List.fold_left(
+                  (acc, curr) => {
+                    let (line, tokens) = curr;
+                    Feature_Syntax.setTokensForLine(
+                      ~bufferId,
+                      ~line,
+                      ~tokens,
+                      acc,
+                    );
+                  },
+                  state.syntaxHighlights,
+                  highlights,
+                );
+
+              let syntaxHighlights =
+                syntaxHighlights |> Feature_Syntax.ignore(~bufferId);
+
+              let terminalFont = Feature_Terminal.font(state.terminals);
+              let layout =
+                Feature_Layout.map(
+                  editor =>
+                    if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
+                      state.buffers
+                      |> Feature_Buffers.get(bufferId)
+                      |> Option.map(buffer => {
+                           let updatedBuffer =
+                             buffer
+                             |> Oni_Core.Buffer.setFont(terminalFont)
+                             |> Feature_Editor.EditorBuffer.ofBuffer;
+                           Feature_Editor.Editor.setBuffer(
+                             ~buffer=updatedBuffer,
+                             editor,
+                           );
+                         })
+                      |> Option.value(~default=editor);
+                    } else {
+                      editor;
+                    },
+                  state.layout,
+                );
+
+              (
+                {...state, layout, syntaxHighlights},
+                Feature_Vim.Effects.setTerminalLines(
+                  ~bufferId,
+                  ~editorId,
+                  lines,
+                )
+                |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
+              );
+            },
+            maybeBufferId,
+            maybeTerminalId,
+          )
+          |> Option.value(~default=(state, Isolinear.Effect.none));
+
+        (state, effect);
+
       | TerminalCreated({name, splitDirection}) =>
-        let windowTreeDirection =
-          switch (splitDirection) {
-          | Horizontal => SplitDirection.Horizontal
-          | Vertical => SplitDirection.Vertical({shouldReuse: false})
-          | Current => SplitDirection.Current
-          };
+        let windowTreeDirection = splitDirection;
 
         let eff =
           Isolinear.Effect.createWithDispatch(
@@ -2040,7 +2136,8 @@ let update =
     let theme = Feature_Theme.colors(state.colorTheme);
     let model' =
       Feature_Notification.update(~theme, ~config, state.notifications, msg);
-    let pane' = Feature_Pane.setNotifications(model', state.pane);
+    // let pane' = Feature_Pane.setNotifications(model', state.pane);
+    let pane' = state.pane;
     ({...state, notifications: model', pane: pane'}, Effect.none);
 
   | Modals(msg) =>
@@ -2125,6 +2222,19 @@ let update =
       state,
       Internal.notificationEffect(~kind=Error, message),
     )
+
+  | Output(msg) =>
+    let (output', outmsg) = Feature_Output.update(msg, state.output);
+
+    let state' = {...state, output: output'};
+    switch (outmsg) {
+    | Nothing => (state', Isolinear.Effect.none)
+
+    | ClosePane => (
+        {...state', pane: Feature_Pane.close(state'.pane)},
+        Isolinear.Effect.none,
+      )
+    };
 
   | Quickmenu(msg) =>
     let (quickmenu', outmsg) =
@@ -2307,16 +2417,6 @@ let update =
       eff,
     );
 
-  // TODO: This should live in the terminal feature project
-  | TerminalFont(Service_Font.FontLoaded(font)) => (
-      {...state, terminalFont: font},
-      Isolinear.Effect.none,
-    )
-  | TerminalFont(Service_Font.FontLoadError(message)) => (
-      state,
-      Internal.notificationEffect(~kind=Error, message),
-    )
-
   | TitleBar(titleBarMsg) =>
     let eff =
       switch (
@@ -2491,9 +2591,12 @@ let update =
     | ModeDidChange({allowAnimation, mode, effects}) =>
       Internal.updateMode(~allowAnimation, state, mode, effects)
     | Output({cmd, output}) =>
-      let pane' = state.pane |> Feature_Pane.setOutput(cmd, output);
+      let output' =
+        state.output |> Feature_Output.setProcessOutput(~cmd, ~output);
+      let pane' =
+        state.pane |> Feature_Pane.show(~paneId="workbench.panel.output");
       (
-        {...state, pane: pane'} |> FocusManager.push(Pane),
+        {...state, pane: pane', output: output'} |> FocusManager.push(Pane),
         Isolinear.Effect.none,
       );
     };

@@ -47,9 +47,27 @@ module DiagnosticEntry = {
 };
 
 [@deriving show]
+type command =
+  | ToggleProblemsPane;
+
+[@deriving show]
 type msg =
   | Set([@opaque] list(DiagnosticEntry.t))
-  | Clear({owner: string});
+  | Clear({owner: string})
+  | Pane(Pane.msg)
+  | Command(command);
+
+type outmsg =
+  | Nothing
+  | OpenFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    })
+  | PreviewFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    })
+  | TogglePane({paneId: string});
 
 module Msg = {
   let exthost =
@@ -78,12 +96,14 @@ type model = {
   // Keep a cached count so we don't have to recalculate when
   // querying UI
   count: int,
+  pane: Pane.model,
 };
 
 let initial = {
   keyToUri: StringMap.empty,
   diagnosticsMap: StringMap.empty,
   count: 0,
+  pane: Pane.initial,
 };
 
 // UPDATE
@@ -222,33 +242,21 @@ let change = (instance, uri, diagKey, diagnostics) => {
   |> Internal.recalculateCount;
 };
 
-let update = (msg, model) =>
-  switch (msg) {
-  | Clear({owner}) => clear(model, owner)
-  | Set(entries) =>
-    entries
-    |> List.fold_left(
-         (acc, curr: DiagnosticEntry.t) => {
-           change(acc, curr.uri, curr.owner, curr.diagnostics)
-         },
-         model,
-       )
-  };
-
-let getDiagnostics = ({diagnosticsMap, _}, buffer) => {
-  let f = ((_key, v)) => v;
-  let bufferKey = getKeyForBuffer(buffer);
-  switch (StringMap.find_opt(bufferKey, diagnosticsMap)) {
-  | None => []
-  | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten
+let diagnosticToLocList = (diagWithUri: (Uri.t, Diagnostic.t)) => {
+  let (uri, diag) = diagWithUri;
+  let file = Uri.toFileSystemPath(uri);
+  let location = Diagnostic.(diag.range.start);
+  Oni_Components.LocationListItem.{
+    file,
+    location,
+    text: diag.message,
+    highlight: None,
   };
 };
 
-let _value = ((_key, v)) => v;
-
 let getAllDiagnostics = (diagnostics: model) => {
   let extractBindings = map => {
-    StringMap.bindings(map) |> List.map(_value) |> List.flatten;
+    StringMap.bindings(map) |> List.map(snd) |> List.flatten;
   };
 
   StringMap.fold(
@@ -265,6 +273,57 @@ let getAllDiagnostics = (diagnostics: model) => {
     [],
   )
   |> List.flatten;
+};
+
+let syncPane = (model: model) => {
+  let locations = model |> getAllDiagnostics |> List.map(diagnosticToLocList);
+  {...model, pane: Pane.setDiagnostics(locations, model.pane)};
+};
+
+let update = (~previewEnabled, msg, model) => {
+  switch (msg) {
+  | Command(ToggleProblemsPane) => (
+      model,
+      TogglePane({paneId: "workbench.panel.markers"}),
+    )
+  | Pane(msg) =>
+    let (pane', outmsg) = Pane.update(msg, model.pane);
+    let eff =
+      switch (outmsg) {
+      | Component_VimTree.Nothing => Nothing
+      | Component_VimTree.Touched(item) =>
+        previewEnabled
+          ? PreviewFile({filePath: item.file, position: item.location})
+          : OpenFile({filePath: item.file, position: item.location})
+      | Component_VimTree.SelectedNode(_) => Nothing
+      | Component_VimTree.Selected(item) =>
+        OpenFile({filePath: item.file, position: item.location})
+      | Component_VimTree.Collapsed(_) => Nothing
+      | Component_VimTree.Expanded(_) => Nothing
+      };
+    ({...model, pane: pane'}, eff);
+  | Clear({owner}) => (clear(model, owner) |> syncPane, Nothing)
+  | Set(entries) =>
+    let model' =
+      entries
+      |> List.fold_left(
+           (acc, curr: DiagnosticEntry.t) => {
+             change(acc, curr.uri, curr.owner, curr.diagnostics)
+           },
+           model,
+         )
+      |> syncPane;
+    (model', Nothing);
+  };
+};
+
+let getDiagnostics = ({diagnosticsMap, _}, buffer) => {
+  let f = ((_key, v)) => v;
+  let bufferKey = getKeyForBuffer(buffer);
+  switch (StringMap.find_opt(bufferKey, diagnosticsMap)) {
+  | None => []
+  | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten
+  };
 };
 
 let getDiagnosticsAtPosition = (instance, buffer, position) => {
@@ -346,4 +405,50 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model: model) => {
     markerUpdate,
     model,
   );
+};
+
+module Commands = {
+  open Feature_Commands.Schema;
+  let problems =
+    define(
+      ~category="View",
+      ~title="Toggle Problems (Errors, Warnings)",
+      "workbench.actions.view.problems",
+      Command(ToggleProblemsPane),
+    );
+};
+
+module Keybindings = {
+  open Feature_Input.Schema;
+  let toggleProblems =
+    bind(
+      ~key="<S-C-M>",
+      ~command=Commands.problems.id,
+      ~condition=WhenExpr.Value(True),
+    );
+
+  let toggleProblemsOSX =
+    bind(
+      ~key="<D-S-M>",
+      ~command=Commands.problems.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
+};
+
+module Contributions = {
+  let commands = Commands.[problems];
+
+  let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX];
+
+  let pane =
+    Pane.pane
+    |> Feature_Pane.Schema.map(
+         ~msg=msg => Pane(msg),
+         ~model=({pane, _}) => pane,
+       );
+};
+
+module Testing = {
+  let change = change;
+  let clear = clear;
 };

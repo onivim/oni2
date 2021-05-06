@@ -172,19 +172,16 @@ module Parts = {
         |> Option.value(~default=<Text text="Unable to load." />)
 
       | Terminal({id, _}) =>
-        state.terminals
-        |> Feature_Terminal.getTerminalOpt(id)
-        |> Option.map(terminal => {
-             let config = Selectors.configResolver(state);
-             <TerminalView
-               config
-               isActive
-               theme
-               font={state.terminalFont}
-               terminal
-             />;
-           })
-        |> Option.value(~default=React.empty)
+        let config = Selectors.configResolver(state);
+        <Feature_Terminal.TerminalView
+          config
+          isActive
+          theme
+          terminals={state.terminals}
+          id
+          font={Feature_Terminal.font(state.terminals)}
+          dispatch={msg => dispatch(Actions.Terminal(msg))}
+        />;
 
       | Editor =>
         <Editor editor buffer state theme isActive dispatch renderOverlays />
