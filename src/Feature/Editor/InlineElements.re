@@ -421,22 +421,6 @@ let updateElement =
      );
 };
 
-let update = (msg, model) =>
-  switch (msg) {
-  | OpacityAnimation({key, uniqueId, line, msg}) =>
-    let updateOpacity = element => {
-      ...element,
-      opacity: Component_Animation.update(msg, element.opacity),
-    };
-    updateElement(~key, ~uniqueId, ~line, ~f=updateOpacity, model);
-  | HeightAnimation({key, uniqueId, line, msg}) =>
-    let updateHeight = element => {
-      ...element,
-      height: Component_Animation.update(msg, element.height),
-    };
-    updateElement(~key, ~uniqueId, ~line, ~f=updateHeight, model);
-  };
-
 let setSize = (~animated, ~key, ~line, ~uniqueId, ~height, model) => {
   let setHeight = (curr: element) => {
     {
