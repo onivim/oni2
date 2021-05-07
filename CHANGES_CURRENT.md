@@ -106,6 +106,7 @@
 - #3461 - Dependency: vscode-exthost -> 1.54.3
 - #3462 - Dependency: vscode-exthost -> 1.55.2
 - #3500 - Dependency: Revery -> e0c12e7 (fixes #3494)
+- #3514 - Configuration: Remove legacy configuration values
 
 ### Infrastructure
 

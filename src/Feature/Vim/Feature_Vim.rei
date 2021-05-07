@@ -12,6 +12,14 @@ let subMode: model => Vim.SubMode.t;
 
 let experimentalViml: model => list(string);
 
+type vimUseSystemClipboard = {
+  yank: bool,
+  delete: bool,
+  paste: bool,
+};
+
+let useSystemClipboard: model => vimUseSystemClipboard;
+
 // MSG
 
 [@deriving show]

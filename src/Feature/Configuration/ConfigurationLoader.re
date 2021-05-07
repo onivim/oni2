@@ -8,16 +8,7 @@ module Log = (
 );
 
 let loadConfiguration = (loadResult: result(Yojson.Safe.t, string)) => {
-  loadResult
-  |> ResultEx.flatMap(json => {
-       let legacyConfigParseResult = LegacyConfigurationParser.ofJson(json);
-       legacyConfigParseResult
-       |> Result.map(legacyConfig => (json, legacyConfig));
-     })
-  |> Result.map(((json, legacyConfig)) => {
-       let config = Config.Settings.fromJson(json);
-       (config, legacyConfig);
-     });
+  loadResult |> Result.map(json => {Config.Settings.fromJson(json)});
 };
 
 module File = {

@@ -6,6 +6,12 @@ module Log = (val Oni_Core.Log.withNamespace("Feature_Vim"));
 
 // MODEL
 
+type vimUseSystemClipboard = {
+  yank: bool,
+  delete: bool,
+  paste: bool,
+};
+
 type model = {
   settings: StringMap.t(Vim.Setting.value),
   recordingMacro: option(char),
@@ -13,6 +19,7 @@ type model = {
   searchPattern: option(string),
   searchHighlights: SearchHighlights.t,
   experimentalViml: list(string),
+  useSystemClipboard: vimUseSystemClipboard,
 };
 
 let initial = {
@@ -22,23 +29,100 @@ let initial = {
   searchPattern: None,
   searchHighlights: SearchHighlights.initial,
   experimentalViml: [],
+  useSystemClipboard: {
+    yank: true,
+    delete: false,
+    paste: false,
+  },
 };
 
+let useSystemClipboard = ({useSystemClipboard, _}) => useSystemClipboard;
+
 module Configuration = {
+  open Config.Schema;
+
+  module Codecs = {
+    let vimUseSystemClipboard =
+      custom(
+        ~encode=
+          Json.Encode.(
+            {
+              (useClipboard: vimUseSystemClipboard) => {
+                obj([
+                  ("yank", useClipboard.yank |> bool),
+                  ("delete", useClipboard.delete |> bool),
+                  ("paste", useClipboard.paste |> bool),
+                ]);
+              };
+            }
+          ),
+        ~decode=
+          Json.Decode.(
+            {
+              let decodeBool =
+                bool
+                |> map(
+                     fun
+                     | true => {yank: true, delete: true, paste: true}
+                     | false => {yank: false, delete: false, paste: false},
+                   );
+
+              let applyString = (prev, str) =>
+                switch (String.lowercase_ascii(str)) {
+                | "yank" => {...prev, yank: true}
+                | "delete" => {...prev, delete: true}
+                | "paste" => {...prev, paste: true}
+                | _ => prev
+                };
+
+              let decodeString =
+                string
+                |> map(
+                     applyString({yank: false, delete: false, paste: false}),
+                   );
+
+              let decodeList =
+                list(string)
+                |> map(
+                     List.fold_left(
+                       applyString,
+                       {yank: false, delete: false, paste: false},
+                     ),
+                   );
+
+              one_of([
+                ("vimUseSystemClipboard.bool", decodeBool),
+                ("vimUseSystemClipboard.string", decodeString),
+                ("vimUseSystemClipboard.list", decodeList),
+              ]);
+            }
+          ),
+      );
+  };
+
   type resolver = string => option(Vim.Setting.value);
 
   let resolver = ({settings, _}, settingName) => {
     settings |> StringMap.find_opt(settingName);
   };
 
-  open Config.Schema;
-
   let experimentalViml =
     setting("experimental.viml", list(string), ~default=[]);
+
+  let useSystemClipboard =
+    setting(
+      "vim.useSystemClipboard",
+      Codecs.vimUseSystemClipboard,
+      ~default={yank: true, delete: false, paste: false},
+    );
 };
 
 let configurationChanged = (~config, model) => {
-  {...model, experimentalViml: Configuration.experimentalViml.get(config)};
+  {
+    ...model,
+    useSystemClipboard: Configuration.useSystemClipboard.get(config),
+    experimentalViml: Configuration.experimentalViml.get(config),
+  };
 };
 
 let recordingMacro = ({recordingMacro, _}) => recordingMacro;
