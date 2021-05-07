@@ -18,20 +18,6 @@ module Constants = {
   let maxElementsToAnimate = 100;
 };
 
-type msg =
-  | OpacityAnimation({
-      key: string,
-      line: LineNumber.t,
-      uniqueId: string,
-      msg: Component_Animation.msg,
-    })
-  | HeightAnimation({
-      key: string,
-      line: LineNumber.t,
-      uniqueId: string,
-      msg: Component_Animation.msg,
-    });
-
 [@deriving show]
 type element = {
   key: string,
