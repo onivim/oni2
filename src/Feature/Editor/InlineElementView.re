@@ -109,7 +109,15 @@ module Container = {
                    height(int_of_float(currentHeight)),
                    pointerEvents(`Allow),
                  ]
-                 onClick={_ => prerr_endline("Clicked")}>
+                 onClick={_ =>
+                   dispatch(
+                     Msg.InlineElementClicked({
+                       key: inlineKey,
+                       uniqueId,
+                       command: inlineElement.command,
+                     }),
+                   )
+                 }>
                  React.empty
                </Clickable>;
 

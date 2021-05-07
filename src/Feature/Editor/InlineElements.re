@@ -42,6 +42,7 @@ type element = {
   view:
     (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
     Revery.UI.element,
+  command: option(Exthost.Command.t),
 };
 
 // A map of inline element key -> inline elements

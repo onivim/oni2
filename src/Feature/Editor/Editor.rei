@@ -38,6 +38,7 @@ type inlineElement;
 
 let makeInlineElement:
   (
+    ~command: option(Exthost.Command.t)=?,
     ~key: string,
     ~uniqueId: string,
     ~lineNumber: EditorCoreTypes.LineNumber.t,
@@ -310,10 +311,6 @@ module Slow: {
 [@deriving show]
 type msg;
 
-type outmsg =
-  | Nothing
-  | CodeLensClicked(Feature_LanguageSupport.CodeLens.t);
-
-let update: (msg, t) => (t, outmsg);
+let update: (msg, t) => t;
 
 let sub: t => Isolinear.Sub.t(msg);

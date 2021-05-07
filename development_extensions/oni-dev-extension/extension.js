@@ -147,7 +147,7 @@ function activate(context) {
             provideCodeLenses: (document, token) => {
                 const range = new vscode.Range(1, 1, 1, 1);
                 const codeLens = vscode.CodeLens(range, {
-                    command: "developer.one.codeLensClicked1",
+                    command: "developer.oni.codeLensClicked1",
                     title: "Test"
                 })
                 return [codeLens]
