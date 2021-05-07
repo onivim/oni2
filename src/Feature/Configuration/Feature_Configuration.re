@@ -248,12 +248,7 @@ let sub =
     ConfigurationLoader.sub(loader)
     |> Isolinear.Sub.map(
          fun
-         | Ok(config) =>
-           UserSettingsChanged(
-             {
-               config: config,
-             },
-           )
+         | Ok(config) => UserSettingsChanged({config: config})
          | Error(msg) => ConfigurationParseError(msg),
        );
 
