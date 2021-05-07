@@ -200,18 +200,6 @@ let isAnimatingScroll = ({scrollX, scrollY, _}) => {
   Spring.isActive(scrollX) || Spring.isActive(scrollY);
 };
 
-let getLeadingWhitespacePixels = (lineNumber, editor) => {
-  let buffer = editor.buffer;
-  let lineCount = EditorBuffer.numberOfLines(buffer);
-  let line = lineNumber |> EditorCoreTypes.LineNumber.toZeroBased;
-  if (line < 0 || line >= lineCount) {
-    0.;
-  } else {
-    let bufferLine = buffer |> EditorBuffer.line(line);
-    BufferLine.getLeadingWhitespacePixels(bufferLine);
-  };
-};
-
 let getBufferLineCount = ({buffer, _}) =>
   EditorBuffer.numberOfLines(buffer);
 
@@ -1069,10 +1057,7 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
            |> EditorCoreTypes.LineNumber.ofZeroBased;
          let uniqueId = Feature_LanguageSupport.CodeLens.text(lens);
          let view =
-           Feature_LanguageSupport.CodeLens.View.make(
-             ~leftMargin=0,
-             ~codeLens=lens,
-           );
+           Feature_LanguageSupport.CodeLens.View.make(~codeLens=lens);
          makeInlineElement(
            ~command=lens.command,
            ~key="codelens:" ++ string_of_int(handle),
