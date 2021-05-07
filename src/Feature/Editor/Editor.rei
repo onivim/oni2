@@ -38,6 +38,7 @@ type inlineElement;
 
 let makeInlineElement:
   (
+    ~command: option(Exthost.Command.t)=?,
     ~key: string,
     ~uniqueId: string,
     ~lineNumber: EditorCoreTypes.LineNumber.t,

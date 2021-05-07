@@ -28,6 +28,7 @@ type inlineElement = {
   view:
     (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
     Revery.UI.element,
+  command: option(Exthost.Command.t),
 };
 
 module WrapMode = {
@@ -985,13 +986,14 @@ let withSteadyCursor = (f, editor) => {
   };
 };
 
-let makeInlineElement = (~key, ~uniqueId, ~lineNumber, ~view) => {
+let makeInlineElement = (~command=None, ~key, ~uniqueId, ~lineNumber, ~view) => {
   hidden: false,
   reconcilerKey: Brisk_reconciler.Key.create(),
   key,
   uniqueId,
   lineNumber,
   view,
+  command,
 };
 
 let linesWithInlineElements = ({inlineElements, _}) => {
@@ -1039,6 +1041,7 @@ let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => 
            height: Component_Animation.make(Animation.expand(0., 0.)),
            view: inlineElement.view,
            opacity: Component_Animation.make(Animation.fadeIn),
+           command: inlineElement.command,
          }
        );
   editor
@@ -1073,6 +1076,7 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
              ~codeLens=lens,
            );
          makeInlineElement(
+           ~command=lens.command,
            ~key="codelens:" ++ string_of_int(handle),
            ~uniqueId,
            ~lineNumber,

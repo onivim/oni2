@@ -115,7 +115,7 @@ module Internal = {
     |> Isolinear.Effect.map(msg => Actions.Workspace(msg));
   };
 
-  let updateEditor = (~editorId, ~msg, layout) => {
+  let updateEditor = (~editorId, ~msg, ~client, layout) => {
     switch (Feature_Layout.editorById(editorId, layout)) {
     | Some(editor) =>
       open Feature_Editor;
@@ -150,6 +150,17 @@ module Internal = {
               ),
             )
           })
+
+        | ExecuteCommand(command) =>
+          switch (command.id) {
+          | None => Isolinear.Effect.none
+          | Some(cmdId) =>
+            Service_Exthost.Effects.Commands.executeContributedCommand(
+              ~command=cmdId,
+              ~arguments=[`Null],
+              client,
+            )
+          }
         };
 
       (layout, effect);
@@ -161,6 +172,7 @@ module Internal = {
       (
         ~scope: EditorScope.t,
         ~msg: Feature_Editor.msg,
+        ~client: Exthost.Client.t,
         layout: Feature_Layout.model,
       ) => {
     switch (scope) {
@@ -170,14 +182,15 @@ module Internal = {
           (prev, editor) => {
             let (layout, effects) = prev;
             let editorId = Feature_Editor.Editor.getId(editor);
-            let (layout', effect') = updateEditor(~editorId, ~msg, layout);
+            let (layout', effect') =
+              updateEditor(~editorId, ~msg, ~client, layout);
             (layout', [effect', ...effects]);
           },
           (layout, []),
           layout,
         );
       (layout', Isolinear.Effect.batch(effects));
-    | Editor(editorId) => updateEditor(~editorId, ~msg, layout)
+    | Editor(editorId) => updateEditor(~client, ~editorId, ~msg, layout)
     };
   };
 
@@ -255,7 +268,13 @@ module Internal = {
     };
 
   let updateMode =
-      (~allowAnimation, state: State.t, mode: Vim.Mode.t, effects) => {
+      (
+        ~client: Exthost.Client.t,
+        ~allowAnimation,
+        state: State.t,
+        mode: Vim.Mode.t,
+        effects,
+      ) => {
     let prevCursor =
       state.layout
       |> Feature_Layout.activeEditor
@@ -277,7 +296,8 @@ module Internal = {
     let msg: Feature_Editor.msg =
       ModeChanged({allowAnimation, mode, effects});
     let scope = EditorScope.Editor(activeEditorId);
-    let (layout, editorEffect) = updateEditors(~scope, ~msg, state.layout);
+    let (layout, editorEffect) =
+      updateEditors(~client, ~scope, ~msg, state.layout);
 
     let isInInsertMode =
       Vim.Mode.isInsertOrSelect(
@@ -2180,7 +2200,12 @@ let update =
 
   | Editor({scope, msg}) =>
     let (layout, effect) =
-      Internal.updateEditors(~scope, ~msg, state.layout);
+      Internal.updateEditors(
+        ~client=extHostClient,
+        ~scope,
+        ~msg,
+        state.layout,
+      );
     let state = {...state, layout};
     (state, effect);
 
@@ -2589,7 +2614,13 @@ let update =
       (state, Isolinear.Effect.batch([eff, bufferEffects]));
 
     | ModeDidChange({allowAnimation, mode, effects}) =>
-      Internal.updateMode(~allowAnimation, state, mode, effects)
+      Internal.updateMode(
+        ~client=extHostClient,
+        ~allowAnimation,
+        state,
+        mode,
+        effects,
+      )
     | Output({cmd, output}) =>
       let output' =
         state.output |> Feature_Output.setProcessOutput(~cmd, ~output);

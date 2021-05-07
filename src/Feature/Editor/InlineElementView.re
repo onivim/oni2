@@ -1,17 +1,20 @@
 open EditorCoreTypes;
 open Revery.UI;
+module Clickable = Components.Clickable;
 
 module LineNumber = EditorCoreTypes.LineNumber;
 
 module Styles = {
   open Style;
-  let container = (~opacity as opac, ~pixelY) => {
+  let container = (~opacity as opac, ~totalHeight, ~pixelY) => {
     [
       position(`Absolute),
       top(int_of_float(pixelY)),
       left(0),
       right(0),
+      height(totalHeight),
       opacity(opac),
+      pointerEvents(`Allow),
     ];
   };
 
@@ -23,12 +26,13 @@ module Styles = {
       bottom(0),
       height(h),
       opacity(0.8),
+      pointerEvents(`Ignore),
     ];
   };
 
   let inner = (~opacity as opac, ~yOffset) => [
     position(`Absolute),
-    bottom(int_of_float(yOffset)),
+    top(int_of_float(yOffset)),
     left(0),
     right(0),
     flexDirection(`Row),
@@ -69,7 +73,6 @@ module Item = {
           None;
         },
       );
-
     // COMPONENT
     <View
       style={Styles.inner(~yOffset, ~opacity)}
@@ -89,10 +92,34 @@ module Container = {
       |> List.fold_left(
            (acc, inlineElement: InlineElements.element) => {
              let (currentOpacity, height, accElements) = acc;
+             let h = height;
              let uniqueId = inlineElement.uniqueId;
              let elem = inlineElement.view(~theme, ~uiFont);
              let inlineKey = inlineElement.key;
              let opacity = inlineElement.opacity |> Component_Animation.get;
+             let currentHeight =
+               Component_Animation.get(inlineElement.height);
+             let clickable =
+               <Clickable
+                 style=Style.[
+                   position(`Absolute),
+                   top(int_of_float(h)),
+                   left(0),
+                   right(0),
+                   height(int_of_float(currentHeight)),
+                   pointerEvents(`Allow),
+                 ]
+                 onClick={_ =>
+                   dispatch(
+                     Msg.InlineElementClicked({
+                       key: inlineKey,
+                       uniqueId,
+                       command: inlineElement.command,
+                     }),
+                   )
+                 }>
+                 React.empty
+               </Clickable>;
 
              let newElement =
                <Item
@@ -107,8 +134,8 @@ module Container = {
 
              (
                max(currentOpacity, opacity),
-               height +. Component_Animation.get(inlineElement.height),
-               [newElement, ...accElements],
+               height +. currentHeight,
+               [newElement, clickable, ...accElements],
              );
            },
            (0., 0., []),
@@ -141,7 +168,12 @@ module Container = {
           </View>
         : React.empty;
 
-    <View style={Styles.container(~opacity=maxOpacity, ~pixelY)}>
+    <View
+      style={Styles.container(
+        ~opacity=maxOpacity,
+        ~totalHeight=int_of_float(totalHeight),
+        ~pixelY=pixelY -. totalHeight,
+      )}>
       {elems |> React.listToElement}
       shadow
     </View>;

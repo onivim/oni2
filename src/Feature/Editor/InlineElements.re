@@ -18,20 +18,6 @@ module Constants = {
   let maxElementsToAnimate = 100;
 };
 
-type msg =
-  | OpacityAnimation({
-      key: string,
-      line: LineNumber.t,
-      uniqueId: string,
-      msg: Component_Animation.msg,
-    })
-  | HeightAnimation({
-      key: string,
-      line: LineNumber.t,
-      uniqueId: string,
-      msg: Component_Animation.msg,
-    });
-
 [@deriving show]
 type element = {
   key: string,
@@ -42,6 +28,7 @@ type element = {
   view:
     (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
     Revery.UI.element,
+  command: option(Exthost.Command.t),
 };
 
 // A map of inline element key -> inline elements
@@ -420,22 +407,6 @@ let updateElement =
        }),
      );
 };
-
-let update = (msg, model) =>
-  switch (msg) {
-  | OpacityAnimation({key, uniqueId, line, msg}) =>
-    let updateOpacity = element => {
-      ...element,
-      opacity: Component_Animation.update(msg, element.opacity),
-    };
-    updateElement(~key, ~uniqueId, ~line, ~f=updateOpacity, model);
-  | HeightAnimation({key, uniqueId, line, msg}) =>
-    let updateHeight = element => {
-      ...element,
-      height: Component_Animation.update(msg, element.height),
-    };
-    updateElement(~key, ~uniqueId, ~line, ~f=updateHeight, model);
-  };
 
 let setSize = (~animated, ~key, ~line, ~uniqueId, ~height, model) => {
   let setHeight = (curr: element) => {

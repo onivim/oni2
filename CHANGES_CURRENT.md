@@ -76,6 +76,7 @@
 - #3469 - CLI: Default to opening files in existing editor (fixes #1250, #2617, #2947, #3058)
 - #3487 - Quickopen: Filter out spaces in query string (fixes #3473, related #3278)
 - #3488 - Search: Restart search even when query hasn't changed (fixes #3477)
+- #3482 - CodeLens: Make codelenses clickable (related #3468)
 
 ### Performance
 
