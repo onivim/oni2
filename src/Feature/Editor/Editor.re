@@ -1068,11 +1068,9 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
            Feature_LanguageSupport.CodeLens.lineNumber(lens)
            |> EditorCoreTypes.LineNumber.ofZeroBased;
          let uniqueId = Feature_LanguageSupport.CodeLens.text(lens);
-         let leftMargin =
-           getLeadingWhitespacePixels(lineNumber, editor) |> int_of_float;
          let view =
            Feature_LanguageSupport.CodeLens.View.make(
-             ~leftMargin,
+             ~leftMargin=0,
              ~codeLens=lens,
            );
          makeInlineElement(
