@@ -18,15 +18,8 @@ runTest(~name="ClipboardChangeTest", ({dispatch, wait, runEffects, _}) => {
   });
 
   wait(~name="Wait for configuration to update (1)", (state: State.t) => {
-    Feature_Configuration.Legacy.getValue(
-      c => c.vimUseSystemClipboard,
-      state.config,
-    )
-    == Feature_Configuration.LegacyConfigurationValues.{
-         yank: true,
-         delete: false,
-         paste: false,
-       }
+    Feature_Vim.useSystemClipboard(state.vim)
+    == Feature_Vim.{yank: true, delete: false, paste: false}
   });
 
   dispatch(KeyboardInput({isText: true, input: "i"}));
@@ -90,15 +83,8 @@ runTest(~name="ClipboardChangeTest", ({dispatch, wait, runEffects, _}) => {
   });
 
   wait(~name="Wait for configuration to update (2)", (state: State.t) => {
-    Feature_Configuration.Legacy.getValue(
-      c => c.vimUseSystemClipboard,
-      state.config,
-    )
-    == Feature_Configuration.LegacyConfigurationValues.{
-         yank: false,
-         delete: true,
-         paste: false,
-       }
+    Feature_Vim.useSystemClipboard(state.vim)
+    == Feature_Vim.{yank: false, delete: true, paste: false}
   });
 
   setClipboard(None);

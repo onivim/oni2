@@ -18,15 +18,8 @@ runTest(~name="ClipboardyypTest", ({dispatch, wait, runEffects, _}) => {
   });
 
   wait(~name="Wait for configuration to update", (state: State.t) => {
-    Feature_Configuration.Legacy.getValue(
-      c => c.vimUseSystemClipboard,
-      state.config,
-    )
-    == Feature_Configuration.LegacyConfigurationValues.{
-         yank: true,
-         delete: true,
-         paste: true,
-       }
+    Feature_Vim.useSystemClipboard(state.vim)
+    == Feature_Vim.{yank: true, delete: true, paste: true}
   });
 
   let testFile = getAssetPath("some-test-file.txt");

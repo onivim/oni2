@@ -35,10 +35,8 @@ let start =
 
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
-    let yankConfig =
-      Selectors.getActiveConfigurationValue(state, c =>
-        c.vimUseSystemClipboard
-      );
+
+    let yankConfig = Feature_Vim.useSystemClipboard(state.vim);
 
     let starReg = Char.code('*');
     let plusReg = Char.code('+');
@@ -317,10 +315,7 @@ let start =
         dispatch(Actions.Yank({range: visualRange}));
       };
 
-      let yankConfig =
-        Selectors.getActiveConfigurationValue(state, c =>
-          c.vimUseSystemClipboard
-        );
+      let yankConfig = Feature_Vim.useSystemClipboard(state.vim);
       let allYanks = yankConfig.yank;
       let allDeletes = yankConfig.delete;
       let isClipboardRegister = register == '*' || register == '+';
