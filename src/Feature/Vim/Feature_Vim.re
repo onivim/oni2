@@ -157,6 +157,40 @@ module Effects = {
       );
     });
   };
+
+  let setTerminalLines = (~editorId as _, ~bufferId, lines) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="vim.setTerminalLinesEffect", dispatch => {
+      let () =
+        bufferId
+        |> Vim.Buffer.getById
+        |> Option.iter(buf => {
+             Vim.Buffer.setModifiable(~modifiable=true, buf);
+             Vim.Buffer.setLines(~shouldAdjustCursors=false, ~lines, buf);
+             Vim.Buffer.setModifiable(~modifiable=false, buf);
+             Vim.Buffer.setReadOnly(~readOnly=true, buf);
+           });
+
+      // Clear out previous mode
+      let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
+      let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
+      // Jump to bottom
+      let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.input("g");
+      let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.input("g");
+      let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.input("G");
+      let ({mode, _}: Vim.Context.t, effects) = Vim.input("$");
+
+      // Update the editor, which is the source of truth for cursor position
+      dispatch(
+        ModeChanged({
+          subMode: Vim.SubMode.None,
+          allowAnimation: true,
+          mode,
+          effects,
+        }),
+      );
+    });
+  };
 };
 
 let update = (~vimContext, msg, model: model) => {

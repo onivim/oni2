@@ -53,7 +53,7 @@ module Commands = {
   let moveUp = define("vim.window.moveUp", Command(MoveUp));
   let moveDown = define("vim.window.moveDown", Command(MoveDown));
   let previousTab = define("vim.window.previousTab", Command(PreviousTab));
-  let nextTab = define("vim.window.previousTab", Command(NextTab));
+  let nextTab = define("vim.window.nextTab", Command(NextTab));
 };
 
 module ContextKeys = {
@@ -66,7 +66,8 @@ module Keybindings = {
   let commandCondition = "vimWindowNavigation" |> WhenExpr.parse;
 
   let noTextInputCondition =
-    "!textInputFocus && vimWindowNavigation" |> WhenExpr.parse;
+    "!terminalFocus && !textInputFocus && vimWindowNavigation"
+    |> WhenExpr.parse;
 
   let keybindings =
     Feature_Input.Schema.[
@@ -136,7 +137,7 @@ module Keybindings = {
         ~condition=noTextInputCondition,
       ),
       bind(
-        ~key="gT",
+        ~key="g<S-T>",
         ~command=Commands.previousTab.id,
         ~condition=noTextInputCondition,
       ),

@@ -10,6 +10,9 @@
 - #3337 - Proxy: Add configuration for proxies (fixes #3314, #2660)
 - #3419 - Buffers: Implement auto-save functionality (fixes #2431)
 - #3430 - Buffers: Implement workbench.action.quickOpenBuffer (fixes #3413)
+- #3481 - UX: Add 'workbench.tree.renderIndentGuides' setting
+- #3499 - Editor: Render deprecated ranges with strikethrough (fixes #3485)
+- #3506 - Theme: Add 'workbench.colorCustomizations' setting (related #3495)
 
 ### Bug Fixes
 
@@ -69,6 +72,10 @@
 - #3466 - Input: Fix `gt` binding parsing (fixes #3256)
 - #3474 - Explorer: Reload explorer when `files.exclude` is updated (fixes #1104)
 - #3476 - UX: Ellipsize author in extensions item view
+- #3475 - Buffers: Fix ctrl-tab ordering (fixes #3433)
+- #3469 - CLI: Default to opening files in existing editor (fixes #1250, #2617, #2947, #3058)
+- #3487 - Quickopen: Filter out spaces in query string (fixes #3473, related #3278)
+- #3488 - Search: Restart search even when query hasn't changed (fixes #3477)
 
 ### Performance
 
@@ -84,6 +91,7 @@
 - #2272 - Documentation: Fix AppImage installation instructions (thanks @mkenigs !)
 - #3458 - Documentation: Fix search motion key (thanks @Minnozz !)
 - #3472 - Documentation: Add `node-gyp` instructions (fixes #3467)
+- #3491 - Documentation: Add `--new-window` to CLI invocation (thanks @jesstelford !)
 
 ### Refactoring
 
@@ -97,6 +105,7 @@
 - #3447 - Terminal: Split out PTY - remove dependency on `$spawnExtHostProcess` API
 - #3461 - Dependency: vscode-exthost -> 1.54.3
 - #3462 - Dependency: vscode-exthost -> 1.55.2
+- #3500 - Dependency: Revery -> e0c12e7 (fixes #3494)
 
 ### Infrastructure
 

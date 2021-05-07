@@ -142,6 +142,8 @@ type t = {
   // Animation
   isAnimationOverride: option(bool),
   animationNonce: int,
+  showUnused: bool,
+  showDeprecated: bool,
 };
 
 let setBoundingBox = (bbox, editor) => {
@@ -535,6 +537,8 @@ let configure = (~config, editor) => {
     isScrollAnimated,
     scrollbarVerticalWidth,
     scrollbarHorizontalWidth,
+    showDeprecated: EditorConfiguration.showDeprecated.get(config),
+    showUnused: EditorConfiguration.showUnused.get(config),
     yankHighlightDuration,
   }
   |> setVerticalScrollMargin(~lines=scrolloff)
@@ -617,9 +621,15 @@ let create = (~config, ~buffer, ~preview: bool, ()) => {
 
     scrollbarHorizontalWidth: 8,
     scrollbarVerticalWidth: 15,
+
+    showDeprecated: true,
+    showUnused: true,
   }
   |> configure(~config);
 };
+
+let shouldShowDeprecated = ({showDeprecated, _}) => showDeprecated;
+let shouldShowUnused = ({showUnused, _}) => showUnused;
 
 let cursors = ({mode, _}) => Vim.Mode.cursors(mode);
 

@@ -28,7 +28,6 @@ type t =
   | EditorFont(Service_Font.msg)
   | Help(Feature_Help.msg)
   | Input(Feature_Input.msg)
-  | TerminalFont(Service_Font.msg)
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
@@ -69,6 +68,7 @@ type t =
     })
   | Notification(Feature_Notification.msg)
   | Messages(Feature_Messages.msg)
+  | Output(Feature_Output.msg)
   | Editor({
       scope: EditorScope.t,
       msg: Feature_Editor.msg,
@@ -128,7 +128,7 @@ type t =
   | Snippets(Feature_Snippets.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
-  | Pane(Feature_Pane.msg)
+  | Pane(Feature_Pane.msg(t))
   | VimExecuteCommand({
       allowAnimation: bool,
       command: string,

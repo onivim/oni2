@@ -93,6 +93,10 @@ module Effects: {
     Isolinear.Effect.t(msg);
 
   let save: (~bufferId: int) => Isolinear.Effect.t(msg);
+
+  let setTerminalLines:
+    (~editorId: int, ~bufferId: int, array(string)) =>
+    Isolinear.Effect.t(msg);
 };
 
 // CONFIGURATION

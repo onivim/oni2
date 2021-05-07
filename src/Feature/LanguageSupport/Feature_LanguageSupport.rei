@@ -75,6 +75,10 @@ type outmsg =
       location: option(CharacterPosition.t),
       direction: SplitDirection.t,
     })
+  | PreviewFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    })
   | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
@@ -95,12 +99,16 @@ type outmsg =
 
 let update:
   (
+    ~buffers: Feature_Buffers.model,
     ~config: Oni_Core.Config.resolver,
     ~diagnostics: Feature_Diagnostics.model,
     ~extensions: Feature_Extensions.model,
+    ~font: Service_Font.font,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
+    ~languageInfo: Exthost.LanguageInfo.t,
     ~maybeSelection: option(CharacterRange.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~previewEnabled: bool,
     ~editorId: int,
     ~cursorLocation: CharacterPosition.t,
     ~client: Exthost.Client.t,
@@ -313,6 +321,7 @@ module Contributions: {
   let contextKeys: model => WhenExpr.ContextKeys.t;
   let keybindings: list(Feature_Input.Schema.keybinding);
   let menuGroups: list(MenuBar.Schema.group);
+  let panes: list(Feature_Pane.Schema.t(model, msg));
 };
 
 module Definition: {

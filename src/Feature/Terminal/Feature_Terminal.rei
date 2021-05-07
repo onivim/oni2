@@ -23,47 +23,38 @@ let toList: t => list(terminal);
 
 let getTerminalOpt: (int, t) => option(terminal);
 
+// Font to be used for terminals
+let font: t => Service_Font.font;
+
 // UPDATE
 
-type splitDirection =
-  | Vertical
-  | Horizontal
-  | Current;
-
 [@deriving show({with_path: false})]
-type command =
-  | NewTerminal({
-      cmd: option(string),
-      splitDirection,
-      closeOnExit: bool,
-    })
-  | NormalMode
-  | InsertMode;
+type msg;
 
-[@deriving show({with_path: false})]
-type msg =
-  | Command(command)
-  | Resized({
-      id: int,
-      rows: int,
-      columns: int,
-    })
-  | KeyPressed({
-      id: int,
-      key: string,
-    })
-  | Pasted({
-      id: int,
-      text: string,
-    })
-  | Service(Service_Terminal.msg);
+module Msg: {
+  let terminalCreatedFromVim:
+    (
+      ~cmd: option(string),
+      ~splitDirection: SplitDirection.t,
+      ~closeOnExit: bool
+    ) =>
+    msg;
+
+  let keyPressed: (~id: int, string) => msg;
+
+  let pasted: (~id: int, string) => msg;
+};
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | NotifyError(string)
+  | SwitchToNormalMode
+  | ClosePane({paneId: string})
+  | TogglePane({paneId: string})
   | TerminalCreated({
       name: string,
-      splitDirection,
+      splitDirection: SplitDirection.t,
     })
   | TerminalExit({
       terminalId: int,
@@ -81,7 +72,18 @@ let update:
   (t, outmsg);
 
 let subscription:
-  (~setup: Setup.t, ~workspaceUri: Uri.t, Exthost.Client.t, t) =>
+  (
+    ~defaultFontFamily: string,
+    ~defaultFontSize: float,
+    ~defaultFontWeight: Revery.Font.Weight.t,
+    ~defaultLigatures: FontLigatures.t,
+    ~defaultSmoothing: FontSmoothing.t,
+    ~config: Oni_Core.Config.resolver,
+    ~setup: Setup.t,
+    ~workspaceUri: Uri.t,
+    Exthost.Client.t,
+    t
+  ) =>
   Isolinear.Sub.t(msg);
 
 let shellCmd: string;
@@ -152,6 +154,21 @@ module Configuration: {
   let fontLigatures: Config.Schema.setting(option(FontLigatures.t));
 };
 
+module TerminalView: {
+  let make:
+    (
+      ~isActive: bool,
+      ~config: Config.resolver,
+      ~id: int,
+      ~terminals: t,
+      ~font: Service_Font.font,
+      ~theme: Oni_Core.ColorTheme.Colors.t,
+      ~dispatch: msg => unit,
+      unit
+    ) =>
+    Revery.UI.element;
+};
+
 // CONTRIBUTIONS
 
 module Contributions: {
@@ -159,4 +176,16 @@ module Contributions: {
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
   let keybindings: list(Feature_Input.Schema.keybinding);
+
+  let pane: Feature_Pane.Schema.t(t, msg);
+};
+
+module Testing: {
+  let newTerminalMsg:
+    (
+      ~cmd: option(string),
+      ~splitDirection: SplitDirection.t,
+      ~closeOnExit: bool
+    ) =>
+    msg;
 };

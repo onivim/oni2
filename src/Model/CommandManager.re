@@ -15,6 +15,9 @@ let current = {
       |> Command.Lookup.map(msg => Actions.Configuration(msg)),
       Feature_Buffers.Contributions.commands
       |> Command.Lookup.map(msg => Actions.Buffers(msg)),
+      Feature_Diagnostics.Contributions.commands
+      |> Command.Lookup.fromList
+      |> Command.Lookup.map(msg => Actions.Diagnostics(msg)),
       Feature_Logging.Contributions.commands
       |> Command.Lookup.fromList
       |> Command.Lookup.map(msg => Actions.Logging(msg)),
@@ -64,6 +67,7 @@ let current = {
         ~isFocused={
           focus == Focus.Pane;
         },
+        state,
         state.pane,
       )
       |> Command.Lookup.fromList

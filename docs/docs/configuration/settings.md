@@ -49,6 +49,10 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.largeFileOptimizations` __(_bool_ default: `true`)__ - When `true`, Onivim will turn off certain settings like syntax highlighting for large files.
 
+- `editor.showDeprecated` __(_bool_ default: `true`)__ - When `true`, Onivim will render deprecated code with a strike-through.
+
+- `editor.showUnused` __(_bool_ default: `true`)__ - When `true`, Onivim will fade out unused code.
+
 - `workbench.editor.enablePreview` __(_bool_ default: `true`)__ - When `true`, Onivim will open files in _preview mode_ unless a change is made or the tab is double-clicked. In _preview mode_, the editor tab will be re-used.
 
 - `editor.lightBulb.enabled` __(_bool_ default: `true`)__ - When `true`, show a lightbulb icon in the editor if there are quick fixes or refactorings available.
@@ -122,11 +126,22 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `search.exclude` __(_list of string_ default: `[]`)__ - When using `Find in files` Onivim will not look at files located at the directories listed here, this inherit all the values from `files.exclude`
 
+- `workbench.colorCustomizations` __(_json_ default: `{}`)__ - Color theme overrides, using the same [Theme Colors as Code](https://code.visualstudio.com/api/references/theme-color) - for example:
+
+```json
+  "workbench.colorCustomizations": {
+    "terminal.background": "#0F0",
+    "terminal.foreground": "#FFF"
+  },
+```
+
 - `workbench.colorTheme` __(_string_ default:`"One Dark Pro"`)__ - Color theme to use.
 
 - `workbench.iconTheme` __(_string_ default: `"vs-seti"`)__ - Icon theme to use.
 
 - `workbench.tree.indent` __(_int_ default: `5`)__ - Indentation of the tree explorer.
+
+- `workbench.tree.renderIndentGuides` __(_bool_ default: `true`)__ - Controls whether indent guide lines are rendered in tree views.
 
 - `vim.highlightedyank.enable` __(_bool_ default: `true`)__ - When `true`, briefly highlight yanks on the editor surface.
 

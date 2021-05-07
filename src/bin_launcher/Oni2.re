@@ -22,6 +22,8 @@ let spec =
       Arg.Set(stayAttached),
       " Stay attached to the foreground terminal.",
     ),
+    ("-n", passthrough, " Open a new Onivim 2 session"),
+    ("--new-window", passthrough, " Open a new Onivim 2 session"),
     ("-v", passthroughAndStayAttached, " Print version information."),
     (
       "-f",

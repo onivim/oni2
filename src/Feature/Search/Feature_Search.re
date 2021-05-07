@@ -11,6 +11,7 @@ type focus =
 type model = {
   findInput: Component_InputText.model,
   query: string,
+  searchNonce: int,
   hits: list(Ripgrep.Match.t),
   focus,
   vimWindowNavigation: Component_VimWindows.model,
@@ -33,6 +34,7 @@ let resetFocus = (~query: option(string), model) => {
 let initial = {
   findInput: Component_InputText.create(~placeholder="Search"),
   query: "",
+  searchNonce: 0,
   hits: [],
   focus: FindInput,
 
@@ -117,11 +119,12 @@ let update = (~previewEnabled, model, msg) => {
         switch (key) {
         | "<CR>" =>
           let findInputValue = model.findInput |> Component_InputText.value;
-          if (model.query == findInputValue) {
-            model; // Do nothing if the query hasn't changed
-          } else {
-            {...model, query: findInputValue} |> setHits([]);
-          };
+          {
+            ...model,
+            query: findInputValue,
+            searchNonce: model.searchNonce + 1,
+          }
+          |> setHits([]);
 
         | _ =>
           let findInput =
@@ -221,37 +224,33 @@ let update = (~previewEnabled, model, msg) => {
 
 // SUBSCRIPTIONS
 
-module SearchSubscription =
-  SearchSubscription.Make({
-    type action = msg;
-  });
+let sub = (~config, ~workingDirectory, ~setup, model) => {
+  let query = model.query;
 
-let subscriptions =
-    (~config: Oni_Core.Config.resolver, ~workingDirectory, ripgrep, dispatch) => {
-  let searchExclude =
-    Configuration.searchExclude.get(config)
-    |> List.append(
-         Feature_Configuration.GlobalConfiguration.Files.exclude.get(config),
-       );
+  if (Utility.StringEx.isEmpty(query)) {
+    Isolinear.Sub.none;
+  } else {
+    let exclude =
+      Configuration.searchExclude.get(config)
+      |> List.append(
+           Feature_Configuration.GlobalConfiguration.Files.exclude.get(
+             config,
+           ),
+         );
+    let toMsg =
+      fun
+      | Service_Ripgrep.Sub.GotMatches(items) => Update(items)
+      | Service_Ripgrep.Sub.Completed => Complete
+      | Service_Ripgrep.Sub.Error(msg) => SearchError(msg);
 
-  let search = query => {
-    SearchSubscription.create(
-      ~id="workspace-search",
-      ~query,
-      ~searchExclude,
+    Service_Ripgrep.Sub.findInFiles(
+      ~exclude,
       ~directory=workingDirectory,
-      ~ripgrep,
-      ~onUpdate=items => dispatch(Update(items)),
-      ~onCompleted=() => Complete,
-      ~onError=msg => SearchError(msg),
+      ~query=model.query,
+      ~uniqueId=string_of_int(model.searchNonce),
+      ~setup,
+      toMsg,
     );
-  };
-
-  model => {
-    switch (model) {
-    | {query: "", _} => []
-    | {query, _} => [search(query)]
-    };
   };
 };
 

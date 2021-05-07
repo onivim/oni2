@@ -168,6 +168,7 @@ type msg =
       grabFocus: bool,
       preview: bool,
     })
+  | FocusedBufferChanged({bufferId: int})
   | NewBufferAndEditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
       split: SplitDirection.t,
@@ -420,6 +421,10 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       }),
     )
 
+  | FocusedBufferChanged({bufferId}) =>
+    let updater = Option.map(Buffer.stampLastUsed);
+    (update(bufferId, updater, model), Nothing);
+
   | NewBufferAndEditorRequested({
       buffer: originalBuffer,
       split,
@@ -467,7 +472,6 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         |> Buffer.setFilePath(newFilePath)
         |> Buffer.setFileType(newFileType)
         |> Buffer.setVersion(version)
-        |> Buffer.stampLastUsed
         |> Option.some
       | None => None
     );
@@ -746,8 +750,7 @@ module Effects = {
 
     switch (IntMap.find_opt(bufferId, model.buffers)) {
     // We already have this buffer loaded - so just ask for an editor!
-    | Some(buffer) =>
-      buffer |> Buffer.stampLastUsed |> f(~alreadyLoaded=true)
+    | Some(buffer) => buffer |> f(~alreadyLoaded=true)
 
     | None =>
       // No buffer yet, so we need to create one _and_ ask for an editor.
@@ -760,8 +763,7 @@ module Effects = {
         Oni_Core.Buffer.ofLines(~id=metadata.id, ~font, lines)
         |> Buffer.setVersion(metadata.version)
         |> Buffer.setFilePath(metadata.filePath)
-        |> Buffer.setModified(metadata.modified)
-        |> Buffer.stampLastUsed;
+        |> Buffer.setModified(metadata.modified);
 
       let fileType =
         Exthost.LanguageInfo.getLanguageFromBuffer(languageInfo, buffer);
@@ -952,6 +954,15 @@ let sub = (~isWindowFocused, ~maybeFocusedBuffer, model) => {
       |> Isolinear.Sub.batch;
     };
 
+  let focusedBufferSub =
+    switch (maybeFocusedBuffer) {
+    | None => Isolinear.Sub.none
+    | Some(bufferId) =>
+      let uniqueId =
+        "Feature_Buffers.Sub.focusedBuffer:" ++ string_of_int(bufferId);
+      SubEx.value(~uniqueId, FocusedBufferChanged({bufferId: bufferId}));
+    };
+
   let autoSaveSub =
     AutoSave.sub(
       ~isWindowFocused,
@@ -960,7 +971,7 @@ let sub = (~isWindowFocused, ~maybeFocusedBuffer, model) => {
       model.autoSave,
     )
     |> Isolinear.Sub.map(msg => AutoSave(msg));
-  [largeFileSub, autoSaveSub] |> Isolinear.Sub.batch;
+  [largeFileSub, autoSaveSub, focusedBufferSub] |> Isolinear.Sub.batch;
 };
 
 module Contributions = {

@@ -35,6 +35,7 @@ type t = {
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
+  forceNewWindow: bool,
   overriddenExtensionsDir: option(FpExp.t(FpExp.absolute)),
   shouldLoadExtensions: bool,
   shouldLoadConfiguration: bool,
@@ -120,6 +121,7 @@ let parse = (~getenv: string => option(string), args) => {
   let shouldSyntaxHighlight = ref(true);
 
   let attachToForeground = ref(false);
+  let forceNewWindow = ref(false);
   let logLevel = ref(None);
   let isSilent = ref(false);
   let logExthost = ref(false);
@@ -167,6 +169,10 @@ let parse = (~getenv: string => option(string), args) => {
 
   getenv("ONI2_LOG_FILTER") |> Option.iter(v => logFilter := Some(v));
 
+  let setForceNewWindow = () => {
+    forceNewWindow := true;
+  };
+
   Arg.parse_argv(
     ~current=ref(0),
     sysArgs,
@@ -174,6 +180,8 @@ let parse = (~getenv: string => option(string), args) => {
       ("-c", String(str => vimExCommands := [str, ...vimExCommands^]), ""),
       ("-f", Unit(setAttached), ""),
       ("-v", setEffect(PrintVersion), ""),
+      ("-n", Unit(setForceNewWindow), ""),
+      ("--new-window", Unit(setForceNewWindow), ""),
       ("--nofork", Unit(setAttached), ""),
       ("--debug", Unit(() => logLevel := Some(Timber.Level.debug)), ""),
       ("--debug-exthost", Unit(() => logExthost := true), ""),
@@ -344,6 +352,7 @@ let parse = (~getenv: string => option(string), args) => {
   let cli = {
     folder,
     filesToOpen,
+    forceNewWindow: forceNewWindow^,
     forceScaleFactor: scaleFactor^,
     gpuAcceleration: gpuAcceleration^,
     overriddenExtensionsDir:

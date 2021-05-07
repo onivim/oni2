@@ -1,77 +1,18 @@
 open Oni_Core;
 
 // MODEL
-
-type terminal = {
-  id: int,
-  launchConfig: Exthost.ShellLaunchConfig.t,
-  rows: int,
-  columns: int,
-  pid: option(int),
-  title: option(string),
-  screen: ReveryTerminal.Screen.t,
-  cursor: ReveryTerminal.Cursor.t,
-  closeOnExit: bool,
-};
-
-type t = {
-  idToTerminal: IntMap.t(terminal),
-  nextId: int,
-};
-
-let initial = {idToTerminal: IntMap.empty, nextId: 0};
-
-let getBufferName = (id, cmd) =>
-  Printf.sprintf("oni://terminal/%d/%s", id, cmd);
-
-let toList = ({idToTerminal, _}) =>
-  idToTerminal |> IntMap.bindings |> List.map(snd);
-
-let getTerminalOpt = (id, {idToTerminal, _}) =>
-  IntMap.find_opt(id, idToTerminal);
-
-// UPDATE
-
-[@deriving show({with_path: false})]
-type splitDirection =
-  | Vertical
-  | Horizontal
-  | Current;
-
-[@deriving show({with_path: false})]
-type command =
-  | NewTerminal({
-      cmd: option(string),
-      splitDirection,
-      closeOnExit: bool,
-    })
-  | NormalMode
-  | InsertMode;
-
-[@deriving show({with_path: false})]
-type msg =
-  | Command(command)
-  | Resized({
-      id: int,
-      rows: int,
-      columns: int,
-    })
-  | KeyPressed({
-      id: int,
-      key: string,
-    })
-  | Pasted({
-      id: int,
-      text: string,
-    })
-  | Service(Service_Terminal.msg);
+include Model;
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | NotifyError(string)
+  | SwitchToNormalMode
+  | ClosePane({paneId: string})
+  | TogglePane({paneId: string})
   | TerminalCreated({
       name: string,
-      splitDirection,
+      splitDirection: SplitDirection.t,
     })
   | TerminalExit({
       terminalId: int,
@@ -178,6 +119,124 @@ let update =
       msg,
     ) => {
   switch (msg) {
+  | Font(Service_Font.FontLoaded(font)) => ({...model, font}, Nothing)
+
+  | Font(Service_Font.FontLoadError(message)) => (
+      model,
+      NotifyError(message),
+    )
+
+  | Command(ToggleIntegratedTerminal) => (
+      model,
+      TogglePane({paneId: "workbench.panel.terminal"}),
+    )
+
+  | StartPaneTerminal =>
+    let cmdToUse =
+      switch (Revery.Environment.os) {
+      | Windows(_) => Configuration.Shell.windows.get(config)
+      | Mac(_) => Configuration.Shell.osx.get(config)
+      | Linux(_) => Configuration.Shell.linux.get(config)
+      | _ => shellCmd
+      };
+
+    let arguments =
+      switch (Revery.Environment.os) {
+      | Windows(_) => Configuration.ShellArgs.windows.get(config)
+      | Mac(_) => Configuration.ShellArgs.osx.get(config)
+      | Linux(_) => Configuration.ShellArgs.linux.get(config)
+      | _ => []
+      };
+
+    let defaultEnvVariables =
+      [
+        ("ONIVIM_TERMINAL", BuildInfo.version),
+        (
+          "ONIVIM2_PARENT_PIPE",
+          clientServer
+          |> Feature_ClientServer.pipe
+          |> Exthost.NamedPipe.toString,
+        ),
+      ]
+      |> List.to_seq
+      |> StringMap.of_seq;
+
+    let env =
+      Exthost.ShellLaunchConfig.(
+        switch (Revery.Environment.os) {
+        // Windows - simply inherit from the running process
+        | Windows(_) => Additive(defaultEnvVariables)
+
+        // Mac - inherit (we rely on the '-l' flag to pick up user config)
+        | Mac(_) => Additive(defaultEnvVariables)
+
+        // For Linux, there's a few stray variables that may come in from the AppImage
+        // for example - LD_LIBRARY_PATH in issue #2040. We need to clear those out.
+        | Linux(_) =>
+          switch (
+            Sys.getenv_opt("ONI2_ORIG_PATH"),
+            Sys.getenv_opt("ONI2_ORIG_LD_LIBRARY_PATH"),
+          ) {
+          // We're running from the AppImage, which tracks the original env.
+          | (Some(origPath), Some(origLdLibPath)) =>
+            let envVariables =
+              [("PATH", origPath), ("LD_LIBRARY_PATH", origLdLibPath)]
+              |> List.to_seq
+              |> StringMap.of_seq;
+
+            let merge = (maybeA, maybeB) =>
+              switch (maybeA, maybeB) {
+              | (Some(_) as a, Some(_)) => a
+              | (Some(_) as a, _) => a
+              | (None, Some(_) as b) => b
+              | (None, None) => None
+              };
+            let allVariables =
+              StringMap.merge(
+                _key => merge,
+                envVariables,
+                defaultEnvVariables,
+              );
+
+            Additive(allVariables);
+
+          // All other cases - just inherit. Maybe not running from AppImage.
+          | _ => Additive(defaultEnvVariables)
+          }
+
+        | _ => Additive(defaultEnvVariables)
+        }
+      );
+
+    let launchConfig =
+      Exthost.ShellLaunchConfig.{
+        name: "Terminal",
+        arguments,
+        executable: cmdToUse,
+        env,
+      };
+
+    let id = model.nextId;
+    let idToTerminal =
+      IntMap.add(
+        id,
+        {
+          id,
+          launchConfig,
+          rows: 40,
+          columns: 40,
+          pid: None,
+          title: None,
+          screen: ReveryTerminal.Screen.initial,
+          cursor: ReveryTerminal.Cursor.initial,
+          closeOnExit: true,
+        },
+        model.idToTerminal,
+      );
+    (
+      {...model, idToTerminal, nextId: id + 1, paneTerminalId: Some(id)},
+      Nothing,
+    );
   | Command(NewTerminal({cmd, splitDirection, closeOnExit})) =>
     let cmdToUse =
       switch (cmd) {
@@ -285,13 +344,28 @@ let update =
         model.idToTerminal,
       );
     (
-      {idToTerminal, nextId: id + 1},
+      {...model, idToTerminal, nextId: id + 1},
       TerminalCreated({name: getBufferName(id, cmdToUse), splitDirection}),
     );
 
-  | Command(InsertMode | NormalMode) =>
+  | Command(InsertMode) =>
     // Used for the renderer state
     (model, Nothing)
+
+  | Command(NormalMode) => (model, SwitchToNormalMode)
+
+  | PaneKeyPressed(key) =>
+    let eff =
+      model.paneTerminalId
+      |> Option.map(id => {
+           let inputEffect =
+             Service_Terminal.Effect.input(~id, key)
+             |> Isolinear.Effect.map(msg => Service(msg));
+
+           Effect(inputEffect);
+         })
+      |> Option.value(~default=Nothing);
+    (model, eff);
 
   | KeyPressed({id, key}) =>
     let inputEffect =
@@ -322,61 +396,91 @@ let update =
     let newModel = updateById(id, term => {...term, screen, cursor}, model);
     (newModel, Nothing);
 
-  | Service(ProcessExit({id, exitCode})) => (
-      model,
-      TerminalExit({
-        terminalId: id,
-        exitCode,
-        shouldClose: shouldClose(~id, model),
-      }),
-    )
+  | Service(ProcessExit({id, exitCode})) =>
+    if (Some(id) == model.paneTerminalId) {
+      (
+        {...model, paneTerminalId: None},
+        ClosePane({paneId: "workbench.panel.terminal"}),
+      );
+    } else {
+      (
+        model,
+        TerminalExit({
+          terminalId: id,
+          exitCode,
+          shouldClose: shouldClose(~id, model),
+        }),
+      );
+    }
   };
 };
 
-let subscription = (~setup, ~workspaceUri, extHostClient, model: t) => {
-  model
-  |> toList
-  |> List.map((terminal: terminal) => {
-       Service_Terminal.Sub.terminal(
-         ~setup,
-         ~id=terminal.id,
-         ~launchConfig=terminal.launchConfig,
-         ~rows=terminal.rows,
-         ~columns=terminal.columns,
-         ~workspaceUri,
-         ~extHostClient,
-       )
-     })
-  |> Isolinear.Sub.batch
-  |> Isolinear.Sub.map(msg => Service(msg));
+let subscription =
+    (
+      ~defaultFontFamily: string,
+      ~defaultFontSize: float,
+      ~defaultFontWeight: Revery.Font.Weight.t,
+      ~defaultLigatures: FontLigatures.t,
+      ~defaultSmoothing: FontSmoothing.t,
+      ~config,
+      ~setup,
+      ~workspaceUri,
+      extHostClient,
+      model: t,
+    ) => {
+  let terminalFontFamily =
+    Configuration.fontFamily.get(config)
+    |> Option.value(~default=defaultFontFamily);
+
+  let terminalFontSize =
+    Configuration.fontSize.get(config)
+    |> Option.value(~default=defaultFontSize);
+
+  let terminalFontWeight =
+    Configuration.fontWeight.get(config)
+    |> Option.value(~default=defaultFontWeight);
+
+  let terminalFontLigatures =
+    Configuration.fontLigatures.get(config)
+    |> Option.value(~default=defaultLigatures);
+
+  let terminalFontSmoothing =
+    Configuration.fontSmoothing.get(config)
+    |> Option.value(~default=defaultSmoothing);
+
+  let fontSubscription =
+    Service_Font.Sub.font(
+      ~uniqueId="Feature_Terminal.font",
+      ~fontFamily=terminalFontFamily,
+      ~fontSize=terminalFontSize,
+      ~fontWeight=terminalFontWeight,
+      ~fontSmoothing=terminalFontSmoothing,
+      ~fontLigatures=terminalFontLigatures,
+    )
+    |> Isolinear.Sub.map(msg => Font(msg));
+
+  let subs =
+    model
+    |> toList
+    |> List.map((terminal: terminal) => {
+         Service_Terminal.Sub.terminal(
+           ~setup,
+           ~id=terminal.id,
+           ~launchConfig=terminal.launchConfig,
+           ~rows=terminal.rows,
+           ~columns=terminal.columns,
+           ~workspaceUri,
+           ~extHostClient,
+         )
+       })
+    |> Isolinear.Sub.batch
+    |> Isolinear.Sub.map(msg => Service(msg));
+
+  [fontSubscription, subs] |> Isolinear.Sub.batch;
 };
 
 // COLORS
-module Colors = Feature_Theme.Colors.Terminal;
-
-let theme = theme =>
-  fun
-  | 0 => Colors.ansiBlack.from(theme)
-  | 1 => Colors.ansiRed.from(theme)
-  | 2 => Colors.ansiGreen.from(theme)
-  | 3 => Colors.ansiYellow.from(theme)
-  | 4 => Colors.ansiBlue.from(theme)
-  | 5 => Colors.ansiMagenta.from(theme)
-  | 6 => Colors.ansiCyan.from(theme)
-  | 7 => Colors.ansiWhite.from(theme)
-  | 8 => Colors.ansiBrightBlack.from(theme)
-  | 9 => Colors.ansiBrightRed.from(theme)
-  | 10 => Colors.ansiBrightGreen.from(theme)
-  | 11 => Colors.ansiBrightYellow.from(theme)
-  | 12 => Colors.ansiBrightBlue.from(theme)
-  | 13 => Colors.ansiBrightMagenta.from(theme)
-  | 14 => Colors.ansiBrightCyan.from(theme)
-  | 15 => Colors.ansiBrightWhite.from(theme)
-  // For 256 colors, fall back to defaults
-  | idx => ReveryTerminal.Theme.default(idx);
-
-let defaultBackground = theme => Colors.background.from(theme);
-let defaultForeground = theme => Colors.foreground.from(theme);
+include Colors;
 
 let getFirstNonEmptyLine =
     (~start: int, ~direction: int, lines: array(string)) => {
@@ -540,6 +644,14 @@ let bufferRendererReducer = (state, action) => {
 module Commands = {
   open Feature_Commands.Schema;
 
+  let toggleIntegratedTerminal =
+    define(
+      ~category="Terminal",
+      ~title="Toggle Integrated Terminal",
+      "workbench.action.terminal.toggleTerminal",
+      Command(ToggleIntegratedTerminal),
+    );
+
   module New = {
     let horizontal =
       define(
@@ -562,7 +674,7 @@ module Commands = {
         Command(
           NewTerminal({
             cmd: None,
-            splitDirection: Vertical,
+            splitDirection: Vertical({shouldReuse: false}),
             closeOnExit: true,
           }),
         ),
@@ -615,6 +727,7 @@ module Contributions = {
 
   let commands =
     Commands.[
+      toggleIntegratedTerminal,
       New.horizontal,
       New.vertical,
       New.current,
@@ -639,6 +752,12 @@ module Contributions = {
 
   let keybindings = {
     Feature_Input.Schema.[
+      // Global
+      bind(
+        ~key="<C-`>",
+        ~command=Commands.toggleIntegratedTerminal.id,
+        ~condition=WhenExpr.Value(True),
+      ),
       // Insert mode -> normal mdoe
       bind(
         ~key="<C-\\><C-N>",
@@ -701,4 +820,74 @@ module Contributions = {
       ),
     ];
   };
+
+  let focusedContextKeys = {
+    WhenExpr.ContextKeys.(
+      [Schema.bool("terminalFocus", _ => true)]
+      |> Schema.fromList
+      |> fromSchema()
+    );
+  };
+
+  let pane: Feature_Pane.Schema.t(t, msg) = {
+    Feature_Pane.Schema.(
+      panel(
+        ~title="Terminal",
+        ~id=Some("workbench.panel.terminal"),
+        ~buttons=
+          (~font as _, ~theme as _, ~dispatch as _, ~model as _) =>
+            Revery.UI.React.empty,
+        ~commands=_model => [],
+        ~contextKeys=
+          (~isFocused, _model) =>
+            if (isFocused) {focusedContextKeys} else {
+              WhenExpr.ContextKeys.empty
+            },
+        ~sub=
+          (~isFocused, model) =>
+            if (isFocused && model.paneTerminalId == None) {
+              SubEx.value(
+                ~uniqueId="Feature_Terminal.Pane.start",
+                StartPaneTerminal,
+              );
+            } else {
+              Isolinear.Sub.none;
+            },
+        ~view=
+          (
+            ~config,
+            ~editorFont as _,
+            ~font as _,
+            ~isFocused,
+            ~iconTheme as _,
+            ~languageInfo as _,
+            ~workingDirectory as _,
+            ~theme,
+            ~dispatch,
+            ~model,
+          ) => {
+            model.paneTerminalId
+            |> Utility.OptionEx.flatMap(id => getTerminalOpt(id, model))
+            |> Option.map(terminal => {
+                 <TerminalView.Terminal
+                   isActive=isFocused
+                   config
+                   terminal
+                   font={model.font}
+                   theme
+                   dispatch
+                 />
+               })
+            |> Option.value(~default=Revery.UI.React.empty)
+          },
+        ~keyPressed=key => PaneKeyPressed(key),
+      )
+    );
+  };
+};
+
+module TerminalView = TerminalView;
+
+module Testing = {
+  let newTerminalMsg = Msg.terminalCreatedFromVim;
 };
