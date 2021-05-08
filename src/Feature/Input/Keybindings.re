@@ -34,11 +34,31 @@ module Keybinding = {
             field.withDefault("when", WhenExpr.Value(True), condition),
         );
       });
+    let remap =
+      obj(({field, _}) => {
+        let recursive = field.withDefault("recursive", false, bool);
+        let condition =
+          field.withDefault("when", WhenExpr.Value(True), condition);
+        let fromKeys = field.required("from", string);
+        let toKeys = field.required("to", string);
+        Schema.remap(
+          ~allowRecursive=recursive,
+          ~fromKeys,
+          ~toKeys,
+          ~condition,
+        );
+      });
+
+    let keybinding =
+      one_of([
+        ("Keybinding.binding", binding),
+        ("Keybinding.remap", remap),
+      ]);
   };
 
   let of_yojson = (json: Yojson.Safe.t) => {
     json
-    |> Json.Decode.decode_value(Decode.binding)
+    |> Json.Decode.decode_value(Decode.keybinding)
     |> Result.map_error(Json.Decode.string_of_error);
   };
 };
