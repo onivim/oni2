@@ -42,7 +42,6 @@ module CodeLens: {
   module View: {
     let make:
       (
-        ~leftMargin: int,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~uiFont: UiFont.t,
         ~codeLens: t,

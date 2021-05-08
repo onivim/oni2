@@ -30,10 +30,10 @@ module Styles = {
     ];
   };
 
-  let inner = (~opacity as opac, ~yOffset) => [
+  let inner = (~opacity as opac, ~yOffset, ~xOffset) => [
     position(`Absolute),
     top(int_of_float(yOffset)),
-    left(0),
+    left(int_of_float(xOffset)),
     right(0),
     flexDirection(`Row),
     flexGrow(1),
@@ -48,6 +48,7 @@ module Item = {
                   ~inlineKey: string,
                   ~uniqueId: string,
                   ~opacity: float,
+                  ~xOffset: float,
                   ~yOffset: float,
                   ~lineNumber: LineNumber.t,
                   ~children,
@@ -75,7 +76,7 @@ module Item = {
       );
     // COMPONENT
     <View
-      style={Styles.inner(~yOffset, ~opacity)}
+      style={Styles.inner(~xOffset, ~yOffset, ~opacity)}
       onDimensionsChanged={({height, _}) => {heightChangedDispatch(height)}}>
       children
     </View>;
@@ -84,8 +85,21 @@ module Item = {
 
 module Container = {
   let make =
-      (~config, ~editor, ~isVisible, ~line, ~dispatch, ~theme, ~uiFont, ()) => {
+      (
+        ~gutterWidth,
+        ~config,
+        ~editor,
+        ~isVisible,
+        ~line,
+        ~dispatch,
+        ~theme,
+        ~uiFont,
+        (),
+      ) => {
     let inlineElements = Editor.getInlineElements(~line, editor);
+
+    let leadingWhitespacePixels =
+      Editor.getLeadingWhitespacePixels(line, editor);
 
     let (maxOpacity, totalHeight, elems) =
       inlineElements
@@ -127,6 +141,7 @@ module Container = {
                  uniqueId
                  dispatch
                  lineNumber=line
+                 xOffset={gutterWidth +. leadingWhitespacePixels}
                  yOffset=height
                  opacity>
                  <elem />
