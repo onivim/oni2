@@ -1,5 +1,5 @@
 {
-  "checksum": "fcc4dbe87b90ed19126e9327280a4b13",
+  "checksum": "76d5d03774d68c0bb19ec4ab27b32e35",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -87,7 +87,7 @@
       "overrides": [],
       "dependencies": [
         "rechoir@0.6.2@d41d8cd9", "interpret@1.4.0@d41d8cd9",
-        "glob@7.1.6@d41d8cd9"
+        "glob@7.1.7@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -102,7 +102,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#e0c12e7@d41d8cd9",
+        "revery@github:revery-ui/revery#bb73d21@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#049ad1e@d41d8cd9",
         "@revery/timber@2.0.0@d41d8cd9",
         "@revery/esy-libvterm@1.0.5@d41d8cd9",
@@ -110,13 +110,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#e0c12e7@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#e0c12e7@d41d8cd9",
+    "revery@github:revery-ui/revery#bb73d21@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#bb73d21@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#e0c12e7",
+      "version": "github:revery-ui/revery#bb73d21",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#e0c12e7" ]
+        "source": [ "github:revery-ui/revery#bb73d21" ]
       },
       "overrides": [],
       "dependencies": [
@@ -551,14 +551,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "glob@7.1.6@d41d8cd9": {
-      "id": "glob@7.1.6@d41d8cd9",
+    "glob@7.1.7@d41d8cd9": {
+      "id": "glob@7.1.7@d41d8cd9",
       "name": "glob",
-      "version": "7.1.6",
+      "version": "7.1.7",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/glob/-/glob-7.1.6.tgz#sha1:141f33b81a7c2492e125594307480c46679278a6"
+          "archive:https://registry.npmjs.org/glob/-/glob-7.1.7.tgz#sha1:3b193e9233f01d42d0b3f78294bbeeb418f94a90"
         ]
       },
       "overrides": [],
@@ -893,7 +893,7 @@
       "overrides": [ "bench.json" ],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#7823010@d41d8cd9",
-        "revery@github:revery-ui/revery#e0c12e7@d41d8cd9",
+        "revery@github:revery-ui/revery#bb73d21@d41d8cd9",
         "reperf@1.5.1@d41d8cd9", "rench@1.10.0@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#a80a9d9@d41d8cd9",
         "reason-fzy@github:CrossR/reason-fzy#485cae1@d41d8cd9",
