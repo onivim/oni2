@@ -293,7 +293,21 @@ module Effect = {
   let statMultiple = (paths, onResult) =>
     Isolinear.Effect.createWithDispatch(~name="os.statmultiple", dispatch =>
       List.iter(
-        path => Unix.stat(path) |> onResult(path) |> dispatch,
+        path =>
+          try({
+            let stat = Unix.stat(path);
+
+            switch (stat.st_kind) {
+            | Unix.S_REG =>
+              onResult(~exists=true, ~isDirectory=false, path) |> dispatch
+            | Unix.S_DIR =>
+              onResult(~exists=true, ~isDirectory=true, path) |> dispatch
+            | _ => ()
+            };
+          }) {
+          | _exn =>
+            onResult(~exists=false, ~isDirectory=false, path) |> dispatch
+          },
         paths,
       )
     );
