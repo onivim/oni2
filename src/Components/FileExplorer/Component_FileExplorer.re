@@ -10,7 +10,7 @@ module Configuration = {
   open Config.Schema;
 
   let useFileWatcher =
-    setting("files.useExperimentalFileWatcher", bool, ~default=false);
+    setting("files.useExperimentalFileWatcher", bool, ~default=true);
 };
 
 module Internal = {
