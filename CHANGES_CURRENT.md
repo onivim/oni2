@@ -77,6 +77,7 @@
 - #3487 - Quickopen: Filter out spaces in query string (fixes #3473, related #3278)
 - #3488 - Search: Restart search even when query hasn't changed (fixes #3477)
 - #3482 - CodeLens: Make codelenses clickable (related #3468)
+- #3525 - CLI: Fix crash when opening non-existent file in running instance
 
 ### Performance
 

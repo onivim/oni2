@@ -2182,18 +2182,19 @@ let update =
 
   | FilesDropped({paths}) =>
     let eff =
-      Service_OS.Effect.statMultiple(paths, (path, stats) =>
-        switch (stats.st_kind) {
-        | S_REG => OpenFileByPath(path, SplitDirection.Current, None)
-        | S_DIR =>
+      Service_OS.Effect.statMultiple(paths, (~exists, ~isDirectory, path) =>
+        if (!exists || !isDirectory) {
+          OpenFileByPath(path, SplitDirection.Current, None);
+        } else if (isDirectory) {
           switch (Luv.Path.chdir(path)) {
           | Ok () =>
             Actions.Workspace(
               Feature_Workspace.Msg.workingDirectoryChanged(path),
             )
           | Error(_) => Noop
-          }
-        | _ => Noop
+          };
+        } else {
+          OpenFileByPath(path, SplitDirection.Current, None);
         }
       );
     (state, eff);
