@@ -159,7 +159,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `explorer.autoReveal` __(_string|bool_ default: `true`)__  - When `true`, the file explorer will jump to highlight the file current focused. When `false` the file explorer will remain static. If a string is entered it must be `"focusNoScroll"` which will still highlight the currently focused file in the file explorer but the file explorer will not scroll to it. Any other string supplied will be treated as if `false` was entered and the file explorer will remain static and not highlight the currently focused file.
 
-- `files.useExperimentalFileWatcher` __(_bool_ default: `false`)__ When `true`, a file watcher will be used to monitor file system changes and update the explorer in the sidebar.
+- `files.useExperimentalFileWatcher` __(_bool_ default: `true`)__ When `true`, a file watcher will be used to monitor file system changes and update the explorer in the sidebar.
 
 ### Layout
 
