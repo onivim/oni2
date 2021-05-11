@@ -90,6 +90,9 @@ let map = (~f: item('a) => item('a), {items, openSubmenus}) => {
 module View = {
   // MENUITEM
 
+  // HACK: Set ref to control blocking of onMouseUp click events
+  let wasChildOnMouseDownPressed = ref(false);
+
   module MenuItem = {
     module Constants = {
       let fontSize = 12.;
@@ -164,7 +167,11 @@ module View = {
           };
 
           (
-            <View onMouseUp={_ => {onClick()}}>
+            <View
+              onMouseUp={_ => {
+                wasChildOnMouseDownPressed := true;
+                onClick();
+              }}>
               <View
                 style={Styles.container(~theme, ~isFocused)}
                 onBoundingBoxChanged={(bbox: Math.BoundingBox2d.t) => {
@@ -228,6 +235,7 @@ module View = {
           ~spreadRadius=0.,
           ~color=Color.rgba(0., 0., 0., 0.2),
         ),
+        pointerEvents(`Allow),
       ];
     };
 
@@ -433,7 +441,13 @@ module View = {
       internalSetMenus := setMenus;
 
       let onOverlayClick = _ => {
-        IntMap.iter((_key, {onCancel, _}) => {onCancel()}, menus);
+        let isClickInsideContextMenus = wasChildOnMouseDownPressed^;
+        wasChildOnMouseDownPressed := false;
+        if (!isClickInsideContextMenus) {
+          menus |> IntMap.iter((_key, {onCancel, _}) => onCancel());
+        } else {
+          ();
+        };
       };
 
       if (IntMap.is_empty(menus)) {
@@ -513,6 +527,7 @@ module View = {
 
           let x = int_of_float(x) + offsetX;
           let y = int_of_float(y) + offsetY - Constants.overlayY;
+          ();
 
           Overlay.setMenu(
             id,
