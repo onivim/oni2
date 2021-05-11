@@ -14,6 +14,7 @@
 - #3499 - Editor: Render deprecated ranges with strikethrough (fixes #3485)
 - #3506 - Theme: Add 'workbench.colorCustomizations' setting (related #3495)
 - #3526 - Explorer: Enable auto-refresh by default (fixes #3399)
+- #3529 - Keybindings: Allow remaps to be defined in keybindings.json
 
 ### Bug Fixes
 
