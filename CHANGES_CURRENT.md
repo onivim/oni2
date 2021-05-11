@@ -13,6 +13,7 @@
 - #3481 - UX: Add 'workbench.tree.renderIndentGuides' setting
 - #3499 - Editor: Render deprecated ranges with strikethrough (fixes #3485)
 - #3506 - Theme: Add 'workbench.colorCustomizations' setting (related #3495)
+- #3529 - Keybindings: Allow remaps to be defined in keybindings.json
 
 ### Bug Fixes
 
