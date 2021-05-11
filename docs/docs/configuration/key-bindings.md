@@ -40,6 +40,23 @@ There are a set of default rules provided by Onivim, but the customized rules ar
 
 The `key` parameter supports both _Vim style_ and _VSCode style_ key bindings.
 
+### Remaps
+
+Remaps can also be specified via the same keybindings configuration file.
+
+Remapping keys tend to be more natural for users coming from Vim, and they allow matching a key sequence and then producing a new set of key presses.
+
+Remaps require 3 properties:
+- `from` - a key, specified in the same format as the `key` parameter
+- `to` - a key, specified in the same format as the `key` parameter
+- `when` - a context clause describing when the remapping should take effect.
+
+An example of a remap would be:
+```json
+{ "from": "jj", "to": "<esc>", "when": "editorTextFocus && insertMode" }
+```
+(which is functionally equivalent to `:inoremap jj <ESC>`)
+
 #### Vim style
 
 Vim-style keybindings are surrounded by `<` and `>`, and allow the following modifiers:

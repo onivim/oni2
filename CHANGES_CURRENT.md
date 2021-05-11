@@ -14,6 +14,7 @@
 - #3499 - Editor: Render deprecated ranges with strikethrough (fixes #3485)
 - #3506 - Theme: Add 'workbench.colorCustomizations' setting (related #3495)
 - #3526 - Explorer: Enable auto-refresh by default (fixes #3399)
+- #3529 - Keybindings: Allow remaps to be defined in keybindings.json
 
 ### Bug Fixes
 
@@ -79,6 +80,8 @@
 - #3488 - Search: Restart search even when query hasn't changed (fixes #3477)
 - #3482 - CodeLens: Make codelenses clickable (related #3468)
 - #3525 - CLI: Fix crash when opening non-existent file in running instance
+- #3530 - UX: Fix click inside context menu from closing context menu (fixes #3510)
+- #3532 - OSX: Fix crash when opening folder with Unicode characters (fixes #3519)
 
 ### Performance
 
