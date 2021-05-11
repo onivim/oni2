@@ -77,6 +77,7 @@
 - #3487 - Quickopen: Filter out spaces in query string (fixes #3473, related #3278)
 - #3488 - Search: Restart search even when query hasn't changed (fixes #3477)
 - #3482 - CodeLens: Make codelenses clickable (related #3468)
+- #3525 - CLI: Fix crash when opening non-existent file in running instance
 
 ### Performance
 
@@ -108,6 +109,7 @@
 - #3462 - Dependency: vscode-exthost -> 1.55.2
 - #3500 - Dependency: Revery -> e0c12e7 (fixes #3494)
 - #3514 - Configuration: Remove legacy configuration values
+- #3518 - Dependency: Revery -> bb73d21 (fixes #3504)
 
 ### Infrastructure
 
