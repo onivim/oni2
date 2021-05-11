@@ -1,5 +1,5 @@
 {
-  "checksum": "22394df6a5a9edd46debeac1ddd6b5be",
+  "checksum": "1757f399703a4c5fa251f2d78ea6402f",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -196,24 +196,6 @@
       ],
       "devDependencies": []
     },
-    "refmterr@3.1.7@d41d8cd9": {
-      "id": "refmterr@3.1.7@d41d8cd9",
-      "name": "refmterr",
-      "version": "3.1.7",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/refmterr/-/refmterr-3.1.7.tgz#sha1:fdd6a58e212b18c6a0685ff21f27a7df6621b3e8"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "@opam/re@opam:1.9.0@d4d5e13d",
-        "@opam/jbuilder@opam:1.0+beta20.2@053ddcf2",
-        "@esy-ocaml/reason@3.7.0@d41d8cd9"
-      ],
-      "devDependencies": []
-    },
     "rechoir@0.6.2@d41d8cd9": {
       "id": "rechoir@0.6.2@d41d8cd9",
       "name": "rechoir",
@@ -260,17 +242,17 @@
       ],
       "devDependencies": [ "ocaml@4.11.2000@d41d8cd9" ]
     },
-    "reason-fzy@github:CrossR/reason-fzy#485cae1@d41d8cd9": {
-      "id": "reason-fzy@github:CrossR/reason-fzy#485cae1@d41d8cd9",
+    "reason-fzy@github:bryphe/reason-fzy#5a1daf4@d41d8cd9": {
+      "id": "reason-fzy@github:bryphe/reason-fzy#5a1daf4@d41d8cd9",
       "name": "reason-fzy",
-      "version": "github:CrossR/reason-fzy#485cae1",
+      "version": "github:bryphe/reason-fzy#5a1daf4",
       "source": {
         "type": "install",
-        "source": [ "github:CrossR/reason-fzy#485cae1" ]
+        "source": [ "github:bryphe/reason-fzy#5a1daf4" ]
       },
       "overrides": [],
       "dependencies": [
-        "refmterr@3.1.7@d41d8cd9", "ocaml@4.11.2000@d41d8cd9",
+        "ocaml@4.11.2000@d41d8cd9",
         "esy-fzy@github:bryphe/esy-fzy#301dbf6@d41d8cd9",
         "@opam/reason@opam:3.7.0@191be014",
         "@opam/ppx_inline_test@opam:v0.14.1@2e4fdd8d",
@@ -894,7 +876,7 @@
         "revery@github:revery-ui/revery#bb73d21@d41d8cd9",
         "rench@1.10.0@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#a80a9d9@d41d8cd9",
-        "reason-fzy@github:CrossR/reason-fzy#485cae1@d41d8cd9",
+        "reason-fzy@github:bryphe/reason-fzy#5a1daf4@d41d8cd9",
         "ocaml@4.11.2000@d41d8cd9", "libvim@8.10869.87@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#049ad1e@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
@@ -2814,28 +2796,6 @@
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.8.5@83fb0224", "@opam/base@opam:v0.14.1@d14008e2"
       ]
-    },
-    "@opam/jbuilder@opam:1.0+beta20.2@053ddcf2": {
-      "id": "@opam/jbuilder@opam:1.0+beta20.2@053ddcf2",
-      "name": "@opam/jbuilder",
-      "version": "opam:1.0+beta20.2",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://opam.ocaml.org/cache/md5/fb/fbe8c3b1facb206cac3fb8932b5dd5d9#md5:fbe8c3b1facb206cac3fb8932b5dd5d9",
-          "archive:https://github.com/ocaml/dune/releases/download/1.0%2Bbeta20.2/jbuilder-1.0+beta20.2.tbz#md5:fbe8c3b1facb206cac3fb8932b5dd5d9"
-        ],
-        "opam": {
-          "name": "jbuilder",
-          "version": "1.0+beta20.2",
-          "path": "integrationtest.esy.lock/opam/jbuilder.1.0+beta20.2"
-        }
-      },
-      "overrides": [],
-      "dependencies": [
-        "ocaml@4.11.2000@d41d8cd9", "@esy-ocaml/substs@0.0.1@d41d8cd9"
-      ],
-      "devDependencies": [ "ocaml@4.11.2000@d41d8cd9" ]
     },
     "@opam/jane-street-headers@opam:v0.14.0@59432b6a": {
       "id": "@opam/jane-street-headers@opam:v0.14.0@59432b6a",
