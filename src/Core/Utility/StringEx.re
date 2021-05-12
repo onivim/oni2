@@ -34,6 +34,12 @@ let characterCount = (~startByte, ~endByte, str) => {
   loop(0, startByte);
 };
 
+let clamp = (~characters, str) => {
+  let characterCount = characterCount(~startByte=0, ~endByte=characters, str);
+
+  Zed_utf8.sub(str, 0, characterCount);
+};
+
 let characterToByte = (~index: EditorCoreTypes.CharacterIndex.t, str) => {
   let idx = CharacterIndex.toInt(index);
   let len = String.length(str);

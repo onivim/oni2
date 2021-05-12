@@ -1348,6 +1348,7 @@ module View = {
     let maybeDetail =
       switch (detail) {
       | Some(detail) when isFocused && remainingWidth > 0 =>
+        let detail = StringEx.clamp(~characters=128, detail);
         <View
           style=Style.[
             position(`Absolute),
@@ -1371,7 +1372,7 @@ module View = {
               text=detail
             />
           </View>
-        </View>
+        </View>;
       | _ => React.empty
       };
 
