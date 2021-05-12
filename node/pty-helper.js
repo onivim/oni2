@@ -3,8 +3,7 @@ const net = require("net")
 const pty = require("node-pty")
 
 process.stdout.write("Hello!")
-// let shouldLog = process.env["ONIVIM2_DEBUG_TERMINAL"];
-let shouldLog = true;
+let shouldLog = process.env["ONIVIM2_DEBUG_TERMINAL"];
 const log = shouldLog ? (msg) => console.log(`[NODE] ${msg}`) : (_msg) => { }
 
 const pipe = process.argv[2]
@@ -102,7 +101,6 @@ let processPendingPackets = () => {
         let length = pendingData.readUInt32BE(9)
 
         const packetSize = HEADER_SIZE + length;
-        log("Received packet: " + type + "|" + id + "(" + packetSize + "/" + pendingData.length + ")");
         // See if the packet is big enough to contain the body
         if (pendingData.length >= packetSize) {
             // It is!
@@ -110,9 +108,6 @@ let processPendingPackets = () => {
             let data = pendingData.slice(HEADER_SIZE, packetSize)
             switch (ack) {
                 case InMessageType.input:
-                    log("INPUT2: " + data);
-                    log(" - length: " + data.length);
-
                     ptyProcess.write(data)
                     break
                 case InMessageType.resize:
