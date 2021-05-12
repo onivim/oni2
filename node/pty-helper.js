@@ -3,8 +3,8 @@ const net = require("net")
 const pty = require("node-pty")
 
 process.stdout.write("Hello!")
-let shouldLog = process.env["ONIVIM2_DEBUG_TERMINAL"];
-const log = shouldLog ? (msg) => console.log(`[NODE] ${msg}`) : (_msg) => { }
+let shouldLog = process.env["ONIVIM2_DEBUG_TERMINAL"]
+const log = shouldLog ? (msg) => console.log(`[NODE] ${msg}`) : (_msg) => {}
 
 const pipe = process.argv[2]
 const cwd = process.argv[3]
@@ -88,19 +88,18 @@ ptyProcess.on("exit", (exitCode) => {
     log("js: pty exited")
 })
 
-let pendingData = Buffer.alloc(0);
+let pendingData = Buffer.alloc(0)
 
-let HEADER_SIZE = 13;
+let HEADER_SIZE = 13
 
 let processPendingPackets = () => {
     while (pendingData.length > HEADER_SIZE) {
-
         let type = pendingData.readUInt8(0)
         let id = pendingData.readUInt32BE(1)
         let ack = pendingData.readUInt32BE(5)
         let length = pendingData.readUInt32BE(9)
 
-        const packetSize = HEADER_SIZE + length;
+        const packetSize = HEADER_SIZE + length
         // See if the packet is big enough to contain the body
         if (pendingData.length >= packetSize) {
             // It is!
@@ -122,16 +121,16 @@ let processPendingPackets = () => {
                     break
             }
 
-            pendingData = pendingData.slice(packetSize);
+            pendingData = pendingData.slice(packetSize)
         } else {
-            return;
+            return
         }
     }
-};
+}
 
 client.on("data", (buffer) => {
-    pendingData = Buffer.concat([pendingData, buffer]);
-    processPendingPackets();
+    pendingData = Buffer.concat([pendingData, buffer])
+    processPendingPackets()
 })
 
 client.on("close", () => {
