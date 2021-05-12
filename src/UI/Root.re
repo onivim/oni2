@@ -58,6 +58,8 @@ module Styles = {
 };
 
 let make = (~dispatch, ~state: State.t, ()) => {
+  Feature_Sneak.View.reset();
+
   let State.{uiFont as font, sideBar, buffers, editorFont, zen, _} = state;
 
   let theme = Feature_Theme.colors(state.colorTheme);
