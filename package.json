@@ -405,9 +405,9 @@
     "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
     "libvim": "8.10869.87",
-    "ocaml": "4.10.0",
+    "ocaml": "~4.11",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#a80a9d9",
-    "reason-fzy": "CrossR/reason-fzy#485cae1",
+    "reason-fzy": "bryphe/reason-fzy#5a1daf4",
     "rench": "^1.9.1",
     "revery": "*",
     "revery-terminal": "*"
@@ -426,7 +426,7 @@
     "@revery/esy-libvterm": "1.0.5"
   },
   "devDependencies": {
-    "ocaml": "~4.10",
+    "ocaml": "~4.11",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",

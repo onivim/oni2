@@ -115,6 +115,7 @@
 - #3500 - Dependency: Revery -> e0c12e7 (fixes #3494)
 - #3514 - Configuration: Remove legacy configuration values
 - #3518 - Dependency: Revery -> bb73d21 (fixes #3504)
+- #3531 - Dependency: OCaml -> 4.11
 
 ### Infrastructure
 
