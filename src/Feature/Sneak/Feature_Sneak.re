@@ -155,11 +155,16 @@ module Registry = {
   };
 
   let reset = () => {
+    prerr_endline("!! Registry: reset");
     MutableState.nextId := 0;
     MutableState.singleton := [];
   };
 
   let getSneaks = () => {
+    let sneaksBeforeFilter = MutableState.singleton^;
+    prerr_endline(
+      "BEFORE FILTER: " ++ string_of_int(List.length(sneaksBeforeFilter)),
+    );
     MutableState.singleton^
     |> List.filter_map(({boundingBoxRef, callback, _}) => {
          boundingBoxRef^ |> Option.map(boundingBox => {callback, boundingBox})
@@ -188,6 +193,9 @@ module Effects = {
   let discoverSneak =
     Isolinear.Effect.createWithDispatch(~name="sneak.discover", dispatch => {
       let sneaks = Registry.getSneaks();
+      prerr_endline(
+        "Discovered sneaks: " ++ string_of_int(List.length(sneaks)),
+      );
       dispatch(Discovered(sneaks));
     });
 
@@ -359,10 +367,15 @@ module View = {
                   ) => {
       let%hook bboxRef = Hooks.ref(None);
 
-      switch ((onSneak, onClick)) {
-      | (Some(sneakCallback), _) => Registry.register(bboxRef, sneakCallback)
-      | (None, Some(clickCallback)) => Registry.register(bboxRef, clickCallback)
-      | _ => 0;
+      prerr_endline("At sneak-");
+      switch (onSneak, onClick) {
+      | (Some(sneakCallback), _) =>
+        prerr_endline("Registering!");
+        Registry.register(bboxRef, sneakCallback);
+      | (None, Some(clickCallback)) =>
+        prerr_endline("Registering!");
+        Registry.register(bboxRef, clickCallback);
+      | _ => 0
       };
 
       <Clickable
@@ -388,31 +401,29 @@ module View = {
 
   module Sneakable = {
     let make =
-                  (
-                    ~key=?,
-                    ~sneakId,
-                    ~style=[],
-                    ~onClick=?,
-                    ~onRightClick=() => (),
-                    ~onAnyClick=_ => (),
-                    ~onDoubleClick=() => (),
-                    ~onSneak=?,
-                    ~onBlur=?,
-                    ~onFocus=?,
-                    ~tabindex=?,
-                    ~onKeyDown=?,
-                    ~onKeyUp=?,
-                    ~onMouseEnter=?,
-                    ~onMouseLeave=?,
-                    ~onTextEdit=?,
-                    ~onTextInput=?,
-                    ~children,
-                    (),
-                  ) => {
-
-          let key = Brisk_reconciler.Key.create();
+        (
+          ~key=?,
+          ~sneakId,
+          ~style=[],
+          ~onClick=?,
+          ~onRightClick=() => (),
+          ~onAnyClick=_ => (),
+          ~onDoubleClick=() => (),
+          ~onSneak=?,
+          ~onBlur=?,
+          ~onFocus=?,
+          ~tabindex=?,
+          ~onKeyDown=?,
+          ~onKeyUp=?,
+          ~onMouseEnter=?,
+          ~onMouseLeave=?,
+          ~onTextEdit=?,
+          ~onTextInput=?,
+          ~children,
+          (),
+        ) => {
       <SneakableInner
-      key
+        ?key
         sneakId
         style
         ?onClick
@@ -432,7 +443,6 @@ module View = {
       </SneakableInner>;
     };
   };
-
 };
 
 module Contributions = {

@@ -390,7 +390,11 @@ switch (eff) {
       let uiDispatch = ref(_ => ());
 
       let update =
-        UI.start(window, <Root state=currentState^ dispatch=uiDispatch^ />);
+        UI.start(
+          ~onBeforeRender=() => Feature_Sneak.View.reset(),
+          window,
+          <Root state=currentState^ dispatch=uiDispatch^ />,
+        );
 
       let setTitle = title => {
         Window.setTitle(window, title);
