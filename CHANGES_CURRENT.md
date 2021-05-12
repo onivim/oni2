@@ -82,6 +82,7 @@
 - #3525 - CLI: Fix crash when opening non-existent file in running instance
 - #3530 - UX: Fix click inside context menu from closing context menu (fixes #3510)
 - #3532 - OSX: Fix crash when opening folder with Unicode characters (fixes #3519)
+- #3533 - Completion: Fix hang when detail text is large
 
 ### Performance
 
