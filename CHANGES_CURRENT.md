@@ -15,6 +15,7 @@
 - #3506 - Theme: Add 'workbench.colorCustomizations' setting (related #3495)
 - #3526 - Explorer: Enable auto-refresh by default (fixes #3399)
 - #3529 - Keybindings: Allow remaps to be defined in keybindings.json
+- #3539 - Buffers: Add Save without formatting commaaand (fixes #3521)
 
 ### Bug Fixes
 
@@ -83,6 +84,7 @@
 - #3530 - UX: Fix click inside context menu from closing context menu (fixes #3510)
 - #3532 - OSX: Fix crash when opening folder with Unicode characters (fixes #3519)
 - #3533 - Completion: Fix hang when detail text is large
+- #3537 - Terminal: Fix pasted text showing in reverse order (fixes #3513)
 
 ### Performance
 
