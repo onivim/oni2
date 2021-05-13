@@ -257,13 +257,14 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   //  SUBSCRIPTIONS
 
+  let isComposing = ref(false);
+
   switch (window) {
   | None => Log.error("No window to subscribe to events")
   | Some(window) =>
     let _: unit => unit =
-      Revery.Window.onKeyDown(
-        window,
-        event => {
+      Revery.Window.onKeyDown(window, event =>
+        if (! isComposing^) {
           let time = Revery.Time.now();
           event
           |> reveryKeyToEditorKey
@@ -272,15 +273,41 @@ let start = (window: option(Revery.Window.t), runEffects) => {
                  Actions.KeyDown({key, time, scancode: event.scancode}),
                )
              });
+        }
+      );
+
+    let _: unit => unit =
+      Revery.Window.onKeyUp(window, event =>
+        if (! isComposing^) {
+          let time = Revery.Time.now();
+          dispatch(Actions.KeyUp({time, scancode: event.scancode}));
+        }
+      );
+
+    let _: unit => unit =
+      Revery.Window.onCompositionStart(
+        window,
+        () => {
+          prerr_endline("composition start");
+          isComposing := true;
         },
       );
 
     let _: unit => unit =
-      Revery.Window.onKeyUp(
+      Revery.Window.onCompositionEdit(
+        window, (evt: Revery.Events.textEditEvent) => {
+        prerr_endline(
+          "composition edit: "
+          ++ Printf.sprintf("%s|%d,%d", evt.text, evt.start, evt.length),
+        )
+      });
+
+    let _: unit => unit =
+      Revery.Window.onCompositionEnd(
         window,
-        event => {
-          let time = Revery.Time.now();
-          dispatch(Actions.KeyUp({time, scancode: event.scancode}));
+        _evt => {
+          prerr_endline("composition end");
+          isComposing := false;
         },
       );
 
@@ -288,6 +315,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       Revery.Window.onTextInputCommit(
         window,
         event => {
+          prerr_endline("Text input: " ++ event.text);
           let time = Revery.Time.now();
           dispatch(Actions.TextInput(event.text, time));
         },
