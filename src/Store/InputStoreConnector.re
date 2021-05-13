@@ -31,7 +31,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   // This enables us to get resolved keyboard events, and IME.
 
   // For IME: Is this sufficient? Or will we need a way to turn off / toggle IME when switching modes?
-  Sdl2.TextInput.start();
+  //Sdl2.TextInput.start();
 
   let isTextInputActive = () => {
     switch (window) {
