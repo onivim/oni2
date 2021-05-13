@@ -252,96 +252,88 @@ let make = (~dispatch, ~state: State.t, ()) => {
   // Correct for zoom in title bar height
   let titlebarHeight = state.titlebarHeight /. zoom;
 
-  let ret =
-    <View style={Styles.root(theme, state.windowDisplayMode)}>
-      <Feature_TitleBar.View
-        menuBar=menuBarElement
-        activeBuffer=maybeActiveBuffer
-        workspaceRoot={Feature_Workspace.rootName(state.workspace)}
-        workspaceDirectory={Feature_Workspace.workingDirectory(
-          state.workspace,
-        )}
-        registration={state.registration}
-        config
-        isFocused={state.windowIsFocused}
-        windowDisplayMode={state.windowDisplayMode |> mapDisplayMode}
-        font={state.uiFont}
-        theme
-        dispatch=titleDispatch
-        registrationDispatch
-        height=titlebarHeight
-      />
-      <View style=Styles.workspace>
-        <View style=Styles.surface>
-          {React.listToElement(surfaceComponents)}
-        </View>
-        <Feature_Pane.View
-          config
-          isFocused={FocusManager.current(state) == Focus.Pane}
-          iconTheme={state.iconTheme}
-          languageInfo={
-            state.languageSupport |> Feature_LanguageSupport.languageInfo
-          }
-          theme
-          editorFont
-          uiFont
-          dispatch={msg => dispatch(Actions.Pane(msg))}
-          pane={state.pane}
-          model=state
-          workingDirectory={Feature_Workspace.workingDirectory(
-            state.workspace,
-          )}
-        />
+  <View style={Styles.root(theme, state.windowDisplayMode)}>
+    <Feature_TitleBar.View
+      menuBar=menuBarElement
+      activeBuffer=maybeActiveBuffer
+      workspaceRoot={Feature_Workspace.rootName(state.workspace)}
+      workspaceDirectory={Feature_Workspace.workingDirectory(state.workspace)}
+      registration={state.registration}
+      config
+      isFocused={state.windowIsFocused}
+      windowDisplayMode={state.windowDisplayMode |> mapDisplayMode}
+      font={state.uiFont}
+      theme
+      dispatch=titleDispatch
+      registrationDispatch
+      height=titlebarHeight
+    />
+    <View style=Styles.workspace>
+      <View style=Styles.surface>
+        {React.listToElement(surfaceComponents)}
       </View>
-      <Overlay>
-        <languageSupportOverlay />
-        {if (Feature_Quickmenu.isMenuOpen(state.newQuickmenu)) {
-           <Feature_Quickmenu.View
-             theme
-             config
-             model={state.newQuickmenu}
-             dispatch={msg => dispatch(Actions.Quickmenu(msg))}
-             font
-           />;
-         } else {
-           React.empty;
-         }}
-        {switch (state.quickmenu) {
-         | None => React.empty
-         | Some(quickmenu) =>
-           <QuickmenuView theme config state=quickmenu font />
-         }}
-        <Feature_Input.View.Overlay
-          input={state.input}
-          uiFont
-          bottom=50
-          right=50
-        />
-        <Feature_Registers.View
-          theme
-          registers={state.registers}
-          font
-          dispatch={msg => dispatch(Actions.Registers(msg))}
-        />
-        <Feature_Registration.View.Modal
-          theme
-          registration={state.registration}
-          font
-          dispatch={msg => dispatch(Actions.Registration(msg))}
-        />
-      </Overlay>
-      <statusBar />
-      <Component_ContextMenu.View.Overlay />
-      <Tooltip.Overlay theme font=uiFont />
-      <messages />
-      <modals />
-      <Overlay>
-        <Feature_Sneak.View.Overlay model={state.sneak} theme font />
-      </Overlay>
-      {Revery.Environment.isWindows
-       && state.windowDisplayMode != State.Maximized
-         ? <WindowResizers /> : React.empty}
-    </View>;
-  prerr_endline("Rendering complete");
-  ret;
+      <Feature_Pane.View
+        config
+        isFocused={FocusManager.current(state) == Focus.Pane}
+        iconTheme={state.iconTheme}
+        languageInfo={
+          state.languageSupport |> Feature_LanguageSupport.languageInfo
+        }
+        theme
+        editorFont
+        uiFont
+        dispatch={msg => dispatch(Actions.Pane(msg))}
+        pane={state.pane}
+        model=state
+        workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
+      />
+    </View>
+    <Overlay>
+      <languageSupportOverlay />
+      {if (Feature_Quickmenu.isMenuOpen(state.newQuickmenu)) {
+         <Feature_Quickmenu.View
+           theme
+           config
+           model={state.newQuickmenu}
+           dispatch={msg => dispatch(Actions.Quickmenu(msg))}
+           font
+         />;
+       } else {
+         React.empty;
+       }}
+      {switch (state.quickmenu) {
+       | None => React.empty
+       | Some(quickmenu) =>
+         <QuickmenuView theme config state=quickmenu font />
+       }}
+      <Feature_Input.View.Overlay
+        input={state.input}
+        uiFont
+        bottom=50
+        right=50
+      />
+      <Feature_Registers.View
+        theme
+        registers={state.registers}
+        font
+        dispatch={msg => dispatch(Actions.Registers(msg))}
+      />
+      <Feature_Registration.View.Modal
+        theme
+        registration={state.registration}
+        font
+        dispatch={msg => dispatch(Actions.Registration(msg))}
+      />
+    </Overlay>
+    <statusBar />
+    <Component_ContextMenu.View.Overlay />
+    <Tooltip.Overlay theme font=uiFont />
+    <messages />
+    <modals />
+    <Overlay>
+      <Feature_Sneak.View.Overlay model={state.sneak} theme font />
+    </Overlay>
+    {Revery.Environment.isWindows && state.windowDisplayMode != State.Maximized
+       ? <WindowResizers /> : React.empty}
+  </View>;
 };

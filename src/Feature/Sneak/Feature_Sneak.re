@@ -149,22 +149,12 @@ module Registry = {
     id;
   };
 
-  let unregister = id => {
-    let filter = sneakInfo => sneakInfo.id !== id;
-    MutableState.singleton := List.filter(filter, MutableState.singleton^);
-  };
-
   let reset = () => {
-    prerr_endline("!! Registry: reset");
     MutableState.nextId := 0;
     MutableState.singleton := [];
   };
 
   let getSneaks = () => {
-    let sneaksBeforeFilter = MutableState.singleton^;
-    prerr_endline(
-      "BEFORE FILTER: " ++ string_of_int(List.length(sneaksBeforeFilter)),
-    );
     MutableState.singleton^
     |> List.filter_map(({boundingBoxRef, callback, _}) => {
          boundingBoxRef^ |> Option.map(boundingBox => {callback, boundingBox})
@@ -193,9 +183,6 @@ module Effects = {
   let discoverSneak =
     Isolinear.Effect.createWithDispatch(~name="sneak.discover", dispatch => {
       let sneaks = Registry.getSneaks();
-      prerr_endline(
-        "Discovered sneaks: " ++ string_of_int(List.length(sneaks)),
-      );
       dispatch(Discovered(sneaks));
     });
 
@@ -343,7 +330,7 @@ module View = {
     };
   };
 
-  module SneakableInner = {
+  module Sneakable = {
     let%component make =
                   (
                     ~sneakId,
@@ -367,15 +354,14 @@ module View = {
                   ) => {
       let%hook bboxRef = Hooks.ref(None);
 
-      prerr_endline("At sneak-");
+      ignore(sneakId);
+
       switch (onSneak, onClick) {
       | (Some(sneakCallback), _) =>
-        prerr_endline("Registering!");
-        Registry.register(bboxRef, sneakCallback);
+        ignore(Registry.register(bboxRef, sneakCallback): int)
       | (None, Some(clickCallback)) =>
-        prerr_endline("Registering!");
-        Registry.register(bboxRef, clickCallback);
-      | _ => 0
+        ignore(Registry.register(bboxRef, clickCallback): int)
+      | _ => ()
       };
 
       <Clickable
@@ -398,54 +384,8 @@ module View = {
       </Clickable>;
     };
   };
-
-  module Sneakable = {
-    let make =
-        (
-          ~key=?,
-          ~sneakId,
-          ~style=[],
-          ~onClick=?,
-          ~onRightClick=() => (),
-          ~onAnyClick=_ => (),
-          ~onDoubleClick=() => (),
-          ~onSneak=?,
-          ~onBlur=?,
-          ~onFocus=?,
-          ~tabindex=?,
-          ~onKeyDown=?,
-          ~onKeyUp=?,
-          ~onMouseEnter=?,
-          ~onMouseLeave=?,
-          ~onTextEdit=?,
-          ~onTextInput=?,
-          ~children,
-          (),
-        ) => {
-      <SneakableInner
-        ?key
-        sneakId
-        style
-        ?onClick
-        onRightClick
-        onAnyClick
-        onDoubleClick
-        ?onBlur
-        ?onFocus
-        ?tabindex
-        ?onKeyDown
-        ?onKeyUp
-        ?onMouseEnter
-        ?onMouseLeave
-        ?onTextEdit
-        ?onTextInput>
-        children
-      </SneakableInner>;
-    };
-  };
 };
 
 module Contributions = {
   let commands = Commands.[start, stop];
 };
-
