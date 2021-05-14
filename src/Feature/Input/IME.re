@@ -1,3 +1,6 @@
+open Oni_Core;
+open Utility;
+
 module BoundingBox2d = Revery.Math.BoundingBox2d;
 
 type t = {currentRect: option(BoundingBox2d.t)};
@@ -8,11 +11,33 @@ let initial = {
 };
 
 [@deriving show]
-type msg = unit;
+type msg =
+  | StopTextInput
+  | TextInputAvailable([@opaque] BoundingBox2d.t);
 
-let update = (msg, model) => model;
+let update = (msg, model) =>
+  switch (msg) {
+  | StopTextInput => {currentRect: None}
+  | TextInputAvailable(bbox) => {currentRect: Some(bbox)}
+  };
 
-let sub = _ime => Isolinear.Sub.none;
+let sub = (~imeBoundingArea, ime) => {
+  switch (imeBoundingArea) {
+  | None =>
+    SubEx.value(~uniqueId="Feature_Input.IME.noTextInput", StopTextInput)
+  | Some(bbox) =>
+    let (x, y, width, height) = BoundingBox2d.getBounds(bbox);
+    let uniqueId =
+      Printf.sprintf(
+        "Feature_Input.IME.textInputChanged-%f-%f-%f-%f",
+        x,
+        y,
+        width,
+        height,
+      );
+    SubEx.value(~uniqueId, TextInputAvailable(bbox));
+  };
+};
 
 module View = {
   open Revery;

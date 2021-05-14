@@ -567,9 +567,9 @@ let update = (msg, model) => {
     )
 
   | IME(imeMsg) => (
-    {...model, ime: IME.update(imeMsg, model.ime)},
-    Nothing
-  )
+      {...model, ime: IME.update(imeMsg, model.ime)},
+      Nothing,
+    )
 
   | VimMap(mapping) =>
     // When parsing Vim-style mappings, don't require a shift key.
@@ -702,7 +702,7 @@ module Commands = {
 
 let sub =
     (
-      ~imeBoundingArea as _,
+      ~imeBoundingArea,
       ~config,
       {keyDisplayer, inputTick, inputStateMachine, keybindingLoader, ime, _},
     ) => {
@@ -713,7 +713,8 @@ let sub =
       KeyDisplayer.sub(kd) |> Isolinear.Sub.map(msg => KeyDisplayer(msg))
     };
 
-  let imeSub = IME.sub(ime);
+  let imeSub =
+    IME.sub(~imeBoundingArea, ime) |> Isolinear.Sub.map(msg => IME(msg));
 
   let timeoutSub =
     switch (Configuration.timeout.get(config)) {

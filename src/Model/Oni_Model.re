@@ -17,7 +17,6 @@ module EditorVisibleRanges = EditorVisibleRanges;
 module Focus = Focus;
 module FocusManager = FocusManager;
 module GlobalCommands = GlobalCommands;
-module IMEManager = IMEManager;
 module Lifecycle = Lifecycle;
 module Quickmenu = Quickmenu;
 module FilterJob = FilterJob;
