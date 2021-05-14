@@ -346,7 +346,9 @@ let%component make =
     />;
 
   switch (textBoundingBox^) {
-  | Some(bbox) when isFocused => Oni_Core.IME.set(Some(bbox))
+  | Some(bbox) when isFocused =>
+    prerr_endline("BBOX: " ++ Revery.Math.BoundingBox2d.toString(bbox));
+    Oni_Core.IME.set(Some(bbox));
   | _ => ()
   };
 
