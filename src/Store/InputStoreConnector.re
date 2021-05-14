@@ -289,9 +289,19 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         window,
         event => {
           let time = Revery.Time.now();
+          prerr_endline("Text input: " ++ event.text);
           dispatch(Actions.TextInput(event.text, time));
         },
       );
+
+    let _: unit => unit =
+      Revery.Window.onCompositionEdit(window, event => {
+        prerr_endline(
+          "Composition text: " ++ event.text,
+          // let time = Revery.Time.now();
+          // dispatch(Actions.TextInput(event.text, time));
+        )
+      });
     ();
   };
 
