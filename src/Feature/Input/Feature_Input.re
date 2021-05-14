@@ -166,6 +166,10 @@ module Configuration = {
       CustomDecoders.timeout,
       ~default=Timeout(Revery.Time.seconds(1)),
     );
+
+  module Debug = {
+    let showIMEFocus = setting("debug.ime.showFocus", bool, ~default=false);
+  };
 };
 
 // MSG
@@ -232,6 +236,15 @@ type model = {
   inputTick: int,
   keybindingLoader: KeybindingsLoader.t,
   ime: IME.t,
+};
+
+let configurationChanged = (~config, model: model) => {
+  ...model,
+  ime:
+    IME.setDebugView(
+      ~enabled=Configuration.Debug.showIMEFocus.get(config),
+      model.ime,
+    ),
 };
 
 type uniqueId = InputStateMachine.uniqueId;
@@ -762,7 +775,8 @@ module Contributions = {
       openDefaultKeybindingsFile,
     ];
 
-  let configuration = Configuration.[leaderKey.spec, timeout.spec];
+  let configuration =
+    Configuration.[Debug.showIMEFocus.spec, leaderKey.spec, timeout.spec];
 
   let contextKeys = model => {
     WhenExpr.ContextKeys.(

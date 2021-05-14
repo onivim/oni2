@@ -3,11 +3,15 @@ open Utility;
 
 module BoundingBox2d = Revery.Math.BoundingBox2d;
 
-type t = {currentRect: option(BoundingBox2d.t)};
+type t = {
+  currentRect: option(BoundingBox2d.t),
+  showDebugFocus: bool,
+};
 
 let initial = {
   // currentRect: None
   currentRect: Some(BoundingBox2d.create(10., 10., 50., 50.)),
+  showDebugFocus: false,
 };
 
 [@deriving show]
@@ -17,11 +21,13 @@ type msg =
 
 type outmsg = Isolinear.Effect.t(msg);
 
+let setDebugView = (~enabled, model) => {...model, showDebugFocus: enabled};
+
 let update = (msg, model) =>
   switch (msg) {
-  | StopTextInput => ({currentRect: None}, Isolinear.Effect.none)
+  | StopTextInput => ({...model, currentRect: None}, Isolinear.Effect.none)
   | TextInputAvailable(bbox) => (
-      {currentRect: Some(bbox)},
+      {...model, currentRect: Some(bbox)},
       Service_IME.Effects.setIMEPosition(bbox),
     )
   };
@@ -50,8 +56,7 @@ module View = {
   open Revery.UI;
   let make = (~ime, ()) => {
     switch (ime.currentRect) {
-    | None => React.empty
-    | Some(bbox) =>
+    | Some(bbox) when ime.showDebugFocus =>
       let (x, y, w, h) = BoundingBox2d.getBounds(bbox);
       <View
         style=Style.[
@@ -63,6 +68,7 @@ module View = {
           backgroundColor(Revery.Color.rgba(1.0, 0., 0., 0.5)),
         ]
       />;
+    | _ => React.empty
     };
   };
 };

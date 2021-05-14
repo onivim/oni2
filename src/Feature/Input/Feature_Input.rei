@@ -156,6 +156,8 @@ let disable: model => model;
 
 let notifyFileSaved: (FpExp.t(FpExp.absolute), model) => model;
 
+let configurationChanged: (~config: Config.resolver, model) => model;
+
 // UPDATE
 
 let update: (msg, model) => (model, outmsg);
