@@ -608,7 +608,8 @@ let bufferSaved =
       ~activeBufferId,
       model,
     ) =>
-  if (reason == Oni_Core.SaveReason.AutoSave) {
+  if (reason == Oni_Core.SaveReason.AutoSave
+      || reason == Oni_Core.SaveReason.UserInitiated({allowFormatting: false})) {
     (model, Isolinear.Effect.none);
   } else {
     let (formatting', formattingEffect) =

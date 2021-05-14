@@ -18,6 +18,7 @@ type command =
 
 [@deriving show({with_path: false})]
 type msg('inner) =
+  | PaneClicked
   | TabClicked({index: int})
   | CloseButtonClicked
   | ToggleMaximizeButtonClicked
@@ -143,6 +144,8 @@ let update = (msg, model) =>
       {...model, isMaximized: !model.isMaximized},
       Nothing,
     )
+
+  | PaneClicked => (model, GrabFocus)
 
   | TabClicked({index}) => ({...model, selected: index}, Nothing)
 
@@ -462,7 +465,8 @@ module View = {
             ~isFocused,
             ~theme,
             ~height,
-          )}>
+          )}
+          onMouseUp={_ => dispatch(PaneClicked)}>
           <View style=Styles.resizer>
             <ResizeHandle.Horizontal
               onDrag={delta =>
