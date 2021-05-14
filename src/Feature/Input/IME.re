@@ -57,7 +57,7 @@ module View = {
           left(x |> int_of_float),
           width(w -. x |> int_of_float),
           height(h -. y |> int_of_float),
-          backgroundColor(Revery.Colors.red),
+          backgroundColor(Revery.Color.rgba(1.0, 0., 0., 0.5)),
         ]
       />;
     };
