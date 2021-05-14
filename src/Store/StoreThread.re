@@ -404,7 +404,7 @@ let start =
          )
       |> Isolinear.Sub.batch;
 
-    let imeBoundingArea = IME.textArea();
+    let imeBoundingArea = Oni_Core.IME.textArea();
 
     let inputSubscription =
       state.input

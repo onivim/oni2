@@ -1,5 +1,7 @@
+module InnerIME = IME;
 open Oni_Core;
 open Utility;
+module IME = InnerIME;
 module Log = (val Log.withNamespace("Oni2.Feature.Input"));
 
 module KeybindingsLoader = KeybindingsLoader;
