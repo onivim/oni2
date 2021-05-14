@@ -85,6 +85,7 @@
 - #3532 - OSX: Fix crash when opening folder with Unicode characters (fixes #3519)
 - #3533 - Completion: Fix hang when detail text is large
 - #3537 - Terminal: Fix pasted text showing in reverse order (fixes #3513)
+- #3541 - Pane: Shoudl grab focus when clicked (fixes #3538)
 
 ### Performance
 
@@ -118,6 +119,7 @@
 - #3514 - Configuration: Remove legacy configuration values
 - #3518 - Dependency: Revery -> bb73d21 (fixes #3504)
 - #3531 - Dependency: OCaml -> 4.11
+- #3540 - Dependency: Revery -> d599514 (Pick up mousewheel scaling fix)
 
 ### Infrastructure
 
