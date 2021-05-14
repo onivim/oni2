@@ -170,18 +170,6 @@ module Configuration = {
 
 // MSG
 
-type outmsg =
-  | Nothing
-  | DebugInputShown
-  | ErrorNotifications(list(string))
-  | MapParseError({
-      fromKeys: string,
-      toKeys: string,
-      error: string,
-    })
-  | OpenFile(FpExp.t(FpExp.absolute))
-  | TimedOut;
-
 type execute =
   InputStateMachine.execute =
     | NamedCommand({
@@ -213,6 +201,19 @@ type msg =
     })
   | KeyDisplayer([@opaque] KeyDisplayer.msg)
   | Timeout;
+
+type outmsg =
+  | Nothing
+  | DebugInputShown
+  | Effect(Isolinear.Effect.t(msg))
+  | ErrorNotifications(list(string))
+  | MapParseError({
+      fromKeys: string,
+      toKeys: string,
+      error: string,
+    })
+  | OpenFile(FpExp.t(FpExp.absolute))
+  | TimedOut;
 
 module Msg = {
   let keybindingsUpdated = keybindings => KeybindingsUpdated(keybindings);
@@ -568,10 +569,12 @@ let update = (msg, model) => {
       Nothing,
     )
 
-  | IME(imeMsg) => (
-      {...model, ime: IME.update(imeMsg, model.ime)},
-      Nothing,
-    )
+  | IME(imeMsg) =>
+    let (ime', imeEffect) = IME.update(imeMsg, model.ime);
+    (
+      {...model, ime: ime'},
+      Effect(imeEffect |> Isolinear.Effect.map(msg => IME(msg))),
+    );
 
   | VimMap(mapping) =>
     // When parsing Vim-style mappings, don't require a shift key.

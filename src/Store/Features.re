@@ -654,6 +654,8 @@ let update =
       | Nothing => Isolinear.Effect.none
       | DebugInputShown => Internal.openFileEffect("oni://DebugInput")
 
+      | Effect(eff) => eff |> Isolinear.Effect.map(msg => Input(msg))
+
       | ErrorNotifications(errorMessages) =>
         errorMessages
         |> List.map(msg => Internal.notificationEffect(~kind=Error, msg))

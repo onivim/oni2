@@ -4,18 +4,6 @@ open EditorInput;
 // TODO: Move to Service_Input
 module ReveryKeyConverter = ReveryKeyConverter;
 
-type outmsg =
-  | Nothing
-  | DebugInputShown
-  | ErrorNotifications(list(string))
-  | MapParseError({
-      fromKeys: string,
-      toKeys: string,
-      error: string,
-    })
-  | OpenFile(FpExp.t(FpExp.absolute))
-  | TimedOut;
-
 [@deriving show]
 type command;
 
@@ -72,6 +60,19 @@ module KeybindingsLoader: {
 
 [@deriving show]
 type msg;
+
+type outmsg =
+  | Nothing
+  | DebugInputShown
+  | Effect(Isolinear.Effect.t(msg))
+  | ErrorNotifications(list(string))
+  | MapParseError({
+      fromKeys: string,
+      toKeys: string,
+      error: string,
+    })
+  | OpenFile(FpExp.t(FpExp.absolute))
+  | TimedOut;
 
 module Msg: {
   let keybindingsUpdated: list(Schema.resolvedKeybinding) => msg;
@@ -161,7 +162,13 @@ let update: (msg, model) => (model, outmsg);
 
 // SUBSCRIPTION
 
-let sub: (~imeBoundingArea: option(Revery.Math.BoundingBox2d.t), ~config: Config.resolver, model) => Isolinear.Sub.t(msg);
+let sub:
+  (
+    ~imeBoundingArea: option(Revery.Math.BoundingBox2d.t),
+    ~config: Config.resolver,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
 
 // CONTRIBUTIONS
 

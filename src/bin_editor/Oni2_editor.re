@@ -391,11 +391,11 @@ switch (eff) {
 
       let update =
         UI.start(
-          ~onBeforeRender={
-          () => { 
-          Feature_Sneak.View.reset();
-          Oni_Core.IME.reset();
-          }},
+          ~onBeforeRender=
+            () => {
+              Feature_Sneak.View.reset();
+              Oni_Core.IME.reset();
+            },
           window,
           <Root state=currentState^ dispatch=uiDispatch^ />,
         );

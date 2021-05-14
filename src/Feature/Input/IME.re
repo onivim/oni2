@@ -15,10 +15,15 @@ type msg =
   | StopTextInput
   | TextInputAvailable([@opaque] BoundingBox2d.t);
 
+type outmsg = Isolinear.Effect.t(msg);
+
 let update = (msg, model) =>
   switch (msg) {
-  | StopTextInput => {currentRect: None}
-  | TextInputAvailable(bbox) => {currentRect: Some(bbox)}
+  | StopTextInput => ({currentRect: None}, Isolinear.Effect.none)
+  | TextInputAvailable(bbox) => (
+      {currentRect: Some(bbox)},
+      Service_IME.Effects.setIMEPosition(bbox),
+    )
   };
 
 let sub = (~imeBoundingArea, ime) => {
@@ -35,9 +40,7 @@ let sub = (~imeBoundingArea, ime) => {
         width,
         height,
       );
-    // HACK:
 
-    Sdl2.TextInput.setInputRect(50, 50, 50, 50);
     SubEx.value(~uniqueId, TextInputAvailable(bbox));
   };
 };
