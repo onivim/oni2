@@ -198,6 +198,7 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
+  | IME(IME.msg)
   | KeybindingsUpdated([@opaque] list(Schema.resolvedKeybinding))
   | KeybindingsReloaded({
       bindings: [@opaque] list(Schema.resolvedKeybinding),
@@ -227,6 +228,7 @@ type model = {
   // such that we can provide a unique id for the timer to flush on timeout.
   inputTick: int,
   keybindingLoader: KeybindingsLoader.t,
+  ime: IME.t,
 };
 
 type uniqueId = InputStateMachine.uniqueId;
@@ -280,6 +282,8 @@ let initial = (~loader, keybindings) => {
     keyDisplayer: None,
     inputTick: 0,
     keybindingLoader: loader,
+
+    ime: IME.initial,
   };
 };
 
@@ -561,6 +565,12 @@ let update = (msg, model) => {
       {...model, keyDisplayer: Some(KeyDisplayer.initial)},
       Nothing,
     )
+
+  | IME(imeMsg) => (
+    {...model, ime: IME.update(imeMsg, model.ime)},
+    Nothing
+  )
+
   | VimMap(mapping) =>
     // When parsing Vim-style mappings, don't require a shift key.
     // In other words - characters like 'J' should resolve to 'Shift+j'
@@ -692,8 +702,9 @@ module Commands = {
 
 let sub =
     (
+      ~imeBoundingArea as _,
       ~config,
-      {keyDisplayer, inputTick, inputStateMachine, keybindingLoader, _},
+      {keyDisplayer, inputTick, inputStateMachine, keybindingLoader, ime, _},
     ) => {
   let keyDisplayerSub =
     switch (keyDisplayer) {
@@ -701,6 +712,8 @@ let sub =
     | Some(kd) =>
       KeyDisplayer.sub(kd) |> Isolinear.Sub.map(msg => KeyDisplayer(msg))
     };
+
+  let imeSub = IME.sub(ime);
 
   let timeoutSub =
     switch (Configuration.timeout.get(config)) {
@@ -724,7 +737,7 @@ let sub =
          KeybindingsReloaded({bindings, errors})
        });
 
-  [keyDisplayerSub, timeoutSub, loaderSub] |> Isolinear.Sub.batch;
+  [keyDisplayerSub, imeSub, timeoutSub, loaderSub] |> Isolinear.Sub.batch;
 };
 
 module ContextKeys = {
@@ -761,11 +774,16 @@ module View = {
 
   module Overlay = {
     let make = (~input, ~uiFont, ~bottom, ~right, ()) => {
-      switch (input.keyDisplayer) {
-      | None => React.empty
-      | Some(keyDisplayer) =>
-        <KeyDisplayer model=keyDisplayer uiFont bottom right />
-      };
+      let keyDisplayerView =
+        switch (input.keyDisplayer) {
+        | None => React.empty
+        | Some(keyDisplayer) =>
+          <KeyDisplayer model=keyDisplayer uiFont bottom right />
+        };
+
+      let imeView = <IME.View ime={input.ime} />;
+
+      [keyDisplayerView, imeView] |> React.listToElement;
     };
   };
 

@@ -161,7 +161,7 @@ let update: (msg, model) => (model, outmsg);
 
 // SUBSCRIPTION
 
-let sub: (~config: Config.resolver, model) => Isolinear.Sub.t(msg);
+let sub: (~imeBoundingArea: option(Revery.Math.BoundingBox2d.t), ~config: Config.resolver, model) => Isolinear.Sub.t(msg);
 
 // CONTRIBUTIONS
 
