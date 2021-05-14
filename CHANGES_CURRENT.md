@@ -118,6 +118,7 @@
 - #3514 - Configuration: Remove legacy configuration values
 - #3518 - Dependency: Revery -> bb73d21 (fixes #3504)
 - #3531 - Dependency: OCaml -> 4.11
+- #3540 - Dependency: Revery -> d599514 (Pick up mousewheel scaling fix)
 
 ### Infrastructure
 
