@@ -154,6 +154,16 @@ let acceptSuggestionOnEnter =
     ~default=true,
   );
 
+let acceptSuggestionOnTab =
+  setting(
+    "editor.acceptSuggestionOnTab",
+    custom(
+      ~decode=Decode.AcceptSuggestionOnEnter.decode,
+      ~encode=Json.Encode.bool,
+    ),
+    ~default=true,
+  );
+
 let snippetSuggestions =
   setting(
     "editor.snippetSuggestions",
