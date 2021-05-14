@@ -221,6 +221,7 @@ let fixOSXPath = () =>
     let shellEnv = getDefaultShellEnvironment();
     switch (StringMap.find_opt("PATH", shellEnv)) {
     | Some(path) =>
+      // Curious if something is going wrong here, too!
       Log.infof(m => m("OSX - setting path from shell: %s", path));
       Luv.Env.setenv(~value=path, "PATH")
       |> Utility.ResultEx.tapError(err => {
