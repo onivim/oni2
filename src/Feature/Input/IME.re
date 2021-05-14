@@ -35,6 +35,9 @@ let sub = (~imeBoundingArea, ime) => {
         width,
         height,
       );
+    // HACK:
+
+    Sdl2.TextInput.setInputRect(50, 50, 50, 50);
     SubEx.value(~uniqueId, TextInputAvailable(bbox));
   };
 };
