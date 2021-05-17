@@ -121,6 +121,7 @@
 - #3518 - Dependency: Revery -> bb73d21 (fixes #3504)
 - #3531 - Dependency: OCaml -> 4.11
 - #3540 - Dependency: Revery -> d599514 (Pick up mousewheel scaling fix)
+- #3555 - Terminal: Bring in vterm/revery-terminal to monorepo
 
 ### Infrastructure
 
