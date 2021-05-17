@@ -206,6 +206,7 @@ module Internal = {
   };
 
   let handleInput = (~text, ~selection: Selection.t, key) => {
+    prerr_endline("Handle input: " ++ key);
     switch (key, Selection.isCollapsed(selection)) {
     // Arrow keys
     | ("<LEFT>", true) => (

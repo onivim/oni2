@@ -41,6 +41,12 @@ type t =
       scancode: int,
       time: [@opaque] Revery.Time.t,
     })
+  // Action when there is a composition edit change
+  | TextEdit({
+      start: int,
+      length: int,
+      compositionText: string,
+    })
   | TextInput(string, [@opaque] Revery.Time.t)
   | KeyUp({
       scancode: int,

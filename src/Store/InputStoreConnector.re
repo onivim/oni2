@@ -219,6 +219,18 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     updateFromInput(newState, actions);
   };
 
+  let handleTextEdit = (~compositionText, ~start, ~length, state: State.t) => {
+    let input' =
+      Feature_Input.imeEdit(
+        ~candidateText=compositionText,
+        ~length,
+        ~start,
+        state.input,
+      );
+
+    ({...state, input: input'}, Isolinear.Effect.none);
+  };
+
   let handleKeyUp = (~scancode, state: State.t) => {
     let context = Model.ContextKeys.all(state);
 
@@ -237,14 +249,19 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   // TODO: This should be moved to a Feature_Keybindings project
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | KeyDown({key, scancode, time}) =>
+    | KeyDown({key, scancode, time})
+        when !Feature_Input.isImeActive(state.input) =>
       handleKeyPress(~scancode, state, time, key)
 
-    | KeyUp({scancode, _}) => handleKeyUp(~scancode, state)
+    | KeyUp({scancode, _}) when !Feature_Input.isImeActive(state.input) =>
+      handleKeyUp(~scancode, state)
 
     | KeyTimeout => handleTimeout(state)
 
     | TextInput(text, time) => handleTextInput(state, time, text)
+
+    | TextEdit({compositionText, start, length}) =>
+      handleTextEdit(~compositionText, ~start, ~length, state)
 
     | Pasted({rawText, isMultiLine, lines}) => (
         state,
@@ -295,13 +312,19 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       );
 
     let _: unit => unit =
-      Revery.Window.onCompositionEdit(window, event => {
-        prerr_endline(
-          "Composition text: " ++ event.text,
-          // let time = Revery.Time.now();
-          // dispatch(Actions.TextInput(event.text, time));
-        )
-      });
+      Revery.Window.onCompositionEdit(
+        window,
+        event => {
+          prerr_endline("Text edit: " ++ event.text);
+          dispatch(
+            Actions.TextEdit({
+              start: event.start,
+              length: event.length,
+              compositionText: event.text,
+            }),
+          );
+        },
+      );
     ();
   };
 

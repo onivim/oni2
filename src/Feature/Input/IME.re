@@ -6,12 +6,14 @@ module BoundingBox2d = Revery.Math.BoundingBox2d;
 type t = {
   currentRect: option(BoundingBox2d.t),
   showDebugFocus: bool,
+  candidateText: string,
 };
 
 let initial = {
   // currentRect: None
   currentRect: Some(BoundingBox2d.create(10., 10., 50., 50.)),
   showDebugFocus: false,
+  candidateText: "",
 };
 
 [@deriving show]
@@ -22,6 +24,15 @@ type msg =
 type outmsg = Isolinear.Effect.t(msg);
 
 let setDebugView = (~enabled, model) => {...model, showDebugFocus: enabled};
+
+let setCandidateText = (~candidateText, ~length as _, ~start as _, model) => {
+  ...model,
+  candidateText,
+};
+
+let isActive = model => {
+  model.candidateText != "";
+};
 
 let update = (msg, model) =>
   switch (msg) {
@@ -66,8 +77,9 @@ module View = {
           width(w -. x |> int_of_float),
           height(h -. y |> int_of_float),
           backgroundColor(Revery.Color.rgba(1.0, 0., 0., 0.5)),
-        ]
-      />;
+        ]>
+        <Text text={ime.candidateText} />
+      </View>;
     | _ => React.empty
     };
   };

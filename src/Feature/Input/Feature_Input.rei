@@ -117,6 +117,11 @@ let timeout:
 let text:
   (~text: string, ~time: Revery.Time.t, model) => (model, list(effect));
 
+let imeEdit:
+  (~candidateText: string, ~length: int, ~start: int, model) => model;
+
+let isImeActive: model => bool;
+
 let candidates:
   (~config: Config.resolver, ~context: WhenExpr.ContextKeys.t, model) =>
   list((EditorInput.Matcher.t, execute));

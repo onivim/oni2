@@ -313,6 +313,13 @@ type effect =
       })
     | RemapRecursionLimitHit;
 
+let imeEdit = (~candidateText, ~length, ~start, model) => {
+  ...model,
+  ime: IME.setCandidateText(~candidateText, ~length, ~start, model.ime),
+};
+
+let isImeActive = ({ime, _}) => IME.isActive(ime);
+
 let keyDown =
     (
       ~config,
