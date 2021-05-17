@@ -454,6 +454,7 @@ type model = {
   isInsertMode: bool,
   isSnippetMode: bool,
   acceptOnEnter: bool,
+  acceptOnTab: bool,
   snippetSortOrder: [ | `Bottom | `Hidden | `Inline | `Top],
   isShadowEnabled: bool,
   isAnimationEnabled: bool,
@@ -463,6 +464,7 @@ let initial = {
   isInsertMode: false,
   isSnippetMode: false,
   acceptOnEnter: false,
+  acceptOnTab: true,
   providers: [
     Session.create(
       ~triggerCharacters=[],
@@ -494,6 +496,7 @@ let configurationChanged = (~config, model) => {
   {
     ...model,
     acceptOnEnter: CompletionConfig.acceptSuggestionOnEnter.get(config),
+    acceptOnTab: CompletionConfig.acceptSuggestionOnTab.get(config),
     snippetSortOrder: CompletionConfig.snippetSuggestions.get(config),
     isAnimationEnabled:
       Feature_Configuration.GlobalConfiguration.animation.get(config),
@@ -1012,6 +1015,9 @@ module ContextKeys = {
 
   let acceptSuggestionOnEnter =
     bool("acceptSuggestionOnEnter", model => model.acceptOnEnter);
+
+  let acceptSuggestionOnTab =
+    bool("acceptSuggestionOnTab", model => model.acceptOnTab);
 };
 
 // KEYBINDINGS
@@ -1023,6 +1029,10 @@ module KeyBindings = {
     "editorTextFocus && suggestWidgetVisible" |> WhenExpr.parse;
   let acceptOnEnter =
     "acceptSuggestionOnEnter && suggestWidgetVisible && editorTextFocus"
+    |> WhenExpr.parse;
+
+  let acceptOnTab =
+    "acceptSuggestionOnTab && suggestWidgetVisible && editorTextFocus"
     |> WhenExpr.parse;
 
   let triggerSuggestCondition =
@@ -1085,7 +1095,7 @@ module KeyBindings = {
     bind(
       ~key="<TAB>",
       ~command=Commands.acceptSelected.id,
-      ~condition=suggestWidgetVisible,
+      ~condition=acceptOnTab,
     );
 
   let acceptSuggestionShiftTab =
@@ -1111,6 +1121,7 @@ module Contributions = {
       quickSuggestions.spec,
       wordBasedSuggestions.spec,
       acceptSuggestionOnEnter.spec,
+      acceptSuggestionOnTab.spec,
       snippetSuggestions.spec,
     ];
 
@@ -1123,7 +1134,11 @@ module Contributions = {
     ];
 
   let contextKeys =
-    ContextKeys.[acceptSuggestionOnEnter, suggestWidgetVisible];
+    ContextKeys.[
+      acceptSuggestionOnTab,
+      acceptSuggestionOnEnter,
+      suggestWidgetVisible,
+    ];
 
   let keybindings =
     KeyBindings.[

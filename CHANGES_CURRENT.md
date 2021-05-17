@@ -15,6 +15,7 @@
 - #3506 - Theme: Add 'workbench.colorCustomizations' setting (related #3495)
 - #3526 - Explorer: Enable auto-refresh by default (fixes #3399)
 - #3529 - Keybindings: Allow remaps to be defined in keybindings.json
+- #3539 - Buffers: Add Save without formatting commaaand (fixes #3521)
 
 ### Bug Fixes
 
@@ -83,6 +84,9 @@
 - #3530 - UX: Fix click inside context menu from closing context menu (fixes #3510)
 - #3532 - OSX: Fix crash when opening folder with Unicode characters (fixes #3519)
 - #3533 - Completion: Fix hang when detail text is large
+- #3537 - Terminal: Fix pasted text showing in reverse order (fixes #3513)
+- #3541 - Pane: Shoudl grab focus when clicked (fixes #3538)
+- #3547 - Completion: Add `editor.acceptSuggestionOnTab` setting
 
 ### Performance
 
@@ -116,6 +120,7 @@
 - #3514 - Configuration: Remove legacy configuration values
 - #3518 - Dependency: Revery -> bb73d21 (fixes #3504)
 - #3531 - Dependency: OCaml -> 4.11
+- #3540 - Dependency: Revery -> d599514 (Pick up mousewheel scaling fix)
 - #3536 - Dependency: OCaml -> 4.12
 
 ### Infrastructure

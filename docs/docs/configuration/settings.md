@@ -23,7 +23,9 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 ### Editor
 
-- `editor.acceptSuggestionOnEnter` __(_bool_ default: `false`)__ - When `true`, the enter key can be used to select a suggestion. By default, the enter key will not be used, so as not to interfere with creating a new line.
+- `editor.acceptSuggestionOnEnter` __(_bool_ default: `true`)__ - When `true`, the enter key can be used to accept a suggestion. Users may wish to set to `false` to avoid a conflict with inserting a new line.
+
+- `editor.acceptSuggestionOnTab` __(_bool_ default: `true`)__ - When `true`, the tab key can be used to accept a suggestion. Users may wish to turn to `false` to avoid ambiguity with inserting a tab character.
 
 - `editor.autoClosingBrackets` __(_"LanguageDefined"|"Never"_ default: `"LanguageDefined"`)__ - When set to `"LanguageDefined"`, Onivim will automatically close brackets and pairs, based on language configuration.
 

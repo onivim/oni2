@@ -154,7 +154,8 @@ type command =
   | ChangeFiletype({maybeBufferId: option(int)})
   | ConvertIndentationToTabs
   | ConvertIndentationToSpaces
-  | DetectIndentation;
+  | DetectIndentation
+  | SaveWithoutFormatting;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -554,7 +555,9 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   | Saved(bufferId) =>
     let saveReason =
       model.pendingSaveReason
-      |> Option.value(~default=SaveReason.UserInitiated);
+      |> Option.value(
+           ~default=SaveReason.UserInitiated({allowFormatting: true}),
+         );
     let model' =
       update(bufferId, Option.map(Buffer.incrementSaveTick), model);
     let eff =
@@ -725,6 +728,19 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         let updatedBuffer = Buffer.setIndentation(indentation, buffer);
         (add(updatedBuffer, model), Nothing);
       };
+
+    | SaveWithoutFormatting => (
+        {
+          ...model,
+          pendingSaveReason:
+            Some(SaveReason.UserInitiated({allowFormatting: false})),
+        },
+        Effect(
+          Service_Vim.Effects.save(~bufferId=activeBufferId, () =>
+            Saved(activeBufferId)
+          ),
+        ),
+      )
     }
 
   | LargeFileOptimizationsApplied({buffer}) =>
@@ -933,6 +949,14 @@ module Commands = {
       "workbench.action.editor.changeLanguageMode",
       Command(ChangeFiletype({maybeBufferId: None})),
     );
+
+  let saveWithoutFormatting =
+    define(
+      ~category="File",
+      ~title="Save without formatting",
+      "workbench.action.files.saveWithoutFormatting",
+      Command(SaveWithoutFormatting),
+    );
 };
 
 let sub = (~isWindowFocused, ~maybeFocusedBuffer, model) => {
@@ -992,6 +1016,7 @@ module Contributions = {
       detectIndentation,
       indentUsingSpaces,
       indentUsingTabs,
+      saveWithoutFormatting,
     ]
     |> Command.Lookup.fromList;
 
