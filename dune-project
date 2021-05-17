@@ -23,3 +23,6 @@
 
 (package
  (name treesitter))
+
+(package
+ (name vterm))

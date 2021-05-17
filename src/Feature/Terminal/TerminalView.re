@@ -73,7 +73,7 @@ module Terminal = {
         ) => {
       // If we have a loaded font, figure out how many columns and rows we can show
       let terminalFont =
-        ReveryTerminal.Font.make(~size=fontSize, resolvedFont);
+        EditorTerminal.Font.make(~size=fontSize, resolvedFont);
       let rows =
         float_of_int(height) /. terminalFont.lineHeight |> int_of_float;
       let columns =
@@ -90,8 +90,8 @@ module Terminal = {
 
     let element = {
       let font =
-        ReveryTerminal.Font.make(~smoothing, ~size=fontSize, resolvedFont);
-      ReveryTerminal.render(
+        EditorTerminal.Font.make(~smoothing, ~size=fontSize, resolvedFont);
+      EditorTerminal.render(
         ~opacity,
         ~defaultBackground,
         ~defaultForeground,
