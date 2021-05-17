@@ -1,4 +1,3 @@
-
 Oni_Core_Test.Helpers.allocateConsoleIfNecessary();
 
 VTerm_Test.TestFramework.cli();
