@@ -1,5 +1,3 @@
-module RingBuffer = RingBuffer;
-
 module Cursor: {
   type t = {
     row: int,

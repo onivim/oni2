@@ -1,3 +1,5 @@
+open Oni_Core;
+
 type t = {
   damageCounter: int,
   rows: int,
@@ -10,11 +12,10 @@ type t = {
 
 module Internal = {
   let markDamaged = ({columns, dirtyCells, _}, row, col) => {
-
     let idx = row * columns + col;
     if (idx >= 0 && idx < Array.length(dirtyCells)) {
       dirtyCells[idx] = true;
-    }
+    };
   };
 
   let bumpDamageCounter = model => {
