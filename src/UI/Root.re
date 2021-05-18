@@ -221,7 +221,24 @@ let make = (~dispatch, ~state: State.t, ()) => {
   let defaultSurfaceComponents = [
     <activityBar />,
     <sideBar />,
-    <EditorView state theme dispatch />,
+    <View style=Styles.workspace>
+    <EditorView state theme dispatch />
+      <Feature_Pane.View
+        config
+        isFocused={FocusManager.current(state) == Focus.Pane}
+        iconTheme={state.iconTheme}
+        languageInfo={
+          state.languageSupport |> Feature_LanguageSupport.languageInfo
+        }
+        theme
+        editorFont
+        uiFont
+        dispatch={msg => dispatch(Actions.Pane(msg))}
+        pane={state.pane}
+        model=state
+        workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
+      />
+      </View>,
   ];
 
   let surfaceComponents =
@@ -272,21 +289,6 @@ let make = (~dispatch, ~state: State.t, ()) => {
       <View style=Styles.surface>
         {React.listToElement(surfaceComponents)}
       </View>
-      <Feature_Pane.View
-        config
-        isFocused={FocusManager.current(state) == Focus.Pane}
-        iconTheme={state.iconTheme}
-        languageInfo={
-          state.languageSupport |> Feature_LanguageSupport.languageInfo
-        }
-        theme
-        editorFont
-        uiFont
-        dispatch={msg => dispatch(Actions.Pane(msg))}
-        pane={state.pane}
-        model=state
-        workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
-      />
     </View>
     <Overlay>
       <languageSupportOverlay />

@@ -310,11 +310,11 @@ module View = {
       } else if (isFocused) {
         [
           boxShadow(
-            ~xOffset=0.,
+            ~xOffset=4.,
             ~yOffset=-4.,
             ~blurRadius=isFocused ? 8. : 0.,
             ~spreadRadius=0.,
-            ~color=Revery.Color.rgba(0., 0., 0., 0.5),
+            ~color=Colors.shadow.from(theme),
           ),
           Style.height(height),
           ...common,
