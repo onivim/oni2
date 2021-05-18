@@ -10,8 +10,8 @@ type terminal =
     columns: int,
     pid: option(int),
     title: option(string),
-    screen: ReveryTerminal.Screen.t,
-    cursor: ReveryTerminal.Cursor.t,
+    screen: EditorTerminal.Screen.t,
+    cursor: EditorTerminal.Cursor.t,
     closeOnExit: bool,
   };
 
@@ -111,7 +111,7 @@ module Colors: {
   let ansiBrightWhite: ColorTheme.Schema.definition;
 };
 
-let theme: ColorTheme.Colors.t => ReveryTerminal.Theme.t;
+let theme: ColorTheme.Colors.t => EditorTerminal.Theme.t;
 let defaultBackground: ColorTheme.Colors.t => Revery.Color.t;
 let defaultForeground: ColorTheme.Colors.t => Revery.Color.t;
 
