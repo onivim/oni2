@@ -378,10 +378,16 @@ module View = {
     };
   };
 
+  // TODO: Workaround not having a 'stopPropagation' or 'preventDefault' gesture...
+  let wasCloseButtonClicked = ref(false);
+
   let closeButton = (~theme, ~dispatch, ()) => {
     <Sneakable
       sneakId="close"
-      onClick={() => dispatch(CloseButtonClicked)}
+      onClick={() => {
+        wasCloseButtonClicked := true;
+        dispatch(CloseButtonClicked);
+      }}
       style=Styles.closeButton>
       <Codicon
         icon=Codicon.close
@@ -466,7 +472,12 @@ module View = {
             ~theme,
             ~height,
           )}
-          onMouseUp={_ => dispatch(PaneClicked)}>
+          onMouseUp={_ => {
+            if (! wasCloseButtonClicked^) {
+              dispatch(PaneClicked);
+            };
+            wasCloseButtonClicked := false;
+          }}>
           <View style=Styles.resizer>
             <ResizeHandle.Horizontal
               onDrag={delta =>
