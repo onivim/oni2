@@ -420,7 +420,7 @@
     "@opam/fp": "bryphe/reason-native:fp.opam#e16590c",
     "@opam/dir": "bryphe/reason-native:dir.opam#e16590c",
     "@esy-ocaml/reason": "EduardoRFS/reason:reason.json#35aa4df3de0daa60bdc1133dcf97855decac48f7",
-    "flex": "bryphe/flex#5e19b05",
+    "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
     "@revery/esy-libvterm": "1.0.5"
   },
   "devDependencies": {
