@@ -33,7 +33,7 @@ if [ "$PRINTF_COUNT" -ne "3" ]; then
     exit 3
 fi
 
-if [ "$MAGENTA_COUNT" -ne "0" ]; then
+if [ "$MAGENTA_COUNT" -ne "1" ]; then
     echo "Debug magenta color left in; please remove and re-check"
     echo "---"
     echo "Output: $(git grep magenta)"

@@ -227,8 +227,8 @@ let update =
           columns: 40,
           pid: None,
           title: None,
-          screen: ReveryTerminal.Screen.initial,
-          cursor: ReveryTerminal.Cursor.initial,
+          screen: EditorTerminal.Screen.initial,
+          cursor: EditorTerminal.Cursor.initial,
           closeOnExit: true,
         },
         model.idToTerminal,
@@ -337,8 +337,8 @@ let update =
           columns: 40,
           pid: None,
           title: None,
-          screen: ReveryTerminal.Screen.initial,
-          cursor: ReveryTerminal.Cursor.initial,
+          screen: EditorTerminal.Screen.initial,
+          cursor: EditorTerminal.Cursor.initial,
           closeOnExit,
         },
         model.idToTerminal,
@@ -508,7 +508,7 @@ let getFirstNonEmptyLineFromBottom = (lines: array(string)) => {
 
 type highlights = (int, list(ThemeToken.t));
 
-module TermScreen = ReveryTerminal.Screen;
+module TermScreen = EditorTerminal.Screen;
 
 let addHighlightForCell =
     (~defaultBackground, ~defaultForeground, ~theme, ~cell, ~column, tokens) => {
@@ -554,7 +554,7 @@ let getLinesAndHighlights = (~colorTheme, ~terminalId) => {
   terminalId
   |> Service_Terminal.getScreen
   |> Option.map(screen => {
-       module TermScreen = ReveryTerminal.Screen;
+       module TermScreen = EditorTerminal.Screen;
        let totalRows = TermScreen.getTotalRows(screen);
        let columns = TermScreen.getColumns(screen);
 
