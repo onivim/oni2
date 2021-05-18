@@ -87,6 +87,7 @@
 - #3537 - Terminal: Fix pasted text showing in reverse order (fixes #3513)
 - #3541 - Pane: Shoudl grab focus when clicked (fixes #3538)
 - #3547 - Completion: Add `editor.acceptSuggestionOnTab` setting
+- #3559 - Explorer: Don't open explorer on `:cd` if `workbench.sideBar.visible` is false
 
 ### Performance
 
