@@ -82,17 +82,7 @@ function activate(context) {
     let channel = window.createOutputChannel("reason-vscode")
     context.subscriptions.push(channel)
 
-    // HACK:
-    // Log to a file during startup, so that we can get access to these logs when running from Finder
-    // TODO:
-    let logPath = "/PATH/TO/log-extension.txt";
-
-    fs.writeFileSync(logPath, "Starting log file...\n", { flag: "w" });
-
-    let log = (msg) => {
-        fs.writeFileSync(logPath, msg + "\n", { flag: "a" });
-        channel.appendLine(msg)
-    };
+    let log = (msg) => channel.appendLine(msg)
 
     const validatePath = (pathToValidate) => {
         if (!pathToValidate) {
@@ -129,8 +119,6 @@ function activate(context) {
 
     const isEsyAvailable = (projectPath) => {
         try {
-            log("Checking esy version, for projectPath: " + projectPath);
-            log("Ambient environment: " + JSON.stringify(process.env, null, 2));
             cp.execSync("esy --version", { cwd: projectPath })
             return true
         } catch (ex) {
