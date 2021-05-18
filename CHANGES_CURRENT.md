@@ -89,6 +89,7 @@
 - #3547 - Completion: Add `editor.acceptSuggestionOnTab` setting
 - #3556 - Pane: Fix issue with close button
 - #3558 - Extensions: Clicking on search input should focus it
+- #3559 - Explorer: Don't open explorer on `:cd` if `workbench.sideBar.visible` is false
 
 ### Performance
 
