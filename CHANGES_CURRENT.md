@@ -88,6 +88,7 @@
 - #3541 - Pane: Should grab focus when clicked (fixes #3538)
 - #3547 - Completion: Add `editor.acceptSuggestionOnTab` setting
 - #3556 - Pane: Fix issue with close button
+- #3558 - Extensions: Clicking on search input should focus it
 
 ### Performance
 
