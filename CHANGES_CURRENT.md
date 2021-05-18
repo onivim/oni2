@@ -87,6 +87,7 @@
 - #3537 - Terminal: Fix pasted text showing in reverse order (fixes #3513)
 - #3541 - Pane: Should grab focus when clicked (fixes #3538)
 - #3547 - Completion: Add `editor.acceptSuggestionOnTab` setting
+- #3556 - Pane: Fix issue with close button
 - #3558 - Extensions: Clicking on search input should focus it
 
 ### Performance
@@ -122,6 +123,7 @@
 - #3518 - Dependency: Revery -> bb73d21 (fixes #3504)
 - #3531 - Dependency: OCaml -> 4.11
 - #3540 - Dependency: Revery -> d599514 (Pick up mousewheel scaling fix)
+- #3555 - Terminal: Bring in vterm/revery-terminal to monorepo
 
 ### Infrastructure
 

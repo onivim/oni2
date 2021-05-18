@@ -50,6 +50,7 @@ module MenuBar = MenuBar;
 module MinimalUpdate = MinimalUpdate;
 module Mode = Mode;
 module NodeTask = NodeTask;
+module RingBuffer = RingBuffer;
 module Ripgrep = Ripgrep;
 module Scheduler = Scheduler;
 module Decoration = Decoration;
