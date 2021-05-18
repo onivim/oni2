@@ -2657,9 +2657,12 @@ let update =
 
       // Pop open and focus sidebar
       let sideBar =
-        if (!Feature_SideBar.isOpen(state.sideBar)
-            || Feature_SideBar.selected(state.sideBar)
-            !== Feature_SideBar.FileExplorer) {
+        if (shouldFocusExplorer
+            && (
+              !Feature_SideBar.isOpen(state.sideBar)
+              || Feature_SideBar.selected(state.sideBar)
+              !== Feature_SideBar.FileExplorer
+            )) {
           Feature_SideBar.toggle(FileExplorer, state.sideBar);
         } else {
           state.sideBar;

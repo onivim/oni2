@@ -8,7 +8,7 @@ module Internal = {
   let onExtensionMessage: Revery.Event.t(Exthost.Msg.TerminalService.msg) =
     Revery.Event.create();
 
-  let idToTerminal: Hashtbl.t(int, ReveryTerminal.t) = Hashtbl.create(8);
+  let idToTerminal: Hashtbl.t(int, EditorTerminal.t) = Hashtbl.create(8);
 
   let getEnvironmentFromConfiguration =
       (env: Exthost.ShellLaunchConfig.environment) => {
@@ -74,8 +74,8 @@ type msg =
     })
   | ScreenUpdated({
       id: int,
-      screen: [@opaque] ReveryTerminal.Screen.t,
-      cursor: [@opaque] ReveryTerminal.Cursor.t,
+      screen: [@opaque] EditorTerminal.Screen.t,
+      cursor: [@opaque] EditorTerminal.Cursor.t,
     });
 
 module Sub = {
@@ -97,7 +97,7 @@ module Sub = {
         maybePty: ref(option(Pty.t)),
         rows: int,
         columns: int,
-        terminal: ReveryTerminal.t,
+        terminal: EditorTerminal.t,
         isResizing: ref(bool),
       };
 
@@ -114,31 +114,31 @@ module Sub = {
 
         let onEffect = eff =>
           switch (eff) {
-          | ReveryTerminal.ScreenResized(_) => ()
-          | ReveryTerminal.ScreenUpdated(_) => ()
-          | ReveryTerminal.CursorMoved(_) => ()
-          | ReveryTerminal.Output(output) =>
+          | EditorTerminal.ScreenResized(_) => ()
+          | EditorTerminal.ScreenUpdated(_) => ()
+          | EditorTerminal.CursorMoved(_) => ()
+          | EditorTerminal.Output(output) =>
             maybePty^ |> Option.iter(pty => Pty.write(pty, output))
           // TODO: Handle term prop changes
-          | ReveryTerminal.TermPropChanged(_) => ()
+          | EditorTerminal.TermPropChanged(_) => ()
           };
 
         let rows = params.rows;
         let columns = params.columns;
 
         let terminal =
-          ReveryTerminal.make(
+          EditorTerminal.make(
             ~scrollBackSize=512,
             ~rows,
             ~columns,
             ~onEffect,
             (),
           );
-        ReveryTerminal.resize(~rows, ~columns=40, terminal);
+        EditorTerminal.resize(~rows, ~columns=40, terminal);
         let onData = data => {
-          ReveryTerminal.write(~input=data, terminal);
-          let cursor = ReveryTerminal.cursor(terminal);
-          let screen = ReveryTerminal.screen(terminal);
+          EditorTerminal.write(~input=data, terminal);
+          let cursor = EditorTerminal.cursor(terminal);
+          let screen = EditorTerminal.screen(terminal);
           dispatch(ScreenUpdated({id: params.id, screen, cursor}));
         };
 
@@ -191,7 +191,7 @@ module Sub = {
             && (rows != state.rows || columns != state.columns)) {
           state.isResizing := true;
           state.maybePty^ |> Option.iter(Pty.resize(~rows, ~cols=columns));
-          ReveryTerminal.resize(~rows, ~columns, state.terminal);
+          EditorTerminal.resize(~rows, ~columns, state.terminal);
           state.isResizing := false;
           {...state, rows, columns};
         } else {
@@ -278,7 +278,7 @@ module Effect = {
         switch (getControlKey(input)) {
         | Some(key) =>
           let keyChar = key |> Char.code |> Uchar.of_int;
-          ReveryTerminal.input(
+          EditorTerminal.input(
             ~key=Unicode(keyChar),
             ~modifier=Control,
             terminal,
@@ -286,10 +286,10 @@ module Effect = {
         | None =>
           if (String.length(input) == 1) {
             let key = input.[0] |> Char.code |> Uchar.of_int;
-            ReveryTerminal.input(~key=Unicode(key), terminal);
+            EditorTerminal.input(~key=Unicode(key), terminal);
           } else {
             switch (Hashtbl.find_opt(keyToVtermKey, input)) {
-            | Some(key) => ReveryTerminal.input(~key, terminal)
+            | Some(key) => EditorTerminal.input(~key, terminal)
             | None => ()
             };
           }
@@ -305,7 +305,7 @@ module Effect = {
       | Some(terminal) =>
         input
         |> Zed_utf8.iter(uchar => {
-             ReveryTerminal.input(~key=Unicode(uchar), terminal)
+             EditorTerminal.input(~key=Unicode(uchar), terminal)
            })
       | None => ()
       }
@@ -320,5 +320,5 @@ let handleExtensionMessage = (msg: Exthost.Msg.TerminalService.msg) => {
 let getScreen = terminalId => {
   terminalId
   |> Hashtbl.find_opt(Internal.idToTerminal)
-  |> Option.map(ReveryTerminal.screen);
+  |> Option.map(EditorTerminal.screen);
 };
