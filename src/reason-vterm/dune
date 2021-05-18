@@ -1,0 +1,19 @@
+(library
+ (name vterm)
+ (public_name vterm)
+ (library_flags
+  (:include flags.sexp))
+ (c_library_flags
+  (:include c_library_flags.sexp))
+ (foreign_stubs
+  (language c)
+  (flags
+   (:include c_flags.sexp))
+  (names bindings)))
+
+(rule
+ (targets c_flags.sexp flags.sexp c_library_flags.sexp)
+ (deps
+  (:discover config/discover.exe))
+ (action
+  (run %{discover})))

@@ -18,7 +18,7 @@ let theme = theme =>
   | 14 => Colors.ansiBrightCyan.from(theme)
   | 15 => Colors.ansiBrightWhite.from(theme)
   // For 256 colors, fall back to defaults
-  | idx => ReveryTerminal.Theme.default(idx);
+  | idx => EditorTerminal.Theme.default(idx);
 
 let defaultBackground = theme => Colors.background.from(theme);
 let defaultForeground = theme => Colors.foreground.from(theme);

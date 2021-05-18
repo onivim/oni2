@@ -16,8 +16,8 @@ type msg =
     })
   | ScreenUpdated({
       id: int,
-      screen: ReveryTerminal.Screen.t,
-      cursor: ReveryTerminal.Cursor.t,
+      screen: EditorTerminal.Screen.t,
+      cursor: EditorTerminal.Cursor.t,
     });
 
 module Sub: {
@@ -41,4 +41,4 @@ module Effect: {
 
 let handleExtensionMessage: Exthost.Msg.TerminalService.msg => unit;
 
-let getScreen: int => option(ReveryTerminal.Screen.t);
+let getScreen: int => option(EditorTerminal.Screen.t);
