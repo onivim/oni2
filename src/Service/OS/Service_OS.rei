@@ -1,5 +1,28 @@
 open Oni_Core;
 
+module DirectoryEntry: {
+  // type kind = [ `File | Directory `];
+
+  // type t = {
+  //   kind: kind,
+  //   isSymbolicLink: bool,
+  //   name: string,
+  //   path: FpExp.t(FpExp.absolute)
+  // };
+
+  type t;
+
+  let name: t => string;
+
+  let path: t => FpExp.t(FpExp.absolute);
+
+  let isSymbolicLink: t => bool;
+
+  let isFile: t => bool;
+
+  let isDirectory: t => bool;
+};
+
 module Api: {
   let glob:
     (
@@ -13,6 +36,7 @@ module Api: {
   let rmdir: (~recursive: bool=?, string) => Lwt.t(unit);
   let stat: string => Lwt.t(Luv.File.Stat.t);
   let readdir: string => Lwt.t(list(Luv.File.Dirent.t));
+  let readdir2: FpExp.t(FpExp.absolute) => Lwt.t(list(DirectoryEntry.t));
   let readFile: (~chunkSize: int=?, string) => Lwt.t(Bytes.t);
   let writeFile: (~contents: Bytes.t, string) => Lwt.t(unit);
   let rename:
@@ -48,8 +72,8 @@ module Sub: {
   let dir:
     (
       ~uniqueId: string,
-      ~toMsg: result(list(Luv.File.Dirent.t), string) => 'msg,
-      string
+      ~toMsg: result(list(DirectoryEntry.t), string) => 'msg,
+      FpExp.t(FpExp.absolute)
     ) =>
     Isolinear.Sub.t('msg);
 };
