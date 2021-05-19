@@ -974,7 +974,7 @@ let withSteadyCursor = (f, editor) => {
   };
 };
 
-let makeInlineElement = (~command=None, ~key, ~uniqueId, ~lineNumber, ~view) => {
+let makeInlineElement = (~command=None, ~key, ~uniqueId, ~lineNumber, view) => {
   hidden: false,
   reconcilerKey: Brisk_reconciler.Key.create(),
   key,
@@ -1063,7 +1063,7 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
            ~key="codelens:" ++ string_of_int(handle),
            ~uniqueId,
            ~lineNumber,
-           ~view,
+           view,
          );
        });
 

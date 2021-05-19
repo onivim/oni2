@@ -7,7 +7,7 @@ let wrap = LuvEx.wrapPromise;
 let bind = (fst, snd) => Lwt.bind(snd, fst);
 
 module Internal = {
-  let copyfile = (~overwrite=true, ~source, ~target) => {
+  let copyfile = (~overwrite=true, ~source, target) => {
     source |> wrap(Luv.File.copyfile(~excl=!overwrite, ~to_=target));
   };
   let openfile = (~flags, path) => flags |> wrap(Luv.File.open_(path));
@@ -205,7 +205,7 @@ module Api = {
   };
 
   let copy = (~source, ~target, ~overwrite) => {
-    Internal.copyfile(~source, ~target, ~overwrite);
+    Internal.copyfile(~overwrite, ~source, target);
   };
 
   let rename = (~source, ~target, ~overwrite) => {

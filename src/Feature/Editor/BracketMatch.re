@@ -27,13 +27,13 @@ let find =
 
   let rec loop =
           (
+            ~index=None,
             ~direction,
             ~count,
             ~line,
-            ~index=None,
             ~travel,
-            ~startCharacter,
-            ~stopCharacter,
+            startCharacter,
+            stopCharacter,
           ) =>
     // Traveled as far as we could, didn't find a pair...
     if (travel > Constants.maxTravel) {
@@ -64,8 +64,8 @@ let find =
           ~line=line + direction,
           ~index=None,
           ~travel=travel + 1,
-          ~startCharacter,
-          ~stopCharacter,
+          startCharacter,
+          stopCharacter,
         );
       } else if (idx >= lineLength) {
         loop(
@@ -74,8 +74,8 @@ let find =
           ~line=line + direction,
           ~index=None,
           ~travel=travel + 1,
-          ~startCharacter,
-          ~stopCharacter,
+          startCharacter,
+          stopCharacter,
         );
       } else {
         let char: Uchar.t =
@@ -105,8 +105,8 @@ let find =
             ~line,
             ~index=Some(idx + direction),
             ~travel=travel + 1,
-            ~startCharacter,
-            ~stopCharacter,
+            startCharacter,
+            stopCharacter,
           );
         };
       };
@@ -152,8 +152,8 @@ let find =
       ~index=index',
       ~travel=0,
       ~direction=-1,
-      ~startCharacter=start,
-      ~stopCharacter=stop,
+      start,
+      stop,
     );
 
   maybeStart
@@ -166,8 +166,8 @@ let find =
          ~index=Some(character |> CharacterIndex.toInt),
          ~travel=0,
          ~direction=1,
-         ~startCharacter=start,
-         ~stopCharacter=stop,
+         start,
+         stop,
        )
        |> Option.map(stop => {start: startPos, stop});
      });
