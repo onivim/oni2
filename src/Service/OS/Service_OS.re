@@ -54,7 +54,7 @@ module DirectoryEntry = {
 
   let isDirectory = ({kind, _}) => kind == `Directory;
 
-  let fromPath = (~name: string, path: FpExp.t(FpExp.absolute)) => {
+  let fromStat = (~name, path) => {
     let ofMode = (~isSymbolicLink, mode) => {
       let kind =
         if (Luv.File.Mode.test([`IFDIR], mode)) {
@@ -79,6 +79,20 @@ module DirectoryEntry = {
            Lwt.return(ofMode(~isSymbolicLink=false, lstat.mode));
          }
        );
+  };
+
+  let fromDirent =
+      (~dirent: Luv.File.Dirent.t, path: FpExp.t(FpExp.absolute)) => {
+    let name = dirent.name;
+    switch (dirent.kind) {
+    | `FILE => Lwt.return({name, kind: `File, isSymbolicLink: false, path})
+    | `DIR =>
+      Lwt.return({name, kind: `Directory, isSymbolicLink: false, path})
+    // Wasn't enough information from the direntry - could be `LINK, `UNKNOWN, etc -
+    // fall back to using stat. We don't use stat by default for everything since the additional
+    // I/O is slow on Windows
+    | _ => fromStat(~name, path)
+    };
   };
 };
 
@@ -125,9 +139,9 @@ module Api = {
          };
          let resolvedItems: list(Lwt.t(DirectoryEntry.t)) =
            dirItems
-           |> List.map(({name, _}: Luv.File.Dirent.t) => {
-                let fullPath = FpExp.At.(path / name);
-                DirectoryEntry.fromPath(~name, fullPath);
+           |> List.map((dirent: Luv.File.Dirent.t) => {
+                let fullPath = FpExp.At.(path / dirent.name);
+                DirectoryEntry.fromDirent(~dirent, fullPath);
               });
 
          resolvedItems |> LwtEx.all(~initial=[], joiner);

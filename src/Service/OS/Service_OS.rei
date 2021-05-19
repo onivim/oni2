@@ -1,15 +1,6 @@
 open Oni_Core;
 
 module DirectoryEntry: {
-  // type kind = [ `File | Directory `];
-
-  // type t = {
-  //   kind: kind,
-  //   isSymbolicLink: bool,
-  //   name: string,
-  //   path: FpExp.t(FpExp.absolute)
-  // };
-
   type t;
 
   let name: t => string;
