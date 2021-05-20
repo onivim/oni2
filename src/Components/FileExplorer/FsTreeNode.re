@@ -5,7 +5,8 @@ open Utility;
 type metadata = {
   path: [@opaque] FpExp.t(FpExp.absolute),
   displayName: string,
-  hash: int // hash of basename, so only comparable locally
+  hash: int, // hash of basename, so only comparable locally
+  isSymlink: bool,
 };
 
 [@deriving show({with_path: false})]
@@ -38,19 +39,29 @@ module PathHasher = {
   };
 };
 
-let file = path => {
+let file = (~isSymlink, path) => {
   let basename = FpExp.baseName(path) |> Option.value(~default="(empty)");
 
-  Tree.leaf({path, hash: PathHasher.hash(basename), displayName: basename});
+  Tree.leaf({
+    isSymlink,
+    path,
+    hash: PathHasher.hash(basename),
+    displayName: basename,
+  });
 };
 
-let directory = (~isOpen=false, path, ~children) => {
+let directory = (~isOpen=false, ~isSymlink, path, ~children) => {
   let basename = FpExp.baseName(path) |> Option.value(~default="(empty)");
 
   Tree.node(
     ~expanded=isOpen,
     ~children,
-    {path, hash: PathHasher.hash(basename), displayName: basename},
+    {
+      isSymlink,
+      path,
+      hash: PathHasher.hash(basename),
+      displayName: basename,
+    },
   );
 };
 
@@ -58,6 +69,8 @@ let get = f =>
   fun
   | Tree.Node({data, _})
   | Tree.Leaf(data) => f(data);
+
+let isSymlink = get(({isSymlink, _}) => isSymlink);
 
 let getHash = get(({hash, _}) => hash);
 let getPath = get(({path, _}) => path);
@@ -130,8 +143,8 @@ let replace = (~replacement, tree) => {
     // Merge the 'old' children with the 'new' children, so that we don't have to recursively
     // refresh if we don't have to.
     | (
-        Tree.Node({children: oldChildren, expanded, _}),
-        Tree.Node({children: newChildren, data, _}),
+        Tree.Node({children: oldChildren, expanded, data: prevData, _}),
+        Tree.Node({children: newChildren, data: newData, _}),
       ) =>
       // Grab a map of previous children. For any that were existing, use the old metadata - some children might be expanded, for example.
       let previousMap =
@@ -162,6 +175,9 @@ let replace = (~replacement, tree) => {
                |> Option.value(~default=child)
              }
            });
+
+      // We assume that the 'symlink' state doesn't change when re-loading...
+      let data = {...newData, isSymlink: prevData.isSymlink};
 
       Tree.Node({children, expanded, data});
     };
