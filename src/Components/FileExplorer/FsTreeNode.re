@@ -1,5 +1,4 @@
 open Oni_Core;
-open Utility;
 
 [@deriving show({with_path: false})]
 type metadata = {
