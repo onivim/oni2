@@ -1,7 +1,8 @@
 module GlobalState = {
-  type provider = {get: unit => option(string)};
+  type provider = {get: unit => option(string), set: string => unit};
 
-  let providerInstance = ref({get: Sdl2.Clipboard.getText});
+  let providerInstance = ref({get: Sdl2.Clipboard.getText,
+  set: Sdl2.Clipboard.setText});
 };
 
 module Effects = {
@@ -12,10 +13,16 @@ module Effects = {
       dispatch(toMsg(clipboardText));
     });
   };
+
+  let setClipboardText = (text) => 
+    Isolinear.Effect.create(
+      ~name="Service_Clipboard.setClipboardText", () => {
+       GlobalState.providerInstance^.set(text);
+    });
 };
 
 module Testing = {
-  let setClipboardProvider = (~get) => {
-    GlobalState.providerInstance := {get: get};
+  let setClipboardProvider = (~get, ~set) => {
+    GlobalState.providerInstance := {get: get, set: set};
   };
 };

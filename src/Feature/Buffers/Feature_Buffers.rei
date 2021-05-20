@@ -99,7 +99,7 @@ type outmsg =
 // UPDATE
 
 let update:
-  (~activeBufferId: int, ~config: Config.fileTypeResolver, msg, model) =>
+  (~activeBufferId: int, ~config: Config.fileTypeResolver, ~workspace: Feature_Workspace.model, msg, model) =>
   (model, outmsg);
 
 let configurationChanged: (~config: Config.resolver, model) => model;

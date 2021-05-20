@@ -1307,7 +1307,7 @@ let update =
     let config = Feature_Configuration.resolver(state.config, state.vim);
 
     let (buffers, outmsg) =
-      Feature_Buffers.update(~activeBufferId, ~config, msg, state.buffers);
+      Feature_Buffers.update(~activeBufferId, ~config, ~workspace=state.workspace, msg, state.buffers);
 
     let state = {...state, buffers};
 

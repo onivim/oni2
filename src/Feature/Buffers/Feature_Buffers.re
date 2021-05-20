@@ -391,7 +391,7 @@ let guessIndentation = (~config, buffer) => {
   |> Option.value(~default=Inferred.implicit(defaultIndentation(~config)));
 };
 
-let update = (~activeBufferId, ~config, msg: msg, model: model) => {
+let update = (~activeBufferId, ~config, ~workspace as _, msg: msg, model: model) => {
   switch (msg) {
   | AutoSave(msg) =>
     let (autoSave', outmsg) = AutoSave.update(msg, model.autoSave);
