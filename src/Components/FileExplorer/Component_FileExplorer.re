@@ -27,12 +27,13 @@ module Internal = {
     };
   };
 
-  let luvDirentToFsTree = (~cwd, {name, kind}: Luv.File.Dirent.t) => {
-    let path = FpExp.At.(cwd / name);
+  let luvDirentToFsTree = (dirent: Service_OS.DirectoryEntry.t) => {
+    open Service_OS;
 
-    if (kind == `FILE || kind == `LINK) {
+    let path = DirectoryEntry.path(dirent);
+    if (DirectoryEntry.isFile(dirent)) {
       Some(FsTreeNode.file(path));
-    } else if (kind == `DIR) {
+    } else if (DirectoryEntry.isDirectory(dirent)) {
       //let isOpen = expandedPaths |> List.exists(FpExp.eq(path));
       Some(
         FsTreeNode.directory(path, ~children=[]),
@@ -42,13 +43,16 @@ module Internal = {
     };
   };
 
-  let luvDirentsToFsTree = (~cwd: FpExp.t(FpExp.absolute), ~ignored, dirents) => {
-    dirents
-    |> List.filter(({name, _}: Luv.File.Dirent.t) =>
-         name != ".." && name != "." && !List.mem(name, ignored)
-       )
-    |> List.filter_map(luvDirentToFsTree(~cwd))
-    |> List.sort(sortByLoweredDisplayName);
+  let luvDirentsToFsTree = (~ignored, dirents) => {
+    Service_OS.(
+      dirents
+      |> List.filter((dirEnt: DirectoryEntry.t) => {
+           let name = DirectoryEntry.name(dirEnt);
+           name != ".." && name != "." && !List.mem(name, ignored);
+         })
+      |> List.filter_map(luvDirentToFsTree)
+      |> List.sort(sortByLoweredDisplayName)
+    );
   };
 
   /**
@@ -62,10 +66,7 @@ module Internal = {
      not recurse too far.
    */
   let getFilesAndFolders = (~ignored, cwd) => {
-    cwd
-    |> FpExp.toString
-    |> Service_OS.Api.readdir
-    |> Lwt.map(luvDirentsToFsTree(~ignored, ~cwd));
+    cwd |> Service_OS.Api.readdir2 |> Lwt.map(luvDirentsToFsTree(~ignored));
   };
 
   let getDirectoryTree = (cwd: FpExp.t(FpExp.absolute), ignored) => {
@@ -346,8 +347,7 @@ let sub = (~config, {fileWatcherKey, expandedPaths, pathsToLoad, _}) => {
   let toMsg = path =>
     fun
     | Ok(dirents) => {
-        let children =
-          dirents |> Internal.luvDirentsToFsTree(~ignored, ~cwd=path);
+        let children = dirents |> Internal.luvDirentsToFsTree(~ignored);
         NodeLoaded(FsTreeNode.directory(path, ~children, ~isOpen=true));
       }
     | Error(msg) => NodeLoadError(msg);
@@ -368,7 +368,7 @@ let sub = (~config, {fileWatcherKey, expandedPaths, pathsToLoad, _}) => {
              Service_OS.Sub.dir(
                ~uniqueId="FileExplorer:Sub" ++ FpExp.toString(path),
                ~toMsg=toMsg(path),
-               FpExp.toString(path),
+               path,
              )
            })
         |> Option.value(~default=Isolinear.Sub.none)

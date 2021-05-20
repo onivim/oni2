@@ -91,6 +91,7 @@
 - #3558 - Extensions: Clicking on search input should focus it
 - #3559 - Explorer: Don't open explorer on `:cd` if `workbench.sideBar.visible` is false
 - #3560 - Shell: Fix incorrect PATH on OSX when launched via Finder (fixes #3199)
+- #3567 - Explorer: Fix files in NFS mount not loading (fixes #3534)
 
 ### Performance
 
