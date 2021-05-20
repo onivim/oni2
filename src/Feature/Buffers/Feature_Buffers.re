@@ -394,8 +394,7 @@ let guessIndentation = (~config, buffer) => {
   |> Option.value(~default=Inferred.implicit(defaultIndentation(~config)));
 };
 
-let update =
-    (~activeBufferId, ~config, ~workspace as _, msg: msg, model: model) => {
+let update = (~activeBufferId, ~config, ~workspace, msg: msg, model: model) => {
   switch (msg) {
   | AutoSave(msg) =>
     let (autoSave', outmsg) = AutoSave.update(msg, model.autoSave);
@@ -718,9 +717,47 @@ let update =
         );
       };
 
-    | CopyAbsolutePathToClipboard => failwith("Not implemented")
+    | CopyAbsolutePathToClipboard =>
+      let eff =
+        model.buffers
+        |> IntMap.find_opt(activeBufferId)
+        |> OptionEx.flatMap(Buffer.getFilePath)
+        |> Option.map(path => SetClipboardText(path))
+        |> Option.value(~default=Nothing);
 
-    | CopyRelativePathToClipboard => failwith("Not implemented")
+      (model, eff);
+
+    | CopyRelativePathToClipboard =>
+      let maybeBufferPath =
+        model.buffers
+        |> IntMap.find_opt(activeBufferId)
+        |> OptionEx.flatMap(Buffer.getFilePath)
+        |> OptionEx.flatMap(Oni_Core.FpExp.absoluteCurrentPlatform);
+
+      let default =
+        maybeBufferPath
+        |> Option.map(path => SetClipboardText(FpExp.toString(path)))
+        |> Option.value(~default=Nothing);
+
+      let maybeWorkspacePath =
+        workspace
+        |> Feature_Workspace.openedFolder
+        |> OptionEx.flatMap(Oni_Core.FpExp.absoluteCurrentPlatform);
+
+      let eff =
+        OptionEx.flatMap2(
+          (bufferPath, workspacePath) => {
+            switch (FpExp.relativize(~source=workspacePath, ~dest=bufferPath)) {
+            | Ok(relative) =>
+              Some(SetClipboardText(FpExp.relativeToString(relative)))
+            | Error(_) => None
+            }
+          },
+          maybeBufferPath,
+          maybeWorkspacePath,
+        )
+        |> Option.value(~default);
+      (model, eff);
 
     | DetectIndentation =>
       let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);

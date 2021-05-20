@@ -19,7 +19,7 @@ module PathHasher = {
 
   let make = (~base, path) => {
     switch (FpExp.relativize(~source=base, ~dest=path)) {
-    | Ok(relativePath) => FpEx.explode(relativePath) |> List.map(hash)
+    | Ok(relativePath) => FpExp.explode(relativePath) |> List.map(hash)
     | Error(_) => []
     };
   };
