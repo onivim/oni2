@@ -154,6 +154,8 @@ type command =
   | ChangeFiletype({maybeBufferId: option(int)})
   | ConvertIndentationToTabs
   | ConvertIndentationToSpaces
+  | CopyAbsolutePathToClipboard
+  | CopyRelativePathToClipboard
   | DetectIndentation
   | SaveWithoutFormatting;
 
@@ -336,6 +338,7 @@ type outmsg =
       preview: bool,
     })
   | BufferModifiedSet(int, bool)
+  | SetClipboardText(string)
   | ShowMenu(
       (Exthost.LanguageInfo.t, IconTheme.t) =>
       Feature_Quickmenu.Schema.menu(msg),
@@ -391,7 +394,8 @@ let guessIndentation = (~config, buffer) => {
   |> Option.value(~default=Inferred.implicit(defaultIndentation(~config)));
 };
 
-let update = (~activeBufferId, ~config, ~workspace as _, msg: msg, model: model) => {
+let update =
+    (~activeBufferId, ~config, ~workspace as _, msg: msg, model: model) => {
   switch (msg) {
   | AutoSave(msg) =>
     let (autoSave', outmsg) = AutoSave.update(msg, model.autoSave);
@@ -714,6 +718,10 @@ let update = (~activeBufferId, ~config, ~workspace as _, msg: msg, model: model)
         );
       };
 
+    | CopyAbsolutePathToClipboard => failwith("Not implemented")
+
+    | CopyRelativePathToClipboard => failwith("Not implemented")
+
     | DetectIndentation =>
       let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
 
@@ -950,6 +958,21 @@ module Commands = {
       Command(ChangeFiletype({maybeBufferId: None})),
     );
 
+  let copyAbsolutePath =
+    define(
+      ~category="File",
+      ~title="Copy Path of Active File",
+      "copyFilePath",
+      Command(CopyAbsolutePathToClipboard),
+    );
+  let copyRelativePath =
+    define(
+      ~category="File",
+      ~title="Copy Relative Path of Active File",
+      "copyRelativeFilePath",
+      Command(CopyRelativePathToClipboard),
+    );
+
   let saveWithoutFormatting =
     define(
       ~category="File",
@@ -1013,6 +1036,8 @@ module Contributions = {
       changeFiletype,
       convertIndentationToSpaces,
       convertIndentationToTabs,
+      copyAbsolutePath,
+      copyRelativePath,
       detectIndentation,
       indentUsingSpaces,
       indentUsingTabs,

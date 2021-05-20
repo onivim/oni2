@@ -88,6 +88,7 @@ type outmsg =
       preview: bool,
     })
   | BufferModifiedSet(int, bool)
+  | SetClipboardText(string)
   | ShowMenu(
       (Exthost.LanguageInfo.t, IconTheme.t) =>
       Feature_Quickmenu.Schema.menu(msg),
@@ -99,7 +100,13 @@ type outmsg =
 // UPDATE
 
 let update:
-  (~activeBufferId: int, ~config: Config.fileTypeResolver, ~workspace: Feature_Workspace.model, msg, model) =>
+  (
+    ~activeBufferId: int,
+    ~config: Config.fileTypeResolver,
+    ~workspace: Feature_Workspace.model,
+    msg,
+    model
+  ) =>
   (model, outmsg);
 
 let configurationChanged: (~config: Config.resolver, model) => model;
