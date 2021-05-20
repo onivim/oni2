@@ -578,7 +578,6 @@ module Sub = {
 
       let update = (~params, ~state, ~dispatch as _) =>
         if (params.editor.selections != state.lastSelections) {
-          prerr_endline("Selection changed!");
           open Exthost.TextEditor;
           Log.infof(m =>
             m("Sending updated selection for editor: %s", params.editor.id)
