@@ -63,6 +63,8 @@ module Msg: {
 
   let selectFileTypeClicked: (~bufferId: int) => msg;
   let statusBarIndentationClicked: msg;
+
+  let copyActivePathToClipboard: msg;
 };
 
 type outmsg =

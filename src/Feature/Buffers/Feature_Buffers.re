@@ -252,6 +252,8 @@ module Msg = {
     Command(ChangeFiletype({maybeBufferId: Some(bufferId)}));
 
   let statusBarIndentationClicked = StatusBarIndentationClicked;
+
+  let copyActivePathToClipboard = Command(CopyAbsolutePathToClipboard);
 };
 
 let vimSettingChanged = (~activeBufferId, ~name, ~value, model) => {
