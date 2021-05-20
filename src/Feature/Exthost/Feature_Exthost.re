@@ -12,7 +12,14 @@ module Internal = {
   let getExthostSelectionFromEditor = (editor: Feature_Editor.Editor.t) => {
     Feature_Editor.Editor.(
       {
-        let byteRange = editor |> selectionOrCursorRange;
+        let byteRange =
+          switch (Editor.selections(editor)) {
+          | [] =>
+            let position = Editor.getPrimaryCursorByte(editor);
+            EditorCoreTypes.ByteRange.{start: position, stop: position};
+
+          | [selection, ..._] => VisualRange.(selection.range)
+          };
 
         editor
         |> byteRangeToCharacterRange(byteRange)
