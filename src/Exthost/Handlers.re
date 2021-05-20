@@ -112,7 +112,11 @@ let handlers =
       ~mapper=msg => Msg.DocumentContentProvider(msg),
       "MainThreadDocumentContentProviders",
     ),
-    mainNotImplemented("MainThreadTextEditors"),
+    main(
+      ~handler=Msg.TextEditors.handle,
+      ~mapper=msg => Msg.TextEditors(msg),
+      "MainThreadTextEditors",
+    ),
     mainNotImplemented("MainThreadEditorInsets"),
     mainNotImplemented("MainThreadEditorTabs"),
     main(

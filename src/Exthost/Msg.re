@@ -1738,6 +1738,22 @@ module TerminalService = {
   };
 };
 
+module TextEditors = {
+  [@deriving show]
+  type msg =
+    | TryApplyEdits({
+        id: string,
+        modelVersionId: int,
+        // TODO:
+        //opts: ApplyEditOptions.t,
+        edits: list(Edit.SingleEditOperation.t),
+      });
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    Error("Unhandled text editor operation");
+  };
+};
+
 module Window = {
   [@deriving show]
   type msg =
@@ -1872,6 +1888,7 @@ type t =
   | Storage(Storage.msg)
   | Telemetry(Telemetry.msg)
   | TerminalService(TerminalService.msg)
+  | TextEditors(TextEditors.msg)
   | Window(Window.msg)
   | Workspace(Workspace.msg)
   | Initialized

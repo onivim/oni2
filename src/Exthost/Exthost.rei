@@ -1723,6 +1723,18 @@ module Msg: {
         });
   };
 
+  module TextEditors: {
+    [@deriving show]
+    type msg =
+      | TryApplyEdits({
+          id: string,
+          modelVersionId: int,
+          // TODO:
+          //opts: ApplyEditOptions.t,
+          edits: list(Edit.SingleEditOperation.t),
+        });
+  };
+
   module OutputService: {
     [@deriving show]
     type msg =
@@ -1817,6 +1829,7 @@ module Msg: {
     | Storage(Storage.msg)
     | Telemetry(Telemetry.msg)
     | TerminalService(TerminalService.msg)
+    | TextEditors(TextEditors.msg)
     | Window(Window.msg)
     | Workspace(Workspace.msg)
     | Initialized
