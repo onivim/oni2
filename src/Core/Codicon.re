@@ -845,7 +845,7 @@ module Animation = {
     );
 };
 
-let make = (~rotation=0., ~spin=false, ~icon, ~fontSize=15., ~color, ()) => {
+let make = (~rotation=0., ~icon, ~fontSize=15., ~color, ()) => {
   <View
     style=Style.[
       transform([

@@ -32,7 +32,7 @@ module Styles = {
     alignItems(`Center),
   ];
 
-  let text = (~color as c, ~isFocus, ~isActive, ~decoration, ~theme) => [
+  let text = (~color as c) => [
     color(c),
     // Minor adjustment to align with seti-icon
     marginTop(4),
@@ -107,7 +107,7 @@ let nodeView =
     <View style=Revery.UI.Style.[flexGrow(1), flexShrink(1)]>
       <Text
         text={node.displayName}
-        style={Styles.text(~color, ~isFocus, ~isActive, ~decoration, ~theme)}
+        style={Styles.text(~color)}
         fontFamily={font.family}
         fontSize=12.
       />
