@@ -1043,6 +1043,25 @@ module TextEditor: {
 
     let encode: Json.encoder(t);
   };
+
+  module SelectionChangeEvent: {
+    type t = {
+      selections: list(Selection.t),
+      source: option(string),
+    };
+
+    let encode: Json.encoder(t);
+  };
+
+  module PropertiesChangeData: {
+    type t = {
+      selections: option(SelectionChangeEvent.t),
+      // options: IResolvedTextEditorConfiguration
+      // visibleRanges: IRange[]
+    };
+
+    let encode: Json.encoder(t);
+  };
 };
 
 module DocumentsAndEditorsDelta: {

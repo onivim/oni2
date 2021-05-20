@@ -88,3 +88,33 @@ module AddData = {
       ])
     );
 };
+
+module SelectionChangeEvent = {
+  type t = {
+    selections: list(Selection.t),
+    source: option(string),
+  };
+
+  let encode = ({selections, source}) =>
+    Json.Encode.(
+      obj([
+        ("selections", selections |> list(Selection.encode)),
+        ("source", source |> nullable(string)),
+      ])
+    );
+};
+
+module PropertiesChangeData = {
+  type t = {
+    selections: option(SelectionChangeEvent.t),
+    // options: IResolvedTextEditorConfiguration
+    // visibleRanges: IRange[]
+  };
+
+  let encode = ({selections}) =>
+    Json.Encode.(
+      obj([
+        ("selections", selections |> nullable(SelectionChangeEvent.encode)),
+      ])
+    );
+};
