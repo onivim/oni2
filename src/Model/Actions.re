@@ -120,7 +120,6 @@ type t =
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBar(Feature_StatusBar.msg)
-  | CopyActiveFilepathToClipboard
   | SCM(Feature_SCM.msg)
   | Search(Feature_Search.msg)
   | SideBar(Feature_SideBar.msg)
