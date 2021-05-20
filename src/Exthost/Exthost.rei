@@ -150,6 +150,7 @@ module Span: {
 };
 
 module Selection: {
+  [@deriving show]
   type t = {
     selectionStartLineNumber: int,
     selectionStartColumn: int,
@@ -1035,8 +1036,8 @@ module TextEditor: {
       id: string,
       documentUri: Uri.t,
       options: ResolvedConfiguration.t,
+      selections: list(Selection.t),
       // TODO:
-      // selections: list(Selection.t),
       // visibleRanges: list(Range.t),
       // editorPosition: option(EditorViewColumn.t),
     };

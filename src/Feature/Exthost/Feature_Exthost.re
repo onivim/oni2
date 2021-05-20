@@ -9,6 +9,36 @@ module Internal = {
   let getVscodeEditorId = editorId =>
     "onivim.editor:" ++ string_of_int(editorId);
 
+  let getExthostSelectionFromEditor = (editor: Feature_Editor.Editor.t) => {
+    Feature_Editor.Editor.(
+      {
+        let byteRange = editor |> selectionOrCursorRange;
+
+        editor
+        |> byteRangeToCharacterRange(byteRange)
+        |> Option.map(range => {
+             EditorCoreTypes.(
+               EditorCoreTypes.CharacterRange.(
+                 EditorCoreTypes.CharacterPosition.[
+                   Exthost.Selection.{
+                     selectionStartLineNumber:
+                       range.start.line |> LineNumber.toOneBased,
+                     selectionStartColumn:
+                       (range.start.character |> CharacterIndex.toInt) + 1,
+                     positionLineNumber:
+                       range.stop.line |> LineNumber.toOneBased,
+                     positionColumn:
+                       (range.stop.character |> CharacterIndex.toInt) + 1,
+                   },
+                 ]
+               )
+             )
+           })
+        |> Option.value(~default=[]);
+      }
+    );
+  };
+
   let editorToAddData:
     (IntMap.t(Buffer.t), Editor.t) => option(TextEditor.AddData.t) =
     (bufferMap, editor) => {
@@ -39,7 +69,9 @@ module Internal = {
                lineNumbers: LineNumbersStyle.On,
              };
 
-           AddData.{id, documentUri: uri, options};
+           let selections = getExthostSelectionFromEditor(editor);
+
+           AddData.{id, documentUri: uri, options, selections};
          });
     };
 };
@@ -204,14 +236,14 @@ let subscription =
          })
       |> Isolinear.Sub.batch;
 
-    let editors =
-      editors
-      |> List.map(Internal.editorToAddData(bufferMap))
-      |> OptionEx.values;
+    let editorAddDataAndSelection =
+      editors |> List.filter_map(Internal.editorToAddData(bufferMap));
 
     let editorSubscriptions =
-      editors
-      |> List.map(editor => {Service_Exthost.Sub.editor(~editor, ~client)})
+      editorAddDataAndSelection
+      |> List.map(editorAddData => {
+           Service_Exthost.Sub.editor(~editor=editorAddData, ~client)
+         })
       |> Isolinear.Sub.batch
       |> Isolinear.Sub.map(() => Noop);
 

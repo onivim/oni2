@@ -70,20 +70,20 @@ module AddData = {
     id: string,
     documentUri: Uri.t,
     options: ResolvedConfiguration.t,
+    selections: list(Selection.t),
     // TODO:
-    // selections: list(Selection.t),
     // visibleRanges: list(Range.t),
     // editorPosition: option(EditorViewColumn.t),
   };
 
-  let encode = ({id, documentUri, options}) =>
+  let encode = ({id, documentUri, options, selections}) =>
     Json.Encode.(
       obj([
         ("id", id |> string),
         ("documentUri", documentUri |> Uri.encode),
         ("options", options |> ResolvedConfiguration.encode),
+        ("selections", selections |> list(Selection.encode)),
         // TODO:
-        ("selections", [] |> list(int)),
         ("visibleRanges", [] |> list(int)),
       ])
     );
