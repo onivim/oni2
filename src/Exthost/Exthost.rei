@@ -1938,6 +1938,12 @@ module Request: {
       (~delta: DocumentsAndEditorsDelta.t, Client.t) => unit;
   };
 
+  module Editors: {
+    let acceptEditorPropertiesChanged:
+      (~id: string, ~props: TextEditor.PropertiesChangeData.t, Client.t) =>
+      unit;
+  };
+
   module ExtensionService: {
     let activateByEvent: (~event: string, Client.t) => Lwt.t(unit);
 
