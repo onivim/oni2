@@ -6,8 +6,19 @@ open Exthost;
 module Log = (val Log.withNamespace("Oni2.Feature.Exthost"));
 
 module Internal = {
+  let prefix = "onivim.editor:";
+  let prefixLength = String.length(prefix);
   let getVscodeEditorId = editorId =>
     "onivim.editor:" ++ string_of_int(editorId);
+
+  let editorIdFromVscodeEditorId = (vscodeEditorId: string) => {
+    String.sub(
+      vscodeEditorId,
+      prefixLength,
+      String.length(vscodeEditorId) - prefixLength,
+    )
+    |> int_of_string;
+  };
 
   let getExthostSelectionFromEditor = (editor: Feature_Editor.Editor.t) => {
     Feature_Editor.Editor.(
@@ -91,11 +102,19 @@ type msg =
       msg: Exthost.Msg.Documents.msg,
       resolver: [@opaque] Lwt.u(Exthost.Reply.t),
     })
+  | ExthostTextEditors({
+      msg: Exthost.Msg.TextEditors.msg,
+      resolver: [@opaque] Lwt.u(Exthost.Reply.t),
+    })
   | Initialized;
 
 module Msg = {
   let document = (msg, resolver) => {
     ExthostDocuments({msg, resolver});
+  };
+
+  let textEditors = (msg, resolver) => {
+    ExthostTextEditors({msg, resolver});
   };
 
   let initialized = Initialized;
@@ -171,6 +190,10 @@ let update = (msg: msg, model) =>
       Log.warn("TryCreateDocument is not yet implemented.");
       (model, Effect(Effects.resolve(resolver)));
     }
+
+  | ExthostTextEditors(_) =>
+    // TODO
+    (model, Nothing)
 
   | Initialized => ({...model, isInitialized: true}, Nothing)
   };
