@@ -55,3 +55,9 @@ let showRunningThreads = () => {
   Mutex.unlock(activeThreadMutex);
   output;
 };
+
+let killAll = () => {
+  Mutex.lock(activeThreadMutex);
+  activeThreads^ |> List.iter(Thread.kill);
+  Mutex.unlock(activeThreadMutex);
+};

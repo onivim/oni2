@@ -68,7 +68,7 @@ let draw =
       ~y=topY -. 5.,
       ~width,
       ~height=5.,
-      Revery.Draw.CanvasContext.(context.canvasContext.canvas),
+      ~context=Revery.Draw.CanvasContext.(context.canvasContext.canvas),
     );
 
     let (bottomPixel, _) =
@@ -99,7 +99,7 @@ let draw =
       ~y=bottomY,
       ~width,
       ~height=5.,
-      Revery.Draw.CanvasContext.(context.canvasContext.canvas),
+      ~context=Revery.Draw.CanvasContext.(context.canvasContext.canvas),
     );
   };
 };
