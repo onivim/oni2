@@ -79,6 +79,7 @@ module Terminal = {
       Oni_Core.LineHeight.calculate(~measuredFontHeight=fontSize, lineHeight);
     let terminalFont =
       EditorTerminal.Font.make(
+        ~smoothing,
         ~size=fontSize,
         ~lineHeight=lineHeightSize,
         resolvedFont,
