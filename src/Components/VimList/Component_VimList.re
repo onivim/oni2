@@ -193,18 +193,6 @@ let setSelected = (~selected, model) => {
   {...model, selected: selected'} |> ensureSelectedVisible;
 };
 
-let set = (~searchText=?, items, model) => {
-  let searchContext =
-    switch (searchText) {
-    | None => model.searchContext
-    | Some(f) =>
-      let searchIds = Array.map(f, items);
-      SearchContext.setSearchIds(searchIds, model.searchContext);
-    };
-
-  {...model, searchContext, items} |> setSelected(~selected=model.selected);
-};
-
 let setScrollY = (~allowOverscroll=false, ~scrollY, model) => {
   let maxScroll =
     if (allowOverscroll) {
@@ -222,6 +210,22 @@ let setScrollY = (~allowOverscroll=false, ~scrollY, model) => {
 
   let newScrollY = FloatEx.clamp(scrollY, ~hi=maxScroll, ~lo=minScroll);
   {...model, scrollY: newScrollY};
+};
+
+let set = (~searchText=?, items, model) => {
+  let searchContext =
+    switch (searchText) {
+    | None => model.searchContext
+    | Some(f) =>
+      let searchIds = Array.map(f, items);
+      SearchContext.setSearchIds(searchIds, model.searchContext);
+    };
+
+  let originalScrollY = model.scrollY;
+
+  {...model, searchContext, items}
+  |> setSelected(~selected=model.selected)
+  |> setScrollY(~scrollY=originalScrollY);
 };
 
 let enableScrollAnimation = model => {...model, isScrollAnimated: true};
