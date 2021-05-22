@@ -154,9 +154,7 @@ let%component make =
        });
   };
 
-  let totalHeight =
-    float(Editor.totalViewLines(editor))
-    *. rowHeight;
+  let totalHeight = float(Editor.totalViewLines(editor)) *. rowHeight;
 
   let getScrollTo = (~offset=0., screenMouseY: float) => {
     getRelativeMousePosition(screenMouseY)
