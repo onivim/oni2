@@ -42,8 +42,8 @@ let makeInlineElement:
     ~key: string,
     ~uniqueId: string,
     ~lineNumber: EditorCoreTypes.LineNumber.t,
-    (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
-    Revery.UI.element
+    ~view: (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
+           Revery.UI.element
   ) =>
   inlineElement;
 

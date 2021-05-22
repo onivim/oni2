@@ -382,6 +382,7 @@
     "@opam/lwt": "*",
     "@opam/markup": "^0.8.2",
     "@opam/ocamlbuild": "*",
+    "@opam/ocamlformat": "^0.15.0",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
     "@opam/ppx_inline_test": "v0.14.1",
@@ -405,7 +406,7 @@
     "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
     "libvim": "8.10869.87",
-    "ocaml": "~4.12",
+    "ocaml": "~4.11",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#a80a9d9",
     "reason-fzy": "bryphe/reason-fzy#5a1daf4",
     "rench": "^1.9.1",
@@ -418,12 +419,12 @@
     "@opam/fs": "bryphe/reason-native:fs.opam#e16590c",
     "@opam/fp": "bryphe/reason-native:fp.opam#e16590c",
     "@opam/dir": "bryphe/reason-native:dir.opam#e16590c",
-    "@esy-ocaml/reason": "EduardoRFS/reason:reason.json#35aa4df3de0daa60bdc1133dcf97855decac48f7",
+    "@opam/conf-pkg-config": "1.2",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
     "flex": "bryphe/flex#5e19b05"
   },
   "devDependencies": {
-    "ocaml": "~4.12",
+    "ocaml": "~4.11",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",
@@ -431,6 +432,6 @@
     "innosetup-compiler": "5.5.9",
     "plist": "3.0.1",
     "rcedit": "2.0.0",
-    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#d5ba8b9"
+    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#966a28f"
   }
 }

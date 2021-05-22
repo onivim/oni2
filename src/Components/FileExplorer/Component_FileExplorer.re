@@ -31,13 +31,11 @@ module Internal = {
     open Service_OS;
 
     let path = DirectoryEntry.path(dirent);
+    let isSymlink = DirectoryEntry.isSymbolicLink(dirent);
     if (DirectoryEntry.isFile(dirent)) {
-      Some(FsTreeNode.file(path));
+      Some(FsTreeNode.file(~isSymlink, path));
     } else if (DirectoryEntry.isDirectory(dirent)) {
-      //let isOpen = expandedPaths |> List.exists(FpExp.eq(path));
-      Some(
-        FsTreeNode.directory(path, ~children=[]),
-      );
+      Some(FsTreeNode.directory(~isSymlink, path, ~children=[]));
     } else {
       None;
     };
@@ -74,7 +72,16 @@ module Internal = {
 
     childrenPromise
     |> Lwt.map(children => {
-         FsTreeNode.directory(cwd, ~children, ~isOpen=true)
+         FsTreeNode.directory(
+           // HACK: We don't know if this is a symlink,
+           // and the merge logic assumes that the symlink status
+           // doesn't change. So we skip an extra stat to check the symlink
+           // status.
+           ~isSymlink=false,
+           cwd,
+           ~children,
+           ~isOpen=true,
+         )
        });
   };
 };
@@ -348,7 +355,18 @@ let sub = (~config, {fileWatcherKey, expandedPaths, pathsToLoad, _}) => {
     fun
     | Ok(dirents) => {
         let children = dirents |> Internal.luvDirentsToFsTree(~ignored);
-        NodeLoaded(FsTreeNode.directory(path, ~children, ~isOpen=true));
+        NodeLoaded(
+          FsTreeNode.directory(
+            // HACK: We don't know if this is a symlink,
+            // and the merge logic assumes that the symlink status
+            // doesn't change. So we skip an extra stat to check the symlink
+            // status.
+            ~isSymlink=false,
+            path,
+            ~children,
+            ~isOpen=true,
+          ),
+        );
       }
     | Error(msg) => NodeLoadError(msg);
 

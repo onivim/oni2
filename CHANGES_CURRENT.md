@@ -92,6 +92,7 @@
 - #3559 - Explorer: Don't open explorer on `:cd` if `workbench.sideBar.visible` is false
 - #3560 - Shell: Fix incorrect PATH on OSX when launched via Finder (fixes #3199)
 - #3567 - Explorer: Fix files in NFS mount not loading (fixes #3534)
+- #3568 - Explorer: Fix symlinks showing up as empty files (fixes #2657)
 - #3581 - Explorer: Fix population in stat failure
 
 ### Performance
@@ -128,7 +129,6 @@
 - #3531 - Dependency: OCaml -> 4.11
 - #3540 - Dependency: Revery -> d599514 (Pick up mousewheel scaling fix)
 - #3555 - Terminal: Bring in vterm/revery-terminal to monorepo
-- #3536 - Dependency: OCaml -> 4.12
 
 ### Infrastructure
 

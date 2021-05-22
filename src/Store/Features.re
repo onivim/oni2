@@ -1307,7 +1307,13 @@ let update =
     let config = Feature_Configuration.resolver(state.config, state.vim);
 
     let (buffers, outmsg) =
-      Feature_Buffers.update(~activeBufferId, ~config, msg, state.buffers);
+      Feature_Buffers.update(
+        ~activeBufferId,
+        ~config,
+        ~workspace=state.workspace,
+        msg,
+        state.buffers,
+      );
 
     let state = {...state, buffers};
 
@@ -1317,6 +1323,11 @@ let update =
     | Effect(eff) => (
         state,
         eff |> Isolinear.Effect.map(msg => Buffers(msg)),
+      )
+
+    | SetClipboardText(text) => (
+        state,
+        Service_Clipboard.Effects.setClipboardText(text),
       )
 
     | ShowMenu(menuFn) =>

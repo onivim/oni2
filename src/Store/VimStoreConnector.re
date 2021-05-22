@@ -703,14 +703,6 @@ let start =
       }
     );
 
-  let copyActiveFilepathToClipboardEffect =
-    Isolinear.Effect.create(~name="vim.copyActiveFilepathToClipboard", () =>
-      switch (Vim.Buffer.getCurrent() |> Vim.Buffer.getFilename) {
-      | Some(filename) => setClipboardText(filename)
-      | None => ()
-      }
-    );
-
   let prevViml = ref([]);
   let synchronizeViml = lines =>
     Isolinear.Effect.create(~name="vim.synchronizeViml", () =>
@@ -816,11 +808,6 @@ let start =
 
     | Init => (state, initEffect)
     | KeyboardInput({isText, input}) => (state, inputEffect(~isText, input))
-
-    | CopyActiveFilepathToClipboard => (
-        state,
-        copyActiveFilepathToClipboardEffect,
-      )
 
     | VimMessageReceived({priority, message, _}) =>
       let kind =

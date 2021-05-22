@@ -1,13 +1,13 @@
 open EditorCoreTypes;
 open Oniguruma;
 
-type t = Yojson.Safe.t;
+type t = Yojson.Safe.json;
 
 module Decode = {
   open Decoders;
 
-  module Json_decodeable: Decode.Decodeable with type value = Yojson.Safe.t = {
-    type value = Yojson.Safe.t;
+  module Json_decodeable: Decode.Decodeable with type value = Yojson.Safe.json = {
+    type value = Yojson.Safe.json;
     let pp = (fmt, json) =>
       Format.fprintf(fmt, "@[%s@]", Yojson.Safe.pretty_to_string(json));
 
