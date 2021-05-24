@@ -149,9 +149,9 @@ module Registry = {
     id;
   };
 
-  let unregister = id => {
-    let filter = sneakInfo => sneakInfo.id !== id;
-    MutableState.singleton := List.filter(filter, MutableState.singleton^);
+  let reset = () => {
+    MutableState.nextId := 0;
+    MutableState.singleton := [];
   };
 
   let getSneaks = () => {
@@ -247,6 +247,8 @@ module View = {
   open Revery.UI;
   open Revery.UI.Components;
 
+  let reset = Registry.reset;
+
   module Colors = Feature_Theme.Colors;
 
   module Constants = {
@@ -333,7 +335,7 @@ module View = {
                   (
                     ~sneakId,
                     ~style=[],
-                    ~onClick=() => (),
+                    ~onClick=?,
                     ~onRightClick=() => (),
                     ~onAnyClick=_ => (),
                     ~onDoubleClick=() => (),
@@ -352,25 +354,19 @@ module View = {
                   ) => {
       let%hook bboxRef = Hooks.ref(None);
 
-      let%hook () =
-        Hooks.effect(
-          OnMountAndIf((!=), sneakId),
-          () => {
-            let maybeId =
-              switch (onSneak) {
-              | Some(cb) => Some(Registry.register(bboxRef, cb))
-              | None => Some(Registry.register(bboxRef, onClick))
-              };
+      ignore(sneakId);
 
-            Some(
-              () => {maybeId |> Option.iter(id => Registry.unregister(id))},
-            );
-          },
-        );
+      switch (onSneak, onClick) {
+      | (Some(sneakCallback), _) =>
+        ignore(Registry.register(bboxRef, sneakCallback): int)
+      | (None, Some(clickCallback)) =>
+        ignore(Registry.register(bboxRef, clickCallback): int)
+      | _ => ()
+      };
 
       <Clickable
         style
-        onClick
+        ?onClick
         onRightClick
         onAnyClick
         onDoubleClick

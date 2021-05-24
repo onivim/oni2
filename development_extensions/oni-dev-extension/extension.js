@@ -142,6 +142,25 @@ function activate(context) {
         }),
     )
 
+    cleanup(
+        vscode.languages.registerCodeLensProvider("oni-dev", {
+            provideCodeLenses: (document, token) => {
+                const range = new vscode.Range(1, 1, 1, 1);
+                const codeLens = vscode.CodeLens(range, {
+                    command: "developer.oni.codeLensClicked1",
+                    title: "Test"
+                })
+                return [codeLens]
+            },
+        }),
+    );
+
+    cleanup(
+        vscode.commands.registerCommand("developer.oni.codeLensClicked1", () => {
+            vscode.window.showInformationMessage("Code lens 1 clicked!");
+        }),
+    );
+
     // SLOW completion provider
     cleanup(
         vscode.languages.registerCompletionItemProvider("oni-dev", {

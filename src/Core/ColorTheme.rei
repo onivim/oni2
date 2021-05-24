@@ -21,6 +21,9 @@ module Colors: {
 
   let union: (t, t) => t;
   let unionMany: list(t) => t;
+
+  let encode: Json.Encode.encoder(t);
+  let decode: Json.Decode.decoder(t);
 };
 
 // DEFAULTS

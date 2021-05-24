@@ -10,7 +10,7 @@ module Configuration = {
   open Config.Schema;
 
   let useFileWatcher =
-    setting("files.useExperimentalFileWatcher", bool, ~default=false);
+    setting("files.useExperimentalFileWatcher", bool, ~default=true);
 };
 
 module Internal = {
@@ -27,28 +27,30 @@ module Internal = {
     };
   };
 
-  let luvDirentToFsTree = (~cwd, {name, kind}: Luv.File.Dirent.t) => {
-    let path = FpExp.At.(cwd / name);
+  let luvDirentToFsTree = (dirent: Service_OS.DirectoryEntry.t) => {
+    open Service_OS;
 
-    if (kind == `FILE || kind == `LINK) {
-      Some(FsTreeNode.file(path));
-    } else if (kind == `DIR) {
-      //let isOpen = expandedPaths |> List.exists(FpExp.eq(path));
-      Some(
-        FsTreeNode.directory(path, ~children=[]),
-      );
+    let path = DirectoryEntry.path(dirent);
+    let isSymlink = DirectoryEntry.isSymbolicLink(dirent);
+    if (DirectoryEntry.isFile(dirent)) {
+      Some(FsTreeNode.file(~isSymlink, path));
+    } else if (DirectoryEntry.isDirectory(dirent)) {
+      Some(FsTreeNode.directory(~isSymlink, path, ~children=[]));
     } else {
       None;
     };
   };
 
-  let luvDirentsToFsTree = (~cwd: FpExp.t(FpExp.absolute), ~ignored, dirents) => {
-    dirents
-    |> List.filter(({name, _}: Luv.File.Dirent.t) =>
-         name != ".." && name != "." && !List.mem(name, ignored)
-       )
-    |> List.filter_map(luvDirentToFsTree(~cwd))
-    |> List.sort(sortByLoweredDisplayName);
+  let luvDirentsToFsTree = (~ignored, dirents) => {
+    Service_OS.(
+      dirents
+      |> List.filter((dirEnt: DirectoryEntry.t) => {
+           let name = DirectoryEntry.name(dirEnt);
+           name != ".." && name != "." && !List.mem(name, ignored);
+         })
+      |> List.filter_map(luvDirentToFsTree)
+      |> List.sort(sortByLoweredDisplayName)
+    );
   };
 
   /**
@@ -62,10 +64,7 @@ module Internal = {
      not recurse too far.
    */
   let getFilesAndFolders = (~ignored, cwd) => {
-    cwd
-    |> FpExp.toString
-    |> Service_OS.Api.readdir
-    |> Lwt.map(luvDirentsToFsTree(~ignored, ~cwd));
+    cwd |> Service_OS.Api.readdir2 |> Lwt.map(luvDirentsToFsTree(~ignored));
   };
 
   let getDirectoryTree = (cwd: FpExp.t(FpExp.absolute), ignored) => {
@@ -73,21 +72,27 @@ module Internal = {
 
     childrenPromise
     |> Lwt.map(children => {
-         FsTreeNode.directory(cwd, ~children, ~isOpen=true)
+         FsTreeNode.directory(
+           // HACK: We don't know if this is a symlink,
+           // and the merge logic assumes that the symlink status
+           // doesn't change. So we skip an extra stat to check the symlink
+           // status.
+           ~isSymlink=false,
+           cwd,
+           ~children,
+           ~isOpen=true,
+         )
        });
   };
 };
 
 module Effects = {
-  let load = (directory, configuration, ~onComplete) => {
+  let load = (directory, config, ~onComplete) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.load", dispatch => {
       let directoryStr = FpExp.toString(directory);
       Log.infof(m => m("Loading nodes for directory: %s", directoryStr));
       let ignored =
-        Feature_Configuration.Legacy.getValue(
-          c => c.filesExclude,
-          configuration,
-        );
+        Feature_Configuration.GlobalConfiguration.Files.exclude.get(config);
       let promise = Internal.getDirectoryTree(directory, ignored);
 
       Lwt.on_success(
@@ -191,7 +196,7 @@ let replaceNode = (node, model: model) =>
   | None => setTree(node, model)
   };
 
-let revealAndFocusPath = (~configuration, path, model: model) => {
+let revealAndFocusPath = (~config, path, model: model) => {
   switch (model.tree) {
   | Some(tree) =>
     switch (FsTreeNode.findNodesByPath(path, tree)) {
@@ -203,8 +208,7 @@ let revealAndFocusPath = (~configuration, path, model: model) => {
     | `Partial(lastNode) => (
         model,
         Effect(
-          Effects.load(
-            FsTreeNode.getPath(lastNode), configuration, ~onComplete=node =>
+          Effects.load(FsTreeNode.getPath(lastNode), config, ~onComplete=node =>
             FocusNodeLoaded(node)
           ),
         ),
@@ -254,7 +258,7 @@ let markNodeAsLoaded = (node, model) => {
 
 let reload = model => {...model, pathsToLoad: model.expandedPaths};
 
-let update = (~config, ~configuration, msg, model) => {
+let update = (~config, msg, model) => {
   switch (msg) {
   | FileWatcherEvent({path, event}) => (
       model |> expand(path),
@@ -272,7 +276,7 @@ let update = (~config, ~configuration, msg, model) => {
         switch (autoReveal) {
         | `HighlightAndScroll =>
           let model' = {...model, active: Some(path)};
-          revealAndFocusPath(~configuration, path, model');
+          revealAndFocusPath(~config, path, model');
         | `HighlightOnly =>
           let model = setActive(Some(path), model);
           (setFocus(Some(path), model), Nothing);
@@ -297,7 +301,7 @@ let update = (~config, ~configuration, msg, model) => {
       |> expand(FsTreeNode.getPath(node))
       |> replaceNode(node)
       |> markNodeAsLoaded(node)
-      |> revealAndFocusPath(~configuration, activePath)
+      |> revealAndFocusPath(~config, activePath)
 
     | None => (model, Nothing)
     }
@@ -343,21 +347,26 @@ let update = (~config, ~configuration, msg, model) => {
 
 module View = View;
 
-let sub =
-    (
-      ~config,
-      ~configuration,
-      {fileWatcherKey, expandedPaths, pathsToLoad, _},
-    ) => {
+let sub = (~config, {fileWatcherKey, expandedPaths, pathsToLoad, _}) => {
   let ignored =
-    Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
+    Feature_Configuration.GlobalConfiguration.Files.exclude.get(config);
 
   let toMsg = path =>
     fun
     | Ok(dirents) => {
-        let children =
-          dirents |> Internal.luvDirentsToFsTree(~ignored, ~cwd=path);
-        NodeLoaded(FsTreeNode.directory(path, ~children, ~isOpen=true));
+        let children = dirents |> Internal.luvDirentsToFsTree(~ignored);
+        NodeLoaded(
+          FsTreeNode.directory(
+            // HACK: We don't know if this is a symlink,
+            // and the merge logic assumes that the symlink status
+            // doesn't change. So we skip an extra stat to check the symlink
+            // status.
+            ~isSymlink=false,
+            path,
+            ~children,
+            ~isOpen=true,
+          ),
+        );
       }
     | Error(msg) => NodeLoadError(msg);
 
@@ -377,7 +386,7 @@ let sub =
              Service_OS.Sub.dir(
                ~uniqueId="FileExplorer:Sub" ++ FpExp.toString(path),
                ~toMsg=toMsg(path),
-               FpExp.toString(path),
+               path,
              )
            })
         |> Option.value(~default=Isolinear.Sub.none)

@@ -10,6 +10,12 @@
 - #3337 - Proxy: Add configuration for proxies (fixes #3314, #2660)
 - #3419 - Buffers: Implement auto-save functionality (fixes #2431)
 - #3430 - Buffers: Implement workbench.action.quickOpenBuffer (fixes #3413)
+- #3481 - UX: Add 'workbench.tree.renderIndentGuides' setting
+- #3499 - Editor: Render deprecated ranges with strikethrough (fixes #3485)
+- #3506 - Theme: Add 'workbench.colorCustomizations' setting (related #3495)
+- #3526 - Explorer: Enable auto-refresh by default (fixes #3399)
+- #3529 - Keybindings: Allow remaps to be defined in keybindings.json
+- #3539 - Buffers: Add Save without formatting commaaand (fixes #3521)
 
 ### Bug Fixes
 
@@ -65,6 +71,30 @@
 - #3456 - Diagnostics: Swift diagnostics not showing in editor surface (related #3434)
 - #3457 - Snippets: Fix parse error when colon is in placeholder (related #3434)
 - #3464 - Vim: Fix alternate-file keybinding (fixes #3455)
+- #3465 - Quickmenu: Remove darkening of background when menu is open (fixes #3459)
+- #3466 - Input: Fix `gt` binding parsing (fixes #3256)
+- #3474 - Explorer: Reload explorer when `files.exclude` is updated (fixes #1104)
+- #3476 - UX: Ellipsize author in extensions item view
+- #3475 - Buffers: Fix ctrl-tab ordering (fixes #3433)
+- #3469 - CLI: Default to opening files in existing editor (fixes #1250, #2617, #2947, #3058)
+- #3487 - Quickopen: Filter out spaces in query string (fixes #3473, related #3278)
+- #3488 - Search: Restart search even when query hasn't changed (fixes #3477)
+- #3482 - CodeLens: Make codelenses clickable (related #3468)
+- #3525 - CLI: Fix crash when opening non-existent file in running instance
+- #3530 - UX: Fix click inside context menu from closing context menu (fixes #3510)
+- #3532 - OSX: Fix crash when opening folder with Unicode characters (fixes #3519)
+- #3533 - Completion: Fix hang when detail text is large
+- #3537 - Terminal: Fix pasted text showing in reverse order (fixes #3513)
+- #3541 - Pane: Should grab focus when clicked (fixes #3538)
+- #3547 - Completion: Add `editor.acceptSuggestionOnTab` setting
+- #3556 - Pane: Fix issue with close button
+- #3558 - Extensions: Clicking on search input should focus it
+- #3559 - Explorer: Don't open explorer on `:cd` if `workbench.sideBar.visible` is false
+- #3560 - Shell: Fix incorrect PATH on OSX when launched via Finder (fixes #3199)
+- #3567 - Explorer: Fix files in NFS mount not loading (fixes #3534)
+- #3568 - Explorer: Fix symlinks showing up as empty files (fixes #2657)
+- #3581 - Explorer: Fix population in stat failure
+- #3585 - Extensions: Fix scroll resetting while search is in progress (fixes #3551)
 
 ### Performance
 
@@ -79,6 +109,8 @@
 - #3411 - Vim Tips: Fix missing links (fixes #3407)
 - #2272 - Documentation: Fix AppImage installation instructions (thanks @mkenigs !)
 - #3458 - Documentation: Fix search motion key (thanks @Minnozz !)
+- #3472 - Documentation: Add `node-gyp` instructions (fixes #3467)
+- #3491 - Documentation: Add `--new-window` to CLI invocation (thanks @jesstelford !)
 
 ### Refactoring
 
@@ -92,6 +124,12 @@
 - #3447 - Terminal: Split out PTY - remove dependency on `$spawnExtHostProcess` API
 - #3461 - Dependency: vscode-exthost -> 1.54.3
 - #3462 - Dependency: vscode-exthost -> 1.55.2
+- #3500 - Dependency: Revery -> e0c12e7 (fixes #3494)
+- #3514 - Configuration: Remove legacy configuration values
+- #3518 - Dependency: Revery -> bb73d21 (fixes #3504)
+- #3531 - Dependency: OCaml -> 4.11
+- #3540 - Dependency: Revery -> d599514 (Pick up mousewheel scaling fix)
+- #3555 - Terminal: Bring in vterm/revery-terminal to monorepo
 
 ### Infrastructure
 

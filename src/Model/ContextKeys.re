@@ -161,6 +161,7 @@ let all = (state: State.t) => {
   let paneContextKeys =
     Feature_Pane.Contributions.contextKeys(
       ~isFocused=focus == Focus.Pane,
+      state,
       state.pane,
     );
 

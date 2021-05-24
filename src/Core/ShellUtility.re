@@ -118,11 +118,22 @@ module Internal = {
         "-ilc",
         "printf \"\n_SHELL_ENV_DELIMITER_\"; env; printf \"\n_SHELL_ENV_DELIMITER_\n\"; exit",
       ];
+
+      // #3199 - For getting the default shell environment, we still need to pass in the environment
+      // that we do have (when launching from Finder, we get the `HOME` variable, which needs to be sent)
+      // If `HOME` is not available, the `PATH` items that depend on `HOME` may be incorrect.
+      let envList = Unix.environment() |> Array.to_list;
+      let env = [
+        // Disable oh-my-zsh update:
+        // https://github.com/sindresorhus/shell-env/blob/b60d531b00194e1edd6399d7a25757ea90aa5916/index.js#L13
+        "DISABLE_AUTO_UPDATE=true",
+        ...envList,
+      ];
       let (inp, out, err) =
         Unix.open_process_args_full(
           shellCmd,
           [shellCmd, ...args] |> Array.of_list,
-          [||],
+          env |> Array.of_list,
         );
       // #2659 - Close stdin before reading any data, so we don't get blocked.
       close_out(out);
@@ -221,6 +232,7 @@ let fixOSXPath = () =>
     let shellEnv = getDefaultShellEnvironment();
     switch (StringMap.find_opt("PATH", shellEnv)) {
     | Some(path) =>
+      // Curious if something is going wrong here, too!
       Log.infof(m => m("OSX - setting path from shell: %s", path));
       Luv.Env.setenv(~value=path, "PATH")
       |> Utility.ResultEx.tapError(err => {

@@ -814,6 +814,13 @@ module Configuration: {
 };
 
 module Diagnostic: {
+  module Tag: {
+    [@deriving show]
+    type t =
+      | Unused
+      | Deprecated;
+  };
+
   module Severity: {
     [@deriving show]
     type t =
@@ -826,10 +833,12 @@ module Diagnostic: {
     let ofInt: int => option(t);
     let max: (t, t) => t;
   };
+
   type t = {
     range: OneBasedRange.t,
     message: string,
     severity: Severity.t,
+    tags: list(Tag.t),
   };
 
   let decode: Json.decoder(t);

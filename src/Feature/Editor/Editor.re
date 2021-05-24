@@ -28,6 +28,7 @@ type inlineElement = {
   view:
     (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
     Revery.UI.element,
+  command: option(Exthost.Command.t),
 };
 
 module WrapMode = {
@@ -142,6 +143,8 @@ type t = {
   // Animation
   isAnimationOverride: option(bool),
   animationNonce: int,
+  showUnused: bool,
+  showDeprecated: bool,
 };
 
 let setBoundingBox = (bbox, editor) => {
@@ -195,18 +198,6 @@ let overrideAnimation = (~animated, editor) => {
 
 let isAnimatingScroll = ({scrollX, scrollY, _}) => {
   Spring.isActive(scrollX) || Spring.isActive(scrollY);
-};
-
-let getLeadingWhitespacePixels = (lineNumber, editor) => {
-  let buffer = editor.buffer;
-  let lineCount = EditorBuffer.numberOfLines(buffer);
-  let line = lineNumber |> EditorCoreTypes.LineNumber.toZeroBased;
-  if (line < 0 || line >= lineCount) {
-    0.;
-  } else {
-    let bufferLine = buffer |> EditorBuffer.line(line);
-    BufferLine.getLeadingWhitespacePixels(bufferLine);
-  };
 };
 
 let getBufferLineCount = ({buffer, _}) =>
@@ -535,6 +526,8 @@ let configure = (~config, editor) => {
     isScrollAnimated,
     scrollbarVerticalWidth,
     scrollbarHorizontalWidth,
+    showDeprecated: EditorConfiguration.showDeprecated.get(config),
+    showUnused: EditorConfiguration.showUnused.get(config),
     yankHighlightDuration,
   }
   |> setVerticalScrollMargin(~lines=scrolloff)
@@ -542,7 +535,12 @@ let configure = (~config, editor) => {
        ~enabled=EditorConfiguration.Minimap.enabled.get(config),
        ~maxColumn=EditorConfiguration.Minimap.maxColumn.get(config),
      )
-  |> setLineHeight(~lineHeight=EditorConfiguration.lineHeight.get(config))
+  |> setLineHeight(
+       ~lineHeight=
+         Feature_Configuration.GlobalConfiguration.Editor.lineHeight.get(
+           config,
+         ),
+     )
   |> setLineNumbers(
        ~lineNumbers=EditorConfiguration.lineNumbers.get(config),
      )
@@ -617,9 +615,15 @@ let create = (~config, ~buffer, ~preview: bool, ()) => {
 
     scrollbarHorizontalWidth: 8,
     scrollbarVerticalWidth: 15,
+
+    showDeprecated: true,
+    showUnused: true,
   }
   |> configure(~config);
 };
+
+let shouldShowDeprecated = ({showDeprecated, _}) => showDeprecated;
+let shouldShowUnused = ({showUnused, _}) => showUnused;
 
 let cursors = ({mode, _}) => Vim.Mode.cursors(mode);
 
@@ -975,13 +979,14 @@ let withSteadyCursor = (f, editor) => {
   };
 };
 
-let makeInlineElement = (~key, ~uniqueId, ~lineNumber, ~view) => {
+let makeInlineElement = (~command=None, ~key, ~uniqueId, ~lineNumber, ~view) => {
   hidden: false,
   reconcilerKey: Brisk_reconciler.Key.create(),
   key,
   uniqueId,
   lineNumber,
   view,
+  command,
 };
 
 let linesWithInlineElements = ({inlineElements, _}) => {
@@ -1029,6 +1034,7 @@ let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => 
            height: Component_Animation.make(Animation.expand(0., 0.)),
            view: inlineElement.view,
            opacity: Component_Animation.make(Animation.fadeIn),
+           command: inlineElement.command,
          }
        );
   editor
@@ -1055,14 +1061,10 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
            Feature_LanguageSupport.CodeLens.lineNumber(lens)
            |> EditorCoreTypes.LineNumber.ofZeroBased;
          let uniqueId = Feature_LanguageSupport.CodeLens.text(lens);
-         let leftMargin =
-           getLeadingWhitespacePixels(lineNumber, editor) |> int_of_float;
          let view =
-           Feature_LanguageSupport.CodeLens.View.make(
-             ~leftMargin,
-             ~codeLens=lens,
-           );
+           Feature_LanguageSupport.CodeLens.View.make(~codeLens=lens);
          makeInlineElement(
+           ~command=lens.command,
            ~key="codelens:" ++ string_of_int(handle),
            ~uniqueId,
            ~lineNumber,

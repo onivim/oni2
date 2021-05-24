@@ -38,6 +38,7 @@ type inlineElement;
 
 let makeInlineElement:
   (
+    ~command: option(Exthost.Command.t)=?,
     ~key: string,
     ~uniqueId: string,
     ~lineNumber: EditorCoreTypes.LineNumber.t,
@@ -142,6 +143,9 @@ let hasMouseEntered: t => bool;
 let isMouseDown: t => bool;
 let lastMouseMoveTime: t => option(Revery.Time.t);
 let getCharacterUnderMouse: t => option(CharacterPosition.t);
+
+let shouldShowDeprecated: t => bool;
+let shouldShowUnused: t => bool;
 
 // Scale factor between horizontal pixels on the editor surface vs minimap
 let getMinimapWidthScaleFactor: t => float;

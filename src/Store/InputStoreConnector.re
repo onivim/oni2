@@ -71,7 +71,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
 
     | Terminal(id) => [
-        Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k})),
+        Actions.Terminal(Feature_Terminal.Msg.keyPressed(~id, k)),
       ]
 
     | Search => [Actions.Search(Feature_Search.Msg.input(k))]
@@ -113,7 +113,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         | LicenseKey =>
           Actions.Registration(Feature_Registration.Pasted(firstLine))
         | Terminal(id) =>
-          Actions.Terminal(Feature_Terminal.Pasted({id, text: rawText}))
+          Actions.Terminal(Feature_Terminal.Msg.pasted(~id, firstLine))
 
         // No paste handling in these UIs, currently...
         | Pane => Actions.Noop

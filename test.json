@@ -16,13 +16,15 @@
     "watch:inline": "esy b dune runtest --watch"
   },
   "override": {
-      "build": ["dune build -p libvim,textmate,treesitter,Oni2,OniUnitTestRunner -j4"],
-      "dependencies": {
-        "@reason-native/rely": "^3.2.1"
-      },
-      "install": [
-          "esy-installer #{self.target_dir}/default/Oni2.install",
-          "esy-installer #{self.target_dir}/default/OniUnitTestRunner.install"
-      ]
+    "build": [
+      "dune build -p libvim,textmate,treesitter,Oni2,OniUnitTestRunner,vterm -j4"
+    ],
+    "dependencies": {
+      "@reason-native/rely": "^3.2.1"
+    },
+    "install": [
+      "esy-installer #{self.target_dir}/default/Oni2.install",
+      "esy-installer #{self.target_dir}/default/OniUnitTestRunner.install"
+    ]
   }
 }

@@ -43,6 +43,7 @@ module Styles = {
     ),
     marginVertical(2),
     textWrap(Revery.TextWrapping.NoWrap),
+    textOverflow(`Ellipsis),
   ];
 
   let restartText = (~theme) => [

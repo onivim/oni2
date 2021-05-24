@@ -224,6 +224,30 @@ let underline =
   );
 };
 
+let strikethrough =
+    (~context, ~color=Revery.Colors.black, range: CharacterRange.t) => {
+  let ({y: startPixelY, x: startPixelX}: PixelPosition.t, _) =
+    Editor.bufferCharacterPositionToPixel(
+      ~position=range.start,
+      context.editor,
+    );
+
+  let ({x: stopPixelX, _}: PixelPosition.t, _) =
+    Editor.bufferCharacterPositionToPixel(
+      ~position=range.stop,
+      context.editor,
+    );
+
+  drawRect(
+    ~context,
+    ~x=startPixelX -. 1.,
+    ~y=startPixelY +. Editor.lineHeightInPixels(context.editor) /. 2.,
+    ~height=1.,
+    ~width=max(stopPixelX -. startPixelX, 1.0) +. 2.,
+    ~color,
+  );
+};
+
 let squiggly = (~context, ~color=Revery.Colors.black, range: CharacterRange.t) => {
   let ({x: startPixelX, y: startPixelY}: PixelPosition.t, _) =
     Editor.bufferCharacterPositionToPixel(

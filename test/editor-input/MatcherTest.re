@@ -83,6 +83,8 @@ describe("Matcher", ({describe, _}) => {
         ("~", keyPress(Key.Character(Uchar.of_char('~')))),
         ("_", keyPress(Key.Character(Uchar.of_char('_')))),
         ("+", keyPress(Key.Character(Uchar.of_char('+')))),
+        ("<gt>", keyPress(Key.Character(Uchar.of_char('>')))),
+        ("<lt>", keyPress(Key.Character(Uchar.of_char('<')))),
       ];
 
       let runCase = case => {
@@ -114,6 +116,18 @@ describe("Matcher", ({describe, _}) => {
     test("all keys released", ({expect, _}) => {
       let result = defaultParse("<RELEASE>");
       expect.equal(result, Ok(AllKeysReleased));
+    });
+    // https://github.com/onivim/oni2/issues/3256
+    test("gt #3256)", ({expect, _}) => {
+      expect.equal(
+        defaultParse("gt"),
+        Ok(
+          Sequence([
+            keyPress(Key.Character(Uchar.of_char('g'))),
+            keyPress(Key.Character(Uchar.of_char('t'))),
+          ]),
+        ),
+      )
     });
     test("vim bindings", ({expect, _}) => {
       let result = defaultParse("<a>");

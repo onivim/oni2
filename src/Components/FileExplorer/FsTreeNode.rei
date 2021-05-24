@@ -4,18 +4,27 @@ open Oni_Core;
 type metadata = {
   path: FpExp.t(FpExp.absolute),
   displayName: string,
-  hash: int // hash of basename, so only comparable locally
+  hash: int, // hash of basename, so only comparable locally
+  isSymlink: bool,
 };
 
 [@deriving show({with_path: false})]
 type t = Tree.t(metadata, metadata);
 
-let file: FpExp.t(FpExp.absolute) => t;
+let file: (~isSymlink: bool, FpExp.t(FpExp.absolute)) => t;
 let directory:
-  (~isOpen: bool=?, FpExp.t(FpExp.absolute), ~children: list(t)) => t;
+  (
+    ~isOpen: bool=?,
+    ~isSymlink: bool,
+    FpExp.t(FpExp.absolute),
+    ~children: list(t)
+  ) =>
+  t;
 
 let getPath: t => FpExp.t(FpExp.absolute);
 let displayName: t => string;
+
+let isSymlink: t => bool;
 
 let findNodesByPath:
   (FpExp.t(FpExp.absolute), t) =>

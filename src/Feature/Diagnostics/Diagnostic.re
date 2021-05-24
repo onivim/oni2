@@ -17,9 +17,18 @@ type t = {
   range: CharacterRange.t,
   message: string,
   severity: Exthost.Diagnostic.Severity.t,
+  isUnused: bool,
+  isDeprecated: bool,
+  tags: list(Exthost.Diagnostic.Tag.t),
 };
 
-let create = (~range, ~message, ~severity) => {range, message, severity};
+let create = (~range, ~message, ~severity, ~tags) => {
+  let isUnused =
+    tags |> List.exists(tag => tag == Exthost.Diagnostic.Tag.Unused);
+  let isDeprecated =
+    tags |> List.exists(tag => tag == Exthost.Diagnostic.Tag.Deprecated);
+  {range, message, severity, tags, isUnused, isDeprecated};
+};
 
 let explode = (buffer, diagnostic) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
@@ -40,6 +49,7 @@ let explode = (buffer, diagnostic) => {
          ~range,
          ~message=diagnostic.message,
          ~severity=diagnostic.severity,
+         ~tags=diagnostic.tags,
        )
      );
 };

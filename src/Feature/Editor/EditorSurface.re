@@ -324,6 +324,36 @@ let%component make =
   let horizontalScrollbarThickness =
     Editor.horizontalScrollbarThickness(editor);
 
+  let topVisibleLine = Editor.getTopVisibleBufferLine(editor);
+  let bottomVisibleLine = Editor.getBottomVisibleBufferLine(editor);
+
+  let rec getInlineElements = (acc: list(Revery.UI.element), lines) =>
+    switch (lines) {
+    | [] => acc
+    | [line, ...tail] =>
+      let isVisible = line >= topVisibleLine && line <= bottomVisibleLine;
+      getInlineElements(
+        [
+          <InlineElementView.Container
+            config
+            uiFont
+            theme
+            editor
+            line
+            dispatch
+            isVisible
+            gutterWidth
+          />,
+          ...acc,
+        ],
+        tail,
+      );
+    };
+
+  let linesWithElements = Editor.linesWithInlineElements(editor);
+
+  let lensElements = getInlineElements([], linesWithElements);
+
   <View
     style={Styles.container(~colors)}
     onDimensionsChanged
@@ -351,9 +381,19 @@ let%component make =
       bufferPixelWidth={int_of_float(layout.bufferWidthInPixels)}
       windowIsFocused
       config
-      uiFont
-      theme
     />
+    <View
+      style=Style.[
+        position(`Absolute),
+        top(0),
+        left(0),
+        bottom(0),
+        right(0),
+        overflow(`Hidden),
+        pointerEvents(`Ignore),
+      ]>
+      {lensElements |> React.listToElement}
+    </View>
     {Editor.isMinimapEnabled(editor)
        ? <minimap
            editor

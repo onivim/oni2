@@ -8,16 +8,16 @@
    Oni2.feature.help Oni2.feature.buffers Oni2.feature.clipboard
    Oni2.feature.configuration Oni2.feature.diagnostics Oni2.feature.explorer
    Oni2.feature.exthost Oni2.feature.extensions Oni2.feature.messages
-   Oni2.feature.theme Oni2.feature.notification Oni2.feature.changelog
-   Oni2.feature.clientServer Oni2.feature.commands Oni2.feature.decorations
-   Oni2.feature.input Oni2.feature.logging Oni2.component.inputText
-   Oni2.feature.search Oni2.feature.menubar Oni2.feature.sideBar
-   Oni2.feature.syntax Oni2.feature.language_support Oni2.feature.editor
-   Oni2.feature.fileSystem Oni2.feature.pane Oni2.feature.quickmenu
-   Oni2.feature.registers Oni2.feature.scm Oni2.feature.sneak
-   Oni2.feature.snippets Oni2.feature.statusbar Oni2.feature.terminal
-   Oni2.feature.titlebar Oni2.feature.modals Oni2.feature.layout
-   Oni2.feature.proxy Oni2.feature.vim Oni2.feature.zen
+   Oni2.feature.output Oni2.feature.theme Oni2.feature.notification
+   Oni2.feature.changelog Oni2.feature.clientServer Oni2.feature.commands
+   Oni2.feature.decorations Oni2.feature.input Oni2.feature.logging
+   Oni2.component.inputText Oni2.feature.search Oni2.feature.menubar
+   Oni2.feature.sideBar Oni2.feature.syntax Oni2.feature.language_support
+   Oni2.feature.editor Oni2.feature.fileSystem Oni2.feature.pane
+   Oni2.feature.quickmenu Oni2.feature.registers Oni2.feature.scm
+   Oni2.feature.sneak Oni2.feature.snippets Oni2.feature.statusbar
+   Oni2.feature.terminal Oni2.feature.titlebar Oni2.feature.modals
+   Oni2.feature.layout Oni2.feature.proxy Oni2.feature.vim Oni2.feature.zen
    Oni2.feature.workspace Oni2.feature.autoupdate Oni2.feature.registration
    Oni2.feature.zoom Fzy textmate Oni2.editor-core-types)
  (preprocess

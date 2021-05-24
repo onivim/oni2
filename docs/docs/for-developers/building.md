@@ -51,6 +51,7 @@ cd oni2
 
 ```sh
 npm install -g node-gyp
+node-gyp install 14.15.4
 node install-node-deps.js
 ```
 

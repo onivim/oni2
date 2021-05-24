@@ -17,15 +17,6 @@ let getBufferForEditor = (buffers, editor: Editor.t) => {
   Feature_Buffers.get(Editor.getBufferId(editor), buffers);
 };
 
-let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
-  let fileType =
-    Option.value(
-      ~default=Exthost.LanguageInfo.defaultLanguage,
-      Buffer.getFileType(buffer) |> Buffer.FileType.toOption,
-    );
-  Feature_Configuration.Legacy.getValue(~fileType, f, state.config);
-};
-
 let getActiveBuffer = (state: State.t) => {
   state.layout
   |> Feature_Layout.activeEditor
@@ -48,16 +39,6 @@ let withActiveBufferAndFileType = (state: State.t, f) => {
        })
     |> Option.iter(((buf, ft)) => f(buf, ft));
   ();
-};
-
-let getActiveConfigurationValue = (state: State.t, f) => {
-  switch (getActiveBuffer(state)) {
-  | None => Feature_Configuration.Legacy.getValue(f, state.config)
-  | Some(buffer) =>
-    let fileType = Buffer.getFileType(buffer) |> Buffer.FileType.toString;
-
-    Feature_Configuration.Legacy.getValue(~fileType, f, state.config);
-  };
 };
 
 let getActiveTerminal = (state: State.t) => {

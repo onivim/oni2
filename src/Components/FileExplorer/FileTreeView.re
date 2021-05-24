@@ -32,25 +32,8 @@ module Styles = {
     alignItems(`Center),
   ];
 
-  let text = (~isFocus, ~isActive, ~decoration, ~theme) => [
-    color(
-      switch (
-        Option.bind(
-          decoration, (decoration: Feature_Decorations.Decoration.t) =>
-          ColorTheme.(Colors.get(key(decoration.color), theme))
-        )
-      ) {
-      | Some(color) => color
-      | None =>
-        if (isActive) {
-          Colors.List.activeSelectionForeground.from(theme);
-        } else if (isFocus) {
-          Colors.List.focusForeground.from(theme);
-        } else {
-          Colors.SideBar.foreground.from(theme);
-        }
-      },
-    ),
+  let text = (~color as c) => [
+    color(c),
     // Minor adjustment to align with seti-icon
     marginTop(4),
     textWrap(TextWrapping.NoWrap),
@@ -60,6 +43,7 @@ module Styles = {
 
 let nodeView =
     (
+      ~isSymlink,
       ~isFocus,
       ~isActive,
       ~font: UiFont.t,
@@ -75,6 +59,23 @@ let nodeView =
     | [] => None
     };
 
+  let color =
+    switch (
+      Option.bind(decoration, (decoration: Feature_Decorations.Decoration.t) =>
+        ColorTheme.(Colors.get(key(decoration.color), theme))
+      )
+    ) {
+    | Some(color) => color
+    | None =>
+      if (isActive) {
+        Colors.List.activeSelectionForeground.from(theme);
+      } else if (isFocus) {
+        Colors.List.focusForeground.from(theme);
+      } else {
+        Colors.SideBar.foreground.from(theme);
+      }
+    };
+
   let tooltipText = {
     let path = node.path;
     switch (decoration) {
@@ -84,16 +85,34 @@ let nodeView =
     };
   };
 
+  let maybeSymlink =
+    if (isSymlink) {
+      let symlinkColor = Colors.SideBar.foreground.from(theme);
+      <View style=Revery.UI.Style.[flexGrow(0), flexShrink(0)]>
+        <View style=Revery.UI.Style.[paddingHorizontal(8), marginTop(4)]>
+          <Codicon
+            icon=Codicon.reply
+            rotation=Float.pi
+            fontSize=10.
+            color=symlinkColor
+          />
+        </View>
+      </View>;
+    } else {
+      React.empty;
+    };
+
   <Tooltip text=tooltipText style=Styles.item>
     <View style=Revery.UI.Style.[flexGrow(0), flexShrink(0)]> icon </View>
     <View style=Revery.UI.Style.[flexGrow(1), flexShrink(1)]>
       <Text
         text={node.displayName}
-        style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme)}
+        style={Styles.text(~color)}
         fontFamily={font.family}
         fontSize=12.
       />
     </View>
+    maybeSymlink
   </Tooltip>;
 };
 
@@ -156,9 +175,11 @@ let make =
           ~path=FpExp.toString(data.path),
           decorations,
         );
+      let isSymlink = data.isSymlink;
       <nodeView
         icon
         isFocus=selected
+        isSymlink
         isActive={Some(data.path) == active}
         font
         theme

@@ -3,7 +3,6 @@ const net = require("net")
 const pty = require("node-pty")
 
 process.stdout.write("Hello!")
-// let shouldLog = process.env["ONIVIM2_DEBUG_TERMINAL"];
 let shouldLog = process.env["ONIVIM2_DEBUG_TERMINAL"]
 const log = shouldLog ? (msg) => console.log(`[NODE] ${msg}`) : (_msg) => {}
 
@@ -29,6 +28,7 @@ const ptyProcess = pty.spawn(cmd, [], {
     rows: initialRows || 30,
     cwd: cwd,
     env: process.env,
+    encoding: "utf8",
 })
 
 let currentId = 0
@@ -88,30 +88,49 @@ ptyProcess.on("exit", (exitCode) => {
     log("js: pty exited")
 })
 
-client.on("data", (buffer) => {
-    let type = buffer.readUInt8(0)
-    let id = buffer.readUInt32BE(1)
-    let ack = buffer.readUInt32BE(5)
-    let length = buffer.readUInt32BE(9)
+let pendingData = Buffer.alloc(0)
 
-    // Protocol augmentation:
-    // The 'ack' field is being used to discriminate between message types
-    let data = buffer.slice(13, buffer.length)
-    switch (ack) {
-        case InMessageType.input:
-            ptyProcess.write(data)
-            break
-        case InMessageType.resize:
-            const size = JSON.parse(data)
-            ptyProcess.resize(size.cols, size.rows)
-            break
-        case InMessageType.kill:
-            ptyProcess.kill()
-        default:
-            // Unknown message type
-            log("Unknown message type: " + ack)
-            break
+let HEADER_SIZE = 13
+
+let processPendingPackets = () => {
+    while (pendingData.length > HEADER_SIZE) {
+        let type = pendingData.readUInt8(0)
+        let id = pendingData.readUInt32BE(1)
+        let ack = pendingData.readUInt32BE(5)
+        let length = pendingData.readUInt32BE(9)
+
+        const packetSize = HEADER_SIZE + length
+        // See if the packet is big enough to contain the body
+        if (pendingData.length >= packetSize) {
+            // It is!
+            // Let's grab the packet, and then splice pendingData
+            let data = pendingData.slice(HEADER_SIZE, packetSize)
+            switch (ack) {
+                case InMessageType.input:
+                    ptyProcess.write(data)
+                    break
+                case InMessageType.resize:
+                    const size = JSON.parse(data)
+                    ptyProcess.resize(size.cols, size.rows)
+                    break
+                case InMessageType.kill:
+                    ptyProcess.kill()
+                default:
+                    // Unknown message type
+                    log("Unknown message type: " + ack)
+                    break
+            }
+
+            pendingData = pendingData.slice(packetSize)
+        } else {
+            return
+        }
     }
+}
+
+client.on("data", (buffer) => {
+    pendingData = Buffer.concat([pendingData, buffer])
+    processPendingPackets()
 })
 
 client.on("close", () => {

@@ -12,6 +12,14 @@ let subMode: model => Vim.SubMode.t;
 
 let experimentalViml: model => list(string);
 
+type vimUseSystemClipboard = {
+  yank: bool,
+  delete: bool,
+  paste: bool,
+};
+
+let useSystemClipboard: model => vimUseSystemClipboard;
+
 // MSG
 
 [@deriving show]
@@ -93,6 +101,10 @@ module Effects: {
     Isolinear.Effect.t(msg);
 
   let save: (~bufferId: int) => Isolinear.Effect.t(msg);
+
+  let setTerminalLines:
+    (~editorId: int, ~bufferId: int, array(string)) =>
+    Isolinear.Effect.t(msg);
 };
 
 // CONFIGURATION

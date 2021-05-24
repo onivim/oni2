@@ -154,7 +154,10 @@ type command =
   | ChangeFiletype({maybeBufferId: option(int)})
   | ConvertIndentationToTabs
   | ConvertIndentationToSpaces
-  | DetectIndentation;
+  | CopyAbsolutePathToClipboard
+  | CopyRelativePathToClipboard
+  | DetectIndentation
+  | SaveWithoutFormatting;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -168,6 +171,7 @@ type msg =
       grabFocus: bool,
       preview: bool,
     })
+  | FocusedBufferChanged({bufferId: int})
   | NewBufferAndEditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
       split: SplitDirection.t,
@@ -248,6 +252,8 @@ module Msg = {
     Command(ChangeFiletype({maybeBufferId: Some(bufferId)}));
 
   let statusBarIndentationClicked = StatusBarIndentationClicked;
+
+  let copyActivePathToClipboard = Command(CopyAbsolutePathToClipboard);
 };
 
 let vimSettingChanged = (~activeBufferId, ~name, ~value, model) => {
@@ -334,6 +340,7 @@ type outmsg =
       preview: bool,
     })
   | BufferModifiedSet(int, bool)
+  | SetClipboardText(string)
   | ShowMenu(
       (Exthost.LanguageInfo.t, IconTheme.t) =>
       Feature_Quickmenu.Schema.menu(msg),
@@ -389,7 +396,7 @@ let guessIndentation = (~config, buffer) => {
   |> Option.value(~default=Inferred.implicit(defaultIndentation(~config)));
 };
 
-let update = (~activeBufferId, ~config, msg: msg, model: model) => {
+let update = (~activeBufferId, ~config, ~workspace, msg: msg, model: model) => {
   switch (msg) {
   | AutoSave(msg) =>
     let (autoSave', outmsg) = AutoSave.update(msg, model.autoSave);
@@ -419,6 +426,10 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         preview,
       }),
     )
+
+  | FocusedBufferChanged({bufferId}) =>
+    let updater = Option.map(Buffer.stampLastUsed);
+    (update(bufferId, updater, model), Nothing);
 
   | NewBufferAndEditorRequested({
       buffer: originalBuffer,
@@ -467,7 +478,6 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         |> Buffer.setFilePath(newFilePath)
         |> Buffer.setFileType(newFileType)
         |> Buffer.setVersion(version)
-        |> Buffer.stampLastUsed
         |> Option.some
       | None => None
     );
@@ -550,7 +560,9 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   | Saved(bufferId) =>
     let saveReason =
       model.pendingSaveReason
-      |> Option.value(~default=SaveReason.UserInitiated);
+      |> Option.value(
+           ~default=SaveReason.UserInitiated({allowFormatting: true}),
+         );
     let model' =
       update(bufferId, Option.map(Buffer.incrementSaveTick), model);
     let eff =
@@ -707,6 +719,48 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         );
       };
 
+    | CopyAbsolutePathToClipboard =>
+      let eff =
+        model.buffers
+        |> IntMap.find_opt(activeBufferId)
+        |> OptionEx.flatMap(Buffer.getFilePath)
+        |> Option.map(path => SetClipboardText(path))
+        |> Option.value(~default=Nothing);
+
+      (model, eff);
+
+    | CopyRelativePathToClipboard =>
+      let maybeBufferPath =
+        model.buffers
+        |> IntMap.find_opt(activeBufferId)
+        |> OptionEx.flatMap(Buffer.getFilePath)
+        |> OptionEx.flatMap(Oni_Core.FpExp.absoluteCurrentPlatform);
+
+      let default =
+        maybeBufferPath
+        |> Option.map(path => SetClipboardText(FpExp.toString(path)))
+        |> Option.value(~default=Nothing);
+
+      let maybeWorkspacePath =
+        workspace
+        |> Feature_Workspace.openedFolder
+        |> OptionEx.flatMap(Oni_Core.FpExp.absoluteCurrentPlatform);
+
+      let eff =
+        OptionEx.flatMap2(
+          (bufferPath, workspacePath) => {
+            switch (FpExp.relativize(~source=workspacePath, ~dest=bufferPath)) {
+            | Ok(relative) =>
+              Some(SetClipboardText(FpExp.relativeToString(relative)))
+            | Error(_) => None
+            }
+          },
+          maybeBufferPath,
+          maybeWorkspacePath,
+        )
+        |> Option.value(~default);
+      (model, eff);
+
     | DetectIndentation =>
       let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
 
@@ -721,6 +775,19 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         let updatedBuffer = Buffer.setIndentation(indentation, buffer);
         (add(updatedBuffer, model), Nothing);
       };
+
+    | SaveWithoutFormatting => (
+        {
+          ...model,
+          pendingSaveReason:
+            Some(SaveReason.UserInitiated({allowFormatting: false})),
+        },
+        Effect(
+          Service_Vim.Effects.save(~bufferId=activeBufferId, () =>
+            Saved(activeBufferId)
+          ),
+        ),
+      )
     }
 
   | LargeFileOptimizationsApplied({buffer}) =>
@@ -746,8 +813,7 @@ module Effects = {
 
     switch (IntMap.find_opt(bufferId, model.buffers)) {
     // We already have this buffer loaded - so just ask for an editor!
-    | Some(buffer) =>
-      buffer |> Buffer.stampLastUsed |> f(~alreadyLoaded=true)
+    | Some(buffer) => buffer |> f(~alreadyLoaded=true)
 
     | None =>
       // No buffer yet, so we need to create one _and_ ask for an editor.
@@ -760,8 +826,7 @@ module Effects = {
         Oni_Core.Buffer.ofLines(~id=metadata.id, ~font, lines)
         |> Buffer.setVersion(metadata.version)
         |> Buffer.setFilePath(metadata.filePath)
-        |> Buffer.setModified(metadata.modified)
-        |> Buffer.stampLastUsed;
+        |> Buffer.setModified(metadata.modified);
 
       let fileType =
         Exthost.LanguageInfo.getLanguageFromBuffer(languageInfo, buffer);
@@ -931,6 +996,29 @@ module Commands = {
       "workbench.action.editor.changeLanguageMode",
       Command(ChangeFiletype({maybeBufferId: None})),
     );
+
+  let copyAbsolutePath =
+    define(
+      ~category="File",
+      ~title="Copy Path of Active File",
+      "copyFilePath",
+      Command(CopyAbsolutePathToClipboard),
+    );
+  let copyRelativePath =
+    define(
+      ~category="File",
+      ~title="Copy Relative Path of Active File",
+      "copyRelativeFilePath",
+      Command(CopyRelativePathToClipboard),
+    );
+
+  let saveWithoutFormatting =
+    define(
+      ~category="File",
+      ~title="Save without formatting",
+      "workbench.action.files.saveWithoutFormatting",
+      Command(SaveWithoutFormatting),
+    );
 };
 
 let sub = (~isWindowFocused, ~maybeFocusedBuffer, model) => {
@@ -952,6 +1040,15 @@ let sub = (~isWindowFocused, ~maybeFocusedBuffer, model) => {
       |> Isolinear.Sub.batch;
     };
 
+  let focusedBufferSub =
+    switch (maybeFocusedBuffer) {
+    | None => Isolinear.Sub.none
+    | Some(bufferId) =>
+      let uniqueId =
+        "Feature_Buffers.Sub.focusedBuffer:" ++ string_of_int(bufferId);
+      SubEx.value(~uniqueId, FocusedBufferChanged({bufferId: bufferId}));
+    };
+
   let autoSaveSub =
     AutoSave.sub(
       ~isWindowFocused,
@@ -960,7 +1057,7 @@ let sub = (~isWindowFocused, ~maybeFocusedBuffer, model) => {
       model.autoSave,
     )
     |> Isolinear.Sub.map(msg => AutoSave(msg));
-  [largeFileSub, autoSaveSub] |> Isolinear.Sub.batch;
+  [largeFileSub, autoSaveSub, focusedBufferSub] |> Isolinear.Sub.batch;
 };
 
 module Contributions = {
@@ -978,9 +1075,12 @@ module Contributions = {
       changeFiletype,
       convertIndentationToSpaces,
       convertIndentationToTabs,
+      copyAbsolutePath,
+      copyRelativePath,
       detectIndentation,
       indentUsingSpaces,
       indentUsingTabs,
+      saveWithoutFormatting,
     ]
     |> Command.Lookup.fromList;
 

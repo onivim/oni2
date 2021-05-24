@@ -115,7 +115,7 @@ module Internal = {
     |> Isolinear.Effect.map(msg => Actions.Workspace(msg));
   };
 
-  let updateEditor = (~editorId, ~msg, layout) => {
+  let updateEditor = (~editorId, ~msg, ~client, layout) => {
     switch (Feature_Layout.editorById(editorId, layout)) {
     | Some(editor) =>
       open Feature_Editor;
@@ -150,6 +150,17 @@ module Internal = {
               ),
             )
           })
+
+        | ExecuteCommand(command) =>
+          switch (command.id) {
+          | None => Isolinear.Effect.none
+          | Some(cmdId) =>
+            Service_Exthost.Effects.Commands.executeContributedCommand(
+              ~command=cmdId,
+              ~arguments=[`Null],
+              client,
+            )
+          }
         };
 
       (layout, effect);
@@ -161,6 +172,7 @@ module Internal = {
       (
         ~scope: EditorScope.t,
         ~msg: Feature_Editor.msg,
+        ~client: Exthost.Client.t,
         layout: Feature_Layout.model,
       ) => {
     switch (scope) {
@@ -170,14 +182,15 @@ module Internal = {
           (prev, editor) => {
             let (layout, effects) = prev;
             let editorId = Feature_Editor.Editor.getId(editor);
-            let (layout', effect') = updateEditor(~editorId, ~msg, layout);
+            let (layout', effect') =
+              updateEditor(~editorId, ~msg, ~client, layout);
             (layout', [effect', ...effects]);
           },
           (layout, []),
           layout,
         );
       (layout', Isolinear.Effect.batch(effects));
-    | Editor(editorId) => updateEditor(~editorId, ~msg, layout)
+    | Editor(editorId) => updateEditor(~client, ~editorId, ~msg, layout)
     };
   };
 
@@ -187,6 +200,9 @@ module Internal = {
       let resolver = Selectors.configResolver(state);
       let maybeRoot = Feature_Explorer.root(state.fileExplorer);
 
+      let fileExplorer =
+        state.fileExplorer
+        |> Feature_Explorer.configurationChanged(~config=resolver);
       let zen = Feature_Zen.configurationChanged(resolver, state.zen);
       let sideBar =
         state.sideBar
@@ -238,6 +254,7 @@ module Internal = {
           ...state,
           buffers,
           colorTheme,
+          fileExplorer,
           languageSupport,
           sideBar,
           layout,
@@ -251,7 +268,13 @@ module Internal = {
     };
 
   let updateMode =
-      (~allowAnimation, state: State.t, mode: Vim.Mode.t, effects) => {
+      (
+        ~client: Exthost.Client.t,
+        ~allowAnimation,
+        state: State.t,
+        mode: Vim.Mode.t,
+        effects,
+      ) => {
     let prevCursor =
       state.layout
       |> Feature_Layout.activeEditor
@@ -273,7 +296,8 @@ module Internal = {
     let msg: Feature_Editor.msg =
       ModeChanged({allowAnimation, mode, effects});
     let scope = EditorScope.Editor(activeEditorId);
-    let (layout, editorEffect) = updateEditors(~scope, ~msg, state.layout);
+    let (layout, editorEffect) =
+      updateEditors(~client, ~scope, ~msg, state.layout);
 
     let isInInsertMode =
       Vim.Mode.isInsertOrSelect(
@@ -421,15 +445,35 @@ let update =
     (state, eff);
 
   | Diagnostics(msg) =>
-    let diagnostics = Feature_Diagnostics.update(msg, state.diagnostics);
-    (
-      {
-        ...state,
-        diagnostics,
-        pane: Feature_Pane.setDiagnostics(diagnostics, state.pane),
-      },
-      Isolinear.Effect.none,
-    );
+    let config = Selectors.configResolver(state);
+    let previewEnabled =
+      Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+        get(
+        config,
+      );
+    let (diagnostics, outmsg) =
+      Feature_Diagnostics.update(~previewEnabled, msg, state.diagnostics);
+
+    let state' = {...state, diagnostics};
+    switch (outmsg) {
+    | Nothing => (state', Isolinear.Effect.none)
+    | OpenFile({filePath, position}) => (
+        state',
+        Internal.openFileEffect(~position=Some(position), filePath),
+      )
+    | PreviewFile({filePath, position}) => (
+        state',
+        Internal.previewFileEffect(~position=Some(position), filePath),
+      )
+
+    | TogglePane({paneId}) => (
+        state',
+        EffectEx.value(
+          ~name="Feature_Diagnostics.Effect.togglePane",
+          Actions.Pane(Feature_Pane.Msg.toggle(~paneId)),
+        ),
+      )
+    };
 
   | Exthost(msg) =>
     let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
@@ -528,12 +572,7 @@ let update =
   | FileExplorer(msg) =>
     let config = Selectors.configResolver(state);
     let (model, outmsg) =
-      Feature_Explorer.update(
-        ~config,
-        ~configuration=state.config,
-        msg,
-        state.fileExplorer,
-      );
+      Feature_Explorer.update(~config, msg, state.fileExplorer);
 
     let state = {...state, fileExplorer: model};
 
@@ -665,12 +704,21 @@ let update =
       editor |> Feature_Editor.Editor.byteRangeToCharacterRange(selection);
 
     let config = Selectors.configResolver(state);
+    let previewEnabled =
+      Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+        get(
+        config,
+      );
 
     let (languageSupport, outmsg) =
       Feature_LanguageSupport.update(
+        ~buffers=state.buffers,
         ~config,
         ~diagnostics=state.diagnostics,
+        ~languageInfo,
+        ~font=state.editorFont,
         ~languageConfiguration,
+        ~previewEnabled,
         ~extensions=state.extensions,
         ~maybeBuffer,
         ~maybeSelection=characterSelection,
@@ -800,17 +848,14 @@ let update =
           |> Isolinear.Effect.batch;
         (state, eff);
       | ReferencesAvailable =>
-        let references =
-          Feature_LanguageSupport.References.get(languageSupport);
-        let pane =
-          state.pane
-          |> Feature_Pane.setLocations(
-               ~maybeActiveBuffer=maybeBuffer,
-               ~locations=references,
-             )
-          |> Feature_Pane.show(~pane=Locations);
-        let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
-        (state', Isolinear.Effect.none);
+        let effect =
+          EffectEx.value(
+            ~name="Feature_LanguageSupport.References.Effect.togglePane",
+            Actions.Pane(
+              Feature_Pane.Msg.toggle(~paneId="workbench.panel.locations"),
+            ),
+          );
+        (state, effect);
       | InsertSnippet({replaceSpan, snippet, _}) =>
         let editor = Feature_Layout.activeEditor(state.layout);
         // let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
@@ -834,6 +879,10 @@ let update =
           )
           |> Isolinear.Effect.map(msg => Snippets(msg)),
         );
+      | PreviewFile({filePath, position}) => (
+          state,
+          Internal.previewFileEffect(~position=Some(position), filePath),
+        )
       | OpenFile({filePath, location, direction}) => (
           state,
           Internal.openFileEffect(~direction, ~position=location, filePath),
@@ -954,35 +1003,12 @@ let update =
     (state, eff);
 
   | Pane(msg) =>
-    let config = Selectors.configResolver(state);
-    let languageInfo =
-      state.languageSupport |> Feature_LanguageSupport.languageInfo;
-    let (model, outmsg) =
-      Feature_Pane.update(
-        ~font=state.editorFont,
-        ~languageInfo,
-        ~buffers=state.buffers,
-        ~previewEnabled=
-          Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
-            get(
-            config,
-          ),
-        msg,
-        state.pane,
-      );
+    let (model, outmsg) = Feature_Pane.update(msg, state.pane);
 
     let state = {...state, pane: model};
 
     switch (outmsg) {
     | Nothing => (state, Isolinear.Effect.none)
-    | OpenFile({filePath, position}) => (
-        state,
-        Internal.openFileEffect(~position=Some(position), filePath),
-      )
-    | PreviewFile({filePath, position}) => (
-        state,
-        Internal.previewFileEffect(~position=Some(position), filePath),
-      )
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -996,23 +1022,19 @@ let update =
         Isolinear.Effect.none,
       )
 
-    | NotificationDismissed(notification) => (
+    | NestedMessage(msg) => (
         state,
-        Feature_Notification.Effects.dismiss(notification)
-        |> Isolinear.Effect.map(msg => Notification(msg)),
+        EffectEx.value(~name="Feature_Pane.NestedMessage", msg),
       )
-
-    | PaneButton(pane) =>
-      switch (pane) {
-      | Notifications => (
-          state,
-          Feature_Notification.Effects.clear()
-          |> Isolinear.Effect.map(msg => Notification(msg)),
-        )
-      | _ => (state, Isolinear.Effect.none)
-      }
-
-    | Effect(eff) => (state, eff |> Isolinear.Effect.map(msg => Pane(msg)))
+    // | PaneButton(pane) =>
+    //   switch (pane) {
+    //   | Notifications => (
+    //       state,
+    //       Feature_Notification.Effects.clear()
+    //       |> Isolinear.Effect.map(msg => Notification(msg)),
+    //     )
+    //   | _ => (state, Isolinear.Effect.none)
+    //   }
     };
 
   | Registers(msg) =>
@@ -1227,15 +1249,10 @@ let update =
       switch ((maybeOutmsg: Feature_StatusBar.outmsg)) {
       | Nothing => (state', Effect.none)
       | ToggleProblems => (
-          {
-            ...state',
-            pane:
-              Feature_Pane.toggle(
-                ~pane=Feature_Pane.Diagnostics,
-                state'.pane,
-              ),
-          },
-          Effect.none,
+          state',
+          Feature_Pane.Msg.toggle(~paneId="workbench.panel.markers")
+          |> EffectEx.value(~name="Feature_StatusBar.toggleProblems")
+          |> Effect.map(msg => Pane(msg)),
         )
 
       | ClearNotifications => (
@@ -1243,15 +1260,10 @@ let update =
           Effect.none,
         )
       | ToggleNotifications => (
-          {
-            ...state',
-            pane:
-              Feature_Pane.toggle(
-                ~pane=Feature_Pane.Notifications,
-                state'.pane,
-              ),
-          },
-          Effect.none,
+          state,
+          Feature_Pane.Msg.toggle(~paneId="workbench.panel.notifications")
+          |> EffectEx.value(~name="Feature_StatusBar.toggleNotifications")
+          |> Effect.map(msg => Pane(msg)),
         )
       | ShowFileTypePicker =>
         let bufferId =
@@ -1295,7 +1307,13 @@ let update =
     let config = Feature_Configuration.resolver(state.config, state.vim);
 
     let (buffers, outmsg) =
-      Feature_Buffers.update(~activeBufferId, ~config, msg, state.buffers);
+      Feature_Buffers.update(
+        ~activeBufferId,
+        ~config,
+        ~workspace=state.workspace,
+        msg,
+        state.buffers,
+      );
 
     let state = {...state, buffers};
 
@@ -1305,6 +1323,11 @@ let update =
     | Effect(eff) => (
         state,
         eff |> Isolinear.Effect.map(msg => Buffers(msg)),
+      )
+
+    | SetClipboardText(text) => (
+        state,
+        Service_Clipboard.Effects.setClipboardText(text),
       )
 
     | ShowMenu(menuFn) =>
@@ -1900,13 +1923,116 @@ let update =
           state,
           eff |> Effect.map(msg => Actions.Terminal(msg)),
         )
+
+      | NotifyError(msg) => (
+          state,
+          Internal.notificationEffect(~kind=Error, msg),
+        )
+
+      | ClosePane({paneId}) => (
+          state,
+          Feature_Pane.Msg.close(~paneId)
+          |> EffectEx.value(~name="Feature_Terminal.closePane")
+          |> Effect.map(msg => Pane(msg)),
+        )
+      | TogglePane({paneId}) => (
+          state,
+          Feature_Pane.Msg.toggle(~paneId)
+          |> EffectEx.value(~name="Feature_Terminal.togglePane")
+          |> Effect.map(msg => Pane(msg)),
+        )
+
+      | SwitchToNormalMode =>
+        let maybeBufferId =
+          state
+          |> Selectors.getActiveBuffer
+          |> Option.map(Oni_Core.Buffer.getId);
+
+        let maybeTerminalId =
+          maybeBufferId
+          |> Option.map(id =>
+               BufferRenderers.getById(id, state.bufferRenderers)
+             )
+          |> OptionEx.flatMap(
+               fun
+               | BufferRenderer.Terminal({id, _}) => Some(id)
+               | _ => None,
+             );
+
+        let editorId =
+          Feature_Layout.activeEditor(state.layout)
+          |> Feature_Editor.Editor.getId;
+
+        let (state, effect) =
+          OptionEx.map2(
+            (bufferId, terminalId) => {
+              let colorTheme = Feature_Theme.colors(state.colorTheme);
+              let (lines, highlights) =
+                Feature_Terminal.getLinesAndHighlights(
+                  ~colorTheme,
+                  ~terminalId,
+                );
+              let syntaxHighlights =
+                List.fold_left(
+                  (acc, curr) => {
+                    let (line, tokens) = curr;
+                    Feature_Syntax.setTokensForLine(
+                      ~bufferId,
+                      ~line,
+                      ~tokens,
+                      acc,
+                    );
+                  },
+                  state.syntaxHighlights,
+                  highlights,
+                );
+
+              let syntaxHighlights =
+                syntaxHighlights |> Feature_Syntax.ignore(~bufferId);
+
+              let terminalFont = Feature_Terminal.font(state.terminals);
+              let layout =
+                Feature_Layout.map(
+                  editor =>
+                    if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
+                      state.buffers
+                      |> Feature_Buffers.get(bufferId)
+                      |> Option.map(buffer => {
+                           let updatedBuffer =
+                             buffer
+                             |> Oni_Core.Buffer.setFont(terminalFont)
+                             |> Feature_Editor.EditorBuffer.ofBuffer;
+                           Feature_Editor.Editor.setBuffer(
+                             ~buffer=updatedBuffer,
+                             editor,
+                           );
+                         })
+                      |> Option.value(~default=editor);
+                    } else {
+                      editor;
+                    },
+                  state.layout,
+                );
+
+              (
+                {...state, layout, syntaxHighlights},
+                Feature_Vim.Effects.setTerminalLines(
+                  ~bufferId,
+                  ~editorId,
+                  lines,
+                )
+                |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
+              );
+            },
+            maybeBufferId,
+            maybeTerminalId,
+          )
+          |> Option.value(~default=(state, Isolinear.Effect.none));
+
+        (state, effect);
+
       | TerminalCreated({name, splitDirection}) =>
-        let windowTreeDirection =
-          switch (splitDirection) {
-          | Horizontal => SplitDirection.Horizontal
-          | Vertical => SplitDirection.Vertical({shouldReuse: false})
-          | Current => SplitDirection.Current
-          };
+        let windowTreeDirection = splitDirection;
 
         let eff =
           Isolinear.Effect.createWithDispatch(
@@ -2041,7 +2167,8 @@ let update =
     let theme = Feature_Theme.colors(state.colorTheme);
     let model' =
       Feature_Notification.update(~theme, ~config, state.notifications, msg);
-    let pane' = Feature_Pane.setNotifications(model', state.pane);
+    // let pane' = Feature_Pane.setNotifications(model', state.pane);
+    let pane' = state.pane;
     ({...state, notifications: model', pane: pane'}, Effect.none);
 
   | Modals(msg) =>
@@ -2066,25 +2193,31 @@ let update =
 
   | FilesDropped({paths}) =>
     let eff =
-      Service_OS.Effect.statMultiple(paths, (path, stats) =>
-        switch (stats.st_kind) {
-        | S_REG => OpenFileByPath(path, SplitDirection.Current, None)
-        | S_DIR =>
+      Service_OS.Effect.statMultiple(paths, (~exists, ~isDirectory, path) =>
+        if (!exists || !isDirectory) {
+          OpenFileByPath(path, SplitDirection.Current, None);
+        } else if (isDirectory) {
           switch (Luv.Path.chdir(path)) {
           | Ok () =>
             Actions.Workspace(
               Feature_Workspace.Msg.workingDirectoryChanged(path),
             )
           | Error(_) => Noop
-          }
-        | _ => Noop
+          };
+        } else {
+          OpenFileByPath(path, SplitDirection.Current, None);
         }
       );
     (state, eff);
 
   | Editor({scope, msg}) =>
     let (layout, effect) =
-      Internal.updateEditors(~scope, ~msg, state.layout);
+      Internal.updateEditors(
+        ~client=extHostClient,
+        ~scope,
+        ~msg,
+        state.layout,
+      );
     let state = {...state, layout};
     (state, effect);
 
@@ -2126,6 +2259,19 @@ let update =
       state,
       Internal.notificationEffect(~kind=Error, message),
     )
+
+  | Output(msg) =>
+    let (output', outmsg) = Feature_Output.update(msg, state.output);
+
+    let state' = {...state, output: output'};
+    switch (outmsg) {
+    | Nothing => (state', Isolinear.Effect.none)
+
+    | ClosePane => (
+        {...state', pane: Feature_Pane.close(state'.pane)},
+        Isolinear.Effect.none,
+      )
+    };
 
   | Quickmenu(msg) =>
     let (quickmenu', outmsg) =
@@ -2308,16 +2454,6 @@ let update =
       eff,
     );
 
-  // TODO: This should live in the terminal feature project
-  | TerminalFont(Service_Font.FontLoaded(font)) => (
-      {...state, terminalFont: font},
-      Isolinear.Effect.none,
-    )
-  | TerminalFont(Service_Font.FontLoadError(message)) => (
-      state,
-      Internal.notificationEffect(~kind=Error, message),
-    )
-
   | TitleBar(titleBarMsg) =>
     let eff =
       switch (
@@ -2490,11 +2626,20 @@ let update =
       (state, Isolinear.Effect.batch([eff, bufferEffects]));
 
     | ModeDidChange({allowAnimation, mode, effects}) =>
-      Internal.updateMode(~allowAnimation, state, mode, effects)
+      Internal.updateMode(
+        ~client=extHostClient,
+        ~allowAnimation,
+        state,
+        mode,
+        effects,
+      )
     | Output({cmd, output}) =>
-      let pane' = state.pane |> Feature_Pane.setOutput(cmd, output);
+      let output' =
+        state.output |> Feature_Output.setProcessOutput(~cmd, ~output);
+      let pane' =
+        state.pane |> Feature_Pane.show(~paneId="workbench.panel.output");
       (
-        {...state, pane: pane'} |> FocusManager.push(Pane),
+        {...state, pane: pane', output: output'} |> FocusManager.push(Pane),
         Isolinear.Effect.none,
       );
     };
@@ -2523,9 +2668,12 @@ let update =
 
       // Pop open and focus sidebar
       let sideBar =
-        if (!Feature_SideBar.isOpen(state.sideBar)
-            || Feature_SideBar.selected(state.sideBar)
-            !== Feature_SideBar.FileExplorer) {
+        if (shouldFocusExplorer
+            && (
+              !Feature_SideBar.isOpen(state.sideBar)
+              || Feature_SideBar.selected(state.sideBar)
+              !== Feature_SideBar.FileExplorer
+            )) {
           Feature_SideBar.toggle(FileExplorer, state.sideBar);
         } else {
           state.sideBar;
@@ -2604,33 +2752,13 @@ module QuickmenuSubscriptionRunner =
     let id = "quickmenu-subscription";
   });
 
-module SearchSubscriptionRunner =
-  Subscription.Runner({
-    type action = Feature_Search.msg;
-    let id = "search-subscription";
-  });
-
 let updateSubscriptions = (setup: Setup.t) => {
   let ripgrep = Ripgrep.make(~executablePath=setup.rgPath);
 
   let quickmenuSubscriptions = QuickmenuStoreConnector.subscriptions(ripgrep);
 
-  let searchSubscriptions = Feature_Search.subscriptions(ripgrep);
-
   (state: State.t, dispatch) => {
-    let workingDirectory =
-      Feature_Workspace.workingDirectory(state.workspace);
     quickmenuSubscriptions(dispatch, state)
     |> QuickmenuSubscriptionRunner.run(~dispatch);
-
-    let searchDispatch = msg => dispatch(Search(msg));
-    let config = Selectors.configResolver(state);
-    searchSubscriptions(
-      ~config,
-      ~workingDirectory,
-      searchDispatch,
-      state.searchPane,
-    )
-    |> SearchSubscriptionRunner.run(~dispatch=searchDispatch);
   };
 };

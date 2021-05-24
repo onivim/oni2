@@ -63,6 +63,8 @@ module Msg: {
 
   let selectFileTypeClicked: (~bufferId: int) => msg;
   let statusBarIndentationClicked: msg;
+
+  let copyActivePathToClipboard: msg;
 };
 
 type outmsg =
@@ -88,6 +90,7 @@ type outmsg =
       preview: bool,
     })
   | BufferModifiedSet(int, bool)
+  | SetClipboardText(string)
   | ShowMenu(
       (Exthost.LanguageInfo.t, IconTheme.t) =>
       Feature_Quickmenu.Schema.menu(msg),
@@ -99,7 +102,13 @@ type outmsg =
 // UPDATE
 
 let update:
-  (~activeBufferId: int, ~config: Config.fileTypeResolver, msg, model) =>
+  (
+    ~activeBufferId: int,
+    ~config: Config.fileTypeResolver,
+    ~workspace: Feature_Workspace.model,
+    msg,
+    model
+  ) =>
   (model, outmsg);
 
 let configurationChanged: (~config: Config.resolver, model) => model;

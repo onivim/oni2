@@ -77,6 +77,10 @@ type outmsg =
       location: option(CharacterPosition.t),
       direction: Oni_Core.SplitDirection.t,
     })
+  | PreviewFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    })
   | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
@@ -111,6 +115,8 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     | Outmsg.ReferencesAvailable => ReferencesAvailable
     | Outmsg.OpenFile({filePath, location, direction}) =>
       OpenFile({filePath, location, direction})
+    | Outmsg.PreviewFile({filePath, position}) =>
+      PreviewFile({filePath, position})
     | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
     | Outmsg.CodeLensesChanged({
         handle,
@@ -150,14 +156,22 @@ module Msg = {
   };
 };
 
+// ~previewEnabled,
+// ~languageInfo,
+// ~buffers,
+// ~font,
 let update =
     (
+      ~buffers,
       ~config,
       ~diagnostics,
       ~extensions,
+      ~font,
       ~languageConfiguration,
+      ~languageInfo,
       ~maybeSelection,
       ~maybeBuffer,
+      ~previewEnabled,
       ~editorId,
       ~cursorLocation,
       ~client,
@@ -443,6 +457,10 @@ let update =
   | References(referencesMsg) =>
     let (references', outmsg) =
       References.update(
+        ~buffers,
+        ~font,
+        ~languageInfo,
+        ~previewEnabled,
         ~maybeBuffer,
         ~cursorLocation,
         ~client,
@@ -590,7 +608,8 @@ let bufferSaved =
       ~activeBufferId,
       model,
     ) =>
-  if (reason == Oni_Core.SaveReason.AutoSave) {
+  if (reason == Oni_Core.SaveReason.AutoSave
+      || reason == Oni_Core.SaveReason.UserInitiated({allowFormatting: false})) {
     (model, Isolinear.Effect.none);
   } else {
     let (formatting', formattingEffect) =
@@ -801,6 +820,14 @@ module Contributions = {
     @ Formatting.Contributions.keybindings
     @ References.Contributions.keybindings
     @ SignatureHelp.Contributions.keybindings;
+
+  let panes = [
+    References.Contributions.pane
+    |> Feature_Pane.Schema.map(
+         ~msg=msg => References(msg),
+         ~model=({references, _}) => references,
+       ),
+  ];
 
   let menuGroups =
     DocumentSymbols.Contributions.menuGroups

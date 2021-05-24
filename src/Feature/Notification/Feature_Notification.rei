@@ -103,20 +103,11 @@ module View: {
       ) =>
       React.element(React.node);
   };
-
-  module Item: {
-    let make:
-      (
-        ~notification: notification,
-        ~theme: ColorTheme.Colors.t,
-        ~font: UiFont.t,
-        ~onDismiss: unit => unit,
-        unit
-      ) =>
-      React.element(React.node);
-  };
 };
 
 // CONTRIBUTIONS
 
-module Contributions: {let colors: list(ColorTheme.Schema.definition);};
+module Contributions: {
+  let colors: list(ColorTheme.Schema.definition);
+  let pane: Feature_Pane.Schema.t(model, msg);
+};

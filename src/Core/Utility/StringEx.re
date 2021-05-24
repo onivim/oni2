@@ -34,6 +34,12 @@ let characterCount = (~startByte, ~endByte, str) => {
   loop(0, startByte);
 };
 
+let clamp = (~characters, str) => {
+  let characterCount = characterCount(~startByte=0, ~endByte=characters, str);
+
+  Zed_utf8.sub(str, 0, characterCount);
+};
+
 let characterToByte = (~index: EditorCoreTypes.CharacterIndex.t, str) => {
   let idx = CharacterIndex.toInt(index);
   let len = String.length(str);
@@ -404,13 +410,13 @@ let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {
   };
 };
 
-let removeWindowsNewLines = str => {
+let filterAscii = (f, str) => {
   let len = String.length(str);
   let filteredString = Bytes.of_string(str);
 
   let destIdx = ref(0);
   for (srcIdx in 0 to len - 1) {
-    if (str.[srcIdx] != '\r') {
+    if (f(str.[srcIdx])) {
       Bytes.set(filteredString, destIdx^, str.[srcIdx]);
       incr(destIdx);
     };
@@ -418,6 +424,10 @@ let removeWindowsNewLines = str => {
 
   let destLen = destIdx^;
   Bytes.sub(filteredString, 0, destLen) |> Bytes.to_string;
+};
+
+let removeWindowsNewLines = str => {
+  str |> filterAscii(c => c != '\r');
 };
 
 let%test_module "removeWindowsNewLines" =
