@@ -100,18 +100,13 @@ let update = (msg, model) => {
           |> Lwt.map(Internal.mapEncoder(Files.StatResult.encode))
         },
         _exn => {
-          prerr_endline("Got failure...");
           Exthost.Files.FileSystemError.(
             make(Code.fileNotFound)
             |> Lwt.return
             |> Lwt.map(Internal.mapEncoder(encode))
-          );
+          )
         },
       );
-
-    Lwt.on_failure(promise, _ => {
-      prerr_endline("FAILED FOR: " ++ Uri.toFileSystemPath(uri))
-    });
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
@@ -161,8 +156,6 @@ let update = (msg, model) => {
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(WriteFile({uri, bytes}), resolver) =>
-    prerr_endline("!!!!!! WRITEFILE: " ++ Uri.toFileSystemPath(uri));
-
     let maybePath =
       uri |> Uri.toFileSystemPath |> FpExp.absoluteCurrentPlatform;
 
@@ -171,32 +164,17 @@ let update = (msg, model) => {
       // Get parent directory
       |> Option.map(FpExp.dirName)
       // ...and make sure it's created
-      |> Option.map(path => {
-           prerr_endline("-- mkdirp: " ++ FpExp.toString(path));
-           let ret = Service_OS.Api.mkdirp(path);
-           Lwt.on_success(ret, () => prerr_endline(" --- mkdirp - success!"));
-           Lwt.on_failure(ret, exn =>
-             prerr_endline(
-               " --- mkdirp - failed: " ++ Printexc.to_string(exn),
-             )
-           );
-           ret;
-         })
+      |> Option.map(path => {Service_OS.Api.mkdirp(path)})
       |> Option.value(~default=Lwt.return());
 
     let promise =
       mkdirPromise
-      |> LwtEx.tap(() => prerr_endline("- WRITEFILE: Created dir"))
       |> LwtEx.flatMap(() => {
            uri
            |> Uri.toFileSystemPath
            |> Service_OS.Api.writeFile(~contents=bytes)
            |> Lwt.map(() => Reply.okEmpty)
          });
-
-    Lwt.on_failure(promise, _ => {
-      prerr_endline("WRITE FILE FAILED FOR: " ++ Uri.toFileSystemPath(uri))
-    });
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
@@ -223,9 +201,6 @@ let update = (msg, model) => {
         },
       );
 
-    Lwt.on_failure(promise, _ => {
-      prerr_endline("RENAME FAILED FOR: " ++ Uri.toFileSystemPath(source))
-    });
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(Copy({source, target, opts}), resolver) =>
@@ -239,10 +214,6 @@ let update = (msg, model) => {
         ~overwrite=opts.overwrite,
       )
       |> Lwt.map(() => Reply.okEmpty);
-
-    Lwt.on_failure(promise, _ => {
-      prerr_endline("COPY FAILED FOR: " ++ Uri.toFileSystemPath(source))
-    });
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 

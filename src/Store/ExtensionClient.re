@@ -52,21 +52,6 @@ let create =
           Feature_FileSystem.Msg.exthost(~resolver, fileMsg);
         dispatch(FileSystem(fileSystemMsg));
 
-        // Lwt.on_success(promise, (reply) => {
-        //   prerr_endline (Printf.sprintf("
-        //   ---- Responding to msg: %s with %s", Msg.show(msg), Reply.toDebugString(reply)));
-        // });
-
-        Lwt.on_failure(promise, exn => {
-          prerr_endline(
-            Printf.sprintf(
-              "
-          ---- FAILING to msg: %s with %s",
-              Msg.show(msg),
-              Printexc.to_string(exn),
-            ),
-          )
-        });
         promise;
 
       | SCM(msg) =>

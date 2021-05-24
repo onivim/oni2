@@ -301,13 +301,10 @@ module Api = {
     let buffer = Luv.Buffer.from_bytes(contents);
     path
     |> Internal.openfile(~flags=[`CREAT, `WRONLY])
-    |> LwtEx.tap(_ => prerr_endline("-- Open file OK"))
     |> bind(file => {
          [buffer] |> wrap(Luv.File.write(file)) |> Lwt.map(_ => file)
        })
-    |> LwtEx.tap(_ => prerr_endline("-- Write file OK"))
-    |> bind(Internal.closefile)
-    |> LwtEx.tap(_ => prerr_endline("-- Close file OK"));
+    |> bind(Internal.closefile);
   };
 
   let copy = (~source, ~target, ~overwrite) => {
@@ -319,7 +316,6 @@ module Api = {
   };
   let mkdir = path => {
     Log.tracef(m => m("Calling mkdir for path: %s", path));
-    prerr_endline("Calling mkdirf for path: " ++ path);
     let maybeStat = str => {
       Lwt.catch(
         () => stat(str) |> Lwt.map(stat => Some(stat)),
@@ -363,8 +359,7 @@ module Api = {
   };
 
   let mkdirp = (path: FpExp.t(FpExp.absolute)) => {
-    let rec loop = path => {
-      prerr_endline("** mkdirp - loop: " ++ FpExp.toString(path));
+    let rec loop = path =>
       // Hit the root!
       if (FpExp.eq(path, FpExp.root) || FpExp.eq(path, FpExp.dirName(path))) {
         Lwt.return();
@@ -403,7 +398,6 @@ module Api = {
              }
            });
       };
-    };
 
     loop(path);
   };
