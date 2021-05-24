@@ -86,7 +86,7 @@ let subscription:
   ) =>
   Isolinear.Sub.t(msg);
 
-let shellCmd: string;
+// let shellCmd: string;
 
 // COLORS
 

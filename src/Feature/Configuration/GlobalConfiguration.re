@@ -206,6 +206,14 @@ module VimSettings = {
       |> VimSetting.decode_value_opt(bool)
       |> Option.value(~default=false)
     });
+
+  let lineSpace =
+    vim("linespace", lineSpaceSetting => {
+      lineSpaceSetting
+      |> VimSetting.decode_value_opt(int)
+      |> Option.map(LineHeight.padding)
+      |> Option.value(~default=LineHeight.default)
+    });
 };
 
 module Editor = {
@@ -215,6 +223,14 @@ module Editor = {
       "editor.codeLens",
       bool,
       ~default=true,
+    );
+
+  let lineHeight =
+    setting(
+      ~vim=VimSettings.lineSpace,
+      "editor.lineHeight",
+      custom(~decode=LineHeight.decode, ~encode=LineHeight.encode),
+      ~default=LineHeight.default,
     );
 
   let snippetSuggestions =
@@ -295,6 +311,7 @@ let contributions = [
   vsync.spec,
   Editor.codeLensEnabled.spec,
   Editor.largeFileOptimizations.spec,
+  Editor.lineHeight.spec,
   Editor.snippetSuggestions.spec,
   Files.exclude.spec,
   Explorer.autoReveal.spec,

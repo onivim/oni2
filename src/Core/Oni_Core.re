@@ -42,6 +42,7 @@ module Job = Job;
 module KeyedStringMap = Kernel.KeyedStringMap;
 module LanguageConfiguration = LanguageConfiguration;
 module LazyLoader = LazyLoader;
+module LineHeight = LineHeight;
 module LineNumber = LineNumber;
 module Log = Kernel.Log;
 module MarkerUpdate = MarkerUpdate;
