@@ -63,31 +63,42 @@ module DirectoryEntry = {
           `File;
         };
 
-      {path, name, kind, isSymbolicLink};
+      Some({path, name, kind, isSymbolicLink});
     };
 
     let pathStr = FpExp.toString(path);
 
-    InnerApi.lstat(pathStr)
-    |> LwtEx.flatMap((lstat: Luv.File.Stat.t) =>
-         if (Luv.File.Mode.test([`IFLNK], lstat.mode)) {
-           InnerApi.stat(pathStr)
-           |> Lwt.map((stat: Luv.File.Stat.t) =>
-                ofMode(~isSymbolicLink=true, stat.mode)
-              );
-         } else {
-           Lwt.return(ofMode(~isSymbolicLink=false, lstat.mode));
-         }
-       );
+    Lwt.catch(
+      () => {
+        InnerApi.lstat(pathStr)
+        |> LwtEx.flatMap((lstat: Luv.File.Stat.t) =>
+             if (Luv.File.Mode.test([`IFLNK], lstat.mode)) {
+               InnerApi.stat(pathStr)
+               |> Lwt.map((stat: Luv.File.Stat.t) =>
+                    ofMode(~isSymbolicLink=true, stat.mode)
+                  );
+             } else {
+               Lwt.return(ofMode(~isSymbolicLink=false, lstat.mode));
+             }
+           )
+      },
+      exn => {
+        Log.errorf(m =>
+          m("Error stat'ing file: %s (%s)", pathStr, Printexc.to_string(exn))
+        );
+        Lwt.return(None);
+      },
+    );
   };
 
   let fromDirent =
       (~dirent: Luv.File.Dirent.t, path: FpExp.t(FpExp.absolute)) => {
     let name = dirent.name;
     switch (dirent.kind) {
-    | `FILE => Lwt.return({name, kind: `File, isSymbolicLink: false, path})
+    | `FILE =>
+      Lwt.return(Some({name, kind: `File, isSymbolicLink: false, path}))
     | `DIR =>
-      Lwt.return({name, kind: `Directory, isSymbolicLink: false, path})
+      Lwt.return(Some({name, kind: `Directory, isSymbolicLink: false, path}))
     // Wasn't enough information from the direntry - could be `LINK, `UNKNOWN, etc -
     // fall back to using stat. We don't use stat by default for everything since the additional
     // I/O is slow on Windows
@@ -134,17 +145,19 @@ module Api = {
   let readdir2 = path => {
     readdir(FpExp.toString(path))
     |> LwtEx.flatMap(dirItems => {
-         let joiner = (acc: list(DirectoryEntry.t), curr: DirectoryEntry.t) => {
+         let joiner = (acc, curr) => {
            [curr, ...acc];
          };
-         let resolvedItems: list(Lwt.t(DirectoryEntry.t)) =
+         let resolvedItems =
            dirItems
            |> List.map((dirent: Luv.File.Dirent.t) => {
                 let fullPath = FpExp.At.(path / dirent.name);
                 DirectoryEntry.fromDirent(~dirent, fullPath);
               });
 
-         resolvedItems |> LwtEx.all(~initial=[], joiner);
+         resolvedItems
+         |> LwtEx.all(~initial=[], joiner)
+         |> Lwt.map(OptionEx.values);
        });
   };
 

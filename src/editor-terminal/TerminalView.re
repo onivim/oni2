@@ -133,6 +133,9 @@ let%component make =
 
           Skia.Paint.setLcdRenderText(textPaint, true);
 
+          let lineSpacingOffset =
+            max(0., (lineHeight -. characterHeight) /. 2.);
+
           let columns = Screen.getColumns(screen);
           let rows = Screen.getTotalRows(screen);
 
@@ -147,7 +150,7 @@ let%component make =
                      CanvasContext.drawRectLtwh(
                        ~paint=backgroundPaint,
                        ~left=float(startColumn) *. characterWidth,
-                       ~top=yOffset,
+                       ~top=yOffset +. lineSpacingOffset,
                        ~height=lineHeight,
                        ~width=
                          float(endColumn - startColumn) *. characterWidth,
@@ -184,7 +187,7 @@ let%component make =
                        CanvasContext.drawText(
                          ~paint=textPaint,
                          ~x=float(startColumn) *. characterWidth,
-                         ~y=yOffset +. characterHeight,
+                         ~y=yOffset +. characterHeight +. lineSpacingOffset,
                          ~text=str,
                          canvasContext,
                        );
@@ -226,7 +229,11 @@ let%component make =
             let (yOffset, width, height) =
               switch (cursor.shape) {
               | BarLeft => (0., 2., lineHeight)
-              | Underline => (lineHeight -. 2., characterWidth, 2.)
+              | Underline => (
+                  lineHeight -. 2. -. lineSpacingOffset,
+                  characterWidth,
+                  2.,
+                )
               | Unknown
               | Block => (0., characterWidth, lineHeight)
               };
