@@ -93,6 +93,7 @@
 - #3560 - Shell: Fix incorrect PATH on OSX when launched via Finder (fixes #3199)
 - #3567 - Explorer: Fix files in NFS mount not loading (fixes #3534)
 - #3568 - Explorer: Fix symlinks showing up as empty files (fixes #2657)
+- #3581 - Explorer: Fix population in stat failure
 
 ### Performance
 
