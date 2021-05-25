@@ -95,6 +95,7 @@
 - #3568 - Explorer: Fix symlinks showing up as empty files (fixes #2657)
 - #3581 - Explorer: Fix population in stat failure
 - #3585 - Extensions: Fix scroll resetting while search is in progress (fixes #3551)
+- #3584 - Minimap: Fix mouse scroll for small files (fixes #3563)
 
 ### Performance
 
