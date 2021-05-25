@@ -9,6 +9,7 @@ module Effect = {
   let checkLicenseKeyValidity = (~proxy, licenseKey) =>
     Isolinear.Effect.createWithDispatch(
       ~name="registration.checkLicenseKeyValidity", dispatch => {
+      let licenseKey = licenseKey |> String.trim;
       let url =
         "https://v2.onivim.io/api/isLicenseKeyValid?licenseKey=" ++ licenseKey;
       let setup = Setup.init();
