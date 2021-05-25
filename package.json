@@ -414,7 +414,7 @@
   },
   "resolutions": {
     "revery": "revery-ui/revery#b27b0b9",
-    "esy-skia": "revery-ui/esy-skia#6106223",
+    "esy-skia": "revery-ui/esy-skia#81edd7b",
     "isolinear": "revery-ui/isolinear#049ad1e",
     "@opam/fs": "bryphe/reason-native:fs.opam#e16590c",
     "@opam/fp": "bryphe/reason-native:fp.opam#e16590c",
