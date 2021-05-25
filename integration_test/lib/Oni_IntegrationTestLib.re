@@ -24,7 +24,10 @@ let _currentRaised: ref(bool) = ref(false);
 let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
 
-Service_Clipboard.Testing.setClipboardProvider(~get=() => _currentClipboard^);
+Service_Clipboard.Testing.setClipboardProvider(
+  ~get=() => _currentClipboard^,
+  ~set=str => setClipboard(Some(str)),
+);
 
 let setTime = v => _currentTime := v;
 

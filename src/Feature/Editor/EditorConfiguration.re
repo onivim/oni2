@@ -185,14 +185,6 @@ module VimSettings = {
       |> Option.value(~default="JetBrainsMono-Regular.ttf")
     });
 
-  let lineSpace =
-    vim("linespace", lineSpaceSetting => {
-      lineSpaceSetting
-      |> VimSetting.decode_value_opt(int)
-      |> Option.map(LineHeight.padding)
-      |> Option.value(~default=LineHeight.default)
-    });
-
   let wrap =
     vim("wrap", wrapSetting => {
       wrapSetting
@@ -285,13 +277,6 @@ let fontWeight =
     "editor.fontWeight",
     Codecs.fontWeight,
     ~default=Revery.Font.Weight.Normal,
-  );
-let lineHeight =
-  setting(
-    ~vim=VimSettings.lineSpace,
-    "editor.lineHeight",
-    custom(~decode=LineHeight.decode, ~encode=LineHeight.encode),
-    ~default=LineHeight.default,
   );
 let enablePreview =
   setting("workbench.editor.enablePreview", bool, ~default=true);
@@ -398,7 +383,6 @@ let contributions = [
   fontSize.spec,
   fontSmoothing.spec,
   fontWeight.spec,
-  lineHeight.spec,
   enablePreview.spec,
   highlightActiveIndentGuide.spec,
   horizontalScrollbarSize.spec,

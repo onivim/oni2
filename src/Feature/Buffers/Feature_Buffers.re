@@ -154,6 +154,8 @@ type command =
   | ChangeFiletype({maybeBufferId: option(int)})
   | ConvertIndentationToTabs
   | ConvertIndentationToSpaces
+  | CopyAbsolutePathToClipboard
+  | CopyRelativePathToClipboard
   | DetectIndentation
   | SaveWithoutFormatting;
 
@@ -250,6 +252,8 @@ module Msg = {
     Command(ChangeFiletype({maybeBufferId: Some(bufferId)}));
 
   let statusBarIndentationClicked = StatusBarIndentationClicked;
+
+  let copyActivePathToClipboard = Command(CopyAbsolutePathToClipboard);
 };
 
 let vimSettingChanged = (~activeBufferId, ~name, ~value, model) => {
@@ -336,6 +340,7 @@ type outmsg =
       preview: bool,
     })
   | BufferModifiedSet(int, bool)
+  | SetClipboardText(string)
   | ShowMenu(
       (Exthost.LanguageInfo.t, IconTheme.t) =>
       Feature_Quickmenu.Schema.menu(msg),
@@ -391,7 +396,7 @@ let guessIndentation = (~config, buffer) => {
   |> Option.value(~default=Inferred.implicit(defaultIndentation(~config)));
 };
 
-let update = (~activeBufferId, ~config, msg: msg, model: model) => {
+let update = (~activeBufferId, ~config, ~workspace, msg: msg, model: model) => {
   switch (msg) {
   | AutoSave(msg) =>
     let (autoSave', outmsg) = AutoSave.update(msg, model.autoSave);
@@ -714,6 +719,48 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         );
       };
 
+    | CopyAbsolutePathToClipboard =>
+      let eff =
+        model.buffers
+        |> IntMap.find_opt(activeBufferId)
+        |> OptionEx.flatMap(Buffer.getFilePath)
+        |> Option.map(path => SetClipboardText(path))
+        |> Option.value(~default=Nothing);
+
+      (model, eff);
+
+    | CopyRelativePathToClipboard =>
+      let maybeBufferPath =
+        model.buffers
+        |> IntMap.find_opt(activeBufferId)
+        |> OptionEx.flatMap(Buffer.getFilePath)
+        |> OptionEx.flatMap(Oni_Core.FpExp.absoluteCurrentPlatform);
+
+      let default =
+        maybeBufferPath
+        |> Option.map(path => SetClipboardText(FpExp.toString(path)))
+        |> Option.value(~default=Nothing);
+
+      let maybeWorkspacePath =
+        workspace
+        |> Feature_Workspace.openedFolder
+        |> OptionEx.flatMap(Oni_Core.FpExp.absoluteCurrentPlatform);
+
+      let eff =
+        OptionEx.flatMap2(
+          (bufferPath, workspacePath) => {
+            switch (FpExp.relativize(~source=workspacePath, ~dest=bufferPath)) {
+            | Ok(relative) =>
+              Some(SetClipboardText(FpExp.relativeToString(relative)))
+            | Error(_) => None
+            }
+          },
+          maybeBufferPath,
+          maybeWorkspacePath,
+        )
+        |> Option.value(~default);
+      (model, eff);
+
     | DetectIndentation =>
       let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
 
@@ -950,6 +997,21 @@ module Commands = {
       Command(ChangeFiletype({maybeBufferId: None})),
     );
 
+  let copyAbsolutePath =
+    define(
+      ~category="File",
+      ~title="Copy Path of Active File",
+      "copyFilePath",
+      Command(CopyAbsolutePathToClipboard),
+    );
+  let copyRelativePath =
+    define(
+      ~category="File",
+      ~title="Copy Relative Path of Active File",
+      "copyRelativeFilePath",
+      Command(CopyRelativePathToClipboard),
+    );
+
   let saveWithoutFormatting =
     define(
       ~category="File",
@@ -1013,6 +1075,8 @@ module Contributions = {
       changeFiletype,
       convertIndentationToSpaces,
       convertIndentationToTabs,
+      copyAbsolutePath,
+      copyRelativePath,
       detectIndentation,
       indentUsingSpaces,
       indentUsingTabs,

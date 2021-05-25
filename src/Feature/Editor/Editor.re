@@ -535,7 +535,12 @@ let configure = (~config, editor) => {
        ~enabled=EditorConfiguration.Minimap.enabled.get(config),
        ~maxColumn=EditorConfiguration.Minimap.maxColumn.get(config),
      )
-  |> setLineHeight(~lineHeight=EditorConfiguration.lineHeight.get(config))
+  |> setLineHeight(
+       ~lineHeight=
+         Feature_Configuration.GlobalConfiguration.Editor.lineHeight.get(
+           config,
+         ),
+     )
   |> setLineNumbers(
        ~lineNumbers=EditorConfiguration.lineNumbers.get(config),
      )

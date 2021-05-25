@@ -154,6 +154,8 @@ let%component make =
        });
   };
 
+  let totalHeight = float(Editor.totalViewLines(editor)) *. rowHeight;
+
   let getScrollTo = (~offset=0., screenMouseY: float) => {
     getRelativeMousePosition(screenMouseY)
     |> Option.map(mouseY => {
@@ -162,7 +164,7 @@ let%component make =
              ~pixelX=0.,
              ~pixelY=mouseY -. offset,
              ~pixelWidth=width,
-             ~pixelHeight=height,
+             ~pixelHeight=min(int_of_float(totalHeight), height),
              editor,
            );
          pixelY;
