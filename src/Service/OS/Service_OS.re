@@ -315,7 +315,91 @@ module Api = {
     copy(~source, ~target, ~overwrite) |> bind(() => unlink(source));
   };
   let mkdir = path => {
-    path |> wrap(Luv.File.mkdir);
+    Log.tracef(m => m("Calling mkdir for path: %s", path));
+    let maybeStat = str => {
+      Lwt.catch(
+        () => stat(str) |> Lwt.map(stat => Some(stat)),
+        _exn => Lwt.return(None),
+      );
+    };
+
+    let isDirectory = (stat: Luv.File.Stat.t) => {
+      Luv.File.Mode.test([`IFDIR], stat.mode);
+    };
+
+    let doMkdir = path => path |> wrap(Luv.File.mkdir);
+
+    let attemptCheckOrCreateDirectory = path => {
+      path
+      |> maybeStat
+      |> LwtEx.flatMap(maybeStatResult => {
+           maybeStatResult
+           |> Option.map(statResult =>
+                if (isDirectory(statResult)) {
+                  Lwt.return();
+                } else {
+                  doMkdir(path);
+                }
+              )
+           |> OptionEx.value_or_lazy(() => doMkdir(path))
+         });
+    };
+
+    let rec loop = attemptCount =>
+      if (attemptCount >= 3) {
+        attemptCheckOrCreateDirectory(path);
+      } else {
+        Lwt.catch(
+          () => {attemptCheckOrCreateDirectory(path)},
+          _exn => loop(attemptCount + 1),
+        );
+      };
+
+    loop(0);
+  };
+
+  let mkdirp = (path: FpExp.t(FpExp.absolute)) => {
+    let rec loop = path =>
+      // Hit the root!
+      if (FpExp.eq(path, FpExp.root) || FpExp.eq(path, FpExp.dirName(path))) {
+        Lwt.return();
+      } else {
+        let parent = FpExp.dirName(path);
+        let pathStr = FpExp.toString(path);
+
+        let maybeStat = str => {
+          Lwt.catch(
+            () => stat(str) |> Lwt.map(stat => Some(stat)),
+            _exn => Lwt.return(None),
+          );
+        };
+
+        let isDirectory = (stat: Luv.File.Stat.t) => {
+          Luv.File.Mode.test([`IFDIR], stat.mode);
+        };
+
+        parent
+        |> loop
+        |> LwtEx.flatMap(() => {
+             // Does the directory already exist?
+             maybeStat(pathStr)
+           })
+        |> LwtEx.flatMap(maybeStatResult => {
+             switch (maybeStatResult) {
+             | None => mkdir(pathStr)
+             | Some(stat) when isDirectory(stat) => Lwt.return()
+             | Some(_stat) =>
+               Lwt.fail_with(
+                 Printf.sprintf(
+                   "mkdirp: Path %s exists but is not a directory",
+                   pathStr,
+                 ),
+               )
+             }
+           });
+      };
+
+    loop(path);
   };
 
   let rmdir = (~recursive=true, path) => {

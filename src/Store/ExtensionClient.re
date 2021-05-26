@@ -45,11 +45,13 @@ let create =
         )
         |> Lwt.map(_ => Reply.okEmpty);
 
-      | FileSystem(msg) =>
+      | FileSystem(fileMsg) =>
         let (promise, resolver) = Lwt.task();
 
-        let fileSystemMsg = Feature_FileSystem.Msg.exthost(~resolver, msg);
+        let fileSystemMsg =
+          Feature_FileSystem.Msg.exthost(~resolver, fileMsg);
         dispatch(FileSystem(fileSystemMsg));
+
         promise;
 
       | SCM(msg) =>
