@@ -15,7 +15,7 @@ depends: [
   "ocaml" {>= "4.02.3"}
 ]
 build: [
-  ["dune" "subst"] {pinned}
+  ["dune" "subst"] {dev}
   [
     "dune"
     "build"

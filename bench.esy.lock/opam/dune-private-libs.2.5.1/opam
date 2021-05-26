@@ -9,8 +9,8 @@ This package contains code that is shared between various dune-xxx
 packages. However, it is not meant for public consumption and provides
 no stability guarantee.
 """
-maintainer: ["Jane Street Group, LLC <opensource@janestreet.com>"]
-authors: ["Jane Street Group, LLC <opensource@janestreet.com>"]
+maintainer: ["Jane Street Group, LLC"]
+authors: ["Jane Street Group, LLC"]
 license: "MIT"
 homepage: "https://github.com/ocaml/dune"
 doc: "https://dune.readthedocs.io/"
@@ -21,7 +21,7 @@ depends: [
 ]
 dev-repo: "git+https://github.com/ocaml/dune.git"
 build: [
-  ["dune" "subst"] {pinned}
+  ["dune" "subst"] {dev}
   [
     "dune"
     "build"
