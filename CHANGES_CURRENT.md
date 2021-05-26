@@ -11,4 +11,6 @@
 
 ### Refactoring
 
+- #3595 - Dependency: OCaml -> 4.12
+
 ### Infrastructure
