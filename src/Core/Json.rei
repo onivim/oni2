@@ -2,7 +2,7 @@
 
 open EditorCoreTypes;
 
-type t = Yojson.Safe.json;
+type t = Yojson.Safe.t;
 
 module Decode: {
   include Decoders.Decode.S with type value = t;

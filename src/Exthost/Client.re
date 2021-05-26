@@ -4,7 +4,7 @@ module Extension = Exthost_Extension;
 type t = {
   client: Protocol.t,
   lastRequestId: ref(int),
-  requestIdToReply: Hashtbl.t(int, Lwt.u(Yojson.Safe.json)),
+  requestIdToReply: Hashtbl.t(int, Lwt.u(Yojson.Safe.t)),
   initPromise: Lwt.t(unit),
 };
 
