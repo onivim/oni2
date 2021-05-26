@@ -4,6 +4,7 @@
 
 - #3597 - Registration: Trim license key before submitting
 - #3431 - Extensions: Serialize file system errors correctly to extensions (fixes #3418)
+- #3600 - OSX: Fix crash on selecting native menu item
 
 ### Performance
 
