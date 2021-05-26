@@ -388,7 +388,7 @@ module Api = {
              switch (maybeStatResult) {
              | None => mkdir(pathStr)
              | Some(stat) when isDirectory(stat) => Lwt.return()
-             | Some(stat) =>
+             | Some(_stat) =>
                Lwt.fail_with(
                  Printf.sprintf(
                    "mkdirp: Path %s exists but is not a directory",
