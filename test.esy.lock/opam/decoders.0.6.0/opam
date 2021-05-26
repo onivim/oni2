@@ -15,7 +15,7 @@ depends: [
   "containers" {with-test}
 ]
 build: [
-  ["dune" "subst"] {pinned}
+  ["dune" "subst"] {dev}
   [
     "dune"
     "build"
