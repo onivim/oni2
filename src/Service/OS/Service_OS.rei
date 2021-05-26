@@ -35,6 +35,7 @@ module Api: {
   let copy:
     (~source: string, ~target: string, ~overwrite: bool) => Lwt.t(unit);
   let mkdir: string => Lwt.t(unit);
+  let mkdirp: FpExp.t(FpExp.absolute) => Lwt.t(unit);
 
   let mktempdir: (~prefix: string=?, unit) => Lwt.t(string);
   let delete: (~recursive: bool, string) => Lwt.t(unit);
