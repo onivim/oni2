@@ -1,5 +1,3 @@
-open EditorCoreTypes;
-open Vim;
 open TestFramework;
 
 let reset = () => Helpers.resetBuffer("test/reason-libvim/testfile.txt");
