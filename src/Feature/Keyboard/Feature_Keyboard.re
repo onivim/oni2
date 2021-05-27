@@ -24,6 +24,7 @@ module Commands = {
     define(
       ~category="Keyboard",
       ~title="Input Emoji & Symbols",
+      ~isEnabledWhen="isMac" |> WhenExpr.parse,
       "oni2.keyboard.emojiAndSymbols", // This doesn't exist in VSCode
       Command(ShowEmojiAndSymbols),
     );
