@@ -707,14 +707,10 @@ let start =
   let synchronizeViml = lines =>
     Isolinear.Effect.create(~name="vim.synchronizeViml", () =>
       if (prevViml^ != lines) {
-        List.iter(
-          l => {
-            Log.info("Running VimL from config: " ++ l);
-            Vim.command(l) |> ignore;
-            Log.info("VimL command completed.");
-          },
-          lines,
-        );
+        let linesArray = Array.of_list(lines);
+        Log.info("Running VimL from config...");
+        Vim.commands(linesArray) |> ignore;
+        Log.info("VimL command completed.");
         prevViml := lines;
       }
     );
