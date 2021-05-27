@@ -182,13 +182,23 @@ module Container = {
             />
           </View>
         : React.empty;
+    // Forward mouse-wheel events to editor
+    let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
+      dispatch(
+        Msg.EditorMouseWheel({
+          deltaY: wheelEvent.deltaY *. (-1.),
+          deltaX: wheelEvent.deltaX,
+          shiftKey: wheelEvent.shiftKey,
+        }),
+      );
 
     <View
       style={Styles.container(
         ~opacity=maxOpacity,
         ~totalHeight=int_of_float(totalHeight),
         ~pixelY=pixelY -. totalHeight,
-      )}>
+      )}
+      onMouseWheel>
       {elems |> React.listToElement}
       shadow
     </View>;
