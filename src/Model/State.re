@@ -572,7 +572,8 @@ let initial =
           [Feature_Workspace.Contributions.menuGroup]
           @ Feature_LanguageSupport.Contributions.menuGroups
           @ Feature_SideBar.Contributions.menuGroups
-          @ Feature_Help.Contributions.menuGroups,
+          @ Feature_Help.Contributions.menuGroups
+          @ Feature_Keyboard.Contributions.menuGroups,
       ),
     output: Feature_Output.initial,
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
