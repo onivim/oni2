@@ -6,6 +6,7 @@
 - #3431 - Extensions: Serialize file system errors correctly to extensions (fixes #3418)
 - #3600 - OSX: Fix crash on selecting native menu item
 - #3604 - Editor: Fix CodeLens blocking mousewheel
+- #3606 - Vim: Fix hang when using `function` in `experimental.viml`
 
 ### Performance
 
