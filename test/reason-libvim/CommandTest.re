@@ -15,7 +15,7 @@ describe("Command", ({describe, _}) => {
         |]);
 
       expect.equal(Vim.eval("_VimBoxShellSlash()"), Ok("42"));
-    })
+    });
     test("define multi-line function", ({expect, _}) => {
       let _ = reset();
 
@@ -30,6 +30,6 @@ describe("Command", ({describe, _}) => {
         |]);
 
       expect.equal(Vim.eval("_AnotherFunction()"), Ok("99"));
-    })
+    });
   })
 });
