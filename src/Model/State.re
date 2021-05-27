@@ -427,6 +427,7 @@ type t = {
   fileSystem: Feature_FileSystem.model,
   help: Feature_Help.model,
   input: Feature_Input.model,
+  keyboard: Feature_Keyboard.model,
   logging: Feature_Logging.model,
   messages: Feature_Messages.model,
   output: Feature_Output.model,
@@ -544,6 +545,7 @@ let initial =
     diagnostics: Feature_Diagnostics.initial,
     input:
       Feature_Input.initial(~loader=keybindingsLoader, defaultKeyBindings),
+    keyboard: Feature_Keyboard.initial,
     quickmenu: None,
     editorFont: defaultEditorFont,
     extensions:
