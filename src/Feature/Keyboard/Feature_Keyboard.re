@@ -10,7 +10,7 @@ type command =
 
 [@deriving show]
 type msg =
-  | Empty(unit)
+  | Noop
   | Command(command);
 
 type outmsg =
@@ -70,8 +70,8 @@ let update = (model, msg) =>
       model,
       Effect(
         Service_Keyboard.Effects.showEmojiAndSymbols
-        |> Isolinear.Effect.map(msg => Empty(msg)),
+        |> Isolinear.Effect.map(_ => Noop),
       ),
     )
-  | Empty () => (model, Nothing)
+  | Noop => (model, Nothing)
   };
