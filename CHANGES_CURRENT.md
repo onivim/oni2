@@ -19,6 +19,7 @@
 
 ### Bug Fixes
 
+<<<<<<< HEAD
 - #3289 - Extensions: Fix logs location path provided to extension (related #3268)
 - #3290 - Symbols: Fix issues focusing nodes in symbol outline view (fixes #2002)
 - #3292 - Vim: Fix control+d/control+u behavior in explorer
@@ -96,6 +97,7 @@
 - #3581 - Explorer: Fix population in stat failure
 - #3585 - Extensions: Fix scroll resetting while search is in progress (fixes #3551)
 - #3584 - Minimap: Fix mouse scroll for small files (fixes #3563)
+- #3616 - OSX: Fix crash on IME switch (fixes #3614)
 
 ### Performance
 
