@@ -38,6 +38,17 @@ module MenuItems = {
   };
 };
 
+module Keybindings = {
+  open Feature_Input.Schema;
+
+  let emojiAndSymbols =
+    bind(
+      ~key="<C-D-Space>",
+      ~command=Commands.showEmojiAndSymbols.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
+};
+
 module Contributions = {
   let commands = Commands.[showEmojiAndSymbols];
 
@@ -49,6 +60,8 @@ module Contributions = {
         MenuItems.Edit.[emojiAndSymbols],
       ),
     ];
+
+  let keybindings = Keybindings.[emojiAndSymbols];
 };
 
 let update = (model, msg) =>
