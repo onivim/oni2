@@ -6,8 +6,56 @@ open Exthost;
 module Log = (val Log.withNamespace("Oni2.Feature.Exthost"));
 
 module Internal = {
+  let prefix = "onivim.editor:";
+  let prefixLength = String.length(prefix);
   let getVscodeEditorId = editorId =>
     "onivim.editor:" ++ string_of_int(editorId);
+
+  let editorIdFromVscodeEditorId = (vscodeEditorId: string) => {
+    String.sub(
+      vscodeEditorId,
+      prefixLength,
+      String.length(vscodeEditorId) - prefixLength,
+    )
+    |> int_of_string;
+  };
+
+  let getExthostSelectionFromEditor = (editor: Feature_Editor.Editor.t) => {
+    Feature_Editor.Editor.(
+      {
+        let byteRange =
+          switch (Editor.selections(editor)) {
+          | [] =>
+            let position = Editor.getPrimaryCursorByte(editor);
+            EditorCoreTypes.ByteRange.{start: position, stop: position};
+
+          | [selection, ..._] => VisualRange.(selection.range)
+          };
+
+        editor
+        |> byteRangeToCharacterRange(byteRange)
+        |> Option.map(range => {
+             EditorCoreTypes.(
+               EditorCoreTypes.CharacterRange.(
+                 EditorCoreTypes.CharacterPosition.[
+                   Exthost.Selection.{
+                     selectionStartLineNumber:
+                       range.start.line |> LineNumber.toOneBased,
+                     selectionStartColumn:
+                       (range.start.character |> CharacterIndex.toInt) + 1,
+                     positionLineNumber:
+                       range.stop.line |> LineNumber.toOneBased,
+                     positionColumn:
+                       (range.stop.character |> CharacterIndex.toInt) + 1,
+                   },
+                 ]
+               )
+             )
+           })
+        |> Option.value(~default=[]);
+      }
+    );
+  };
 
   let editorToAddData:
     (IntMap.t(Buffer.t), Editor.t) => option(TextEditor.AddData.t) =
@@ -39,7 +87,9 @@ module Internal = {
                lineNumbers: LineNumbersStyle.On,
              };
 
-           AddData.{id, documentUri: uri, options};
+           let selections = getExthostSelectionFromEditor(editor);
+
+           AddData.{id, documentUri: uri, options, selections};
          });
     };
 };
@@ -52,11 +102,19 @@ type msg =
       msg: Exthost.Msg.Documents.msg,
       resolver: [@opaque] Lwt.u(Exthost.Reply.t),
     })
+  | ExthostTextEditors({
+      msg: Exthost.Msg.TextEditors.msg,
+      resolver: [@opaque] Lwt.u(Exthost.Reply.t),
+    })
   | Initialized;
 
 module Msg = {
   let document = (msg, resolver) => {
     ExthostDocuments({msg, resolver});
+  };
+
+  let textEditors = (msg, resolver) => {
+    ExthostTextEditors({msg, resolver});
   };
 
   let initialized = Initialized;
@@ -133,6 +191,10 @@ let update = (msg: msg, model) =>
       (model, Effect(Effects.resolve(resolver)));
     }
 
+  | ExthostTextEditors(_) =>
+    // TODO
+    (model, Nothing)
+
   | Initialized => ({...model, isInitialized: true}, Nothing)
   };
 
@@ -204,14 +266,14 @@ let subscription =
          })
       |> Isolinear.Sub.batch;
 
-    let editors =
-      editors
-      |> List.map(Internal.editorToAddData(bufferMap))
-      |> OptionEx.values;
+    let editorAddDataAndSelection =
+      editors |> List.filter_map(Internal.editorToAddData(bufferMap));
 
     let editorSubscriptions =
-      editors
-      |> List.map(editor => {Service_Exthost.Sub.editor(~editor, ~client)})
+      editorAddDataAndSelection
+      |> List.map(editorAddData => {
+           Service_Exthost.Sub.editor(~editor=editorAddData, ~client)
+         })
       |> Isolinear.Sub.batch
       |> Isolinear.Sub.map(() => Noop);
 

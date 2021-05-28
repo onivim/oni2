@@ -5,6 +5,10 @@ type msg;
 
 module Msg: {
   let document: (Exthost.Msg.Documents.msg, Lwt.u(Exthost.Reply.t)) => msg;
+
+  let textEditors:
+    (Exthost.Msg.TextEditors.msg, Lwt.u(Exthost.Reply.t)) => msg;
+
   let initialized: msg;
 };
 
