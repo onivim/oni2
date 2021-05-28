@@ -20,13 +20,6 @@ module Resource: {
 module ResourceGroup: {
   [@deriving show]
   type t;
-  //  type t = {
-  //    handle: int,
-  //    id: string,
-  //    label: string,
-  //    hideWhenEmpty: bool,
-  //    resources: list(Resource.t),
-  //  };
 };
 
 module Provider: {
@@ -52,6 +45,8 @@ type model;
 
 let resetFocus: model => model;
 
+let count: model => int;
+
 let initial: model;
 
 let statusBarCommands: (~workingDirectory: string, model) => list(command);
@@ -74,6 +69,10 @@ type outmsg =
   | OpenFile(string)
   | PreviewFile(string)
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | OriginalContentLoaded({
+      bufferId: int,
+      originalLines: array(string),
+    })
   | Nothing;
 
 let update:
@@ -85,9 +84,6 @@ let update:
     msg
   ) =>
   (model, outmsg);
-
-let getOriginalLines: (Oni_Core.Buffer.t, model) => option(array(string));
-let setOriginalLines: (Oni_Core.Buffer.t, array(string), model) => model;
 
 let handleExtensionMessage:
   (~dispatch: msg => unit, Exthost.Msg.SCM.msg) => unit;

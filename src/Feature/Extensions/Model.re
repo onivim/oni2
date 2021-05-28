@@ -125,6 +125,7 @@ type outmsg =
   | Nothing
   | Focus
   | Effect(Isolinear.Effect.t(msg))
+  | NewExtensions(list(Scanner.ScanResult.t))
   | InstallSucceeded({
       extensionId: string,
       contributions: Exthost.Extension.Contributions.t,
@@ -231,6 +232,8 @@ module Focus = {
 
   let initial = SearchText;
 
+  let searchText = initial;
+
   let moveDown = (~isSearching, focus) => {
     switch (focus) {
     | SearchText => Some(Installed)
@@ -256,7 +259,7 @@ type model = {
   extensions: list(Scanner.ScanResult.t),
   searchText: Component_InputText.model,
   latestQuery: option(Service_Extensions.Query.t),
-  extensionsFolder: option(Fp.t(Fp.absolute)),
+  extensionsFolder: option(FpExp.t(FpExp.absolute)),
   pendingInstalls: list(string),
   pendingUninstalls: list(string),
   globalValues: Yojson.Safe.t,
@@ -434,8 +437,7 @@ module Internal = {
     || name == "arcticicestudio.nord-visual-studio-code";
   };
   let markActivated = (id: string, model) => {
-    ...model,
-    activatedIds: [id, ...model.activatedIds],
+    {...model, activatedIds: [id, ...model.activatedIds]};
   };
 
   let getExtensions = (~category, model) => {
@@ -606,17 +608,34 @@ let checkAndUpdateSearchText = (~hasError, ~previousText, ~newText, ~query) =>
 
 let getExtensions = Internal.getExtensions;
 
-let update = (~extHostClient, msg, model) => {
+let update = (~extHostClient, ~proxy, msg, model) => {
   switch (msg) {
-  | Exthost(WillActivateExtension(_))
-  | Exthost(ExtensionRuntimeError(_)) => (model, Nothing)
+  | Exthost(WillActivateExtension(_)) => (model, Nothing)
+
+  | Exthost(ExtensionRuntimeError({extensionId, errorsJson})) => (
+      model,
+      NotifyFailure(
+        Printf.sprintf(
+          "Extension runtime error %s:%s",
+          Exthost.ExtensionId.toString(extensionId),
+          Yojson.Safe.to_string(`List(errorsJson)),
+        ),
+      ),
+    )
+
   | Exthost(ActivateExtension({extensionId, _})) => (
       Internal.markActivated(extensionId, model),
       Nothing,
     )
-  | Exthost(ExtensionActivationError({errorMessage, _})) => (
+  | Exthost(ExtensionActivationError({error, extensionId})) => (
       model,
-      NotifyFailure(Printf.sprintf("Error: %s", errorMessage)),
+      NotifyFailure(
+        Printf.sprintf(
+          "Error activating extension %s: %s",
+          Exthost.ExtensionId.toString(extensionId),
+          Exthost.ExtensionActivationError.toString(error),
+        ),
+      ),
     )
   | Exthost(DidActivateExtension({extensionId, _})) => (
       Internal.markActivated(extensionId, model),
@@ -659,7 +678,10 @@ let update = (~extHostClient, msg, model) => {
       (model', Effect(eff));
     }
 
-  | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
+  | Discovered(extensions) => (
+      Internal.add(extensions, model),
+      NewExtensions(extensions),
+    )
 
   | ExecuteCommand({command, arguments}) => (
       model,
@@ -718,10 +740,13 @@ let update = (~extHostClient, msg, model) => {
     let previousText = model.searchText |> Component_InputText.value;
     let (searchText', inputOutmsg) =
       Component_InputText.update(msg, model.searchText);
-    let outmsg =
+    let (model', outmsg) =
       switch (inputOutmsg) {
-      | Component_InputText.Nothing => Nothing
-      | Component_InputText.Focus => Focus
+      | Component_InputText.Nothing => (model, Nothing)
+      | Component_InputText.Focus => (
+          {...model, focusedWindow: Focus.searchText},
+          Focus,
+        )
       };
     let newText = searchText' |> Component_InputText.value;
     let (hasError, latestQuery) =
@@ -734,7 +759,7 @@ let update = (~extHostClient, msg, model) => {
 
     (
       {
-        ...model,
+        ...model',
         lastSearchHadError: hasError,
         searchText: searchText',
         latestQuery,
@@ -798,6 +823,7 @@ let update = (~extHostClient, msg, model) => {
     );
     let eff =
       Service_Extensions.Effects.install(
+        ~proxy,
         ~extensionsFolder=model.extensionsFolder,
         ~toMsg,
         extensionId,
@@ -812,6 +838,7 @@ let update = (~extHostClient, msg, model) => {
     );
     let eff =
       Service_Extensions.Effects.update(
+        ~proxy,
         ~extensionsFolder=model.extensionsFolder,
         ~toMsg,
         extensionId,
@@ -844,6 +871,7 @@ let update = (~extHostClient, msg, model) => {
       model,
       Effect(
         Service_Extensions.Effects.details(
+          ~proxy,
           ~extensionId,
           ~toMsg={
             fun

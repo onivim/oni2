@@ -1,6 +1,6 @@
 module Key: {
   type t =
-    | Character(char)
+    | Character(Uchar.t)
     | Function(int)
     | NumpadDigit(int)
     | Escape
@@ -39,7 +39,7 @@ module Modifiers: {
     alt: bool,
     altGr: bool,
     shift: bool,
-    meta: bool,
+    super: bool,
   };
 
   let none: t;
@@ -76,8 +76,8 @@ module KeyPress: {
     | SpecialKey(SpecialKey.t);
 
   let toString:
-    // The name of the 'meta' key. Defaults to "Meta".
-    (~meta: string=?, ~keyToString: Key.t => string=?, t) => string;
+    // The name of the 'super' key. Defaults to "Super".
+    (~super: string=?, ~keyToString: Key.t => string=?, t) => string;
 
   let physicalKey: (~key: Key.t, ~modifiers: Modifiers.t) => t;
 
@@ -130,6 +130,8 @@ module Matcher: {
     // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
     // (Vim style parsing)
     (~explicitShiftKeyNeeded: bool, string) => result(t, string);
+
+  let toString: t => string;
 };
 
 module type Input = {
@@ -183,7 +185,9 @@ module type Input = {
       t
     ) =>
     (t, list(effect));
+
   let text: (~text: string, t) => (t, list(effect));
+
   let keyUp:
     (
       ~leaderKey: option(PhysicalKey.t)=?,
@@ -192,6 +196,8 @@ module type Input = {
       t
     ) =>
     (t, list(effect));
+
+  let timeout: (~context: context, t) => (t, list(effect));
 
   // [candidates] returns a list of available matcher / command
   // candidates, based on the current context and input state.

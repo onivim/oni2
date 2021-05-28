@@ -64,6 +64,7 @@ describe("Wrapping", ({describe, _}) => {
         let update =
           BufferUpdate.{
             id: 0,
+            shouldAdjustCursorPosition: false,
             startLine: LineNumber.ofZeroBased(0),
             endLine: LineNumber.ofZeroBased(1),
             lines: [|"aaaa"|],
@@ -88,6 +89,7 @@ describe("Wrapping", ({describe, _}) => {
         let update =
           BufferUpdate.{
             id: 0,
+            shouldAdjustCursorPosition: false,
             startLine: LineNumber.ofZeroBased(0),
             endLine: LineNumber.ofZeroBased(1),
             lines: [|"aa"|],
@@ -156,6 +158,7 @@ describe("Wrapping", ({describe, _}) => {
       let update =
         BufferUpdate.{
           id: 0,
+          shouldAdjustCursorPosition: false,
           startLine: LineNumber.ofZeroBased(0),
           endLine: LineNumber.ofZeroBased(1),
           lines: [|"aaa"|],
@@ -183,6 +186,7 @@ describe("Wrapping", ({describe, _}) => {
       let update =
         BufferUpdate.{
           id: 0,
+          shouldAdjustCursorPosition: false,
           startLine: LineNumber.ofZeroBased(0),
           endLine: LineNumber.ofZeroBased(1),
           lines: [|"aaaa"|],
@@ -216,6 +220,7 @@ describe("Wrapping", ({describe, _}) => {
         BufferUpdate.{
           id: 0,
           startLine: LineNumber.ofZeroBased(0),
+          shouldAdjustCursorPosition: false,
           endLine: LineNumber.ofZeroBased(1),
           lines: [|"aaaa"|],
           isFull: false,

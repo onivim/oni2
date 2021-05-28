@@ -2,6 +2,7 @@
      This feature project contains logic related to Hover
    */
 open Oni_Core;
+module OptionEx = Utility.OptionEx;
 open Revery;
 open Revery.UI;
 open EditorCoreTypes;
@@ -14,31 +15,51 @@ type provider = {
   selector: Exthost.DocumentSelector.t,
 };
 
+module Session = {
+  type t = {
+    range: option(CharacterRange.t),
+    triggeredFrom: [
+      | `CommandPalette(CharacterPosition.t)
+      | `Mouse(CharacterPosition.t)
+    ],
+    requestId: int,
+    editorId: int,
+    contents: list(Exthost.MarkdownString.t),
+    diagnostics: list(Feature_Diagnostics.Diagnostic.t),
+  };
+
+  let start = (~diagnostics, ~requestId, ~editorId, ~triggeredFrom) => {
+    range: None,
+    triggeredFrom,
+    requestId,
+    editorId,
+    contents: [],
+    diagnostics,
+  };
+
+  let hasContent = session =>
+    session.contents != [] || session.diagnostics != [];
+
+  let position = ({triggeredFrom, _}) =>
+    switch (triggeredFrom) {
+    | `CommandPalette(pos) => pos
+    | `Mouse(pos) => pos
+    };
+
+  let containsPosition = (~position as pos, model) => {
+    pos == position(model)
+    || Option.map(CharacterRange.contains(pos), model.range)
+    |> Option.value(~default=false);
+  };
+};
+
 type model = {
   shown: bool,
   providers: list(provider),
-  contents: list(Exthost.MarkdownString.t),
-  range: option(EditorCoreTypes.CharacterRange.t),
-  triggeredFrom:
-    option(
-      [
-        | `CommandPalette(EditorCoreTypes.CharacterPosition.t)
-        | `Mouse(EditorCoreTypes.CharacterPosition.t)
-      ],
-    ),
-  lastRequestID: option(int),
-  editorID: option(int),
+  activeSession: option(Session.t),
 };
 
-let initial = {
-  shown: false,
-  providers: [],
-  contents: [],
-  range: None,
-  triggeredFrom: None,
-  lastRequestID: None,
-  editorID: None,
-};
+let initial = {shown: false, providers: [], activeSession: None};
 
 module IDGenerator =
   Oni_Core.Utility.IDGenerator.Make({});
@@ -54,8 +75,8 @@ type msg =
   | HoverInfoReceived({
       contents: list(Exthost.MarkdownString.t),
       range: option(EditorCoreTypes.CharacterRange.t),
-      requestID: int,
-      editorID: int,
+      requestId: int,
+      editorId: int,
     })
   | HoverRequestFailed(string)
   | MouseHovered(option(EditorCoreTypes.CharacterPosition.t))
@@ -66,7 +87,7 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg));
 
 let getEffectsForLocation =
-    (~buffer, ~location, ~extHostClient, ~model, ~requestID, ~editorId) => {
+    (~buffer, ~location, ~extHostClient, ~model, ~requestId, ~editorId) => {
   let matchingProviders =
     model.providers
     |> List.filter(({selector, _}) =>
@@ -86,8 +107,8 @@ let getEffectsForLocation =
            HoverInfoReceived({
              contents,
              range: Option.map(Exthost.OneBasedRange.toRange, range),
-             requestID,
-             editorID: editorId,
+             requestId,
+             editorId,
            })
          | Error(s) => HoverRequestFailed(s)
          }
@@ -96,9 +117,22 @@ let getEffectsForLocation =
   |> Isolinear.Effect.batch;
 };
 
+let getDiagnosticsForPosition =
+    (~buffer, ~languageConfiguration, ~diagnostics, ~position) => {
+  let maybeRange = Buffer.tokenAt(~languageConfiguration, position, buffer);
+
+  maybeRange
+  |> Option.map(range => {
+       Feature_Diagnostics.getDiagnosticsInRange(diagnostics, buffer, range)
+     })
+  |> Option.value(~default=[]);
+};
+
 let update =
     (
+      ~languageConfiguration,
       ~cursorLocation: CharacterPosition.t,
+      ~diagnostics,
       ~maybeBuffer,
       ~editorId,
       ~extHostClient,
@@ -109,22 +143,36 @@ let update =
   | Command(Show) =>
     switch (maybeBuffer) {
     | Some(buffer) =>
-      let requestID = IDGenerator.get();
+      let requestId = IDGenerator.get();
       let effects =
         getEffectsForLocation(
           ~buffer,
           ~location=cursorLocation,
           ~extHostClient,
           ~model,
-          ~requestID,
+          ~requestId,
           ~editorId,
         );
+
       (
         {
           ...model,
           shown: true,
-          triggeredFrom: Some(`CommandPalette(cursorLocation)),
-          lastRequestID: Some(requestID),
+          activeSession:
+            Some(
+              Session.start(
+                ~diagnostics=
+                  getDiagnosticsForPosition(
+                    ~buffer,
+                    ~diagnostics,
+                    ~position=cursorLocation,
+                    ~languageConfiguration,
+                  ),
+                ~requestId,
+                ~editorId,
+                ~triggeredFrom=`CommandPalette(cursorLocation),
+              ),
+            ),
         },
         Effect(effects),
       );
@@ -133,32 +181,45 @@ let update =
     }
   | MouseHovered(maybeLocation) =>
     let requestNewHover = (buffer, location) => {
-      let requestID = IDGenerator.get();
+      let requestId = IDGenerator.get();
       let effects =
         getEffectsForLocation(
           ~buffer,
           ~location,
           ~extHostClient,
           ~model,
-          ~requestID,
+          ~requestId,
           ~editorId,
         );
       (
         {
           ...model,
           shown: true,
-          triggeredFrom: Some(`Mouse(location)),
-          lastRequestID: Some(requestID),
+          activeSession:
+            Some(
+              Session.start(
+                ~diagnostics=
+                  getDiagnosticsForPosition(
+                    ~buffer,
+                    ~diagnostics,
+                    ~position=cursorLocation,
+                    ~languageConfiguration,
+                  ),
+                ~requestId,
+                ~editorId,
+                ~triggeredFrom=`Mouse(location),
+              ),
+            ),
         },
         Effect(effects),
       );
     };
     switch (maybeBuffer) {
     | Some(buffer) =>
-      switch (maybeLocation, model.range) {
+      switch (maybeLocation, model.activeSession) {
       | (Some(location), None) => requestNewHover(buffer, location)
-      | (Some(location), Some(range))
-          when !EditorCoreTypes.CharacterRange.contains(location, range) =>
+      | (Some(location), Some(session))
+          when !Session.containsPosition(~position=location, session) =>
         requestNewHover(buffer, location)
       | _ => (model, Nothing)
       }
@@ -166,62 +227,36 @@ let update =
     };
   | MouseMoved(maybeLocation) =>
     let newModel =
-      switch (model.range, maybeLocation) {
-      | (Some(range), Some(location)) =>
-        if (EditorCoreTypes.CharacterRange.contains(location, range)) {
+      switch (model.activeSession, maybeLocation) {
+      | (Some(session), Some(location)) =>
+        if (Session.containsPosition(~position=location, session)) {
           model;
         } else {
-          {
-            ...model,
-            shown: false,
-            range: None,
-            contents: [],
-            triggeredFrom: None,
-          };
+          {...model, shown: false, activeSession: None};
         }
 
-      | _ => {
-          ...model,
-          shown: false,
-          range: None,
-          contents: [],
-          triggeredFrom: None,
-        }
+      | _ => {...model, shown: false, activeSession: None}
       };
     (newModel, Nothing);
-  | KeyPressed(_) => (
-      {
-        ...model,
-        shown: false,
-        contents: [],
-        range: None,
-        triggeredFrom: None,
-      },
-      Nothing,
-    )
-  | HoverInfoReceived({contents, range, requestID, editorID}) =>
-    switch (model.lastRequestID) {
-    | Some(id) when requestID == id => (
-        {
-          ...model,
-          contents,
-          range,
-          lastRequestID: None,
-          editorID: Some(editorID),
-        },
-        Nothing,
-      )
-    | _ => (model, Nothing)
-    }
-  | _ => (model, Nothing)
+  | KeyPressed(_) => ({...model, shown: false, activeSession: None}, Nothing)
+  | HoverInfoReceived({contents, range, requestId, editorId}) =>
+    let activeSession' =
+      model.activeSession
+      |> Option.map((session: Session.t) =>
+           if (requestId == session.requestId && editorId == session.editorId) {
+             Session.{...session, contents, range};
+           } else {
+             session;
+           }
+         );
+    ({...model, activeSession: activeSession'}, Nothing);
+  | HoverRequestFailed(_) => (model, Nothing)
   };
 
 let keyPressed = (_key, model) => {
   ...model,
   shown: false,
-  contents: [],
-  range: None,
-  triggeredFrom: None,
+  activeSession: None,
 };
 
 let register = (~handle, ~selector, model) => {
@@ -256,7 +291,6 @@ module Styles = {
   module Colors = Feature_Theme.Colors;
 
   let diagnostic = (~theme) => [
-    textOverflow(`Ellipsis),
     color(Colors.Editor.foreground.from(theme)),
     backgroundColor(Colors.EditorHoverWidget.background.from(theme)),
   ];
@@ -265,7 +299,6 @@ module Styles = {
 module Popup = {
   let make =
       (
-        ~diagnostics,
         ~theme,
         ~tokenTheme,
         ~languageInfo,
@@ -276,77 +309,64 @@ module Popup = {
         ~buffer,
         ~editorId,
       ) =>
-    if (model.editorID != editorId) {
-      None;
-    } else if (model.contents == []) {
+    if (!model.shown) {
       None;
     } else {
-      let maybeLocation: option(EditorCoreTypes.CharacterPosition.t) =
-        switch (model.triggeredFrom, model.shown) {
-        | (Some(trigger), true) =>
-          switch (trigger) {
-          | `Mouse(location) => Some(location)
-          | `CommandPalette(location) => Some(location)
-          }
-        | _ => None
-        };
+      model.activeSession
+      |> OptionEx.filter((session: Session.t) =>
+           session.editorId == editorId
+         )
+      |> OptionEx.filter(Session.hasContent)
+      |> Option.map((session: Session.t) => {
+           let position = Session.position(session);
+           let defaultLanguage =
+             buffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
-      let defaultLanguage =
-        buffer |> Buffer.getFileType |> Buffer.FileType.toString;
+           let hoverDiagnostic =
+               (~diagnostic: Feature_Diagnostics.Diagnostic.t, ()) => {
+             <Text
+               text={diagnostic.message}
+               fontFamily={editorFont.fontFamily}
+               fontSize={editorFont.fontSize}
+               style={Styles.diagnostic(~theme)}
+             />;
+           };
 
-      let hoverDiagnostic =
-          (~diagnostic: Feature_Diagnostics.Diagnostic.t, ()) => {
-        <Text
-          text={diagnostic.message}
-          fontFamily={editorFont.fontFamily}
-          fontSize={editorFont.fontSize}
-          style={Styles.diagnostic(~theme)}
-        />;
-      };
+           let hoverMarkdown = (~markdown) => {
+             Oni_Components.Markdown.make(
+               ~colorTheme=theme,
+               ~tokenTheme,
+               ~languageInfo,
+               ~defaultLanguage,
+               ~fontFamily={
+                 uiFont.family;
+               },
+               ~codeFontFamily={
+                 editorFont.fontFamily;
+               },
+               ~grammars,
+               ~markdown=Exthost.MarkdownString.toString(markdown),
+               ~baseFontSize=uiFont.size,
+               ~codeBlockStyle=Style.[flexGrow(1)],
+               ~codeBlockFontSize=editorFont.fontSize,
+             );
+           };
 
-      let hoverMarkdown = (~markdown) => {
-        Oni_Components.Markdown.make(
-          ~colorTheme=theme,
-          ~tokenTheme,
-          ~languageInfo,
-          ~defaultLanguage,
-          ~fontFamily={
-            uiFont.family;
-          },
-          ~codeFontFamily={
-            editorFont.fontFamily;
-          },
-          ~grammars,
-          ~markdown=Exthost.MarkdownString.toString(markdown),
-          ~baseFontSize=uiFont.size,
-          ~codeBlockStyle=Style.[flexGrow(1)],
-          ~codeBlockFontSize=editorFont.fontSize,
-        );
-      };
-
-      maybeLocation
-      |> Option.map(location => {
            let hoverElement = {
-             List.map(markdown => <hoverMarkdown markdown />, model.contents)
+             List.map(
+               markdown => <hoverMarkdown markdown />,
+               session.contents,
+             )
              |> React.listToElement;
            };
 
-           let diagnostics =
-             Feature_Diagnostics.getDiagnosticsAtPosition(
-               diagnostics,
-               buffer,
-               location,
-             );
-
            let diagnosticsSection =
-             if (diagnostics == []) {
+             if (session.diagnostics == []) {
                [];
              } else {
                let element =
-                 List.map(
-                   diag => <hoverDiagnostic diagnostic=diag />,
-                   diagnostics,
-                 )
+                 session.diagnostics
+                 |> List.map(diag => <hoverDiagnostic diagnostic=diag />)
                  |> React.listToElement;
                [Oni_Components.Popup.Section.{element, position: `Below}];
              };
@@ -357,7 +377,7 @@ module Popup = {
                position: `Below,
              },
            ];
-           (location, diagnosticsSection @ hoverSection);
+           (position, diagnosticsSection @ hoverSection);
          });
     };
 };

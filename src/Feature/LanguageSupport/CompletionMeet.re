@@ -14,8 +14,11 @@ type t = {
   bufferId: int,
   // Base is the prefix string
   base: string,
-  // Meet is the location where we request completions
+  // `location` is the location where we request completions
   location: CharacterPosition.t,
+  // `insertLocation` is the location where snippets are keywords should begin insertion
+  // Often, this will be overridden by the completion provider
+  insertLocation: CharacterPosition.t,
 };
 
 let shiftMeet = (~edits, meet) => {
@@ -30,6 +33,14 @@ let shiftMeet = (~edits, meet) => {
            let delta = Exthost.Edit.SingleEditOperation.deltaLineCount(edit);
            {
              ...meet,
+             insertLocation:
+               CharacterPosition.{
+                 line:
+                   EditorCoreTypes.LineNumber.(
+                     meet.insertLocation.line + delta
+                   ),
+                 character: meet.insertLocation.character,
+               },
              location:
                CharacterPosition.{
                  line: EditorCoreTypes.LineNumber.(meet.location.line + delta),
@@ -82,13 +93,14 @@ let fromLine =
 
   let rec loop = (acc, currentPos) =>
     if (currentPos < 0) {
-      (false, [], 0);
+      (true, false, [], 0);
     } else {
       let uchar =
         BufferLine.getUcharExn(
           ~index=CharacterIndex.ofInt(currentPos),
           line,
         );
+      let isSpace = Uucp.White.is_white_space(uchar);
       let matchesTrigger = matchesTriggerCharacters(uchar);
       let isWordCharacter =
         LanguageConfiguration.isWordCharacter(uchar, languageConfiguration);
@@ -97,29 +109,47 @@ let fromLine =
         // an empty string is valid. However, if it's just a non-word character,
         // we require at least a single character for a meet.
         let validLength = matchesTriggerCharacters(uchar) ? 0 : 1;
-        (List.length(acc) >= validLength, acc, currentPos + 1);
+        (isSpace, List.length(acc) >= validLength, acc, currentPos + 1);
       } else if (currentPos == 0) {
         let all = [uchar, ...acc];
-        (List.length(all) >= 1, all, currentPos);
+        (true, List.length(all) >= 1, all, currentPos);
       } else {
         loop([uchar, ...acc], currentPos - 1);
       };
     };
 
-  let (isValid, characters, pos) = loop([], idx);
+  let (isPreviousCharacterASpace, isValid, characters, pos) = loop([], idx);
   let base = Zed_utf8.implode(characters);
 
   if (isValid) {
-    let meet = {
-      bufferId,
-      location:
+    // If the token is after a space, we should use the first character as the
+    // query position. This mimics the behavior of Code, and some language extensions
+    // won't return valid results if the string is 'empty' - see:
+    // https://github.com/onivim/oni2/issues/3258
+    if (isPreviousCharacterASpace) {
+      let location =
+        CharacterPosition.{
+          line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+          character: CharacterIndex.ofInt(pos + 1),
+        };
+
+      let insertLocation =
         CharacterPosition.{
           line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
           character: CharacterIndex.ofInt(pos),
-        },
-      base,
+        };
+      let meet = {bufferId, location, insertLocation, base};
+
+      Some(meet);
+    } else {
+      let location =
+        CharacterPosition.{
+          line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+          character: CharacterIndex.ofInt(pos),
+        };
+      let meet = {bufferId, location, insertLocation: location, base};
+      Some(meet);
     };
-    Some(meet);
   } else {
     None;
   };

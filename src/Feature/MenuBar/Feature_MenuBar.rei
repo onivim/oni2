@@ -22,6 +22,18 @@ let update:
   ) =>
   (model, outmsg);
 
+// SUBSCRIPTION
+
+let sub:
+  (
+    ~config: Config.resolver,
+    ~contextKeys: WhenExpr.ContextKeys.t,
+    ~commands: Command.Lookup.t(_),
+    ~input: Feature_Input.model,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
+
 module Global = Global;
 
 module View: {

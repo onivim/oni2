@@ -31,7 +31,7 @@ type t = {
 let writeTransport =
     (~id=0, transport: Transport.t, msg: Protocol.ClientToServer.t) => {
   let bytes = Marshal.to_bytes(msg, []);
-  let packet = Transport.Packet.create(~packetType=Regular, ~id, ~bytes);
+  let packet = Transport.Packet.create(~packetType=Regular, ~id, bytes);
   Transport.send(~packet, transport);
 };
 
@@ -194,7 +194,7 @@ module Testing = {
   let simulateReadException = ({transport, _}: t) => {
     let id = 1;
     let bytes = Bytes.make(128, 'a');
-    let packet = Transport.Packet.create(~packetType=Regular, ~id, ~bytes);
+    let packet = Transport.Packet.create(~packetType=Regular, ~id, bytes);
     ClientLog.trace("Simulating a bad packet...");
     Transport.send(~packet, transport);
   };

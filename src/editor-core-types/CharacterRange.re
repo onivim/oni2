@@ -56,6 +56,65 @@ let contains = (position: CharacterPosition.t, range) => {
   );
 };
 
+let containsRange = (~query, range) => {
+  let start = query.start;
+  let stop = query.stop;
+
+  contains(start, range) && contains(stop, range);
+};
+
+let intersects = (a, b) => {
+  // A intersects with b
+  contains(a.start, b)
+  || contains(a.stop, b)
+  // or, b totally contains a
+  // or, a totally contains b
+  || containsRange(~query=a, b)
+  || containsRange(~query=b, a);
+};
+
+let shiftLine = (~afterLine: LineNumber.t, ~delta, range) => {
+  LineNumber.(
+    {
+      let start' =
+        if (range.start.line >= afterLine) {
+          {...range.start, line: range.start.line + delta};
+        } else {
+          range.start;
+        };
+
+      let stop' =
+        if (range.stop.line >= afterLine) {
+          {...range.stop, line: range.stop.line + delta};
+        } else {
+          range.stop;
+        };
+      {start: start', stop: stop'};
+    }
+  );
+};
+
+let shiftCharacters = (~line, ~afterCharacter, ~delta, range) => {
+  CharacterIndex.(
+    {
+      let start' =
+        if (range.start.line == line && range.start.character >= afterCharacter) {
+          {...range.start, character: range.start.character + delta};
+        } else {
+          range.start;
+        };
+
+      let stop' =
+        if (range.stop.line == line && range.stop.character >= afterCharacter) {
+          {...range.stop, character: range.stop.character + delta};
+        } else {
+          range.stop;
+        };
+      {start: start', stop: stop'};
+    }
+  );
+};
+
 let toHash = ranges => {
   let hash = Hashtbl.create(100);
 
@@ -75,6 +134,17 @@ let toHash = ranges => {
 
   hash;
 };
+
+let compare = (a, b) =>
+  if (a.start.line != b.start.line) {
+    LineNumber.compare(a.start.line, b.start.line);
+  } else if (a.start.character != b.stop.character) {
+    CharacterIndex.compare(a.start.character, b.start.character);
+  } else if (a.stop.line != b.stop.line) {
+    LineNumber.compare(a.stop.line, b.stop.line);
+  } else {
+    CharacterIndex.compare(a.stop.character, b.stop.character);
+  };
 
 let equals = (a, b) =>
   CharacterPosition.(a.start == b.start && a.stop == b.stop);

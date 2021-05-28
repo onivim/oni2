@@ -11,9 +11,10 @@ type state =
 type model = {
   state,
   providers: list(provider),
+  pane: ReferencesPane.model,
 };
 
-let initial = {state: Empty, providers: []};
+let initial = {state: Empty, providers: [], pane: ReferencesPane.initial};
 
 [@deriving show]
 type command =
@@ -22,6 +23,7 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
+  | Pane(ReferencesPane.msg)
   | ReferencesNotAvailable
   | ReferencesFound([@opaque] list(Exthost.Location.t));
 
@@ -32,7 +34,18 @@ let get = ({state, _}) =>
   | Found(items) => items
   };
 
-let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) => {
+let update =
+    (
+      ~font,
+      ~buffers,
+      ~languageInfo,
+      ~previewEnabled,
+      ~maybeBuffer,
+      ~cursorLocation,
+      ~client,
+      msg,
+      model,
+    ) => {
   switch (msg) {
   | Command(FindAll) =>
     let eff =
@@ -58,7 +71,25 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) => {
         |> Isolinear.Effect.batch
       };
     ({...model, state: InProgress}, Outmsg.Effect(eff));
+
   | ReferencesNotAvailable => (model, Outmsg.Nothing)
+
+  | Pane(paneMsg) =>
+    let (pane', outmsg) =
+      ReferencesPane.update(
+        ~previewEnabled,
+        ~languageInfo,
+        ~buffers,
+        ~font,
+        paneMsg,
+        model.pane,
+      );
+
+    (
+      {...model, pane: pane'},
+      outmsg |> Outmsg.map(paneMsg => Pane(paneMsg)),
+    );
+
   | ReferencesFound(locations) =>
     let state' =
       switch (model.state) {
@@ -66,7 +97,16 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) => {
       | InProgress => Found(locations)
       | Found(prevLocations) => Found(locations @ prevLocations)
       };
-    ({...model, state: state'}, Outmsg.ReferencesAvailable);
+
+    let model' = {...model, state: state'};
+    let locations = get(model');
+    let pane' =
+      ReferencesPane.setLocations(
+        ~maybeActiveBuffer=maybeBuffer,
+        ~locations,
+        model.pane,
+      );
+    ({...model', pane: pane'}, Outmsg.ReferencesAvailable);
   };
 };
 
@@ -105,4 +145,11 @@ module Keybindings = {
 module Contributions = {
   let commands = Commands.[findAll];
   let keybindings = Keybindings.[shiftF12];
+
+  let pane =
+    ReferencesPane.pane
+    |> Feature_Pane.Schema.map(
+         ~msg=msg => Pane(msg),
+         ~model=({pane, _}) => pane,
+       );
 };

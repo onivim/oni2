@@ -7,18 +7,20 @@ type msg;
 
 module Msg: {
   let keyPressed: string => msg;
-  let activeFileChanged: option(string) => msg;
+  let activeFileChanged: option(FpExp.t(FpExp.absolute)) => msg;
 };
 
 type model;
 
-let initial: (~rootPath: option(string)) => model;
+let initial: (~rootPath: option(FpExp.t(FpExp.absolute))) => model;
 
-let setRoot: (~rootPath: option(string), model) => model;
+let setRoot: (~rootPath: option(FpExp.t(FpExp.absolute)), model) => model;
 
-let root: model => option(string);
+let root: model => option(FpExp.t(FpExp.absolute));
 
 let focusOutline: model => model;
+
+let configurationChanged: (~config: Config.resolver, model) => model;
 
 // UPDATE
 
@@ -27,18 +29,20 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
   | PreviewFile(string)
+  | WatchedPathChanged({
+      path: FpExp.t(FpExp.absolute),
+      stat: option(Luv.File.Stat.t),
+    })
   | GrabFocus
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)
   | PickFolder;
 
-let update:
-  (~configuration: Oni_Core.Configuration.t, msg, model) => (model, outmsg);
+let update: (~config: Config.resolver, msg, model) => (model, outmsg);
 
 // SUBSCRIPTION
 
-let sub:
-  (~configuration: Oni_Core.Configuration.t, model) => Isolinear.Sub.t(msg);
+let sub: (~config: Config.resolver, model) => Isolinear.Sub.t(msg);
 
 // VIEW
 
@@ -46,6 +50,7 @@ module View: {
   let make:
     (
       ~key: Brisk_reconciler.Key.t=?,
+      ~config: Config.resolver,
       ~isFocused: bool,
       ~iconTheme: IconTheme.t,
       ~languageInfo: Exthost.LanguageInfo.t,

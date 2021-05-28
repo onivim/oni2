@@ -5,7 +5,14 @@ open Oni_Model;
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
 let create =
-    (~initialWorkspace, ~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
+    (
+      ~initialWorkspace,
+      ~attachStdio,
+      ~config,
+      ~extensions,
+      ~setup: Setup.t,
+      ~proxy: Service_Net.Proxy.t,
+    ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   Log.infof(m =>
@@ -26,13 +33,25 @@ let create =
       | Initialized =>
         dispatch(Actions.Exthost(Feature_Exthost.Msg.initialized));
         Lwt.return(Reply.okEmpty);
-      | DownloadService(msg) => Middleware.download(msg)
+      | DownloadService(Download({uri, dest})) =>
+        let uri = uri |> Oni_Core.Uri.toString;
+        let dest = dest |> Oni_Core.Uri.toFileSystemPath;
 
-      | FileSystem(msg) =>
+        Service_Net.Request.download(
+          ~proxy,
+          ~dest,
+          ~setup=Oni_Core.Setup.init(),
+          uri,
+        )
+        |> Lwt.map(_ => Reply.okEmpty);
+
+      | FileSystem(fileMsg) =>
         let (promise, resolver) = Lwt.task();
 
-        let fileSystemMsg = Feature_FileSystem.Msg.exthost(~resolver, msg);
+        let fileSystemMsg =
+          Feature_FileSystem.Msg.exthost(~resolver, fileMsg);
         dispatch(FileSystem(fileSystemMsg));
+
         promise;
 
       | SCM(msg) =>
@@ -50,21 +69,14 @@ let create =
 
         promise;
 
-      | Configuration(RemoveConfigurationOption({key, _})) =>
-        dispatch(
-          Actions.ConfigurationTransform(
-            "configuration.json",
-            ConfigurationTransformer.removeField(key),
-          ),
-        );
+      | Commands(ExecuteCommand({command, args, _})) =>
+        // TODO: Is this really the right action?
+        dispatch(Actions.CommandInvoked({command, arguments: `List(args)}));
         Lwt.return(Reply.okEmpty);
 
-      | Configuration(UpdateConfigurationOption({key, value, _})) =>
+      | Configuration(msg) =>
         dispatch(
-          Actions.ConfigurationTransform(
-            "configuration.json",
-            ConfigurationTransformer.setField(key, value),
-          ),
+          Actions.Configuration(Feature_Configuration.Msg.exthost(msg)),
         );
         Lwt.return(Reply.okEmpty);
 
@@ -106,20 +118,6 @@ let create =
         Log.infof(m => m("ExtensionService: %s", Exthost.Msg.show(msg)));
         dispatch(
           Actions.Extensions(Feature_Extensions.Msg.exthost(extMsg)),
-        );
-        Lwt.return(Reply.okEmpty);
-
-      | LanguageFeatures(
-          RegisterSignatureHelpProvider({handle, selector, metadata}),
-        ) =>
-        dispatch(
-          Actions.SignatureHelp(
-            Feature_SignatureHelp.Msg.providerAvailable({
-              handle,
-              selector,
-              metadata,
-            }),
-          ),
         );
         Lwt.return(Reply.okEmpty);
 
@@ -188,10 +186,10 @@ let create =
           }),
         ) =>
         let command =
-          command |> Option.map(({id, _}: Exthost.Command.t) => id);
+          command |> OptionEx.flatMap(({id, _}: Exthost.Command.t) => id);
         dispatch(
           Actions.StatusBar(
-            Feature_StatusBar.ItemAdded(
+            Feature_StatusBar.Msg.itemAdded(
               Feature_StatusBar.Item.create(
                 ~command?,
                 ~color?,
@@ -209,7 +207,11 @@ let create =
         Lwt.return(Reply.okEmpty);
 
       | StatusBar(Dispose({id})) =>
-        dispatch(Actions.StatusBar(ItemDisposed(id |> string_of_int)));
+        dispatch(
+          Actions.StatusBar(
+            Feature_StatusBar.Msg.itemDisposed(id |> string_of_int),
+          ),
+        );
         Lwt.return(Reply.okEmpty);
 
       | TerminalService(msg) =>
@@ -221,8 +223,20 @@ let create =
           : Lwt.return(Reply.error("Unable to open URI"))
       | Window(GetWindowVisibility) =>
         Lwt.return(Reply.okJson(`Bool(true)))
-      | Workspace(StartFileSearch({includePattern, excludePattern, _})) =>
+
+      | Workspace(SaveAll({includeUntitled})) =>
+        ignore(includeUntitled);
+
+        dispatch(
+          Actions.VimExecuteCommand({command: "wa!", allowAnimation: false}),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | Workspace(
+          StartFileSearch({includePattern, excludePattern, maxResults}),
+        ) =>
         Service_OS.Api.glob(
+          ~maxCount=?maxResults,
           ~includeFiles=?includePattern,
           ~excludeDirectories=?excludePattern,
           // TODO: Pull from store
@@ -253,8 +267,8 @@ let create =
 
   let tempDir = Filename.get_temp_dir_name();
 
-  let logFile = tempDir |> Uri.fromPath;
-  let logsLocation =
+  let logsLocation = tempDir |> Uri.fromPath;
+  let logFile =
     Filename.temp_file(~temp_dir=tempDir, "onivim2", "exthost.log")
     |> Uri.fromPath;
 
@@ -281,12 +295,22 @@ let create =
     |> Option.value(~default=originalVersion);
   };
 
+  let staticWorkspace =
+    initialWorkspace
+    |> Option.map(({id, name, _}: Exthost.WorkspaceData.t) => {
+         Exthost.Extension.InitData.StaticWorkspaceData.{id, name}
+       })
+    |> Option.value(
+         ~default=Exthost.Extension.InitData.StaticWorkspaceData.global,
+       );
+
   let initData =
     InitData.create(
       ~version=extHostVersion,
       ~parentPid,
       ~logsLocation,
       ~logFile,
+      ~workspace=staticWorkspace,
       extensionInfo,
     );
 
@@ -298,9 +322,8 @@ let create =
     Exthost.Client.start(
       ~initialConfiguration=
         Feature_Configuration.toExtensionConfiguration(
+          ~additionalExtensions=extensions,
           config,
-          extensions,
-          setup,
         ),
       ~initialWorkspace,
       ~namedPipe,
@@ -332,7 +355,7 @@ let create =
        );
   let environment = [
     (
-      "AMD_ENTRYPOINT",
+      "VSCODE_AMD_ENTRYPOINT",
       "vs/workbench/services/extensions/node/extensionHostProcess",
     ),
     ("VSCODE_IPC_HOOK_EXTHOST", pipeStr),

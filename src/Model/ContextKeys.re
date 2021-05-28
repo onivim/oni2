@@ -1,10 +1,10 @@
 open WhenExpr.ContextKeys;
 
-let menus = (~isFocused) => {
+let menus = (~isFocused, ~isNewQuickMenuOpen) => {
   Schema.(
     fromList(
       // TODO: This should be factored to a feature...
-      isFocused
+      isFocused || isNewQuickMenuOpen
         ? Quickmenu.[
             bool(
               "commandLineFocus",
@@ -12,8 +12,8 @@ let menus = (~isFocused) => {
               | Some({variant: Wildmenu(_), _}) => true
               | _ => false,
             ),
-            bool("listFocus", model => model != None),
-            bool("inQuickOpen", model => model != None),
+            bool("listFocus", model => isNewQuickMenuOpen || model != None),
+            bool("inQuickOpen", model => isNewQuickMenuOpen || model != None),
             bool(
               "inEditorsPicker",
               fun
@@ -25,7 +25,7 @@ let menus = (~isFocused) => {
               fun
               | Some({variant: EditorsPicker, _}) => false
               | Some(_) => true
-              | None => false,
+              | None => isNewQuickMenuOpen,
             ),
             bool(
               "quickmenuCursorEnd",
@@ -45,63 +45,60 @@ let editors = (~isFocused) => {
   Schema.(
     fromList(
       isFocused
-        ? State.[
-            bool("editorTextFocus", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalInsert
-              | TerminalNormal
-              | TerminalVisual(_) => false
-              | _ => true
-              }
-            ),
-            bool("terminalFocus", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalInsert
-              | TerminalNormal
-              | TerminalVisual(_) => true
-              | _ => false
-              }
-            ),
-            bool("commandLineFocus", state =>
-              ModeManager.current(state) == CommandLine
-            ),
-            bool("insertMode", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalInsert
-              | Insert(_) => true
-              | _ => false
-              }
-            ),
-            bool("normalMode", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalNormal
-              | Normal(_) => true
-              | _ => false
-              }
-            ),
-            bool("visualMode", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalVisual(_)
-              | Visual(_) => true
-              | _ => false
-              }
-            ),
-            bool("selectMode", state =>
-              switch (ModeManager.current(state)) {
-              | Select(_) => true
-              | _ => false
-              }
-            ),
-            bool("operatorPending", state =>
-              switch (ModeManager.current(state)) {
-              | Operator(_) => true
-              | _ => false
-              }
-            ),
-            bool("parameterHintsVisible", state =>
-              Feature_SignatureHelp.isShown(state.signatureHelp)
-            ),
-          ]
+        ? [
+          bool("editorTextFocus", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalInsert
+            | TerminalNormal
+            | TerminalVisual(_) => false
+            | _ => true
+            }
+          ),
+          bool("terminalFocus", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalInsert
+            | TerminalNormal
+            | TerminalVisual(_) => true
+            | _ => false
+            }
+          ),
+          bool("commandLineFocus", state =>
+            ModeManager.current(state) == CommandLine
+          ),
+          bool("insertMode", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalInsert
+            | Insert(_) => true
+            | _ => false
+            }
+          ),
+          bool("normalMode", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalNormal
+            | Normal(_) => true
+            | _ => false
+            }
+          ),
+          bool("visualMode", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalVisual(_)
+            | Visual(_) => true
+            | _ => false
+            }
+          ),
+          bool("selectMode", state =>
+            switch (ModeManager.current(state)) {
+            | Select(_) => true
+            | _ => false
+            }
+          ),
+          bool("operatorPending", state =>
+            switch (ModeManager.current(state)) {
+            | Operator(_) => true
+            | _ => false
+            }
+          ),
+        ]
         : [],
     )
   );
@@ -115,7 +112,6 @@ let other = {
         bool("isMac", _state => Revery.Environment.isMac),
         bool("isWin", _state => Revery.Environment.isWindows),
         bool("sneakMode", state => Feature_Sneak.isActive(state.sneak)),
-        bool("zenMode", state => state.zenMode),
       ],
     )
   );
@@ -165,6 +161,7 @@ let all = (state: State.t) => {
   let paneContextKeys =
     Feature_Pane.Contributions.contextKeys(
       ~isFocused=focus == Focus.Pane,
+      state,
       state.pane,
     );
 
@@ -176,6 +173,10 @@ let all = (state: State.t) => {
     };
 
   let inputContextKeys = Feature_Input.Contributions.contextKeys(state.input);
+
+  let zenContextKeys = Feature_Zen.Contributions.contextKeys(state.zen);
+  // let newQuickmenuContextKeys =
+  //   Feature_Quickmenu.Contributions.contextKeys(state.newQuickmenu);
 
   unionMany([
     Feature_Registers.Contributions.contextKeys(
@@ -193,13 +194,17 @@ let all = (state: State.t) => {
       ~isFocused=focus == Focus.LicenseKey,
       state.registration,
     ),
-    Feature_LanguageSupport.Contributions.contextKeys
-    |> Schema.map(({languageSupport, _}: State.t) => languageSupport)
-    |> fromSchema(state),
-    menus(~isFocused=focus == Focus.Quickmenu || focus == Focus.Wildmenu)
+    Feature_LanguageSupport.Contributions.contextKeys(state.languageSupport),
+    menus(
+      ~isFocused=focus == Focus.Quickmenu || focus == Focus.Wildmenu,
+      ~isNewQuickMenuOpen=focus == Focus.NewQuickmenu,
+    )
     |> Schema.map((state: State.t) => state.quickmenu)
     |> fromSchema(state),
     editors(~isFocused=isEditorFocused) |> fromSchema(state),
+    zenContextKeys,
+    //newQuickmenuContextKeys,
+    Feature_Snippets.Contributions.contextKeys(state.snippets),
     other |> fromSchema(state),
   ]);
 };

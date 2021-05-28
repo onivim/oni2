@@ -9,10 +9,8 @@ open Packet;
 let simpleMessage1 = "Hello World!" |> Bytes.of_string;
 let simpleMessage2 = "Hello World2!" |> Bytes.of_string;
 
-let packet1 =
-  Packet.create(~bytes=simpleMessage1, ~packetType=Regular, ~id=1);
-let packet2 =
-  Packet.create(~bytes=simpleMessage2, ~packetType=Regular, ~id=2);
+let packet1 = Packet.create(~packetType=Regular, ~id=1, simpleMessage1);
+let packet2 = Packet.create(~packetType=Regular, ~id=2, simpleMessage2);
 
 let packet1Bytes = Packet.toBytes(packet1);
 let packet1Length = packet1Bytes |> Bytes.length;

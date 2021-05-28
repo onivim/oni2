@@ -23,7 +23,9 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 ### Editor
 
-- `editor.acceptSuggestionOnEnter` __(_bool_ default: `false`)__ - When `true`, the enter key can be used to select a suggestion. By default, the enter key will not be used, so as not to interfere with creating a new line.
+- `editor.acceptSuggestionOnEnter` __(_bool_ default: `true`)__ - When `true`, the enter key can be used to accept a suggestion. Users may wish to set to `false` to avoid a conflict with inserting a new line.
+
+- `editor.acceptSuggestionOnTab` __(_bool_ default: `true`)__ - When `true`, the tab key can be used to accept a suggestion. Users may wish to turn to `false` to avoid ambiguity with inserting a tab character.
 
 - `editor.autoClosingBrackets` __(_"LanguageDefined"|"Never"_ default: `"LanguageDefined"`)__ - When set to `"LanguageDefined"`, Onivim will automatically close brackets and pairs, based on language configuration.
 
@@ -39,7 +41,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.fontSize` __(_int_ default: `14`)__ - The font size used by the editor surface.
 
-- `editor.fontSmoothing` __(_"none"|"antialiased"|"subpixel-antialiased"_)__ - The smoothing strategy used when rendering fonts. The `"antialiased"` setting smooths font edges, and `"subpixel-antialiased"` means characters may be positioned fractionally on the pixel grid.
+- `editor.fontSmoothing` __(_"none"|"antialiased"|"subpixel-antialiased"_ default: `"subpixel-antialiased"`)__ - The smoothing strategy used when rendering fonts. The `"antialiased"` setting smooths font edges, and `"subpixel-antialiased"` means characters may be positioned fractionally on the pixel grid.
 
 - `editor.fontLigatures` __(_string|bool_ default: `true`)__ - Sets whether or not font ligatures are enabled. When `true`, the font's default features are enabled. When `false`, contextual alternates and standard ligatues are disabled. If a string is entered, it must be of the form `"'tag1', 'tag2', ..."`, where each tag listed will be enabled. This is particularly useful for enabling stylistic sets, i.e. `"'ss01', 'ss02', ..."`.
 
@@ -49,7 +51,13 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.largeFileOptimizations` __(_bool_ default: `true`)__ - When `true`, Onivim will turn off certain settings like syntax highlighting for large files.
 
+- `editor.showDeprecated` __(_bool_ default: `true`)__ - When `true`, Onivim will render deprecated code with a strike-through.
+
+- `editor.showUnused` __(_bool_ default: `true`)__ - When `true`, Onivim will fade out unused code.
+
 - `workbench.editor.enablePreview` __(_bool_ default: `true`)__ - When `true`, Onivim will open files in _preview mode_ unless a change is made or the tab is double-clicked. In _preview mode_, the editor tab will be re-used.
+
+- `editor.lightBulb.enabled` __(_bool_ default: `true`)__ - When `true`, show a lightbulb icon in the editor if there are quick fixes or refactorings available.
 
 - `editor.lineHeight` __(_float_ default: `0.`)__ - Controls the absolute height of lines on the editor surface. Use 0 to compute lineHeight from the font size.
 
@@ -84,13 +92,21 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
     - _"selection"_ - Render whitespace characters in visual mode selected text
     - _"none"_ - Don't render whitespace at all
 
+- `editor.scrollbar.horizontalScrollbarSize` __(_int_ default: `8`)__ - The size, in pixels, of the horizontal scroll bar on the editor surface.
+
+- `editor.scrollbar.verticalScrollbarSize` __(_int_ default: `15`)__ - The size, in pixels, of the vertical scroll bar on the editor surface.
+
+- `editor.snippetSuggestions` __(_string_ default: `"inline"`) - controls how snippets are presented in the suggestion UI:
+    - _"top"_ - Show snippets at the top of the suggestion list
+    - _"bottom"_ - Show snippets at the bottom of the suggestion list
+    - _"inline"_ - Show snippets sorted in-line with other suggestion items
+    - _"hidden"_ - Don't show snippet suggestions at all
+
 - `editor.wordBasedSuggestions` __(_bool_ default: `true`)__ When `true`, keywords are provided as completion suggestions.
 
-- `editor.wordWrap` __(_bool_ default: `false`)__ When `true`, Onivim will soft-wrap lines at the viewport boundary.
+- `editor.wordWrap` __(_bool_ default: `true`)__ When `true`, Onivim will soft-wrap lines at the viewport boundary.
 
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
-
-- `explorer.autoReveal` __(_string|bool_ default: `true`)__  - When `true`, the file explorer will jump to highlight the file current focused. When `false` the file explorer will remain static. If a string is entered it must be `"focusNoScroll"` which will still highlight the currently focused file in the file explorer but the file explorer will not scroll to it. Any other string supplied will be treated as if `false` was entered and the file explorer will remain static and not highlight the currently focused file.
 
 - `editor.scrollShadow` __(_bool_ default: `true`)__ - When `true`, show a drop-shadow effect at the borders when there is additional content past the visible area.
 
@@ -100,11 +116,34 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.zenMode.hideTabs` __(_bool_ default: `true`)__ - When `true`, the Onivim will hide the buffer tabs from the user whilst in zen mode. Zen mode can be toggled in the command pallette, or automatically enabled with the `editor.zenMode.singleFile` configuration option.
 
+- `files.exclude` __(_list of string_ default: `[".git", "_esy", "node_modules"]`)__ - When using `Quick Open` or `Find in files`, Onivim will ignore the files inside the directories listed here 
+
+- `files.autoSave` __(_string_ default: `"off"`)__ - controls when buffers are auto-saved:
+    - _"off"_ - Do not auto-save at all
+    - _"afterDelay"_ - Auto-save after the delay specified by `"files.autoSaveDelay"`
+    - _"onFocusChange"_ - Auto-save when changing focus between buffers
+    - _"onWindowChange"_ - Auto-save when the Onivim application window loses focus
+
+- `files.autoSaveDelay` __(_int_ default: `1000`)__ - specifies the time, in milliseconds, to wait to auto-save a buffer when `files.autoSave` is set to `"afterDelay"`
+
+- `search.exclude` __(_list of string_ default: `[]`)__ - When using `Find in files` Onivim will not look at files located at the directories listed here, this inherit all the values from `files.exclude`
+
+- `workbench.colorCustomizations` __(_json_ default: `{}`)__ - Color theme overrides, using the same [Theme Colors as Code](https://code.visualstudio.com/api/references/theme-color) - for example:
+
+```json
+  "workbench.colorCustomizations": {
+    "terminal.background": "#0F0",
+    "terminal.foreground": "#FFF"
+  },
+```
+
 - `workbench.colorTheme` __(_string_ default:`"One Dark Pro"`)__ - Color theme to use.
 
 - `workbench.iconTheme` __(_string_ default: `"vs-seti"`)__ - Icon theme to use.
 
-- `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
+- `workbench.tree.indent` __(_int_ default: `5`)__ - Indentation of the tree explorer.
+
+- `workbench.tree.renderIndentGuides` __(_bool_ default: `true`)__ - Controls whether indent guide lines are rendered in tree views.
 
 - `vim.highlightedyank.enable` __(_bool_ default: `true`)__ - When `true`, briefly highlight yanks on the editor surface.
 
@@ -115,6 +154,14 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 ### Input
 
 - `vim.leader` __(_string_)__ - Specify a custom [leader key](./key-bindings#leader-key).
+
+- `vim.timeout` __(_int_ default: `1000`)__ Sets the timeout, in milliseconds, when Onivim is waiting for a pending chord. When the timeout is reached, any pending keys that are partially mapped will be flushed. Equivalent to the `timeoutlen` Vim setting. Can be set to `0` to disable the timeout entirely.
+
+### Explorer
+
+- `explorer.autoReveal` __(_string|bool_ default: `true`)__  - When `true`, the file explorer will jump to highlight the file current focused. When `false` the file explorer will remain static. If a string is entered it must be `"focusNoScroll"` which will still highlight the currently focused file in the file explorer but the file explorer will not scroll to it. Any other string supplied will be treated as if `false` was entered and the file explorer will remain static and not highlight the currently focused file.
+
+- `files.useExperimentalFileWatcher` __(_bool_ default: `true`)__ When `true`, a file watcher will be used to monitor file system changes and update the explorer in the sidebar.
 
 ### Layout
 
@@ -133,6 +180,14 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `oni.layout.layoutTabPosition` __(_"top"|"bottom"_ default: `"bottom"`)__ - Controls the position of the layout tabs.
 
 - `oni.layout.singleTabMode` __(_bool_ default: `false`)__ - When `true`, groups will only hold a single editor, and closing this editor will always close the group. It will also hide the editor tabs, and therefore essentially hide the concept of editor groups.
+
+### Proxy
+
+Onivim 2 can be configured to send requests through an HTTP/HTTPs proxy with the following configuration:
+
+- `http.proxy` __(_string_ default: `null`) - A URL to be used as a proxy server, including the name and password. ie, `"http.proxy": "http://user@pass:127.0.0.1:8888"`
+
+- `https.proxy` - __(_string_ default: `null`) - A URL to be used as a proxy server for HTTPs requests. If not specified, Onivim will fall back to the `http.proxy` setting.
 
 ### Rendering
 

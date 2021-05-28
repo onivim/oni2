@@ -17,7 +17,7 @@ module Log = (
 
 runTest(
   ~name="InsertMode test - effects batched to runEffects",
-  (dispatch, wait, runEffects) => {
+  ({dispatch, wait, runEffects, input, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
@@ -25,9 +25,10 @@ runTest(
   // '*' test case
   setClipboard(Some("abc\n"));
 
-  dispatch(KeyboardInput({isText: true, input: "\""}));
-  dispatch(KeyboardInput({isText: true, input: "*"}));
-  dispatch(KeyboardInput({isText: true, input: "P"}));
+  input("\"");
+  input("*");
+  input("P");
+
   runEffects();
 
   wait(~name="Mode switches to insert", (state: State.t) =>
@@ -43,9 +44,10 @@ runTest(
   // '*' multi-line test case
   setClipboard(Some("1\n2\n3\n"));
 
-  dispatch(KeyboardInput({isText: true, input: "\""}));
-  dispatch(KeyboardInput({isText: true, input: "*"}));
-  dispatch(KeyboardInput({isText: true, input: "P"}));
+  input("\"");
+  input("*");
+  input("P");
+
   runEffects();
 
   wait(~name="Multi-line paste works correctly", (state: State.t) =>
@@ -70,9 +72,9 @@ runTest(
   // '*' multi-line test case, windows style
   setClipboard(Some("4\r\n5\r\n6\r\n"));
 
-  dispatch(KeyboardInput({isText: true, input: "\""}));
-  dispatch(KeyboardInput({isText: true, input: "*"}));
-  dispatch(KeyboardInput({isText: true, input: "P"}));
+  input("\"");
+  input("*");
+  input("P");
   runEffects();
 
   wait(~name="Multi-line paste works correctly", (state: State.t) =>
@@ -96,9 +98,9 @@ runTest(
   // '+' test case
   setClipboard(Some("def\n"));
 
-  dispatch(KeyboardInput({isText: true, input: "\""}));
-  dispatch(KeyboardInput({isText: true, input: "*"}));
-  dispatch(KeyboardInput({isText: true, input: "P"}));
+  input("\"");
+  input("*");
+  input("P");
   runEffects();
 
   wait(~name="Mode switches to insert", (state: State.t) =>
@@ -113,17 +115,17 @@ runTest(
 
   // 'a' test case
   // yank current line - def - to 'a' register
-  dispatch(KeyboardInput({isText: true, input: "\""}));
-  dispatch(KeyboardInput({isText: true, input: "a"}));
-  dispatch(KeyboardInput({isText: true, input: "y"}));
-  dispatch(KeyboardInput({isText: true, input: "y"}));
+  input("\"");
+  input("a");
+  input("y");
+  input("y");
   runEffects();
 
   setClipboard(Some("ghi\n"));
 
-  dispatch(KeyboardInput({isText: true, input: "\""}));
-  dispatch(KeyboardInput({isText: true, input: "a"}));
-  dispatch(KeyboardInput({isText: true, input: "P"}));
+  input("\"");
+  input("a");
+  input("P");
   runEffects();
 
   wait(~name="Mode switches to insert", (state: State.t) =>
@@ -138,29 +140,27 @@ runTest(
 
   // Test if the configuration is set - paste from unnamed register will pull from the keyboard
   setClipboard(Some("jkl\n"));
-
-  wait(~name="Set configuration to pull clipboard on paste", (state: State.t) => {
-    let configuration = state.configuration;
+  wait(~name="Set clipboard to pull clipboard on paste", _ => {
+    let transformer =
+      ConfigurationTransformer.setField(
+        "vim.useSystemClipboard",
+        `List([`String("paste")]),
+      );
     dispatch(
-      ConfigurationSet({
-        ...configuration,
-        default: {
-          ...configuration.default,
-          vimUseSystemClipboard: {
-            yank: false,
-            delete: false,
-            paste: true,
-          },
-        },
-      }),
+      Configuration(Feature_Configuration.Testing.transform(transformer)),
     );
     runEffects();
     true;
   });
 
-  dispatch(KeyboardInput({isText: true, input: "y"}));
-  dispatch(KeyboardInput({isText: true, input: "y"}));
-  dispatch(KeyboardInput({isText: true, input: "P"}));
+  wait(~name="Wait for configuration to update (1)", (state: State.t) => {
+    Feature_Vim.useSystemClipboard(state.vim)
+    == Feature_Vim.{yank: false, delete: false, paste: true}
+  });
+
+  input("y");
+  input("y");
+  input("P");
   runEffects();
 
   wait(
@@ -179,28 +179,26 @@ runTest(
   // Set configuration back (paste=false), and it should not pull from clipboard
   setClipboard(Some("mno\n"));
 
-  wait(~name="Set configuration to pull clipboard on paste", (state: State.t) => {
-    let configuration = state.configuration;
+  wait(~name="Set clipboard to not pull clipboard on paste", _ => {
+    let transformer =
+      ConfigurationTransformer.setField(
+        "vim.useSystemClipboard",
+        `Assoc([
+          ("yank", `Bool(false)),
+          ("delete", `Bool(false)),
+          ("paste", `Bool(false)),
+        ]),
+      );
     dispatch(
-      ConfigurationSet({
-        ...configuration,
-        default: {
-          ...configuration.default,
-          vimUseSystemClipboard: {
-            yank: false,
-            delete: false,
-            paste: false,
-          },
-        },
-      }),
+      Configuration(Feature_Configuration.Testing.transform(transformer)),
     );
     runEffects();
     true;
   });
 
-  dispatch(KeyboardInput({isText: true, input: "y"}));
-  dispatch(KeyboardInput({isText: true, input: "y"}));
-  dispatch(KeyboardInput({isText: true, input: "P"}));
+  input("y");
+  input("y");
+  input("P");
   runEffects();
 
   wait(
@@ -218,9 +216,10 @@ runTest(
 
   // Single line case - should paste in front of previous text
   setClipboard(Some("mno"));
-  dispatch(KeyboardInput({isText: true, input: "\""}));
-  dispatch(KeyboardInput({isText: true, input: "*"}));
-  dispatch(KeyboardInput({isText: true, input: "P"}));
+
+  input("\"");
+  input("*");
+  input("P");
   runEffects();
 
   wait(~name="paste with single line, from clipboard", (state: State.t) =>

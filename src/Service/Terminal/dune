@@ -1,7 +1,8 @@
 (library
  (name Service_Terminal)
  (public_name Oni2.service.terminal)
- (libraries Oni2.editor-core-types Oni2.core Oni2.exthost Revery
-   revery-terminal.lib revery-terminal.vterm isolinear base)
+ (libraries Oni2.editor-core-types Oni2.editor-terminal Oni2.core
+   Oni2.exthost Revery Oni2.feature.pane Oni2.feature.theme vterm isolinear
+   base)
  (preprocess
   (pps ppx_let ppx_deriving.show)))

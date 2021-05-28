@@ -69,10 +69,35 @@ let themesByName = (~filter: string, model) => {
   |> List.filter(label => Utility.StringEx.contains(filter, label));
 };
 
+let snippetFilePaths = (~fileType, model) => {
+  Exthost.Extension.(
+    model
+    |> pick((manifest: Manifest.t) => {
+         Contributions.(manifest.contributes.snippets)
+       })
+    |> List.flatten
+    |> List.filter(({language, _}: Contributions.Snippet.t) => {
+         switch (language) {
+         | None => true
+         | Some(languageId) => fileType == languageId
+         }
+       })
+    |> List.filter_map(({path, _}: Contributions.Snippet.t) =>
+         FpExp.absoluteCurrentPlatform(path)
+       )
+  );
+};
+
+let hasCompletedDiscovery = ({extensions, _}) => {
+  // TODO: This logic will need to be updated when async
+  // discovery is implemented
+  extensions != [];
+};
+
 module ListView = ListView;
 module DetailsView = DetailsView;
 
-let sub = (~isVisible, ~setup, model) => {
+let sub = (~proxy, ~isVisible, ~setup, model) => {
   let toMsg =
     fun
     | Ok(query) => SearchQueryResults(query)
@@ -93,7 +118,7 @@ let sub = (~isVisible, ~setup, model) => {
   let querySub =
     switch (model.latestQuery) {
     | Some(query) when !Service_Extensions.Query.isComplete(query) =>
-      Service_Extensions.Sub.search(~setup, ~query, ~toMsg)
+      Service_Extensions.Sub.search(~proxy, ~setup, ~query, ~toMsg)
     | Some(_)
     | None => Isolinear.Sub.none
     };
@@ -106,6 +131,7 @@ let sub = (~isVisible, ~setup, model) => {
         | [] => Isolinear.Sub.none
         | [extensionId, ..._] =>
           Service_Extensions.Sub.details(
+            ~proxy,
             ~setup,
             ~extensionId,
             ~toMsg=

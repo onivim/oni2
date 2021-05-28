@@ -11,22 +11,40 @@ type focus =
 type model = {
   findInput: Component_InputText.model,
   query: string,
+  searchNonce: int,
   hits: list(Ripgrep.Match.t),
   focus,
   vimWindowNavigation: Component_VimWindows.model,
   resultsTree: Component_VimTree.model(string, LocationListItem.t),
 };
 
-let resetFocus = model => {...model, focus: FindInput};
+let resetFocus = (~query: option(string), model) => {
+  switch (query) {
+  | None => {...model, focus: FindInput}
+  | Some(query) => {
+      ...model,
+      query,
+      focus: FindInput,
+      findInput: Component_InputText.set(~text=query, model.findInput),
+      hits: query != model.query ? [] : model.hits,
+    }
+  };
+};
 
 let initial = {
   findInput: Component_InputText.create(~placeholder="Search"),
   query: "",
+  searchNonce: 0,
   hits: [],
   focus: FindInput,
 
   vimWindowNavigation: Component_VimWindows.initial,
   resultsTree: Component_VimTree.create(~rowHeight=25),
+};
+
+module Configuration = {
+  open Config.Schema;
+  let searchExclude = setting("search.exclude", list(string), ~default=[]);
 };
 
 let matchToLocListItem = (hit: Ripgrep.Match.t) =>
@@ -101,11 +119,12 @@ let update = (~previewEnabled, model, msg) => {
         switch (key) {
         | "<CR>" =>
           let findInputValue = model.findInput |> Component_InputText.value;
-          if (model.query == findInputValue) {
-            model; // Do nothing if the query hasn't changed
-          } else {
-            {...model, query: findInputValue} |> setHits([]);
-          };
+          {
+            ...model,
+            query: findInputValue,
+            searchNonce: model.searchNonce + 1,
+          }
+          |> setHits([]);
 
         | _ =>
           let findInput =
@@ -190,6 +209,7 @@ let update = (~previewEnabled, model, msg) => {
       | Component_VimTree.Selected(item) =>
         Some(OpenFile({filePath: item.file, location: item.location}))
       // TODO
+      | Component_VimTree.SelectedNode(_) => None
       | Component_VimTree.Collapsed(_) => None
       | Component_VimTree.Expanded(_) => None
       };
@@ -204,29 +224,33 @@ let update = (~previewEnabled, model, msg) => {
 
 // SUBSCRIPTIONS
 
-module SearchSubscription =
-  SearchSubscription.Make({
-    type action = msg;
-  });
+let sub = (~config, ~workingDirectory, ~setup, model) => {
+  let query = model.query;
 
-let subscriptions = (~workingDirectory, ripgrep, dispatch) => {
-  let search = query => {
-    SearchSubscription.create(
-      ~id="workspace-search",
-      ~query,
+  if (Utility.StringEx.isEmpty(query)) {
+    Isolinear.Sub.none;
+  } else {
+    let exclude =
+      Configuration.searchExclude.get(config)
+      |> List.append(
+           Feature_Configuration.GlobalConfiguration.Files.exclude.get(
+             config,
+           ),
+         );
+    let toMsg =
+      fun
+      | Service_Ripgrep.Sub.GotMatches(items) => Update(items)
+      | Service_Ripgrep.Sub.Completed => Complete
+      | Service_Ripgrep.Sub.Error(msg) => SearchError(msg);
+
+    Service_Ripgrep.Sub.findInFiles(
+      ~exclude,
       ~directory=workingDirectory,
-      ~ripgrep,
-      ~onUpdate=items => dispatch(Update(items)),
-      ~onCompleted=() => Complete,
-      ~onError=msg => SearchError(msg),
+      ~query=model.query,
+      ~uniqueId=string_of_int(model.searchNonce),
+      ~setup,
+      toMsg,
     );
-  };
-
-  model => {
-    switch (model) {
-    | {query: "", _} => []
-    | {query, _} => [search(query)]
-    };
   };
 };
 
@@ -383,4 +407,5 @@ module Contributions = {
 
     [inputTextKeys, vimNavKeys, vimTreeKeys] |> unionMany;
   };
+  let configuration = Configuration.[searchExclude.spec];
 };

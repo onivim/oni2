@@ -1,7 +1,7 @@
 (library
  (name Feature_Theme)
  (public_name Oni2.feature.theme)
- (libraries Oni2.core Revery isolinear base textmate libvim Oni2.exthost
-   Oni2.feature.commands)
+ (libraries Oni2.core Oni2.syntax Revery isolinear base textmate libvim
+   Oni2.exthost Oni2.feature.commands)
  (preprocess
   (pps ppx_let ppx_deriving.show)))

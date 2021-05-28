@@ -172,6 +172,8 @@ module Menu = {
 
 let build = (~contextKeys as _, ~commands as _, menu) => {schema: menu};
 
+let schema = ({schema, _}) => schema;
+
 let top = schema => {
   Schema.(
     {

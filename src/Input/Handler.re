@@ -14,7 +14,7 @@ module Internal = {
     EditorInput.Key.(
       {
         switch (key) {
-        | Character(char) => Some(String.make(1, char))
+        | Character(char) => Some(Zed_utf8.make(1, char))
         | Return => Some("CR")
         | Escape => Some("ESC")
         | Tab => Some("TAB")
@@ -110,7 +110,7 @@ let keyPressToCommand = (~force, ~isTextInputActive, key) => {
        let shiftKey = modifiers.shift;
        let altKey = modifiers.alt;
        let ctrlKey = modifiers.control;
-       let superKey = modifiers.meta;
+       let superKey = modifiers.super;
 
        if (altGr && isTextInputActive) {
          None;

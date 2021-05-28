@@ -9,6 +9,7 @@
  */
 
 open Oni_Core;
+open Utility;
 module Log = (val Log.withNamespace("Feature_Workspace"));
 
 [@deriving show]
@@ -20,8 +21,9 @@ type command =
 type msg =
   | Command(command)
   | FolderSelectionCanceled
-  | FolderPicked([@opaque] Fp.t(Fp.absolute))
-  | WorkingDirectoryChanged(string);
+  | FolderPicked([@opaque] FpExp.t(FpExp.absolute))
+  | WorkingDirectoryChanged(string)
+  | Noop;
 
 module Msg = {
   let workingDirectoryChanged = workingDirectory =>
@@ -32,12 +34,14 @@ type model = {
   workingDirectory: string,
   openedFolder: option(string),
   rootName: string,
+  lastPickFromFilePicker: bool,
 };
 
 let initial = (~openedFolder: option(string), workingDirectory) => {
   workingDirectory,
   openedFolder,
   rootName: Filename.basename(workingDirectory),
+  lastPickFromFilePicker: false,
 };
 
 let openedFolder = ({openedFolder, _}) => openedFolder;
@@ -49,13 +53,16 @@ let rootName = ({rootName, _}) => rootName;
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | WorkspaceChanged(option(string));
+  | WorkspaceChanged({
+      path: option(string),
+      shouldFocusExplorer: bool,
+    });
 
 module Effects = {
-  let changeDirectory = (path: Fp.t(Fp.absolute)) =>
+  let changeDirectory = (path: FpExp.t(FpExp.absolute)) =>
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Workspace.changeDirectory", dispatch => {
-      let newDirectory = Fp.toString(path);
+      let newDirectory = FpExp.toString(path);
       switch (Luv.Path.chdir(newDirectory)) {
       | Ok () => dispatch(WorkingDirectoryChanged(newDirectory))
       | Error(msg) =>
@@ -76,20 +83,36 @@ module Effects = {
 let update = (msg, model) => {
   switch (msg) {
   | FolderSelectionCanceled => (model, Nothing)
+
   | WorkingDirectoryChanged(workingDirectory) => (
       {
         workingDirectory,
         rootName: Filename.basename(workingDirectory),
         openedFolder: Some(workingDirectory),
+        // Reset lastPickFromFilePicker once we've actually changed
+        lastPickFromFilePicker: false,
       },
-      WorkspaceChanged(Some(workingDirectory)),
+      WorkspaceChanged({
+        path: Some(workingDirectory),
+        // If the workspace change came from the open-folder dialog,
+        // focus the explorer.
+        shouldFocusExplorer: model.lastPickFromFilePicker,
+      }),
     )
+
   | Command(CloseFolder) => (
       {...model, rootName: "", openedFolder: None},
-      WorkspaceChanged(None),
+      WorkspaceChanged({path: None, shouldFocusExplorer: false}),
     )
+
   | Command(OpenFolder) => (model, Effect(Effects.pickFolder))
-  | FolderPicked(path) => (model, Effect(Effects.changeDirectory(path)))
+
+  | FolderPicked(path) => (
+      {...model, lastPickFromFilePicker: true},
+      Effect(Effects.changeDirectory(path)),
+    )
+
+  | Noop => (model, Nothing)
   };
 };
 
@@ -114,11 +137,26 @@ module Commands = {
       Command(OpenFolder),
     );
 
+  let openFolderArgs =
+    defineWithArgs(
+      "vscode.openFolder",
+      fun
+      | `List([uriJson, ..._]) =>
+        uriJson
+        |> Json.Decode.decode_value(Uri.decode)
+        |> Result.map(Uri.toFileSystemPath)
+        |> Result.to_option
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform)
+        |> Option.map(fp => FolderPicked(fp))
+        |> Option.value(~default=Noop)
+      | _ => Noop,
+    );
+
   let all = model =>
     model.openedFolder == None
-      ? [openFolder]
+      ? [openFolder, openFolderArgs]
       // Always show open folder, so the user can switch folders from command palette
-      : [openFolder, closeFolder];
+      : [openFolder, openFolderArgs, closeFolder];
 };
 
 module MenuItems = {

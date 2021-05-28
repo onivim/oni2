@@ -189,6 +189,76 @@ let getLine = (line: int, buffer: t) => {
   buffer.lines[line];
 };
 
+let bufferLine = (line, buffer) => {
+  let lineIdx = LineNumber.toZeroBased(line);
+
+  if (lineIdx < 0 || lineIdx >= Array.length(buffer.lines)) {
+    None;
+  } else {
+    Some(buffer |> getLine(lineIdx));
+  };
+};
+
+let rawLine = (line: LineNumber.t, buffer: t) => {
+  buffer |> bufferLine(line) |> Option.map(BufferLine.raw);
+};
+
+let characterRangeAt = (line, buffer) => {
+  buffer
+  |> bufferLine(line)
+  |> Option.map(bufferLine => {
+       let length = BufferLine.lengthSlow(bufferLine);
+       let start = CharacterPosition.{line, character: CharacterIndex.zero};
+
+       let stop =
+         CharacterPosition.{line, character: CharacterIndex.ofInt(length)};
+       CharacterRange.{start, stop};
+     });
+};
+
+let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
+
+let tokenAt = (~languageConfiguration, position: CharacterPosition.t, buffer) => {
+  let line = position.line;
+  let character = position.character;
+  let lineNumber = line |> EditorCoreTypes.LineNumber.toZeroBased;
+  let numberOfLines = getNumberOfLines(buffer);
+
+  if (lineNumber < 0 || lineNumber >= numberOfLines) {
+    None;
+  } else {
+    let bufferLine = getLine(lineNumber, buffer);
+    let f = uchar =>
+      LanguageConfiguration.isWordCharacter(uchar, languageConfiguration);
+    let startIndex =
+      BufferLine.traverse(
+        ~f,
+        ~direction=`Backwards,
+        ~index=character,
+        bufferLine,
+      )
+      |> Option.value(~default=character);
+    let stopIndex =
+      BufferLine.traverse(
+        ~f,
+        ~direction=`Forwards,
+        ~index=character,
+        bufferLine,
+      )
+      |> Option.value(~default=character);
+    Some(
+      CharacterRange.{
+        start: CharacterPosition.{line, character: startIndex},
+        stop: CharacterPosition.{line, character: stopIndex},
+      },
+    );
+  };
+};
+
+let lastLine = buffer => {
+  buffer.lines |> Array.length |> max(1) |> LineNumber.ofOneBased;
+};
+
 let getLines = (buffer: t) => buffer.lines |> Array.map(BufferLine.raw);
 
 let getVersion = (buffer: t) => buffer.version;
@@ -214,7 +284,39 @@ let getUri = (buffer: t) => {
   };
 };
 
-let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
+let characterRange = (buffer: t) => {
+  let start =
+    CharacterPosition.{line: LineNumber.zero, character: CharacterIndex.zero};
+
+  let lineCount = getNumberOfLines(buffer);
+
+  if (lineCount > 0) {
+    let lastLineCharacters =
+      buffer |> getLine(lineCount - 1) |> BufferLine.lengthSlow;
+
+    let stop =
+      CharacterPosition.{
+        line: LineNumber.ofZeroBased(lineCount - 1),
+        character: CharacterIndex.ofInt(lastLineCharacters),
+      };
+
+    CharacterRange.{start, stop};
+  } else {
+    CharacterRange.{start, stop: start};
+  };
+};
+
+let hasTrailingNewLine = (buffer: t) => {
+  let len = Array.length(buffer.lines);
+  if (len == 0) {
+    false;
+  } else {
+    let maybeRaw = rawLine(LineNumber.ofZeroBased(len - 1), buffer);
+    maybeRaw
+    |> Option.map(Utility.StringEx.isWhitespaceOnly)
+    |> Option.value(~default=false);
+  };
+};
 
 // TODO: This method needs a lot of improvements:
 // - It's only estimated, as the byte length is quicker to calculate
@@ -287,14 +389,27 @@ let setIndentation = (indentation, buf) => {
     } else {
       buf.lines;
     };
-  {...buf, lines, indentation};
+  {...buf, measure, lines, indentation};
 };
 
 let getIndentation = buf => buf.indentation |> Inferred.value;
 
-let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) => {
-  update.version > getVersion(buf);
-};
+let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) =>
+  // First, make sure the version check passes...
+  if (update.version > getVersion(buf)) {
+    // Then, if this is a full update, do a pass to see if there actually is an update.
+    // There are some cases - like undo - where a full update may come through, but actually
+    // is just bumping the change tick.
+    if (update.isFull) {
+      let bufferLines = getLines(buf);
+
+      !ArrayEx.equals(String.equal, bufferLines, update.lines);
+    } else {
+      true;
+    };
+  } else {
+    false;
+  };
 
 let update = (buf: t, update: BufferUpdate.t) =>
   if (shouldApplyUpdate(update, buf)) {
@@ -336,4 +451,25 @@ let setFont = (font, buf) => {
 
 let getSaveTick = ({saveTick, _}) => saveTick;
 
-let incrementSaveTick = buffer => {...buffer, saveTick: buffer.saveTick + 1};
+let incrementSaveTick = buffer => {
+  ...buffer,
+  modified: false,
+  saveTick: buffer.saveTick + 1,
+};
+
+let toDebugString = buf => {
+  let lines =
+    buf
+    |> getLines
+    |> Array.to_list
+    |> List.mapi((idx, str) =>
+         "Line  " ++ string_of_int(idx) ++ ": |" ++ str ++ "|"
+       )
+    |> String.concat("\n");
+  Printf.sprintf(
+    "Buffer %d (version %d):\n---\n%s\n---\n",
+    getId(buf),
+    getVersion(buf),
+    lines,
+  );
+};

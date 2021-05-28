@@ -25,35 +25,25 @@ module Styles = {
   // Minor adjustment to align with text
   let folder = [marginTop(4)];
 
-  let item = [flexDirection(`Row), flexGrow(1), alignItems(`Center)];
+  let item = [
+    flexDirection(`Row),
+    flexGrow(1),
+    flexShrink(1),
+    alignItems(`Center),
+  ];
 
-  let text = (~isFocus, ~isActive, ~decoration, ~theme) => [
-    color(
-      switch (
-        Option.bind(
-          decoration, (decoration: Feature_Decorations.Decoration.t) =>
-          ColorTheme.(Colors.get(key(decoration.color), theme))
-        )
-      ) {
-      | Some(color) => color
-      | None =>
-        if (isActive) {
-          Colors.List.activeSelectionForeground.from(theme);
-        } else if (isFocus) {
-          Colors.List.focusForeground.from(theme);
-        } else {
-          Colors.SideBar.foreground.from(theme);
-        }
-      },
-    ),
+  let text = (~color as c) => [
+    color(c),
     // Minor adjustment to align with seti-icon
     marginTop(4),
     textWrap(TextWrapping.NoWrap),
+    textOverflow(`Ellipsis),
   ];
 };
 
 let nodeView =
     (
+      ~isSymlink,
       ~isFocus,
       ~isActive,
       ~font: UiFont.t,
@@ -69,23 +59,60 @@ let nodeView =
     | [] => None
     };
 
+  let color =
+    switch (
+      Option.bind(decoration, (decoration: Feature_Decorations.Decoration.t) =>
+        ColorTheme.(Colors.get(key(decoration.color), theme))
+      )
+    ) {
+    | Some(color) => color
+    | None =>
+      if (isActive) {
+        Colors.List.activeSelectionForeground.from(theme);
+      } else if (isFocus) {
+        Colors.List.focusForeground.from(theme);
+      } else {
+        Colors.SideBar.foreground.from(theme);
+      }
+    };
+
   let tooltipText = {
     let path = node.path;
     switch (decoration) {
-    | Some((decoration: Feature_Decorations.Decoration.t)) =>
-      path ++ " • " ++ decoration.tooltip
-    | None => path
+    | Some(decoration: Feature_Decorations.Decoration.t) =>
+      FpExp.toString(path) ++ " • " ++ decoration.tooltip
+    | None => FpExp.toString(path)
     };
   };
 
+  let maybeSymlink =
+    if (isSymlink) {
+      let symlinkColor = Colors.SideBar.foreground.from(theme);
+      <View style=Revery.UI.Style.[flexGrow(0), flexShrink(0)]>
+        <View style=Revery.UI.Style.[paddingHorizontal(8), marginTop(4)]>
+          <Codicon
+            icon=Codicon.reply
+            rotation=Float.pi
+            fontSize=10.
+            color=symlinkColor
+          />
+        </View>
+      </View>;
+    } else {
+      React.empty;
+    };
+
   <Tooltip text=tooltipText style=Styles.item>
-    icon
-    <Text
-      text={node.displayName}
-      style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme)}
-      fontFamily={font.family}
-      fontSize=12.
-    />
+    <View style=Revery.UI.Style.[flexGrow(0), flexShrink(0)]> icon </View>
+    <View style=Revery.UI.Style.[flexGrow(1), flexShrink(1)]>
+      <Text
+        text={node.displayName}
+        style={Styles.text(~color)}
+        fontFamily={font.family}
+        fontSize=12.
+      />
+    </View>
+    maybeSymlink
   </Tooltip>;
 };
 
@@ -93,6 +120,7 @@ let getFileIcon = Model.getFileIcon;
 
 let make =
     (
+      ~config,
       ~rootName,
       ~isFocused,
       ~iconTheme,
@@ -100,7 +128,7 @@ let make =
       ~focusedIndex,
       ~treeView:
          Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
-      ~active: option(string),
+      ~active: option(FpExp.t(FpExp.absolute)),
       ~theme,
       ~decorations: Feature_Decorations.model,
       ~font: UiFont.t,
@@ -110,6 +138,7 @@ let make =
       (),
     ) => {
   <Component_Accordion.VimTree
+    config
     title=rootName
     showCount=false
     isFocused
@@ -136,16 +165,21 @@ let make =
               font
               iconTheme
               languageInfo
-              path={data.path}
+              path={FpExp.toString(data.path)}
             />,
             data,
           )
         };
       let decorations =
-        Feature_Decorations.getDecorations(~path=data.path, decorations);
+        Feature_Decorations.getDecorations(
+          ~path=FpExp.toString(data.path),
+          decorations,
+        );
+      let isSymlink = data.isSymlink;
       <nodeView
         icon
         isFocus=selected
+        isSymlink
         isActive={Some(data.path) == active}
         font
         theme

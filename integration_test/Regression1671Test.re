@@ -4,15 +4,15 @@ open Oni_IntegrationTestLib;
 
 // Validate that unsaved changes persist when switching buffers
 // Regression test for: https://github.com/onivim/oni2/issues/1671
-runTestWithInput(
+runTest(
   ~name="Regression1671 - Opening new buffer loses changes in previous buffer",
-  (input, _dispatch, wait, _runEffects) => {
+  ({input, wait, key, _}) => {
     wait(~name="Capture initial state", (state: State.t) =>
       Selectors.mode(state) |> Vim.Mode.isNormal
     );
 
     input(":e a-test-file");
-    input("<CR>");
+    key(EditorInput.Key.Return);
     input("iabc");
     //ignore(Vim.command("e a-test-file"): Vim.Context.t);
 
@@ -30,10 +30,10 @@ runTestWithInput(
       |> Option.value(~default=false)
     );
 
-    input("<ESC>");
+    key(EditorInput.Key.Escape);
     // Repro for 1671 - switch to a different file, and then back
     input(":e! another-test-file");
-    input("<CR>");
+    key(EditorInput.Key.Return);
 
     wait(~name="Buffer switched", (state: State.t) => {
       state
@@ -42,9 +42,9 @@ runTestWithInput(
       |> Option.value(~default=false)
     });
 
-    input("<ESC>");
+    key(EditorInput.Key.Escape);
     input(":e! a-test-file");
-    input("<CR>");
+    key(EditorInput.Key.Return);
 
     wait(~name="Buffer switched back", (state: State.t) => {
       state

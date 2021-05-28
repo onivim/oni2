@@ -68,6 +68,7 @@ external vimInit: unit => unit = "libvim_vimInit";
 external vimInput: string => unit = "libvim_vimInput";
 external vimKey: string => unit = "libvim_vimKey";
 external vimCommand: string => unit = "libvim_vimCommand";
+external vimCommands: array(string) => unit = "libvim_vimCommands";
 
 external vimGetMode: unit => mode = "libvim_vimGetMode";
 external vimGetSubMode: unit => SubMode.t = "libvim_vimGetSubMode";
@@ -137,8 +138,12 @@ external vimRegisterGet: int => option(array(string)) =
 external vimSearchGetMatchingPair: unit => option((int, int)) =
   "libvim_vimSearchGetMatchingPair";
 
-external vimSearchGetHighlights: (int, int) => array((int, int, int, int)) =
+external vimSearchGetHighlights:
+  (buffer, int, int) => array((int, int, int, int)) =
   "libvim_vimSearchGetHighlights";
+
+external vimSearchGetPattern: unit => option(string) =
+  "libvim_vimSearchGetPattern";
 
 external vimUndoSaveRegion: (int, int) => bool = "libvim_vimUndoSaveRegion";
 external vimUndoSync: int => unit = "libvim_vimUndoSync";

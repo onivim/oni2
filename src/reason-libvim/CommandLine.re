@@ -7,11 +7,7 @@ let getCompletions = (~context: Context.t=Context.current(), ()) => {
   completions;
 };
 
-let getText = Native.vimCommandLineGetText;
-
 let getPosition = Native.vimCommandLineGetPosition;
-
-let getType = Native.vimCommandLineGetType;
 
 let onEnter = f => Event.add(f, Listeners.commandLineEnter);
 let onLeave = f => Event.add(f, Listeners.commandLineLeave);

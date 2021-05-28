@@ -8,6 +8,8 @@ let initial: model;
 [@deriving show]
 type msg;
 
+let languageInfo: model => Exthost.LanguageInfo.t;
+
 module Msg: {
   let exthost: Exthost.Msg.LanguageFeatures.msg => msg;
   let keyPressed: string => msg;
@@ -32,7 +34,7 @@ module Msg: {
 };
 
 module CodeLens: {
-  type t = Exthost.CodeLens.t;
+  type t = Exthost.CodeLens.lens;
 
   let lineNumber: t => int;
   let text: t => string;
@@ -40,7 +42,6 @@ module CodeLens: {
   module View: {
     let make:
       (
-        ~leftMargin: int,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~uiFont: UiFont.t,
         ~codeLens: t,
@@ -53,18 +54,29 @@ module CodeLens: {
 type outmsg =
   | Nothing
   | ApplyCompletion({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       insertText: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
+  | ApplyWorkspaceEdit(Exthost.WorkspaceEdit.t)
+  | FormattingApplied({
+      displayName: string,
+      editCount: int,
+      needsToSave: bool,
+    })
   | InsertSnippet({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       snippet: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | OpenFile({
       filePath: string,
       location: option(CharacterPosition.t),
+      direction: SplitDirection.t,
+    })
+  | PreviewFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
     })
   | ReferencesAvailable
   | NotifySuccess(string)
@@ -76,15 +88,26 @@ type outmsg =
       startLine: EditorCoreTypes.LineNumber.t,
       stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.t),
-    });
+    })
+  | SetSelections({
+      editorId: int,
+      ranges: list(CharacterRange.t),
+    })
+  | ShowMenu(Feature_Quickmenu.Schema.menu(msg))
+  | TransformConfiguration(ConfigurationTransformer.t);
 
 let update:
   (
+    ~buffers: Feature_Buffers.model,
     ~config: Oni_Core.Config.resolver,
-    ~configuration: Oni_Core.Configuration.t,
+    ~diagnostics: Feature_Diagnostics.model,
+    ~extensions: Feature_Extensions.model,
+    ~font: Service_Font.font,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
+    ~languageInfo: Exthost.LanguageInfo.t,
     ~maybeSelection: option(CharacterRange.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~previewEnabled: bool,
     ~editorId: int,
     ~cursorLocation: CharacterPosition.t,
     ~client: Exthost.Client.t,
@@ -93,11 +116,24 @@ let update:
   ) =>
   (model, outmsg);
 
+let bufferSaved:
+  (
+    ~reason: SaveReason.t,
+    ~isLargeBuffer: bool,
+    ~buffer: Oni_Core.Buffer.t,
+    ~config: Oni_Core.Config.resolver,
+    ~savedBufferId: int,
+    ~activeBufferId: int,
+    model
+  ) =>
+  (model, Isolinear.Effect.t(msg));
+
 let bufferUpdated:
   (
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~buffer: Oni_Core.Buffer.t,
     ~config: Oni_Core.Config.resolver,
+    ~extensions: Feature_Extensions.model,
     ~activeCursor: CharacterPosition.t,
     ~syntaxScope: Oni_Core.SyntaxScope.t,
     ~triggerKey: option(string),
@@ -109,14 +145,34 @@ let configurationChanged: (~config: Config.resolver, model) => model;
 
 let cursorMoved:
   (
-    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~editorId: int,
+    ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
+    ~buffer: Oni_Core.Buffer.t,
     ~previous: CharacterPosition.t,
     ~current: CharacterPosition.t,
     model
   ) =>
   model;
-let startInsertMode: model => model;
+
+let extensionsAdded:
+  (list(Exthost.Extension.Scanner.ScanResult.t), model) => model;
+
+let moveMarkers:
+  (~newBuffer: Buffer.t, ~markerUpdate: MarkerUpdate.t, model) => model;
+
+let startInsertMode:
+  (
+    ~config: Oni_Core.Config.resolver,
+    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    model
+  ) =>
+  model;
+
 let stopInsertMode: model => model;
+
+let startSnippet: model => model;
+let stopSnippet: model => model;
+
 let isFocused: model => bool;
 
 let sub:
@@ -125,7 +181,10 @@ let sub:
     ~isInsertMode: bool,
     ~isAnimatingScroll: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
+    ~activeEditor: int,
     ~activePosition: CharacterPosition.t,
+    ~lineHeightInPixels: float,
+    ~positionToRelativePixel: CharacterPosition.t => PixelPosition.t,
     ~topVisibleBufferLine: EditorCoreTypes.LineNumber.t,
     ~bottomVisibleBufferLine: EditorCoreTypes.LineNumber.t,
     ~visibleBuffers: list(Oni_Core.Buffer.t),
@@ -140,16 +199,24 @@ module Completion: {
   let providerCount: model => int;
 
   let availableCompletionCount: model => int;
+};
+
+module SignatureHelp: {
+  let isActive: model => bool;
 
   module View: {
     let make:
       (
         ~x: int,
         ~y: int,
-        ~lineHeight: float,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~editorFont: Service_Font.font,
+        ~uiFont: Oni_Core.UiFont.t,
+        ~languageInfo: Exthost.LanguageInfo.t,
+        ~buffer: Oni_Core.Buffer.t,
+        ~grammars: Oni_Syntax.GrammarRepository.t,
+        ~dispatch: msg => unit,
         ~model: model,
         unit
       ) =>
@@ -172,11 +239,66 @@ module DocumentSymbols: {
   let get: (~bufferId: int, model) => option(t);
 };
 
+module View: {
+  module EditorWidgets: {
+    let make:
+      (
+        ~x: int,
+        ~y: int,
+        ~editorId: int,
+        ~theme: ColorTheme.Colors.t,
+        ~model: model,
+        ~editorFont: Service_Font.font,
+        ~uiFont: UiFont.t,
+        ~dispatch: msg => unit,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+
+  module Overlay: {
+    let make:
+      (
+        ~activeEditorId: int,
+        ~activeBuffer: Oni_Core.Buffer.t,
+        ~cursorPosition: CharacterPosition.t,
+        ~lineHeight: float,
+        ~toPixel: (~editorId: int, CharacterPosition.t) =>
+                  option(PixelPosition.t),
+        ~theme: ColorTheme.Colors.t,
+        ~tokenTheme: Oni_Syntax.TokenTheme.t,
+        ~model: model,
+        ~editorFont: Service_Font.font,
+        ~uiFont: UiFont.t,
+        ~dispatch: msg => unit,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+};
+
+module Rename: {
+  let isActive: model => bool;
+
+  module View: {
+    let make:
+      (
+        ~x: int,
+        ~y: int,
+        ~theme: ColorTheme.Colors.t,
+        ~model: model,
+        ~font: UiFont.t,
+        ~dispatch: msg => unit,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+};
+
 module Hover: {
   module Popup: {
     let make:
       (
-        ~diagnostics: Feature_Diagnostics.model,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~languageInfo: Exthost.LanguageInfo.t,
@@ -185,7 +307,7 @@ module Hover: {
         ~grammars: Oni_Syntax.GrammarRepository.t,
         ~model: model,
         ~buffer: Oni_Core.Buffer.t,
-        ~editorId: option(int)
+        ~editorId: int
       ) =>
       option((CharacterPosition.t, list(Oni_Components.Popup.Section.t)));
   };
@@ -193,10 +315,12 @@ module Hover: {
 
 module Contributions: {
   let colors: list(ColorTheme.Schema.definition);
-  let commands: list(Command.t(msg));
+  let commands: model => list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
-  let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
+  let contextKeys: model => WhenExpr.ContextKeys.t;
   let keybindings: list(Feature_Input.Schema.keybinding);
+  let menuGroups: list(MenuBar.Schema.group);
+  let panes: list(Feature_Pane.Schema.t(model, msg));
 };
 
 module Definition: {

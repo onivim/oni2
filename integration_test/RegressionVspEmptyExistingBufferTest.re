@@ -2,7 +2,7 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 module Editor = Feature_Editor.Editor;
 
-runTest(~name="RegressionVspEmpty", (dispatch, wait, _) => {
+runTest(~name="RegressionVspEmpty", ({dispatch, wait, _}) => {
   let originalBuffer = ref(None);
   wait(~name="Wait for split to be created 1", (state: State.t) => {
     let splitCount =

@@ -6,6 +6,9 @@ module OptionEx = Core.Utility.OptionEx;
 
 module Log = (val Core.Log.withNamespace("Oni2.Service_Syntax"));
 
+module BufferTracker =
+  Oni_Core.BufferTracker.Make({});
+
 module Constants = {
   let defaultScope = "source.text";
 };
@@ -188,6 +191,7 @@ module Sub = {
 
       let init = (~params, ~dispatch) => {
         let bufferId = Core.Buffer.getId(params.buffer);
+        BufferTracker.startTracking(bufferId);
         let unsubscribe =
           Internal.subscribe(bufferId, tokenUpdates => {
             dispatch(ReceivedHighlights(tokenUpdates))
@@ -241,6 +245,7 @@ module Sub = {
       let dispose = (~params, ~state) => {
         state.unsubscribe();
         let bufferId = Core.Buffer.getId(params.buffer);
+        BufferTracker.stopTracking(bufferId);
         Log.infof(m => m("Stopping buffer subscription for: %d", bufferId));
         Oni_Syntax_Client.stopHighlightingBuffer(~bufferId, params.client);
       };
@@ -255,5 +260,18 @@ module Sub = {
       |> Option.value(~default=Constants.defaultScope);
 
     BufferSubscription.create({client, buffer, scope, visibleRanges});
+  };
+};
+
+module Effect = {
+  let bufferUpdate = (~client, ~bufferUpdate: Core.BufferUpdate.t) => {
+    Isolinear.Effect.create(~name="service.syntax.bufferUpdate", () => {
+      let bufferId = bufferUpdate.id;
+      if (BufferTracker.isTracking(bufferId)) {
+        Oni_Syntax_Client.notifyBufferUpdate(~bufferUpdate, client);
+      } else {
+        ();
+      };
+    });
   };
 };

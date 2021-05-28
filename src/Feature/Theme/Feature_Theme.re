@@ -10,7 +10,12 @@ type theme = Exthost.Extension.Contributions.Theme.t;
 type model = {
   schema: ColorTheme.Schema.t,
   theme: ColorTheme.t,
+  tokenColors: Oni_Syntax.TokenTheme.t,
+  selectedThemeId: option(string),
+  userCustomizations: ColorTheme.Colors.t,
 };
+
+let variant = ({theme, _}) => theme.variant;
 
 let defaults =
   [
@@ -20,6 +25,7 @@ let defaults =
     Colors.Dropdown.defaults,
     Colors.Editor.defaults,
     Colors.EditorError.defaults,
+    Colors.EditorUnnecessaryCode.defaults,
     Colors.EditorWarning.defaults,
     Colors.EditorInfo.defaults,
     Colors.EditorHint.defaults,
@@ -68,18 +74,23 @@ let initial = contributions => {
       ...List.map(ColorTheme.Schema.fromList, contributions),
     ]),
   theme: ColorTheme.{variant: Dark, colors: ColorTheme.Colors.empty},
+  tokenColors: Oni_Syntax.TokenTheme.empty,
+  selectedThemeId: None,
+
+  userCustomizations: ColorTheme.Colors.empty,
 };
+
+let tokenColors = ({tokenColors, _}) => tokenColors;
 
 let colors =
     (
       ~extensionDefaults as _=[], // TODO
-      ~customizations=ColorTheme.Colors.empty, // TODO
       model,
     ) => {
-  let {schema, theme} = model;
+  let {schema, theme, userCustomizations, _} = model;
 
   let rec resolve = key => {
-    switch (ColorTheme.Colors.get(key, customizations)) {
+    switch (ColorTheme.Colors.get(key, userCustomizations)) {
     | Some(color) => Some(color)
     | None =>
       switch (ColorTheme.Colors.get(key, theme.colors)) {
@@ -113,7 +124,7 @@ let colors =
        )
     |> ColorTheme.Colors.fromList;
 
-  ColorTheme.Colors.unionMany([defaults, theme.colors, customizations]);
+  ColorTheme.Colors.unionMany([defaults, theme.colors, userCustomizations]);
 };
 
 [@deriving show({with_path: false})]
@@ -123,20 +134,55 @@ type command =
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
-  | TextmateThemeLoaded(ColorTheme.variant, [@opaque] Textmate.ColorTheme.t);
+  | MenuPreviewTheme({themeId: string})
+  | MenuCommitTheme({themeId: string})
+  | TextmateThemeLoaded({
+      variant: ColorTheme.variant,
+      colors: [@opaque] Textmate.ColorTheme.t,
+      tokenColors: [@opaque] Oni_Syntax.TokenTheme.t,
+    })
+  | TextmateThemeLoadingError(string);
 
 module Msg = {
   let openThemePicker = Command(SelectTheme);
+
+  let vimColorSchemeSelected = (~themeId) =>
+    MenuPreviewTheme({themeId: themeId});
+
+  let menuPreviewTheme = (~themeId) => MenuPreviewTheme({themeId: themeId});
+
+  let menuCommitTheme = (~themeId) => MenuCommitTheme({themeId: themeId});
+};
+
+let setTheme = (~themeId, model) => {
+  ...model,
+  selectedThemeId: Some(themeId),
 };
 
 type outmsg =
   | Nothing
+  | ConfigurationTransform(ConfigurationTransformer.t)
   | OpenThemePicker(list(theme))
-  | ThemeChanged(ColorTheme.Colors.t);
+  | ThemeChanged(ColorTheme.Colors.t)
+  | NotifyError(string);
 
 let update = (model, msg) => {
   switch (msg) {
-  | TextmateThemeLoaded(variant, colors) =>
+  | MenuCommitTheme({themeId}) =>
+    let themeTransformer = name =>
+      Oni_Core.ConfigurationTransformer.setField(
+        "workbench.colorTheme",
+        `String(name),
+      );
+
+    (
+      model |> setTheme(~themeId),
+      ConfigurationTransform(themeTransformer(themeId)),
+    );
+
+  | MenuPreviewTheme({themeId}) => (model |> setTheme(~themeId), Nothing)
+
+  | TextmateThemeLoaded({variant, colors, tokenColors}) =>
     let colors =
       Textmate.ColorTheme.fold(
         (key, color, acc) =>
@@ -146,14 +192,68 @@ let update = (model, msg) => {
         [],
       )
       |> ColorTheme.Colors.fromList;
-    ({
-       ...model,
-       theme: {
-         variant,
-         colors,
-       },
-     }, ThemeChanged(colors));
+    (
+      {
+        ...model,
+        theme: {
+          variant,
+          colors,
+        },
+        tokenColors,
+      },
+      ThemeChanged(colors),
+    );
+
+  | TextmateThemeLoadingError(msg) => (
+      {...model, selectedThemeId: Some(Constants.defaultTheme)},
+      NotifyError(msg),
+    )
+
   | Command(SelectTheme) => (model, OpenThemePicker([]))
+  };
+};
+
+// SUBSCRIPTION
+
+let sub = (~getThemeContribution, {selectedThemeId, _}) => {
+  selectedThemeId
+  |> Option.map(themeId => {
+       ThemeLoader.sub(~themeId, ~getThemeContribution)
+       |> Isolinear.Sub.map(
+            fun
+            | Ok((variant, colors, tokenColors)) =>
+              TextmateThemeLoaded({variant, colors, tokenColors})
+            | Error(msg) => {
+                TextmateThemeLoadingError(msg);
+              },
+          )
+     })
+  |> Option.value(~default=Isolinear.Sub.none);
+};
+
+module Configuration = {
+  open Oni_Core;
+  open Config.Schema;
+
+  let colorTheme =
+    setting("workbench.colorTheme", string, ~default=Constants.defaultTheme);
+
+  let userCustomizations =
+    setting(
+      "workbench.colorCustomizations",
+      custom(
+        ~decode=ColorTheme.Colors.decode,
+        ~encode=ColorTheme.Colors.encode,
+      ),
+      ~default=ColorTheme.Colors.empty,
+    );
+};
+
+let configurationChanged = (~resolver, model) => {
+  {
+    ...model,
+    userCustomizations: Configuration.userCustomizations.get(resolver),
+    selectedThemeId: Some(Configuration.colorTheme.get(resolver)),
   };
 };
 
@@ -171,4 +271,7 @@ module Commands = {
 
 module Contributions = {
   let commands = [Commands.selectTheme];
+
+  let configuration =
+    Configuration.[colorTheme.spec, userCustomizations.spec];
 };

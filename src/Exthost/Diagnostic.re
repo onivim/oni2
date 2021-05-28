@@ -1,4 +1,31 @@
 open Oni_Core;
+
+module Tag = {
+  [@deriving show]
+  type t =
+    | Unused
+    | Deprecated;
+
+  let ofInt =
+    fun
+    | 1 => Some(Unused)
+    | 2 => Some(Deprecated)
+    | _ => None;
+
+  let decode =
+    Json.Decode.(
+      {
+        int
+        |> and_then(idx => {
+             switch (ofInt(idx)) {
+             | Some(tag) => succeed(tag)
+             | None => fail("Invalid tag: " ++ string_of_int(idx))
+             }
+           });
+      }
+    );
+};
+
 module Severity = {
   // Must be kept in-sync with:
   // https://github.com/onivim/vscode-exthost/blob/ed480e2fbe01ad85b8d85a2ca2dbd1b85c29242b/src/vs/platform/markers/common/markers.ts#L45
@@ -48,10 +75,12 @@ module Severity = {
     );
 };
 
+[@deriving show]
 type t = {
   range: OneBasedRange.t,
   message: string,
   severity: Severity.t,
+  tags: list(Tag.t),
   // TODO:
   // source: string,
   // code: string,
@@ -69,6 +98,7 @@ module Decode = {
       let endColumn = field.required("endColumn", int);
       let severity = field.required("severity", Severity.decode);
       let message = field.required("message", string);
+      let tags = field.withDefault("tags", [], list(Tag.decode));
 
       let range =
         OneBasedRange.create(
@@ -79,7 +109,7 @@ module Decode = {
           (),
         );
 
-      {range, severity, message};
+      {range, severity, message, tags};
     });
 };
 

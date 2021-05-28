@@ -21,21 +21,26 @@ let toLineMap: list(Range.t) => IntMap.t(list(Range.t)) =
     );
   };
 
-let toByteLineMap: list(ByteRange.t) => IntMap.t(list(ByteRange.t)) =
+let toByteLineMap: list(ByteRange.t) => IntMap.t(list(ByteSpan.t)) =
   ranges => {
     List.fold_left(
-      (prev, cur) =>
-        ByteRange.(
+      (prev: IntMap.t(list(ByteSpan.t)), cur: ByteRange.t) => {
+        let maybeSpan = ByteSpan.ofRange(cur);
+        if (maybeSpan == None) {
+          prev;
+        } else {
+          let span = maybeSpan |> Option.get;
           IntMap.update(
             EditorCoreTypes.LineNumber.toZeroBased(cur.start.line),
             v =>
               switch (v) {
-              | None => Some([cur])
-              | Some(v) => Some([cur, ...v])
+              | None => Some([span])
+              | Some(v) => Some([span, ...v])
               },
             prev,
-          )
-        ),
+          );
+        };
+      },
       IntMap.empty,
       ranges,
     );

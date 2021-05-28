@@ -4,13 +4,11 @@ open Oni_Core.Utility;
 open Config.Schema;
 
 module CustomDecoders: {
+  let autoClosingPairs: Config.Schema.codec([ | `LanguageDefined | `Never]);
   let whitespace:
     Config.Schema.codec([ | `All | `Boundary | `Selection | `None]);
   let lineNumbers:
     Config.Schema.codec([ | `On | `Relative | `RelativeOnly | `Off]);
-  let time: Config.Schema.codec(Time.t);
-  let fontSize: Config.Schema.codec(float);
-  let fontWeight: Config.Schema.codec(Revery.Font.Weight.t);
   let color: Config.Schema.codec(Revery.Color.t);
   let wordWrap: Config.Schema.codec([ | `Off | `On]);
 } = {
@@ -76,6 +74,41 @@ module CustomDecoders: {
         ),
     );
 
+  let autoClosingPairs =
+    custom(
+      ~decode=
+        Json.Decode.(
+          one_of([
+            (
+              "autoClosingPairs.bool",
+              bool
+              |> map(
+                   fun
+                   | false => `Never
+                   | true => `LanguageDefined,
+                 ),
+            ),
+            (
+              "autoClosingPairs.string",
+              string
+              |> map(str => {
+                   switch (String.lowercase_ascii(str)) {
+                   | "never" => `Never
+                   | "languagedefined" => `LanguageDefined
+                   | _ => `Never
+                   }
+                 }),
+            ),
+          ])
+        ),
+      ~encode=
+        Json.Encode.(
+          fun
+          | `Never => string("never")
+          | `LanguageDefined => string("languagedefined")
+        ),
+    );
+
   let whitespace =
     custom(
       ~decode=
@@ -100,73 +133,6 @@ module CustomDecoders: {
         ),
     );
 
-  let fontSize =
-    custom(
-      ~decode=
-        Json.Decode.(
-          float
-          |> map(size => {
-               size < Constants.minimumFontSize
-                 ? Constants.minimumFontSize : size
-             })
-        ),
-      ~encode=Json.Encode.float,
-    );
-  let fontWeightDecoder =
-    Json.Decode.(
-      one_of([
-        (
-          "fontWeight.int",
-          int
-          |> map(
-               fun
-               | 100 => Revery.Font.Weight.Thin
-               | 200 => Revery.Font.Weight.UltraLight
-               | 300 => Revery.Font.Weight.Light
-               | 400 => Revery.Font.Weight.Normal
-               | 500 => Revery.Font.Weight.Medium
-               | 600 => Revery.Font.Weight.SemiBold
-               | 700 => Revery.Font.Weight.Bold
-               | 800 => Revery.Font.Weight.UltraBold
-               | 900 => Revery.Font.Weight.Heavy
-               | _ => Revery.Font.Weight.Normal,
-             ),
-        ),
-        (
-          "fontWeight.string",
-          string
-          |> map(
-               fun
-               | "100" => Revery.Font.Weight.Thin
-               | "200" => Revery.Font.Weight.UltraLight
-               | "300" => Revery.Font.Weight.Light
-               | "400"
-               | "normal" => Revery.Font.Weight.Normal
-               | "500" => Revery.Font.Weight.Medium
-               | "600" => Revery.Font.Weight.SemiBold
-               | "700"
-               | "bold" => Revery.Font.Weight.Bold
-               | "800" => Revery.Font.Weight.UltraBold
-               | "900" => Revery.Font.Weight.Heavy
-               | _ => Revery.Font.Weight.Normal,
-             ),
-        ),
-      ])
-    );
-  let fontWeight =
-    custom(
-      ~decode=fontWeightDecoder,
-      ~encode=
-        Json.Encode.(
-          t =>
-            switch (t) {
-            | Revery.Font.Weight.Normal => string("normal")
-            | Revery.Font.Weight.Bold => string("bold")
-            | _ => string(string_of_int(Revery.Font.Weight.toInt(t)))
-            }
-        ),
-    );
-
   let lineNumbers =
     custom(
       ~decode=
@@ -188,20 +154,6 @@ module CustomDecoders: {
           | `Relative => string("relative")
           | `RelativeOnly => string("relative-only")
           | `On => string("on")
-        ),
-    );
-
-  let time =
-    custom(
-      ~decode=Json.Decode.(int |> map(Time.ms)),
-      ~encode=
-        Json.Encode.(
-          t =>
-            t
-            |> Time.toFloatSeconds
-            |> (t => t *. 1000.)
-            |> int_of_float
-            |> int
         ),
     );
 };
@@ -231,14 +183,6 @@ module VimSettings = {
            fontFamily
          )
       |> Option.value(~default="JetBrainsMono-Regular.ttf")
-    });
-
-  let lineSpace =
-    vim("linespace", lineSpaceSetting => {
-      lineSpaceSetting
-      |> VimSetting.decode_value_opt(int)
-      |> Option.map(LineHeight.padding)
-      |> Option.value(~default=LineHeight.default)
     });
 
   let wrap =
@@ -294,6 +238,15 @@ module VimSettings = {
 
 open CustomDecoders;
 
+module Codecs = Feature_Configuration.GlobalConfiguration.Codecs;
+
+let autoClosingPairs =
+  setting(
+    "editor.autoClosingBrackets",
+    CustomDecoders.autoClosingPairs,
+    ~default=`LanguageDefined,
+  );
+
 let detectIndentation =
   setting("editor.detectIndentation", bool, ~default=true);
 
@@ -304,23 +257,27 @@ let fontFamily =
     string,
     ~default=Constants.defaultFontFile,
   );
-let fontLigatures = setting("editor.fontLigatures", bool, ~default=true);
-let fontSize = setting("editor.fontSize", fontSize, ~default=14.);
+
+let fontSmoothing =
+  setting(
+    "editor.fontSmoothing",
+    custom(~encode=FontSmoothing.encode, ~decode=FontSmoothing.decode),
+    ~default=FontSmoothing.Default,
+  );
+
+let fontLigatures =
+  setting(
+    "editor.fontLigatures",
+    Codecs.fontLigatures,
+    ~default=FontLigatures.enabled,
+  );
+let fontSize = setting("editor.fontSize", Codecs.fontSize, ~default=14.);
 let fontWeight =
   setting(
     "editor.fontWeight",
-    fontWeight,
+    Codecs.fontWeight,
     ~default=Revery.Font.Weight.Normal,
   );
-let lineHeight =
-  setting(
-    ~vim=VimSettings.lineSpace,
-    "editor.lineHeight",
-    custom(~decode=LineHeight.decode, ~encode=LineHeight.encode),
-    ~default=LineHeight.default,
-  );
-let largeFileOptimization =
-  setting("editor.largeFileOptimizations", bool, ~default=true);
 let enablePreview =
   setting("workbench.editor.enablePreview", bool, ~default=true);
 let highlightActiveIndentGuide =
@@ -340,6 +297,13 @@ let renderIndentGuides =
 let renderWhitespace =
   setting("editor.renderWhitespace", whitespace, ~default=`Selection);
 let rulers = setting("editor.rulers", list(int), ~default=[]);
+
+let verticalScrollbarSize =
+  setting("editor.scrollbar.verticalScrollbarSize", int, ~default=15);
+
+let horizontalScrollbarSize =
+  setting("editor.scrollbar.horizontalScrollbarSize", int, ~default=8);
+
 let scrolloff =
   setting(
     "editor.cursorSurroundingLines",
@@ -348,6 +312,11 @@ let scrolloff =
     ~default=1,
   );
 let scrollShadow = setting("editor.scrollShadow", bool, ~default=true);
+
+let showDeprecated = setting("editor.showDeprecated", bool, ~default=true);
+
+let showUnused = setting("editor.showUnused", bool, ~default=true);
+
 let smoothScroll =
   setting(
     ~vim=VimSettings.smoothScroll,
@@ -359,7 +328,7 @@ let smoothScroll =
 let tabSize = setting("editor.tabSize", int, ~default=4);
 
 let wordWrap =
-  setting("editor.wordWrap", ~vim=VimSettings.wrap, wordWrap, ~default=`Off);
+  setting("editor.wordWrap", ~vim=VimSettings.wrap, wordWrap, ~default=`On);
 
 let wordWrapColumn = setting("editor.wordWrapColumn", int, ~default=80);
 
@@ -407,15 +376,16 @@ module Experimental = {
 };
 
 let contributions = [
+  autoClosingPairs.spec,
   detectIndentation.spec,
   fontFamily.spec,
   fontLigatures.spec,
   fontSize.spec,
+  fontSmoothing.spec,
   fontWeight.spec,
-  lineHeight.spec,
-  largeFileOptimization.spec,
   enablePreview.spec,
   highlightActiveIndentGuide.spec,
+  horizontalScrollbarSize.spec,
   indentSize.spec,
   insertSpaces.spec,
   lineNumbers.spec,
@@ -425,10 +395,13 @@ let contributions = [
   rulers.spec,
   scrollShadow.spec,
   scrolloff.spec,
+  showDeprecated.spec,
+  showUnused.spec,
   smoothScroll.spec,
   tabSize.spec,
   wordWrap.spec,
   wordWrapColumn.spec,
+  verticalScrollbarSize.spec,
   yankHighlightColor.spec,
   yankHighlightDuration.spec,
   yankHighlightEnabled.spec,

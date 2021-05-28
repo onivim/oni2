@@ -76,7 +76,7 @@ const getRipgrepPath = () => {
 }
 
 const getNodePath = () => {
-    const nodeDir = "node-v12.17.0"
+    const nodeDir = "node-v14.15.4"
 
     if (process.platform == "darwin") {
         return path.join(rootDirectory, "vendor", nodeDir, "osx", "node")
@@ -84,18 +84,6 @@ const getNodePath = () => {
         return path.join(rootDirectory, "vendor", nodeDir, "win-x64", "node.exe")
     } else {
         return path.join(rootDirectory, "vendor", nodeDir, "linux-x64", "node")
-    }
-}
-
-const getRlsPath = () => {
-    const rlsDir = "reason-language-server"
-
-    if (process.platform == "darwin") {
-        return path.join(vendorDirectory, rlsDir, "bin.native")
-    } else if (process.platform == "win32") {
-        return path.join(vendorDirectory, rlsDir, "bin.native.exe")
-    } else {
-        return path.join(vendorDirectory, rlsDir, "bin.native.linux")
     }
 }
 
@@ -108,7 +96,7 @@ const updateIcon = (rcedit, exe, iconFile) => {
     process.env = {
         PATH: process.env.PATH,
     }
-    fs.chmodSync(exe, 0755)
+    fs.chmodSync(exe, 0o0755)
     rcedit(exe, {
         icon: iconFile,
     })
@@ -125,7 +113,7 @@ if (process.platform == "linux") {
     })
     console.log(result.output.toString())
 } else if (process.platform == "darwin") {
-    const executables = ["Oni2", "Oni2_editor", "rg", "rls", "node"]
+    const executables = ["Oni2", "Oni2_editor", "rg", "node"]
 
     const appDirectory = path.join(releaseDirectory, "Onivim2.app")
     const contentsDirectory = path.join(appDirectory, "Contents")
@@ -189,7 +177,6 @@ if (process.platform == "linux") {
     copy(documentIconSourcePath, resourcesDirectory)
     copy(getRipgrepPath(), path.join(binaryDirectory, "rg"))
     copy(getNodePath(), path.join(binaryDirectory, "node"))
-    copy(getRlsPath(), path.join(binaryDirectory, "rls"))
 
     // Folders to delete
     // TODO: Move this into our VSCode packaging, there are a lot of files we don't need to bundle at all
@@ -208,6 +195,21 @@ if (process.platform == "linux") {
     fs.removeSync(path.join(binaryDirectory, "setup.json"))
     // Remove development plist file
     fs.removeSync(path.join(binaryDirectory, "Info.plist"))
+
+    // The Oni2 and Oni2_Editor binaries can't be symlinks, so replace them with their resolved counterpart
+    const mustBeResolved = ["Oni2", "Oni2_editor"]
+    for (const itemName of mustBeResolved) {
+        const binaryFilePath = path.join(binaryDirectory, itemName)
+        // Resolves symlinks multiple times until the real file is found
+        const resolvedPath = fs.realpathSync(binaryFilePath)
+
+        // If the original and resolved path are different, it is a symlink we need to replace
+        if (binaryFilePath != resolvedPath) {
+            console.log(`Replacing ${itemName} with its resolved binary`)
+            fs.removeSync(binaryFilePath)
+            fs.copyFileSync(resolvedPath, binaryFilePath)
+        }
+    }
 
     // We need to remap the binary files - we end up with font files, images, and configuration files in the bin folder
     // These should be in 'Resources' instead. Move everything that is _not_ a binary out, and symlink back in.
@@ -330,10 +332,6 @@ if (process.platform == "linux") {
     copy(
         getNodePath(),
         path.join(platformReleaseDirectory, process.platform == "win32" ? "node.exe" : "node"),
-    )
-    copy(
-        getRlsPath(),
-        path.join(platformReleaseDirectory, process.platform == "win32" ? "rls.exe" : "rls"),
     )
     if (process.platform == "win32") {
         const numCommits = winShell(

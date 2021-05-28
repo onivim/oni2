@@ -5,5 +5,11 @@
 exception TaskFailed;
 
 let run:
-  (~name: string=?, ~args: list(string)=?, ~setup: Setup.t, string) =>
+  (
+    ~additionalEnvironment: list((string, string))=?,
+    ~name: string=?,
+    ~args: list(string)=?,
+    ~setup: Setup.t,
+    string
+  ) =>
   Lwt.t(string);

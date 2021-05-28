@@ -1,7 +1,7 @@
 [@deriving show({with_path: false})]
 type msg =
   | AutoCheckChanged(bool)
-  | LicenseKeyChanged(string)
+  | LicenseKeyChanged([@opaque] string)
   | ReleaseChannelChanged(string);
 
 module Sub = {

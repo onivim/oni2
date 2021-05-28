@@ -1,3 +1,4 @@
+module PaneColors = Colors;
 open Revery;
 open Oni_Core;
 
@@ -14,22 +15,8 @@ module Internal = {
   };
 };
 
-// MODEL
-
-[@deriving show({with_path: false})]
-type kind =
-  | Info
-  | Warning
-  | Error;
-
-[@deriving show({with_path: false})]
-type notification = {
-  id: int,
-  kind,
-  message: string,
-  source: option(string),
-  yOffset: float,
-};
+include Model;
+module Colors = PaneColors;
 
 [@deriving show({with_path: false})]
 type internal = {
@@ -37,6 +24,7 @@ type internal = {
   kind,
   message: string,
   source: option(string),
+  ephemeral: bool,
   yOffsetAnimation: [@opaque] option(Component_Animation.t(float)),
 };
 
@@ -47,6 +35,7 @@ let internalToExternal: internal => notification =
       kind: internal.kind,
       message: internal.message,
       source: internal.source,
+      ephemeral: internal.ephemeral,
       yOffset:
         internal.yOffsetAnimation
         |> Option.map(Component_Animation.get)
@@ -59,40 +48,7 @@ type model = {
   activeNotifications: IntSet.t,
   statusBarBackgroundColor: option(Component_Animation.ColorTransition.t),
   statusBarForegroundColor: option(Component_Animation.ColorTransition.t),
-};
-
-// COLORS
-
-module Colors = {
-  open ColorTheme.Schema;
-  include Feature_Theme.Colors;
-
-  let infoBackground =
-    define("oni.notification.infoBackground", all(hex("#209CEE")));
-  let infoForeground =
-    define("oni.notification.infoForeground", all(hex("#FFF")));
-  let warningBackground =
-    define("oni.notification.warningBackground", all(hex("#FFDD57")));
-  let warningForeground =
-    define("oni.notification.warningForeground", all(hex("#333")));
-  let errorBackground =
-    define("oni.notification.errorBackground", all(hex("#FF3860")));
-  let errorForeground =
-    define("oni.notification.errorForeground", all(hex("#FFF")));
-
-  let backgroundFor = (notification: notification) =>
-    switch (notification.kind) {
-    | Warning => warningBackground
-    | Error => errorBackground
-    | Info => infoBackground
-    };
-
-  let foregroundFor = (notification: notification) =>
-    switch (notification.kind) {
-    | Warning => warningForeground
-    | Error => errorForeground
-    | Info => infoForeground
-    };
+  pane: Pane.t,
 };
 
 let initial = {
@@ -100,7 +56,11 @@ let initial = {
   activeNotifications: IntSet.empty,
   statusBarBackgroundColor: None,
   statusBarForegroundColor: None,
+  pane: Pane.initial,
 };
+
+let count = ({all, _}) =>
+  all |> List.filter(notification => !notification.ephemeral) |> List.length;
 
 let statusBarBackground = (~theme, {statusBarBackgroundColor, _}) => {
   statusBarBackgroundColor
@@ -137,8 +97,8 @@ let updateColorTransition = (~config, ~theme, model) => {
   let (desiredBackground, desiredForeground) = {
     switch (active(model)) {
     | [notification, ..._] =>
-      let bg = Colors.backgroundFor(notification);
-      let fg = Colors.foregroundFor(notification);
+      let bg = PaneColors.backgroundFor(notification);
+      let fg = PaneColors.foregroundFor(notification);
       (bg.from(theme), fg.from(theme));
     | [] => (
         Feature_Theme.Colors.StatusBar.background.from(theme),
@@ -187,6 +147,11 @@ let updateColorTransition = (~config, ~theme, model) => {
   };
 };
 
+let updatePane = model => {
+  let notifications = all(model);
+  {...model, pane: model.pane |> Pane.set(notifications)};
+};
+
 let changeTheme = updateColorTransition;
 
 // ANIMATIONS
@@ -222,6 +187,7 @@ type msg =
   | Dismissed({id: int})
   | Expire({id: int})
   | Clear({count: int})
+  | Pane(Pane.msg)
   | AnimateYOffset({
       id: int,
       msg: [@opaque] Component_Animation.msg,
@@ -233,19 +199,33 @@ module Msg = {
   let clear = count => Clear({count: count});
 };
 
+let dismiss = (~theme, ~config, ~id, model) => {
+  {
+    ...model,
+    all: List.filter(it => it.id != id, model.all),
+    activeNotifications: IntSet.remove(id, model.activeNotifications),
+  }
+  |> updateColorTransition(~config, ~theme)
+  |> updatePane;
+};
+
+let clear = (~count, ~config, ~theme, model) => {
+  let all =
+    if (count == 0) {
+      [];
+    } else {
+      Utility.ListEx.firstk(count, model.all);
+    };
+  {...model, all, activeNotifications: IntSet.empty}
+  |> updateColorTransition(~config, ~theme)
+  |> updatePane;
+};
+
 let update = (~theme, ~config, model, msg) => {
   let animationsEnabled =
     Feature_Configuration.GlobalConfiguration.animation.get(config);
   switch (msg) {
-  | Clear({count}) =>
-    let all =
-      if (count == 0) {
-        [];
-      } else {
-        Utility.ListEx.firstk(count, model.all);
-      };
-    {...model, all, activeNotifications: IntSet.empty}
-    |> updateColorTransition(~config, ~theme);
+  | Clear({count}) => model |> clear(~count, ~theme, ~config)
   | Created(item) =>
     let yOffsetAnimation =
       animationsEnabled
@@ -255,13 +235,10 @@ let update = (~theme, ~config, model, msg) => {
       all: [{...item, yOffsetAnimation}, ...model.all],
       activeNotifications: IntSet.add(item.id, model.activeNotifications),
     }
-    |> updateColorTransition(~config, ~theme);
+    |> updateColorTransition(~config, ~theme)
+    |> updatePane;
 
-  | Dismissed({id}) => {
-      ...model,
-      all: List.filter(it => it.id != id, model.all),
-      activeNotifications: IntSet.remove(id, model.activeNotifications),
-    }
+  | Dismissed({id}) => model |> dismiss(~theme, ~config, ~id)
 
   | Expire({id}) =>
     {
@@ -269,6 +246,16 @@ let update = (~theme, ~config, model, msg) => {
       activeNotifications: IntSet.remove(id, model.activeNotifications),
     }
     |> updateColorTransition(~config, ~theme)
+    |> updatePane
+
+  | Pane(paneMsg) =>
+    let (pane', outmsg) = Pane.update(paneMsg, model.pane);
+    let model' = {...model, pane: pane'};
+    switch (outmsg) {
+    | Nothing => model'
+    | DismissNotification({id}) => model' |> dismiss(~theme, ~config, ~id)
+    | ClearNotifications => model' |> clear(~theme, ~config, ~count=0)
+    };
 
   | AnimateYOffset({id, msg}) => {
       ...model,
@@ -307,7 +294,7 @@ let update = (~theme, ~config, model, msg) => {
 // EFFECTS
 
 module Effects = {
-  let create = (~kind=Info, ~source=?, message) =>
+  let create = (~ephemeral=false, ~kind=Info, ~source=?, message) =>
     Isolinear.Effect.createWithDispatch(~name="notification.create", dispatch =>
       if (Oni_Core.Utility.StringEx.isEmpty(message)) {
         let source = source |> Option.value(~default="Unknown");
@@ -316,6 +303,7 @@ module Effects = {
         dispatch(
           Created({
             id: Internal.generateId(),
+            ephemeral,
             kind,
             message,
             source,
@@ -329,6 +317,11 @@ module Effects = {
     Isolinear.Effect.createWithDispatch(~name="notification.dismiss", dispatch =>
       dispatch(Dismissed({id: notification.id}))
     );
+
+  let clear = () =>
+    Isolinear.Effect.createWithDispatch(~name="notification.clear", dispatch =>
+      dispatch(Clear({count: 0}))
+    );
 };
 
 let sub = (model: model) => {
@@ -340,7 +333,9 @@ let sub = (model: model) => {
            ~uniqueId="Feature_Notification" ++ string_of_int(notification.id),
            ~delay=Animations.totalDuration,
            ~msg=(~current as _) =>
-           Expire({id: notification.id})
+           notification.ephemeral
+             ? Dismissed({id: notification.id})
+             : Expire({id: notification.id})
          )
        });
 
@@ -374,7 +369,6 @@ let sub = (model: model) => {
 
 module View = {
   open Revery.UI;
-  open Revery.UI.Components;
 
   module FontAwesome = Oni_Components.FontAwesome;
   module FontIcon = Oni_Components.FontIcon;
@@ -451,100 +445,14 @@ module View = {
       </View>;
     };
   };
-
   // LIST
-
-  module Item = {
-    module Styles = {
-      open Style;
-
-      let container = [
-        flexDirection(`Row),
-        alignItems(`Center),
-        paddingHorizontal(10),
-        paddingVertical(5),
-      ];
-
-      let text = (~foreground) => [
-        textWrap(TextWrapping.NoWrap),
-        marginLeft(6),
-        color(foreground),
-      ];
-
-      let message = (~foreground) => [flexGrow(1), ...text(~foreground)];
-
-      let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
-    };
-
-    let colorFor = (item: notification, ~theme) =>
-      switch (item.kind) {
-      | Warning => Colors.warningBackground.from(theme)
-      | Error => Colors.errorBackground.from(theme)
-      | Info => Colors.infoBackground.from(theme)
-      };
-
-    let iconFor = (item: notification) =>
-      switch (item.kind) {
-      | Warning => FontAwesome.exclamationTriangle
-      | Error => FontAwesome.exclamationCircle
-      | Info => FontAwesome.infoCircle
-      };
-
-    let make =
-        (~notification: notification, ~theme, ~font: UiFont.t, ~onDismiss, ()) => {
-      let foreground = Colors.foreground.from(theme);
-
-      let icon = () =>
-        <FontIcon
-          icon={iconFor(notification)}
-          fontSize=12.
-          color={colorFor(notification, ~theme)}
-        />;
-
-      let source = () =>
-        switch (notification.source) {
-        | Some(text) =>
-          let foreground = Color.multiplyAlpha(0.5, foreground);
-          <Text
-            style={Styles.text(~foreground)}
-            fontFamily={font.family}
-            fontSize=11.
-            text
-          />;
-        | None => React.empty
-        };
-
-      let closeButton = () => {
-        // TODO: Bring back
-        //let onClick = () => dispatch(Dismissed({id: item.id}));
-
-        let onClick = onDismiss;
-
-        <Clickable onClick style=Styles.closeButton>
-          <FontIcon icon=FontAwesome.times fontSize=13. color=foreground />
-        </Clickable>;
-      };
-
-      <View style=Styles.container>
-        <icon />
-        <source />
-        <Text
-          style={Styles.message(~foreground)}
-          fontFamily={font.family}
-          fontSize=11.
-          text={notification.message}
-        />
-        <closeButton />
-      </View>;
-    };
-  };
 };
 
 // CONTRIBUTIONS
 
 module Contributions = {
   let colors =
-    Colors.[
+    PaneColors.[
       infoBackground,
       infoForeground,
       warningBackground,
@@ -552,4 +460,50 @@ module Contributions = {
       errorBackground,
       errorForeground,
     ];
+
+  let pane: Feature_Pane.Schema.t(model, msg) = {
+    let contextKeys = (~isFocused, model) => {
+      isFocused
+        ? Component_VimList.Contributions.contextKeys(
+            model.pane.notificationsView,
+          )
+        : WhenExpr.ContextKeys.empty;
+    };
+
+    Feature_Pane.Schema.(
+      panel(
+        ~title="Notifications",
+        ~id=Some("workbench.panel.notifications"),
+        ~buttons=
+          (~font, ~theme, ~dispatch, ~model) => {
+            <Pane.View.Buttons font theme dispatch model={model.pane} />
+          },
+        ~commands=Pane.commands,
+        ~contextKeys,
+        ~sub=(~isFocused as _, _model) => Isolinear.Sub.none,
+        ~view=
+          (
+            ~config as _,
+            ~editorFont as _,
+            ~font,
+            ~isFocused,
+            ~iconTheme as _,
+            ~languageInfo as _,
+            ~workingDirectory as _,
+            ~theme,
+            ~dispatch,
+            ~model,
+          ) =>
+            <Pane.View
+              uiFont=font
+              isFocused
+              theme
+              dispatch
+              model={model.pane}
+            />,
+        ~keyPressed=Pane.keyPress,
+      )
+      |> map(~model=Fun.id, ~msg=msg => Pane(msg))
+    );
+  };
 };

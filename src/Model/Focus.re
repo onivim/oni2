@@ -3,6 +3,7 @@ type focusable =
   | Editor
   | Wildmenu
   | Quickmenu
+  | NewQuickmenu
   // Sidebar
   | Extensions
   | FileExplorer

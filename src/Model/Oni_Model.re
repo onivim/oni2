@@ -23,6 +23,7 @@ module FilterJob = FilterJob;
 module MenuManager = MenuManager;
 module ModeManager = ModeManager;
 module Selectors = Selectors;
+module SnippetVariables = SnippetVariables;
 module State = State;
 module Sub = Sub;
 module VimContext = VimContext;

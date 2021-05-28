@@ -3,29 +3,27 @@ open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="ClipboardyypTest", (dispatch, wait, runEffects) => {
-  wait(
-    ~name="Set configuration to always yank to clipboard", (state: State.t) => {
-    let configuration = state.configuration;
+runTest(~name="ClipboardyypTest", ({dispatch, wait, runEffects, _}) => {
+  wait(~name="Set configuration to always yank to clipboard", _ => {
+    let transformer =
+      ConfigurationTransformer.setField(
+        "vim.useSystemClipboard",
+        `Bool(true),
+      );
     dispatch(
-      ConfigurationSet({
-        ...configuration,
-        default: {
-          ...configuration.default,
-          vimUseSystemClipboard: {
-            yank: true,
-            paste: true,
-            delete: true,
-          },
-        },
-      }),
+      Configuration(Feature_Configuration.Testing.transform(transformer)),
     );
     runEffects();
     true;
   });
 
+  wait(~name="Wait for configuration to update", (state: State.t) => {
+    Feature_Vim.useSystemClipboard(state.vim)
+    == Feature_Vim.{yank: true, delete: true, paste: true}
+  });
+
   let testFile = getAssetPath("some-test-file.txt");
-  dispatch(Actions.OpenFileByPath(testFile, None, None));
+  dispatch(Actions.OpenFileByPath(testFile, SplitDirection.Current, None));
 
   wait(~name="Verify buffer is loaded", (state: State.t) => {
     state

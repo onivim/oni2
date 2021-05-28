@@ -1,14 +1,17 @@
+[@deriving show]
 type modifier =
   | Control
   | Shift
   | Alt
-  | Meta;
+  | Super;
 
+[@deriving show]
 type keyPress =
   | UnmatchedString(string)
   | Physical(Key.t)
   | Special(SpecialKey.t);
 
+[@deriving show]
 type keyMatcher = (keyPress, list(modifier));
 
 type t =
@@ -25,7 +28,7 @@ module Helpers = {
       | [Control, ...tail] => loop(Modifiers.{...mods, control: true}, tail)
       | [Shift, ...tail] => loop(Modifiers.{...mods, shift: true}, tail)
       | [Alt, ...tail] => loop(Modifiers.{...mods, alt: true}, tail)
-      | [Meta, ...tail] => loop(Modifiers.{...mods, meta: true}, tail)
+      | [Super, ...tail] => loop(Modifiers.{...mods, super: true}, tail)
       };
 
     loop(Modifiers.none, modList);

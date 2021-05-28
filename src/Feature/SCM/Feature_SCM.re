@@ -215,9 +215,16 @@ type model = {
   providers: list(Provider.t),
   inputBox: Component_InputText.model,
   textContentProviders: list((int, string)),
-  originalLines: [@opaque] IntMap.t(array(string)),
   vimWindowNavigation: Component_VimWindows.model,
   focus: Focus.t,
+};
+
+let count = ({providers, _}) => {
+  providers
+  |> List.fold_left(
+       (count, provider: Provider.t) => {count + provider.count},
+       0,
+     );
 };
 
 let resetFocus = model => {...model, focus: Focus.initial};
@@ -226,7 +233,6 @@ let initial = {
   providers: [],
   inputBox: Component_InputText.create(~placeholder="Do the commit thing!"),
   textContentProviders: [],
-  originalLines: IntMap.empty,
   vimWindowNavigation: Component_VimWindows.initial,
   focus: Focus.initial,
 };
@@ -265,18 +271,6 @@ let statusBarCommands = (~workingDirectory, {providers, _}: model) => {
      })
   |> List.map(({statusBarCommands, _}: Provider.t) => statusBarCommands)
   |> List.flatten;
-};
-
-let getOriginalLines = (buffer, model) => {
-  let bufferId = buffer |> Oni_Core.Buffer.getId;
-
-  IntMap.find_opt(bufferId, model.originalLines);
-};
-
-let setOriginalLines = (buffer, lines, model) => {
-  let bufferId = buffer |> Oni_Core.Buffer.getId;
-  let originalLines = IntMap.add(bufferId, lines, model.originalLines);
-  {...model, originalLines};
 };
 
 // UPDATE
@@ -379,6 +373,10 @@ type outmsg =
   | OpenFile(string)
   | PreviewFile(string)
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | OriginalContentLoaded({
+      bufferId: int,
+      originalLines: array(string),
+    })
   | Nothing;
 
 module Effects = {
@@ -414,7 +412,15 @@ module Effects = {
           resultLines =>
             switch (resultLines) {
             | Error(_) => GetOriginalContentFailed({bufferId: bufferId})
-            | Ok(lines) => GotOriginalContent({bufferId, lines})
+            | Ok(lines) =>
+              // If the file is empty, it's either untracked, ignored, or totally empty when adding -
+              // in any of these cases, we don't want to render diff markers.
+              // https://github.com/onivim/oni2/issues/3355
+              if (lines != [|""|]) {
+                GotOriginalContent({bufferId, lines});
+              } else {
+                GetOriginalContentFailed({bufferId: bufferId});
+              }
             },
         fileSystem,
         client,
@@ -511,11 +517,8 @@ let update =
     )
 
   | GotOriginalContent({bufferId, lines}) => (
-      {
-        ...model,
-        originalLines: IntMap.add(bufferId, lines, model.originalLines),
-      },
-      Nothing,
+      model,
+      OriginalContentLoaded({bufferId, originalLines: lines}),
     )
 
   | GetOriginalContentFailed(_) => (model, Nothing)

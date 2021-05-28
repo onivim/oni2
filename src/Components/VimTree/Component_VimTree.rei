@@ -36,7 +36,8 @@ type outmsg('node, 'leaf) =
   | Expanded('node)
   | Collapsed('node)
   | Touched('leaf)
-  | Selected('leaf);
+  | Selected('leaf)
+  | SelectedNode('node);
 
 let update:
   (msg, model('node, 'leaf)) => (model('node, 'leaf), outmsg('node, 'leaf));
@@ -54,6 +55,9 @@ let keyPress: (string, model('node, 'leaf)) => model('node, 'leaf);
 
 let findIndex:
   (nodeOrLeaf('node, 'leaf) => bool, model('node, 'leaf)) => option(int);
+
+let setSelected:
+  (~selected: int, model('node, 'leaf)) => model('node, 'leaf);
 
 let scrollTo:
   (
@@ -78,7 +82,7 @@ module Contributions: {
 module View: {
   let make:
     (
-      ~config: Oni_Core.Config.resolver,
+      ~config: Config.resolver,
       ~isActive: bool,
       ~font: UiFont.t,
       ~focusedIndex: option(int),

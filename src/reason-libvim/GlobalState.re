@@ -36,3 +36,5 @@ let screenPositionMotion:
 
 let toggleComments: ref(option(array(string) => array(string))) =
   ref(None);
+
+let additionalCursors: ref(list(BytePosition.t)) = ref([]);

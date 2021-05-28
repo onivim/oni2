@@ -48,8 +48,8 @@ let getDefaultConfigString = configName =>
   // See the onivim documentation for details on the format:
   // https://onivim.github.io/docs/configuration/key-bindings
   // Add key bindings here, for example:
-  // { "key": "<TAB>", "command": "workbench.action.quickOpen", when: "editorTextFocus" },
-  // { "key": "jk", "command": "vim.esc", when: "insertMode" },
+  // { "key": "<TAB>", "command": "workbench.action.quickOpen", "when": "editorTextFocus" },
+  // { "key": "jk", "command": "vim.esc", "when": "insertMode" },
 ]
 |},
     )

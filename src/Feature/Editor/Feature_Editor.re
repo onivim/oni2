@@ -29,7 +29,8 @@ type msg = Msg.t;
 type outmsg =
   | Nothing
   | MouseHovered(option(CharacterPosition.t))
-  | MouseMoved(option(CharacterPosition.t));
+  | MouseMoved(option(CharacterPosition.t))
+  | ExecuteCommand(Exthost.Command.t);
 
 type model = Editor.t;
 
@@ -101,23 +102,32 @@ let update = (~config, editor, msg) => {
   | HorizontalScrollbarMouseRelease
   | VerticalScrollbarMouseRelease
   | VerticalScrollbarMouseDown => (editor, Nothing)
-  | EditorMouseDown({time, pixelX, pixelY}) => (
-      editor |> Editor.mouseDown(~time, ~pixelX, ~pixelY),
+  | EditorMouseDown({altKey, time, pixelX, pixelY}) => (
+      editor |> Editor.mouseDown(~altKey, ~time, ~pixelX, ~pixelY),
       Nothing,
     )
-  | EditorMouseUp({time, pixelX, pixelY}) => (
-      editor |> Editor.mouseUp(~time, ~pixelX, ~pixelY),
+  | EditorMouseUp({altKey, time, pixelX, pixelY}) => (
+      editor |> Editor.mouseUp(~altKey, ~time, ~pixelX, ~pixelY),
       Nothing,
     )
   | InlineElementSizeChanged({key, line, uniqueId, height}) => (
       Editor.setInlineElementSize(~key, ~line, ~uniqueId, ~height, editor),
       Nothing,
     )
+  | InlineElementClicked({command, _}) => (
+      editor,
+      switch (command) {
+      | Some(cmd) => ExecuteCommand(cmd)
+      | None => Nothing
+      },
+    )
   | PreviewChanged(preview) => (
       Editor.setPreview(~preview, editor),
       Nothing,
     )
-  | Internal(msg) => (Editor.update(msg, editor), Nothing)
+  | Internal(msg) =>
+    let editor' = Editor.update(msg, editor);
+    (editor', Nothing);
   | EditorMouseMoved({time, pixelX, pixelY}) =>
     let editor' = editor |> Editor.mouseMove(~time, ~pixelX, ~pixelY);
 
@@ -129,6 +139,10 @@ let update = (~config, editor, msg) => {
   | MouseHovered =>
     let maybeCharacter = Editor.getCharacterUnderMouse(editor);
     (editor, MouseHovered(maybeCharacter));
+
+  | BoundingBoxChanged({bbox}) =>
+    let editor' = Editor.setBoundingBox(bbox, editor);
+    (editor', Nothing);
 
   | ModeChanged({allowAnimation, mode, effects}) =>
     let handleScrollEffect = (~count, ~direction, editor) => {

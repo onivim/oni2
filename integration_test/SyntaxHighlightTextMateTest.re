@@ -3,7 +3,7 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 
 // Validate that textmate highlight runs
-runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
+runTest(~name="SyntaxHighlightTextMateTest", ({dispatch, wait, _}) => {
   wait(~name="Capture initial state", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
@@ -14,7 +14,7 @@ runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
   let testFile = getAssetPath("large-c-file.c");
 
   // Create a buffer
-  dispatch(Actions.OpenFileByPath(testFile, None, None));
+  dispatch(Actions.OpenFileByPath(testFile, SplitDirection.Current, None));
 
   // Wait for highlights to show up
   wait(

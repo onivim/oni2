@@ -41,10 +41,10 @@ module Settings = {
   };
 
   let fromFile = path =>
-    try(path |> Fp.toString |> Yojson.Safe.from_file |> fromJson) {
+    try(path |> FpExp.toString |> Yojson.Safe.from_file |> fromJson) {
     | Yojson.Json_error(message) =>
       Log.errorf(m =>
-        m("Failed to read file %s: %s", path |> Fp.toString, message)
+        m("Failed to read file %s: %s", path |> FpExp.toString, message)
       );
       empty;
     };
@@ -136,9 +136,27 @@ module Schema = {
     let float = {decode: Json.Decode.float, encode: Json.Encode.float};
     let int = {decode: Json.Decode.int, encode: Json.Encode.int};
     let string = {decode: Json.Decode.string, encode: Json.Encode.string};
+    let time = {
+      decode: Json.Decode.(int |> map(Time.ms)),
+      encode:
+        Json.Encode.(
+          t =>
+            t
+            |> Time.toFloatSeconds
+            |> (t => t *. 1000.)
+            |> int_of_float
+            |> int
+        ),
+    };
+
     let list = valueCodec => {
       decode: Json.Decode.list(valueCodec.decode),
       encode: Json.Encode.list(valueCodec.encode),
+    };
+
+    let nullable = valueCodec => {
+      decode: Json.Decode.nullable(valueCodec.decode),
+      encode: Json.Encode.nullable(valueCodec.encode),
     };
 
     let custom = (~decode, ~encode) => {decode, encode};

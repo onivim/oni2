@@ -87,7 +87,7 @@ module Colors = {
 
 module Styles = {
   open Style;
-  let default = (~theme, ~focused) =>
+  let default = (~shadowOpacity, ~theme, ~focused, ()) =>
     Style.[
       color(Colors.foreground(theme)),
       paddingVertical(8),
@@ -102,21 +102,20 @@ module Styles = {
         ~yOffset=4.,
         ~blurRadius=focused ? 8. : 0.,
         ~spreadRadius=0.,
-        ~color=Color.rgba(0., 0., 0., 0.5),
+        ~color=Color.rgba(0., 0., 0., shadowOpacity),
       ),
     ];
 
-  let _all = (~theme, focused) => [
+  let _all = (~shadowOpacity, ~theme, focused) => [
     flexDirection(`Row),
     alignItems(`Center),
     justifyContent(`FlexStart),
     cursor(MouseCursors.text),
-    ...default(~theme, ~focused),
+    ...default(~shadowOpacity, ~theme, ~focused, ()),
   ];
 
-  let box = (~style: list(Revery.UI.Style.viewStyleProps), ~theme, ~focused) => {
-    ignore(style);
-    _all(~theme, focused);
+  let box = (~shadowOpacity, ~theme, ~focused) => {
+    _all(~shadowOpacity, ~theme, focused);
   };
 
   let marginContainer = [
@@ -155,6 +154,7 @@ let%component make =
                 ~model: Model.t,
                 ~theme,
                 ~fontSize=18.,
+                ~shadowOpacity=0.5,
                 ~fontFamily=Revery.Font.Family.fromFile("Roboto-Regular.ttf"),
                 ~placeholderColor=Colors.placeholderForeground(theme),
                 ~cursorColor=Colors.foreground(theme),
@@ -166,8 +166,6 @@ let%component make =
               ) => {
   let%hook textRef = Hooks.ref(None);
   let%hook scrollOffset = Hooks.ref(0);
-
-  let style = Styles.default(~theme, ~focused=isFocused);
 
   let%hook () =
     Hooks.effect(
@@ -347,7 +345,8 @@ let%component make =
     />;
 
   <Sneakable sneakId="text" onAnyClick=handleClick onSneak>
-    <View style={Styles.box(~style, ~theme, ~focused=model.isFocused)}>
+    <View
+      style={Styles.box(~shadowOpacity, ~theme, ~focused=model.isFocused)}>
       <View style=Styles.marginContainer>
         <selectionView />
         <cursor />

@@ -56,6 +56,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     | Quickmenu => [Actions.QuickmenuInput(k)]
 
+    | NewQuickmenu => [
+        Actions.Quickmenu(Feature_Quickmenu.Msg.keyPressed(k)),
+      ]
+
     | Sneak => [Actions.Sneak(Feature_Sneak.KeyboardInput(k))]
 
     | FileExplorer => [
@@ -67,7 +71,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
 
     | Terminal(id) => [
-        Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k})),
+        Actions.Terminal(Feature_Terminal.Msg.keyPressed(~id, k)),
       ]
 
     | Search => [Actions.Search(Feature_Search.Msg.input(k))]
@@ -96,6 +100,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         | Editor => Actions.Vim(Feature_Vim.Pasted(rawText))
         | Wildmenu => Actions.Vim(Feature_Vim.Pasted(firstLine))
         | Quickmenu => Actions.QuickmenuPaste(firstLine)
+        | NewQuickmenu =>
+          Actions.Quickmenu(Feature_Quickmenu.Msg.pasted(firstLine))
         | Extensions =>
           Actions.Extensions(Feature_Extensions.Msg.pasted(firstLine))
         | SCM => Actions.SCM(Feature_SCM.Msg.paste(firstLine))
@@ -107,7 +113,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         | LicenseKey =>
           Actions.Registration(Feature_Registration.Pasted(firstLine))
         | Terminal(id) =>
-          Actions.Terminal(Feature_Terminal.Pasted({id, text: rawText}))
+          Actions.Terminal(Feature_Terminal.Msg.pasted(~id, firstLine))
 
         // No paste handling in these UIs, currently...
         | Pane => Actions.Noop
@@ -129,8 +135,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | Feature_Input.(Execute(VimExCommand(command))) => [
         Actions.VimExecuteCommand({allowAnimation: true, command}),
       ]
-    | Feature_Input.(Execute(NamedCommand(command))) => [
-        Actions.KeybindingInvoked({command: command}),
+    | Feature_Input.(Execute(NamedCommand({command, arguments}))) => [
+        Actions.KeybindingInvoked({command, arguments}),
       ]
     | Feature_Input.Text(text) => handleTextEffect(~isText=true, state, text)
     | Feature_Input.Unhandled({key, isProducedByRemap}) =>
@@ -198,7 +204,19 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     let newState = {...state, input};
 
-    updateFromInput(newState, /*Some("Text: " ++ text),*/ actions);
+    updateFromInput(newState, actions);
+  };
+
+  let handleTimeout = (state: State.t) => {
+    let context = Model.ContextKeys.all(state);
+    let (input, effects) = Feature_Input.timeout(~context, state.input);
+
+    let actions =
+      effects |> List.map(effectToActions(state)) |> List.flatten;
+
+    let newState = {...state, input};
+
+    updateFromInput(newState, actions);
   };
 
   let handleKeyUp = (~scancode, state: State.t) => {
@@ -223,6 +241,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       handleKeyPress(~scancode, state, time, key)
 
     | KeyUp({scancode, _}) => handleKeyUp(~scancode, state)
+
+    | KeyTimeout => handleTimeout(state)
 
     | TextInput(text, time) => handleTextInput(state, time, text)
 

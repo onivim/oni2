@@ -2,14 +2,6 @@ open EditorCoreTypes;
 open Revery.UI;
 open Oni_Core;
 
-module Constants = {
-  include Constants;
-
-  let diffMarkersMaxLineCount = 2000;
-  let diffMarkerWidth = 3.;
-  let gutterMargin = 3.;
-};
-
 let renderLineNumber =
     (
       ~context: Draw.context,
@@ -149,7 +141,12 @@ let render =
   );
 
   if (showScrollShadow) {
-    ScrollShadow.renderVertical(~editor, ~width=float(width), ~context);
+    ScrollShadow.renderVertical(
+      ~color=colors.shadow,
+      ~editor,
+      ~width=float(width),
+      ~context,
+    );
   };
 };
 
@@ -175,8 +172,7 @@ let make =
         )
       : 0.0;
 
-  let totalWidth =
-    lineNumberWidth +. Constants.diffMarkerWidth +. Constants.gutterMargin;
+  let totalWidth = Editor.gutterWidth(~editorFont, editor);
 
   let style =
     Style.[

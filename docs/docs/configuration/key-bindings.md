@@ -40,6 +40,23 @@ There are a set of default rules provided by Onivim, but the customized rules ar
 
 The `key` parameter supports both _Vim style_ and _VSCode style_ key bindings.
 
+### Remaps
+
+Remaps can also be specified via the same keybindings configuration file.
+
+Remapping keys tend to be more natural for users coming from Vim, and they allow matching a key sequence and then producing a new set of key presses.
+
+Remaps require 3 properties:
+- `from` - a key, specified in the same format as the `key` parameter
+- `to` - a key, specified in the same format as the `key` parameter
+- `when` - a context clause describing when the remapping should take effect.
+
+An example of a remap would be:
+```json
+{ "from": "jj", "to": "<esc>", "when": "editorTextFocus && insertMode" }
+```
+(which is functionally equivalent to `:inoremap jj <ESC>`)
+
 #### Vim style
 
 Vim-style keybindings are surrounded by `<` and `>`, and allow the following modifiers:
@@ -116,9 +133,17 @@ Common contexts with VSCode:
 | Context Name | True When | 
 | --- | --- |
 | `editorTextFocus` | An editor has focus |
+| `inSnippetMode` | A snippet session is currently active |
+| `renameInputVisible` | The rename input is visible |
+| `suggestWidgetVisible` | The suggest widget (auto-completion) is visible |
 | `textInputFocus` | A text input area has focus |
 | `terminalFocus` | A terminal has focus |
-| `suggestWidgetVisible` | The suggest widget (auto-completion) is visible |
+
+The `activeViewlet` context key corresponds to the id of the open sidebar pane:
+- `workbench.view.explorer` - File Explorer
+- `workbench.view.extensions` - Extensions
+- `workbench.view.scm` - SCM
+- `workbench.view.search` - Search
 
 Onivim-specific contexts:
 
@@ -130,6 +155,9 @@ Onivim-specific contexts:
 | `sneakMode` | Sneak mode is active |
 | `commandLineFocus` | The Vim commandline is open |
 | `listFocus` | A list of items (like a pop-up menu) is focused |
+| `sideBarFocus` | The sidebar has focus visible |
+| `sideBarVisible` | The sidebar is visible |
+| `paneFocus` | The bottom pane has focus |
 | `vimListNavigation` | Inside a Vim-navigable list |
 | `vimTreeNavigation` | Inside the file explorer |
 
@@ -170,6 +198,13 @@ Onivim-specific contexts:
 | Control+Shift+G | Focus Source Control | `workbench.view.scm` |
 | Control+W, Control+J | Navigate down a section | `vim.window.moveDown` |
 | Control+W, Control+K | Navigate up a section | `vim.window.moveUp` |
+
+### Snippets
+
+| Default Key Binding | Description | Command | 
+| --- | --- | --- |
+| n/a | Insert a Snippet | `editor.action.insertSnippet` |
+| n/a | Configure user snippets | `workbench.action.openSnippets` |
 
 ### Window Management
 

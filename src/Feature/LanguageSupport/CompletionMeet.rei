@@ -10,8 +10,11 @@ type t = {
   bufferId: int,
   // Base is the prefix string
   base: string,
-  // Meet is the location where we request completions
+  // `location` is the location where we request completions
   location: CharacterPosition.t,
+  // `insertLocation` is the location where snippets are keywords should begin insertion
+  // Often, this will be overridden by the completion provider
+  insertLocation: CharacterPosition.t,
 };
 
 let matches: (t, t) => bool;

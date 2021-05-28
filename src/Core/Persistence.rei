@@ -24,6 +24,21 @@ module Schema: {
     item('state, 'value);
 };
 
+// UPGRADER
+
+module Upgrader: {
+  type t;
+
+  let define:
+    (
+      ~name: string,
+      ~fromVersion: int,
+      ~toVersion: int,
+      Yojson.Safe.t => Yojson.Safe.t
+    ) =>
+    t;
+};
+
 // STORE
 
 module Store: {
@@ -34,7 +49,9 @@ module Store: {
 
   let instantiate:
     (
-      ~storeFolder: Fp.t(Fp.absolute)=?,
+      ~version: int,
+      ~upgraders: list(Upgrader.t),
+      ~storeFolder: FpExp.t(FpExp.absolute)=?,
       string,
       unit => list(entry('state))
     ) =>

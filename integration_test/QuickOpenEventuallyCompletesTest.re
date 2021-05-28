@@ -1,7 +1,8 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => {
+runTest(
+  ~name="QuickOpen eventually completes", ({dispatch, wait, runEffects, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );

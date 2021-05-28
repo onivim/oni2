@@ -5,7 +5,7 @@ open Oni_IntegrationTestLib;
 module Log = (val Log.withNamespace("IntegrationTest.inputIgnore"));
 
 // This test validates that certain keystrokes are ignored by our Vim layer
-runTest(~name="InputIgnore test", (dispatch, wait, runEffects) => {
+runTest(~name="InputIgnore test", ({dispatch, wait, runEffects, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );

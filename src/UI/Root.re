@@ -58,7 +58,7 @@ module Styles = {
 };
 
 let make = (~dispatch, ~state: State.t, ()) => {
-  let State.{uiFont as font, sideBar, zenMode, buffers, editorFont, _} = state;
+  let State.{uiFont as font, sideBar, buffers, editorFont, zen, _} = state;
 
   let theme = Feature_Theme.colors(state.colorTheme);
 
@@ -76,6 +76,8 @@ let make = (~dispatch, ~state: State.t, ()) => {
   let statusBarDispatch = msg => dispatch(Actions.StatusBar(msg));
   let messagesDispatch = msg => dispatch(Actions.Messages(msg));
 
+  let zenMode = Feature_Zen.isZen(zen);
+
   let messages = () => {
     <Feature_Messages.View
       theme
@@ -85,11 +87,61 @@ let make = (~dispatch, ~state: State.t, ()) => {
     />;
   };
 
+  let editorToAbsolutePosition = (~editorId, position) => {
+    state.layout
+    |> Feature_Layout.editorById(editorId)
+    |> Option.map(editor => {
+         EditorCoreTypes.(
+           Feature_Editor.(
+             {
+               let (pixelPosition, _) =
+                 Editor.bufferCharacterPositionToPixel(~position, editor);
+
+               let gutterWidth = Editor.gutterWidth(~editorFont, editor);
+
+               let offsetX = Editor.pixelX(editor);
+               let offsetY = Editor.pixelY(editor);
+               let lineHeight = Editor.lineHeightInPixels(editor);
+
+               PixelPosition.{
+                 x: pixelPosition.x +. offsetX +. gutterWidth,
+                 y: pixelPosition.y +. offsetY +. lineHeight,
+               };
+             }
+           )
+         )
+       });
+  };
+
+  let languageSupportOverlay = () => {
+    let activeEditorId = Feature_Editor.Editor.getId(activeEditor);
+    maybeActiveBuffer
+    |> Option.map(activeBuffer => {
+         let cursorPosition =
+           Feature_Editor.Editor.getPrimaryCursor(activeEditor);
+         let lineHeight =
+           Feature_Editor.Editor.lineHeightInPixels(activeEditor);
+         let tokenTheme = Feature_Theme.tokenColors(state.colorTheme);
+
+         <Feature_LanguageSupport.View.Overlay
+           activeEditorId
+           activeBuffer
+           cursorPosition
+           lineHeight
+           toPixel=editorToAbsolutePosition
+           theme
+           tokenTheme
+           uiFont
+           editorFont={state.editorFont}
+           model={state.languageSupport}
+           dispatch={msg => dispatch(Actions.LanguageSupport(msg))}
+         />;
+       })
+    |> Option.value(~default=React.empty);
+  };
+
   let statusBar = () =>
-    if (Selectors.getActiveConfigurationValue(state, c =>
-          c.workbenchStatusBarVisible
-        )
-        && !zenMode) {
+    if (Feature_StatusBar.Configuration.visible.get(config) && !zenMode) {
       <View style=Styles.statusBar>
         <Feature_StatusBar.View
           mode
@@ -115,11 +167,18 @@ let make = (~dispatch, ~state: State.t, ()) => {
     };
 
   let activityBar = () =>
-    if (Selectors.getActiveConfigurationValue(state, c =>
-          c.workbenchActivityBarVisible
+    if (Feature_Configuration.GlobalConfiguration.Workbench.activityBarVisible.
+          get(
+          config,
         )
         && !zenMode) {
-      <Dock font={state.uiFont} theme sideBar extensions={state.extensions} />;
+      <Dock
+        font={state.uiFont}
+        scm={state.scm}
+        theme
+        sideBar
+        extensions={state.extensions}
+      />;
     } else {
       React.empty;
     };
@@ -189,6 +248,10 @@ let make = (~dispatch, ~state: State.t, ()) => {
     | `hidden => React.empty
     };
 
+  let zoom = Feature_Zoom.zoom(state.zoom);
+  // Correct for zoom in title bar height
+  let titlebarHeight = state.titlebarHeight /. zoom;
+
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
       menuBar=menuBarElement
@@ -203,7 +266,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       theme
       dispatch=titleDispatch
       registrationDispatch
-      height={state.titlebarHeight}
+      height=titlebarHeight
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>
@@ -213,16 +276,31 @@ let make = (~dispatch, ~state: State.t, ()) => {
         config
         isFocused={FocusManager.current(state) == Focus.Pane}
         iconTheme={state.iconTheme}
-        languageInfo={state.languageInfo}
+        languageInfo={
+          state.languageSupport |> Feature_LanguageSupport.languageInfo
+        }
         theme
         editorFont
         uiFont
         dispatch={msg => dispatch(Actions.Pane(msg))}
         pane={state.pane}
+        model=state
         workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
       />
     </View>
     <Overlay>
+      <languageSupportOverlay />
+      {if (Feature_Quickmenu.isMenuOpen(state.newQuickmenu)) {
+         <Feature_Quickmenu.View
+           theme
+           config
+           model={state.newQuickmenu}
+           dispatch={msg => dispatch(Actions.Quickmenu(msg))}
+           font
+         />;
+       } else {
+         React.empty;
+       }}
       {switch (state.quickmenu) {
        | None => React.empty
        | Some(quickmenu) =>

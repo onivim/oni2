@@ -75,7 +75,10 @@ let read = (~dispatch, clientPipe) => {
 
   let handleError = handleError(~dispatch);
 
+  let allocator = Oni_Core.Utility.LuvEx.allocator("Exthost_Transport");
+
   Luv.Stream.read_start(
+    ~allocate=allocator,
     clientPipe,
     fun
     | Error(`EOF) => handleClosed()

@@ -36,7 +36,6 @@ else
 
    # Codesign individual files that require it
    manual-codesign Contents/MacOS/rg
-   manual-codesign Contents/MacOS/rls
    manual-codesign Contents/MacOS/node
    manual-codesign Contents/MacOS/Oni2_editor
    manual-codesign Contents/MacOS/Oni2

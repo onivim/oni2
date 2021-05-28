@@ -64,6 +64,18 @@ let getLine: (int, t) => BufferLine.t;
 let getLines: t => array(string);
 let getNumberOfLines: t => int;
 
+let characterRange: t => CharacterRange.t;
+let hasTrailingNewLine: t => bool;
+
+let rawLine: (LineNumber.t, t) => option(string);
+let characterRangeAt: (LineNumber.t, t) => option(CharacterRange.t);
+
+let tokenAt:
+  (~languageConfiguration: LanguageConfiguration.t, CharacterPosition.t, t) =>
+  option(CharacterRange.t);
+
+let lastLine: t => LineNumber.t;
+
 let getVersion: t => int;
 let setVersion: (int, t) => t;
 
@@ -88,3 +100,5 @@ let setFont: (Font.t, t) => t;
 
 let getSaveTick: t => int;
 let incrementSaveTick: t => t;
+
+let toDebugString: t => string;

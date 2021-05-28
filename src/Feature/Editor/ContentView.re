@@ -7,16 +7,12 @@ open Helpers;
 
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 
-let renderLine =
+let renderDiagnostics =
     (
       ~context: Draw.context,
-      ~buffer,
       ~colors: Colors.t,
       ~diagnosticsMap,
-      ~selectionRanges,
-      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
-      ~bufferHighlights,
-      ~languageSupport,
+      ~languageConfiguration,
       viewLine,
       _offset,
     ) => {
@@ -37,6 +33,31 @@ let renderLine =
     let item = EditorCoreTypes.LineNumber.toZeroBased(index);
 
     let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) => {
+      // If at single character, get the token under the cursor
+      let range =
+        if (diagnostic.range.start == diagnostic.range.stop) {
+          Editor.getTokenAt(
+            ~languageConfiguration,
+            diagnostic.range.start,
+            context.editor,
+          )
+          |> Option.map(range
+               // In addition, bump the end position out - the range returned from the editor is inclusive,
+               // but the squiggly rendering is exclusive.
+               =>
+                 CharacterRange.{
+                   start: range.start,
+                   stop: {
+                     ...range.stop,
+                     character: CharacterIndex.(range.stop.character + 1),
+                   },
+                 }
+               )
+          |> Option.value(~default=diagnostic.range);
+        } else {
+          diagnostic.range;
+        };
+
       let color =
         Exthost.Diagnostic.Severity.(
           switch (diagnostic.severity) {
@@ -46,7 +67,21 @@ let renderLine =
           | Info => colors.infoForeground
           }
         );
-      Draw.underline(~context, ~color, diagnostic.range);
+
+      if (diagnostic.isDeprecated
+          && Editor.shouldShowDeprecated(context.editor)) {
+        let color = colors.editorForeground;
+        Draw.strikethrough(~context, ~color, range);
+      } else if (diagnostic.isUnused
+                 && Editor.shouldShowUnused(context.editor)) {
+        let invAlpha = colors.unnecessaryCodeOpacity |> Revery.Color.getAlpha;
+        let alpha = 1.0 -. invAlpha;
+        let color =
+          colors.editorBackground |> Revery.Color.multiplyAlpha(alpha);
+        Draw.rangeCharacter(~context, ~color, range);
+      } else {
+        Draw.squiggly(~context, ~color, range);
+      };
     };
 
     /* Draw error markers */
@@ -54,6 +89,35 @@ let renderLine =
     | None => ()
     | Some(diagnostics) => List.iter(renderDiagnostics(colors), diagnostics)
     };
+  };
+};
+
+let renderLine =
+    (
+      ~context: Draw.context,
+      ~buffer,
+      ~colors: Colors.t,
+      ~selectionRanges,
+      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
+      ~vim,
+      ~languageSupport,
+      viewLine,
+      _offset,
+    ) => {
+  let topViewLine = Editor.getTopViewLine(context.editor);
+  let bottomViewLine = Editor.getBottomViewLine(context.editor);
+
+  // Since this drawing logic is per-buffer-line, we only want to draw
+  // each buffer once. So, we'll draw the _primary_ view line (the
+  // first one for a buffer line), or the top/bottom if we're in the middle
+  // of a buffer line.
+  let shouldRenderViewLine =
+    Editor.viewLineIsPrimary(viewLine, context.editor)
+    || viewLine == topViewLine
+    || viewLine == bottomViewLine;
+
+  if (shouldRenderViewLine) {
+    let index = Editor.viewLineToBufferLine(viewLine, context.editor);
 
     switch (Hashtbl.find_opt(selectionRanges, index)) {
     | None => ()
@@ -82,11 +146,7 @@ let renderLine =
 
     let bufferId = Buffer.getId(buffer);
     /* Draw search highlights */
-    BufferHighlights.getHighlightsByLine(
-      ~bufferId,
-      ~line=index,
-      bufferHighlights,
-    )
+    Feature_Vim.getSearchHighlightsByLine(~bufferId, ~line=index, vim)
     |> List.iter(
          Draw.rangeByte(
            ~context,
@@ -116,10 +176,9 @@ let renderEmbellishments =
       ~context,
       ~buffer,
       ~colors,
-      ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
-      ~bufferHighlights,
+      ~vim,
       ~languageSupport,
     ) =>
   Draw.renderImmediate(
@@ -128,10 +187,9 @@ let renderEmbellishments =
       ~context,
       ~buffer,
       ~colors,
-      ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
-      ~bufferHighlights,
+      ~vim,
       ~languageSupport,
     ),
   );
@@ -206,7 +264,7 @@ let renderText =
       ~context,
       ~selectionRanges,
       ~editor,
-      ~bufferHighlights,
+      ~vim,
       ~cursorLine,
       ~colors,
       ~matchingPairs,
@@ -230,7 +288,7 @@ let renderText =
       let tokens =
         getTokensForLine(
           ~editor,
-          ~bufferHighlights,
+          ~vim,
           ~cursorLine,
           ~colors,
           ~matchingPairs,
@@ -260,7 +318,7 @@ let render =
       ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
-      ~bufferHighlights,
+      ~vim,
       ~cursorPosition: CharacterPosition.t,
       ~languageSupport,
       ~languageConfiguration,
@@ -271,10 +329,9 @@ let render =
     ~context,
     ~buffer,
     ~colors,
-    ~diagnosticsMap,
     ~selectionRanges,
     ~matchingPairs,
-    ~bufferHighlights,
+    ~vim,
     ~languageSupport,
   );
 
@@ -299,11 +356,21 @@ let render =
     ~context,
     ~selectionRanges,
     ~editor,
-    ~bufferHighlights,
+    ~vim,
     ~cursorLine=EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
     ~colors,
     ~matchingPairs,
     ~bufferSyntaxHighlights,
     ~shouldRenderWhitespace,
+  );
+
+  Draw.renderImmediate(
+    ~context,
+    renderDiagnostics(
+      ~context,
+      ~colors,
+      ~diagnosticsMap,
+      ~languageConfiguration,
+    ),
   );
 };

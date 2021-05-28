@@ -60,5 +60,7 @@ let build:
   ) =>
   builtMenu;
 
+let schema: builtMenu => Schema.t;
+
 // [top(builtMenu)] returns the top-level menu items for [builtMenu]
 let top: Schema.t => list(Menu.t);

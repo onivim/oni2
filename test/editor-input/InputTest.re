@@ -3,20 +3,51 @@ open EditorInput;
 
 let aKeyScancode = 101;
 let aKeyNoModifiers =
-  KeyPress.physicalKey(~key=Key.Character('a'), ~modifiers=Modifiers.none);
+  KeyPress.physicalKey(
+    ~key=Key.Character(Uchar.of_char('a')),
+    ~modifiers=Modifiers.none,
+  );
+
+let ctrlAKey =
+  KeyPress.physicalKey(
+    ~key=Key.Character(Uchar.of_char('a')),
+    ~modifiers=Modifiers.{...none, control: true},
+  );
 
 let bKeyScancode = 102;
 
 let bKeyNoModifiers =
-  KeyPress.physicalKey(~key=Key.Character('b'), ~modifiers=Modifiers.none);
+  KeyPress.physicalKey(
+    ~key=Key.Character(Uchar.of_char('b')),
+    ~modifiers=Modifiers.none,
+  );
+
+let ctrlBKey =
+  KeyPress.physicalKey(
+    ~key=Key.Character(Uchar.of_char('b')),
+    ~modifiers=Modifiers.{...none, control: true},
+  );
 
 let cKeyScancode = 103;
 
 let cKeyNoModifiers =
-  KeyPress.physicalKey(~key=Key.Character('c'), ~modifiers=Modifiers.none);
+  KeyPress.physicalKey(
+    ~key=Key.Character(Uchar.of_char('c')),
+    ~modifiers=Modifiers.none,
+  );
+
+let ucharNoModifiers = uchar =>
+  KeyPress.physicalKey(~key=Key.Character(uchar), ~modifiers=Modifiers.none);
 
 let leaderKey = KeyPress.specialKey(SpecialKey.Leader);
 let plugKey = KeyPress.specialKey(SpecialKey.Plug);
+
+let leftControlKeyScancode = 901;
+let leftControlKey =
+  KeyPress.physicalKey(
+    ~key=Key.LeftControl,
+    ~modifiers=Modifiers.{...none, control: true},
+  );
 
 let candidate = keyPress => KeyCandidate.ofKeyPress(keyPress);
 
@@ -27,6 +58,56 @@ module Input =
   });
 
 describe("EditorInput", ({describe, _}) => {
+  describe("modifier keys", ({test, _}) => {
+    test("#2778: Modifier keys shouldn't interrupt binding", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([ctrlAKey, ctrlBKey]),
+             _ => true,
+             "testCommand",
+           );
+      let (bindings, _effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=leftControlKeyScancode,
+          ~key=candidate(leftControlKey),
+          bindings,
+        );
+      let (bindings, _effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=candidate(ctrlAKey),
+          bindings,
+        );
+      let (bindings, _effects) =
+        Input.keyUp(
+          ~context=true,
+          ~scancode=leftControlKeyScancode,
+          bindings,
+        );
+      // In #2778, this control-key press event in the midst of candidate bindings
+      // caused the bindings to be reset - this is the important part of
+      // exercising this case:
+      let (bindings, _effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=leftControlKeyScancode,
+          ~key=candidate(leftControlKey),
+          bindings,
+        );
+      let (_bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=bKeyScancode,
+          ~key=candidate(ctrlBKey),
+          bindings,
+        );
+
+      expect.equal(effects, [Execute("testCommand")]);
+    })
+  });
   describe("special keys", ({test, _}) => {
     test("special keys can participate in remap", ({expect, _}) => {
       // Add a <Plug>a -> "commandA" mapping
@@ -102,7 +183,10 @@ describe("EditorInput", ({describe, _}) => {
 
     test("leader key defined as a", ({expect, _}) => {
       let physicalKey =
-        PhysicalKey.{key: Key.Character('a'), modifiers: Modifiers.none};
+        PhysicalKey.{
+          key: Key.Character(Uchar.of_char('a')),
+          modifiers: Modifiers.none,
+        };
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(Sequence([leaderKey]), _ => true, "commandA");
@@ -144,7 +228,10 @@ describe("EditorInput", ({describe, _}) => {
 
     test("leader key defined as a", ({expect, _}) => {
       let physicalKey =
-        PhysicalKey.{key: Key.Character('a'), modifiers: Modifiers.none};
+        PhysicalKey.{
+          key: Key.Character(Uchar.of_char('a')),
+          modifiers: Modifiers.none,
+        };
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(Sequence([leaderKey]), _ => true, "commandA");
@@ -277,6 +364,44 @@ describe("EditorInput", ({describe, _}) => {
 
       // Subsequent text input should be ignored
       expect.equal(effects, []);
+    });
+
+    test(
+      "#3048: text with new keydown after successful binding should be dispatched",
+      ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers]),
+             _ => true,
+             "commandA",
+           );
+
+      let (bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=candidate(aKeyNoModifiers),
+          bindings,
+        );
+
+      // Keydown should trigger command...
+      expect.equal(effects, [Execute("commandA")]);
+
+      let (bindings, _effects) = Input.text(~text="a", bindings);
+
+      let (bindings, _effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=bKeyScancode,
+          ~key=candidate(bKeyNoModifiers),
+          bindings,
+        );
+
+      let (_bindings, effects) = Input.text(~text="b", bindings);
+
+      // Subsequent text input should be triggered, even though we haven't had a KeyUp for "a" yet
+      expect.equal(effects, [Text("b")]);
     });
 
     test("text not dispatched in sequence", ({expect, _}) => {
@@ -620,6 +745,70 @@ describe("EditorInput", ({describe, _}) => {
       );
     });
   });
+  describe("utf8", ({test, _}) => {
+    let uc252 = Zed_utf8.get("ü", 0);
+    let sc252 = 252;
+
+    let uc246 = Zed_utf8.get("ö", 0);
+
+    test("map utf8 -> ascii", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addMapping(
+             ~allowRecursive=false,
+             Sequence([ucharNoModifiers(uc252)]),
+             _ => true,
+             [aKeyNoModifiers],
+           );
+
+      let (_bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=sc252,
+          ~key=candidate(ucharNoModifiers(uc252)),
+          bindings,
+        );
+
+      expect.equal(
+        effects,
+        [
+          Unhandled({
+            key: candidate(aKeyNoModifiers),
+            isProducedByRemap: true,
+          }),
+        ],
+      );
+    });
+
+    test("map ascii -> utf8", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addMapping(
+             ~allowRecursive=false,
+             Sequence([aKeyNoModifiers]),
+             _ => true,
+             [ucharNoModifiers(uc246)],
+           );
+
+      let (_bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=candidate(aKeyNoModifiers),
+          bindings,
+        );
+
+      expect.equal(
+        effects,
+        [
+          Unhandled({
+            key: candidate(ucharNoModifiers(uc246)),
+            isProducedByRemap: true,
+          }),
+        ],
+      );
+    });
+  });
   describe("remapping", ({test, _}) => {
     test("no-recursive mapping", ({expect, _}) => {
       let (bindings, _id) =
@@ -886,6 +1075,7 @@ describe("EditorInput", ({describe, _}) => {
       expect.equal(effects, [Execute("command2"), Execute("command3")]);
     });
   });
+
   describe("enable / disable", ({test, _}) => {
     test("unhandled when bindings are disabled", ({expect, _}) => {
       let alwaysTrue = _ => true;
@@ -918,5 +1108,97 @@ describe("EditorInput", ({describe, _}) => {
         ],
       );
     })
+  });
+
+  describe("timeout", ({test, _}) => {
+    test("timeout with partial match", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers, cKeyNoModifiers]),
+             _ => true,
+             "commandAC",
+           );
+
+      let (bindings, _id) =
+        bindings
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers]),
+             _ => true,
+             "commandA",
+           );
+
+      let (bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=candidate(aKeyNoModifiers),
+          bindings,
+        );
+
+      expect.equal(effects, []);
+
+      let (_bindings, effects) = Input.timeout(~context=true, bindings);
+
+      expect.equal(effects, [Execute("commandA")]);
+    });
+    test("timeout with no match", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers, cKeyNoModifiers]),
+             _ => true,
+             "commandAC",
+           );
+
+      let (bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=candidate(aKeyNoModifiers),
+          bindings,
+        );
+
+      expect.equal(effects, []);
+
+      let (_bindings, effects) = Input.timeout(~context=true, bindings);
+
+      expect.equal(
+        effects,
+        [
+          Unhandled({
+            key: candidate(aKeyNoModifiers),
+            isProducedByRemap: false,
+          }),
+        ],
+      );
+    });
+    test("timeout with no match, but prior text event", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers, cKeyNoModifiers]),
+             _ => true,
+             "commandAC",
+           );
+
+      let (bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=candidate(aKeyNoModifiers),
+          bindings,
+        );
+
+      expect.equal(effects, []);
+
+      let (bindings, effects) = Input.text(~text="a", bindings);
+
+      expect.equal(effects, []);
+
+      let (_bindings, effects) = Input.timeout(~context=true, bindings);
+
+      expect.equal(effects, [Text("a")]);
+    });
   });
 });

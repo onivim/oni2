@@ -23,6 +23,13 @@ let map: (Buffer.t => Buffer.t, model) => model;
 
 let filter: (Buffer.t => bool, model) => list(Buffer.t);
 
+let isLargeFile: (model, Buffer.t) => bool;
+
+let setOriginalLines:
+  (~bufferId: int, ~originalLines: array(string), model) => model;
+
+let getOriginalDiff: (~bufferId: int, model) => option(DiffMarkers.t);
+
 // MSG
 
 [@deriving show]
@@ -53,31 +60,58 @@ module Msg: {
       ~triggerKey: option(string)
     ) =>
     msg;
+
+  let selectFileTypeClicked: (~bufferId: int) => msg;
+  let statusBarIndentationClicked: msg;
+
+  let copyActivePathToClipboard: msg;
 };
 
 type outmsg =
   | Nothing
+  | BufferIndentationChanged({buffer: Oni_Core.Buffer.t})
   | BufferUpdated({
       update: Oni_Core.BufferUpdate.t,
+      markerUpdate: Oni_Core.MarkerUpdate.t,
+      minimalUpdate: Oni_Core.MinimalUpdate.t,
       newBuffer: Oni_Core.Buffer.t,
       oldBuffer: Oni_Core.Buffer.t,
       triggerKey: option(string),
     })
-  | BufferSaved(Oni_Core.Buffer.t)
+  | BufferSaved({
+      buffer: Oni_Core.Buffer.t,
+      reason: SaveReason.t,
+    })
   | CreateEditor({
       buffer: Oni_Core.Buffer.t,
-      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      split: SplitDirection.t,
       position: option(BytePosition.t),
       grabFocus: bool,
       preview: bool,
     })
-  | BufferModifiedSet(int, bool);
+  | BufferModifiedSet(int, bool)
+  | SetClipboardText(string)
+  | ShowMenu(
+      (Exthost.LanguageInfo.t, IconTheme.t) =>
+      Feature_Quickmenu.Schema.menu(msg),
+    )
+  | NotifyInfo(string)
+  | NotifyError(string)
+  | Effect(Isolinear.Effect.t(msg));
 
 // UPDATE
 
 let update:
-  (~activeBufferId: int, ~config: Config.fileTypeResolver, msg, model) =>
+  (
+    ~activeBufferId: int,
+    ~config: Config.fileTypeResolver,
+    ~workspace: Feature_Workspace.model,
+    msg,
+    model
+  ) =>
   (model, outmsg);
+
+let configurationChanged: (~config: Config.resolver, model) => model;
 
 // EFFECTS
 
@@ -96,7 +130,7 @@ module Effects: {
     (
       ~font: Service_Font.font,
       ~languageInfo: Exthost.LanguageInfo.t,
-      ~split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      ~split: SplitDirection.t,
       model
     ) =>
     Isolinear.Effect.t(msg);
@@ -105,7 +139,7 @@ module Effects: {
     (
       ~font: Service_Font.font,
       ~languageInfo: Exthost.LanguageInfo.t,
-      ~split: [ | `Current | `Horizontal | `Vertical | `NewTab]=?,
+      ~split: SplitDirection.t=?,
       ~position: option(CharacterPosition.t)=?,
       ~grabFocus: bool=?,
       ~filePath: string,
@@ -118,14 +152,23 @@ module Effects: {
     (
       ~font: Service_Font.font,
       ~languageInfo: Exthost.LanguageInfo.t,
-      ~split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      ~split: SplitDirection.t,
       ~bufferId: int,
       model
     ) =>
     Isolinear.Effect.t(msg);
 };
 
+let vimSettingChanged:
+  (~activeBufferId: int, ~name: string, ~value: Vim.Setting.value, model) =>
+  Isolinear.Effect.t(msg);
+
+let sub:
+  (~isWindowFocused: bool, ~maybeFocusedBuffer: option(int), model) =>
+  Isolinear.Sub.t(msg);
+
 module Contributions: {
   let commands: Command.Lookup.t(msg);
   let configuration: list(Config.Schema.spec);
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };

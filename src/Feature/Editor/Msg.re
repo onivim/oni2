@@ -23,6 +23,7 @@ type t =
   | PreviewChanged(bool)
   | EditorMouseEnter
   | EditorMouseDown({
+      altKey: bool,
       time: [@opaque] Revery.Time.t,
       pixelX: float,
       pixelY: float,
@@ -33,6 +34,7 @@ type t =
       pixelY: float,
     })
   | EditorMouseUp({
+      altKey: bool,
       time: [@opaque] Revery.Time.t,
       pixelX: float,
       pixelY: float,
@@ -51,4 +53,10 @@ type t =
       line: EditorCoreTypes.LineNumber.t,
       height: int,
     })
+  | InlineElementClicked({
+      key: string,
+      uniqueId: string,
+      command: option(Exthost.Command.t),
+    })
+  | BoundingBoxChanged({bbox: [@opaque] Revery.Math.BoundingBox2d.t})
   | Internal(Editor.msg);

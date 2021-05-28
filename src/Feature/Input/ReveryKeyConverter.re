@@ -15,6 +15,7 @@ module Internal = {
       | v when v == Revery.Key.Keycode.backspace => Some(Key.Backspace)
       | v when v == Revery.Key.Keycode.delete => Some(Key.Delete)
       | v when v == Revery.Key.Keycode.space => Some(Key.Space)
+      | v when v == 1073741881 => Some(Key.CapsLock)
       | v when v == 1073741897 => Some(Key.Insert)
       | v when v == 1073741898 => Some(Key.Home)
       | v when v == 1073741899 => Some(Key.PageUp)
@@ -44,7 +45,7 @@ module Internal = {
   };
 
   let tryToGetCharacterFromKey =
-      (~shift, ~control, ~alt, ~meta, ~altGr, ~scancode) => {
+      (~shift, ~control, ~alt, ~super, ~altGr, ~scancode) => {
     let keyboard = Oni2_KeyboardLayout.Keymap.getCurrent();
     let maybeKeymap =
       Oni2_KeyboardLayout.Keymap.entryOfScancode(keyboard, scancode);
@@ -57,16 +58,12 @@ module Internal = {
     | None => Log.info("No keymap for key.")
     };
 
-    let stringToKey = maybeString => {
-      maybeString
-      |> OptionEx.flatMap(str =>
-           if (String.length(str) != 1) {
-             None;
-           } else {
-             Some(str.[0]);
-           }
-         )
-      |> Option.map(char => EditorInput.Key.Character(char));
+    let stringToKey = (maybeString: string) => {
+      let maybeChar =
+        try(Some(ZedBundled.get(maybeString, 0))) {
+        | _exn => None
+        };
+      maybeChar |> Option.map(char => EditorInput.Key.Character(char));
     };
 
     maybeKeymap
@@ -84,16 +81,16 @@ module Internal = {
          open KeyPress;
          open Modifiers;
 
-         let modifiers = {shift, control, alt, meta, altGr};
+         let modifiers = {shift, control, alt, super, altGr};
          let defaultCandidate =
            keymap.unmodified
-           |> stringToKey
+           |> OptionEx.flatMap(stringToKey)
            |> Option.map(key => physicalKey(~key, ~modifiers));
 
          let maybeShiftAltGrCandidate =
            if (shift && altGr) {
              keymap.withAltGraphShift
-             |> stringToKey
+             |> OptionEx.flatMap(stringToKey)
              |> Option.map(key =>
                   physicalKey(
                     ~key,
@@ -107,7 +104,7 @@ module Internal = {
          let maybeShiftCandidate =
            if (shift) {
              keymap.withShift
-             |> stringToKey
+             |> OptionEx.flatMap(stringToKey)
              |> Option.map(key =>
                   physicalKey(~key, ~modifiers={...modifiers, shift: false})
                 );
@@ -118,7 +115,7 @@ module Internal = {
          let maybeAltGrCandidate =
            if (altGr) {
              keymap.withAltGraph
-             |> stringToKey
+             |> OptionEx.flatMap(stringToKey)
              |> Option.map(key =>
                   physicalKey(~key, ~modifiers={...modifiers, altGr: false})
                 );
@@ -155,7 +152,7 @@ let reveryKeyToKeyPress =
     let shift = Revery.Key.Keymod.isShiftDown(keymod);
     let control = Revery.Key.Keymod.isControlDown(keymod);
     let alt = Revery.Key.Keymod.isAltDown(keymod);
-    let meta = Revery.Key.Keymod.isGuiDown(keymod);
+    let super = Revery.Key.Keymod.isGuiDown(keymod);
     let altGr = Revery.Key.Keymod.isAltGrKeyDown(keymod);
 
     let (altGr, control, alt) =
@@ -174,7 +171,7 @@ let reveryKeyToKeyPress =
         (altGr, ctrlKey, altKey);
       | _ => (altGr, control, alt)
       };
-    let modifiers = EditorInput.Modifiers.{shift, control, alt, meta, altGr};
+    let modifiers = EditorInput.Modifiers.{shift, control, alt, super, altGr};
 
     keycode
     |> Internal.tryToGetSpecialKey
@@ -186,7 +183,7 @@ let reveryKeyToKeyPress =
            ~shift,
            ~control,
            ~alt,
-           ~meta,
+           ~super,
            ~altGr,
            ~scancode,
          )

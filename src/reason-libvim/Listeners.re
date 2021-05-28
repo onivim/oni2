@@ -36,7 +36,6 @@ let effect: ref(list(effectListener)) = ref([]);
 let intro: ref(list(noopListener)) = ref([]);
 let message: ref(list(messageListener)) = ref([]);
 let quit: ref(list(quitListener)) = ref([]);
-let stopSearchHighlight: ref(list(noopListener)) = ref([]);
 let terminalRequested: Event.t(Types.terminalRequest => unit) =
   Event.create();
 let unhandledEscape: ref(list(noopListener)) = ref([]);

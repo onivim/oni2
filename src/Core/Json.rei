@@ -2,7 +2,7 @@
 
 open EditorCoreTypes;
 
-type t = Yojson.Safe.json;
+type t = Yojson.Safe.t;
 
 module Decode: {
   include Decoders.Decode.S with type value = t;
@@ -20,6 +20,7 @@ module Decode: {
   };
 
   let obj: (objGetters => 'a) => decoder('a);
+  let regexp: decoder(Oniguruma.OnigRegExp.t);
   let default: ('a, decoder(option('a))) => decoder('a);
 };
 

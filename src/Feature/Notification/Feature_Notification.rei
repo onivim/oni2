@@ -15,6 +15,7 @@ type notification = {
   message: string,
   source: option(string),
   yOffset: float,
+  ephemeral: bool,
 };
 
 type model;
@@ -24,6 +25,8 @@ let initial: model;
 let active: model => list(notification);
 
 let all: model => list(notification);
+
+let count: model => int;
 
 let statusBarBackground:
   (~theme: ColorTheme.Colors.t, model) => Revery.Color.t;
@@ -58,8 +61,10 @@ let changeTheme:
 
 module Effects: {
   let create:
-    (~kind: kind=?, ~source: string=?, string) => Isolinear.Effect.t(msg);
+    (~ephemeral: bool=?, ~kind: kind=?, ~source: string=?, string) =>
+    Isolinear.Effect.t(msg);
   let dismiss: notification => Isolinear.Effect.t(msg);
+  let clear: unit => Isolinear.Effect.t(msg);
 };
 
 // SUBSCRIPTION
@@ -98,20 +103,11 @@ module View: {
       ) =>
       React.element(React.node);
   };
-
-  module Item: {
-    let make:
-      (
-        ~notification: notification,
-        ~theme: ColorTheme.Colors.t,
-        ~font: UiFont.t,
-        ~onDismiss: unit => unit,
-        unit
-      ) =>
-      React.element(React.node);
-  };
 };
 
 // CONTRIBUTIONS
 
-module Contributions: {let colors: list(ColorTheme.Schema.definition);};
+module Contributions: {
+  let colors: list(ColorTheme.Schema.definition);
+  let pane: Feature_Pane.Schema.t(model, msg);
+};

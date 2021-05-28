@@ -71,8 +71,8 @@ let load = (~category, packageFile) => {
   };
 };
 
-let scan = (~category, directory: Fp.t(Fp.absolute)) => {
-  let dirString = directory |> Fp.toString;
+let scan = (~category, directory: FpExp.t(FpExp.absolute)) => {
+  let dirString = directory |> FpExp.toString;
   dirString
   |> Sys.readdir
   |> Array.to_list

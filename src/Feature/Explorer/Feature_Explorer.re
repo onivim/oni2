@@ -47,6 +47,7 @@ module ExpandedState = {
 type model = {
   focus,
   isFileExplorerExpanded: ExpandedState.t,
+  excludeFiles: list(string),
   fileExplorer: option(Component_FileExplorer.model),
   isSymbolOutlineExpanded: ExpandedState.t,
   symbolOutline:
@@ -58,7 +59,12 @@ type model = {
 };
 
 [@deriving show]
+type command =
+  | Reload;
+
+[@deriving show]
 type msg =
+  | Command(command)
   | KeyboardInput(string)
   | FileExplorer(Component_FileExplorer.msg)
   | SymbolOutline(Component_VimTree.msg)
@@ -83,10 +89,10 @@ let initial = (~rootPath) => {
   fileExplorer:
     rootPath
     |> Option.map(rootPath => Component_FileExplorer.initial(~rootPath)),
+  excludeFiles: [],
   symbolOutline: Component_VimTree.create(~rowHeight=20),
   vimWindowNavigation: Component_VimWindows.initial,
 };
-
 let focusOutline = model => {
   ...model,
   focus: Outline,
@@ -94,12 +100,43 @@ let focusOutline = model => {
     ExpandedState.implicitlyOpen(model.isSymbolOutlineExpanded),
 };
 
-let setRoot = (~rootPath, model) => {
-  ...model,
-  fileExplorer:
-    rootPath
-    |> Option.map(rootPath => Component_FileExplorer.initial(~rootPath)),
+let configurationChanged = (~config, model) => {
+  let excludeFiles =
+    Feature_Configuration.GlobalConfiguration.Files.exclude.get(config);
+
+  if (excludeFiles != model.excludeFiles) {
+    let fileExplorer' =
+      model.fileExplorer |> Option.map(Component_FileExplorer.reload);
+
+    {...model, excludeFiles, fileExplorer: fileExplorer'};
+  } else {
+    model;
+  };
 };
+
+let setRoot = (~rootPath, model) =>
+  if (Option.equal(
+        FpExp.eq,
+        rootPath,
+        model.fileExplorer |> Option.map(Component_FileExplorer.root),
+      )) {
+    model;
+  } else {
+    {
+      ...model,
+      fileExplorer:
+        rootPath
+        |> Option.map(rootPath =>
+             model.fileExplorer
+             |> Option.map(explorer =>
+                  Component_FileExplorer.setRoot(~rootPath, explorer)
+                )
+             |> Option.value(
+                  ~default=Component_FileExplorer.initial(~rootPath),
+                )
+           ),
+    };
+  };
 
 let root = ({fileExplorer, _}) => {
   fileExplorer |> Option.map(Component_FileExplorer.root);
@@ -110,13 +147,25 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
   | PreviewFile(string)
+  | WatchedPathChanged({
+      path: FpExp.t(FpExp.absolute),
+      stat: option(Luv.File.Stat.t),
+    })
   | GrabFocus
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)
   | PickFolder;
 
-let update = (~configuration, msg, model) => {
+let update = (~config, msg, model) => {
   switch (msg) {
+  | Command(Reload) => (
+      {
+        ...model,
+        fileExplorer:
+          model.fileExplorer |> Option.map(Component_FileExplorer.reload),
+      },
+      Nothing,
+    )
   | KeyboardInput(key) =>
     if (model.focus == FileExplorer) {
       if (model.fileExplorer == None) {
@@ -154,7 +203,7 @@ let update = (~configuration, msg, model) => {
     |> Option.map(fileExplorer => {
          let (fileExplorer, outmsg) =
            Component_FileExplorer.update(
-             ~configuration,
+             ~config,
              fileExplorerMsg,
              fileExplorer,
            );
@@ -168,6 +217,8 @@ let update = (~configuration, msg, model) => {
            | Component_FileExplorer.PreviewFile(filePath) =>
              PreviewFile(filePath)
            | GrabFocus => GrabFocus
+           | Component_FileExplorer.WatchedPathChanged({path, stat}) =>
+             WatchedPathChanged({path, stat})
            };
 
          ({...model, fileExplorer: Some(fileExplorer)}, outmsg');
@@ -216,8 +267,10 @@ let update = (~configuration, msg, model) => {
       | Component_VimTree.Nothing
       | Component_VimTree.Expanded(_)
       | Component_VimTree.Collapsed(_) => Nothing
-      | Component_VimTree.Touched(symbol) => SymbolSelected(symbol)
-      | Component_VimTree.Selected(_) => Nothing
+
+      | Component_VimTree.Touched(symbol)
+      | Component_VimTree.Selected(symbol)
+      | Component_VimTree.SelectedNode(symbol) => SymbolSelected(symbol)
       };
 
     ({...model, symbolOutline}, outmsg');
@@ -297,6 +350,7 @@ module View = {
   open Revery.UI;
   let%component make =
                 (
+                  ~config,
                   ~isFocused,
                   ~iconTheme,
                   ~languageInfo,
@@ -448,6 +502,7 @@ module View = {
 
       | Some(explorer) =>
         <Component_FileExplorer.View
+          config
           isFocused={isFocused && model.focus == FileExplorer}
           expanded={ExpandedState.isOpen(model.isFileExplorerExpanded)}
           iconTheme
@@ -464,6 +519,7 @@ module View = {
     <View style=Style.[flexDirection(`Column), flexGrow(1)]>
       explorerComponent
       <Component_Accordion.VimTree
+        config
         showCount=false
         title="Outline"
         expanded={ExpandedState.isOpen(model.isSymbolOutlineExpanded)}
@@ -480,13 +536,25 @@ module View = {
   };
 };
 
-let sub = (~configuration, model) => {
+let sub = (~config, model) => {
   model.fileExplorer
   |> Option.map(explorer => {
-       Component_FileExplorer.sub(~configuration, explorer)
+       Component_FileExplorer.sub(~config, explorer)
        |> Isolinear.Sub.map(msg => FileExplorer(msg))
      })
   |> Option.value(~default=Isolinear.Sub.none);
+};
+
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let reload =
+    define(
+      ~category="Explorer",
+      ~title="Refresh",
+      "workbench.files.action.refreshFilesExplorer",
+      Command(Reload),
+    );
 };
 
 module Contributions = {
@@ -509,7 +577,7 @@ module Contributions = {
           |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
         : [];
 
-    explorerCommands @ vimNavCommands @ outlineCommands;
+    explorerCommands @ vimNavCommands @ outlineCommands @ Commands.[reload];
   };
 
   let contextKeys = (~isFocused, model) => {

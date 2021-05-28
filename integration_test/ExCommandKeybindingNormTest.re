@@ -1,6 +1,5 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
-open Actions;
 
 let keybindings =
   Some({|
@@ -12,23 +11,11 @@ let keybindings =
 runTest(
   ~keybindings,
   ~name="ExCommandKeybindingNormTest",
-  (dispatch, wait, _) => {
-    let input = key => {
-      let keyPress =
-        EditorInput.KeyPress.physicalKey(
-          ~key,
-          ~modifiers=EditorInput.Modifiers.none,
-        )
-        |> EditorInput.KeyCandidate.ofKeyPress;
-      let time = Revery.Time.now();
-
-      dispatch(KeyDown({key: keyPress, scancode: 1, time}));
-      //dispatch(TextInput(key));
-      dispatch(KeyUp({scancode: 1, time}));
-    };
-
+  ({dispatch, wait, input, _}) => {
     let testFile = getAssetPath("some-test-file.txt");
-    dispatch(Actions.OpenFileByPath(testFile, None, None));
+    dispatch(
+      Actions.OpenFileByPath(testFile, Oni_Core.SplitDirection.Current, None),
+    );
 
     wait(~name="Verify buffer is loaded", (state: State.t) => {
       state
@@ -49,7 +36,7 @@ runTest(
     });
 
     // Press k, which is re-bound to 'norm! j'
-    input(EditorInput.Key.Character('k'));
+    input("k");
 
     // Verify cursor is at top of file
     wait(~name="Verify cursor moved down a line", (state: State.t) => {

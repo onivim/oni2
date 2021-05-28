@@ -43,6 +43,7 @@ module Styles = {
     ),
     marginVertical(2),
     textWrap(Revery.TextWrapping.NoWrap),
+    textOverflow(`Ellipsis),
   ];
 
   let restartText = (~theme) => [
@@ -113,6 +114,7 @@ let make =
       ~isRestartRequired,
       ~version,
       ~font: UiFont.t,
+      ~proxy,
       ~showIcon=true,
       ~onClick,
       (),
@@ -125,6 +127,7 @@ let make =
       ? <View style=Styles.imageContainer>
           <Oni_Components.RemoteImage
             url
+            proxy
             width=Constants.imageSize
             height=Constants.imageSize
           />

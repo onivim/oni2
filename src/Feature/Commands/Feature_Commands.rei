@@ -11,6 +11,17 @@ module Schema: {
       'msg
     ) =>
     Command.t('msg);
+
+  let defineWithArgs:
+    (
+      ~category: string=?,
+      ~title: string=?,
+      ~icon: IconTheme.IconDefinition.t=?,
+      ~isEnabledWhen: WhenExpr.t=?,
+      string,
+      Yojson.Safe.t => 'msg
+    ) =>
+    Command.t('msg);
 };
 
 // MODEL

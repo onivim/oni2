@@ -27,14 +27,13 @@ let editor = (editor, buffer, state: State.t) => {
     editor
     buffer
     onEditorSizeChanged={(_, _, _) => ()}
-    bufferHighlights={state.bufferHighlights}
     bufferSyntaxHighlights={state.syntaxHighlights}
     diagnostics={state.diagnostics}
-    tokenTheme={state.tokenTheme}
+    tokenTheme={state.colorTheme |> Feature_Theme.tokenColors}
     languageSupport={state.languageSupport}
     theme={Feature_Theme.colors(state.colorTheme)}
     windowIsFocused=true
-    scm=Feature_SCM.initial
+    buffers=Feature_Buffers.empty
     perFileTypeConfig={configResolver(
       Config.Settings.empty,
       Feature_Vim.initial,
@@ -42,7 +41,9 @@ let editor = (editor, buffer, state: State.t) => {
     languageInfo=Exthost.LanguageInfo.initial
     grammarRepository=Oni_Syntax.GrammarRepository.empty
     uiFont=Oni_Core.UiFont.default
+    snippets=Feature_Snippets.initial
     renderOverlays={(~gutterWidth as _) => <Revery.UI.View />}
+    vim={state.vim}
   />;
 };
 

@@ -39,11 +39,3 @@ There's currently no support for creating native keybindings for Vim motions.
 For now, please use VimL keybindings with the
 [`"experimental.viml"`](https://onivim.github.io/docs/configuration/settings#experimental)
 setting.
-
-<!--
-
-### How to format on save?
-
-By running the format comamnd with `autocmd`. Help, vim people?
-
--->

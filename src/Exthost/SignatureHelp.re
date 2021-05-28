@@ -122,10 +122,13 @@ module Signature = {
     );
 };
 
+[@deriving show]
+type cacheId = int;
+
 module Response = {
   [@deriving show]
   type t = {
-    id: int,
+    cacheId,
     signatures: list(Signature.t),
     activeSignature: int,
     activeParameter: int,
@@ -135,7 +138,7 @@ module Response = {
     Json.Decode.(
       obj(({field, _}) =>
         {
-          id: field.required("id", int),
+          cacheId: field.required("id", int),
           signatures: field.required("signatures", list(Signature.decode)),
           activeSignature: field.required("activeSignature", int),
           activeParameter: field.required("activeParameter", int),

@@ -7,7 +7,21 @@
 
 let minimumFontSize = 6.;
 let defaultFontSize = 14.;
+
 let defaultFontFile = "JetBrainsMono-Regular.ttf";
+
+let paneRowHeight = 20;
+let diffMarkerWidth = 3.;
+let gutterMargin = 3.;
+
+let isDefaultFont = str => {
+  // Before we switched to JetBrains Mono as the default font...
+  // "FiraCode-Regular.ttf" was specified in the default configuration file.
+  // So if we see it again, we should treat it as a default font (#3208)
+  String.equal(str, "FiraCode-Regular.ttf")
+  || String.equal(str, defaultFontFile);
+};
+
 let defaultFontFamily =
   Revery.Font.Family.fromFiles((~weight, ~italic) => {
     switch (weight, italic) {
@@ -44,6 +58,10 @@ let defaultFontFamily =
   });
 let defaultTerminalFontSize = 12.;
 
+let defaultTheme = "LaserWave Italic";
+
+let diffMarkersMaxLineCount = 2000;
+
 let syntaxEagerMaxLines = 500;
 let syntaxEagerMaxLineLength = 1000;
 let syntaxEagerBudget = 0.25; /* 250 milliseconds */
@@ -63,8 +81,6 @@ let minimapCharacterHeight = 2;
  * Number of pixels between each line in the minimap
  */
 let minimapLineSpacing = 1;
-let scrollBarThickness = 15;
-let editorHorizontalScrollBarThickness = 8;
 let scrollBarCursorSize = 2;
 let minimapMaxColumn = 120;
 let tabHeight = 35;
@@ -77,7 +93,7 @@ let notificationWidth = 300;
  * because our current textmate highlighting strategy is very slow.
  * We'll switch to a native strategy, and bump this up.
  */
-let largeFileLineCountThreshold = 1000;
+let largeFileLineCountThreshold = 300 * 1000;
 
 let doubleClickTime = Revery.Time.milliseconds(500);
 
@@ -86,3 +102,7 @@ let mouseAutoScrollBorder = 75;
 let mouseAutoScrollSpeed = 75.;
 
 let mouseAutoScrollInterval = Revery.Time.milliseconds(50);
+
+let highPriorityDebounceTime = Revery.Time.milliseconds(50);
+let mediumPriorityDebounceTime = Revery.Time.milliseconds(100);
+let lowPriorityDebounceTime = Revery.Time.milliseconds(500);

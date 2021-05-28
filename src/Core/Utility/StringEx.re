@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 let isSpace =
   fun
   | ' '
@@ -7,16 +9,123 @@ let isSpace =
   | '\t' => true
   | _ => false;
 
-/** [contains(query, str)] returns true if [str] contains the substring [query], false otherwise. */
-let contains = (query, str) => {
+let findFirst = (~query, str) => {
   let re = Str.regexp_string(query);
-  try({
-    let _: int = Str.search_forward(re, str, 0);
-    true;
-  }) {
-  | Not_found => false
+  try(Some(Str.search_forward(re, str, 0))) {
+  | Not_found => None
   };
 };
+
+/** [contains(query, str)] returns true if [str] contains the substring [query], false otherwise. */
+let contains = (query, str) => {
+  findFirst(~query, str) != None;
+};
+
+let characterCount = (~startByte, ~endByte, str) => {
+  let len = String.length(str);
+
+  let rec loop = (count, idx) =>
+    if (idx >= endByte || idx >= len) {
+      count;
+    } else {
+      loop(count + 1, Zed_utf8.next(str, idx));
+    };
+
+  loop(0, startByte);
+};
+
+let clamp = (~characters, str) => {
+  let characterCount = characterCount(~startByte=0, ~endByte=characters, str);
+
+  Zed_utf8.sub(str, 0, characterCount);
+};
+
+let characterToByte = (~index: EditorCoreTypes.CharacterIndex.t, str) => {
+  let idx = CharacterIndex.toInt(index);
+  let len = String.length(str);
+  let rec loop = (accBytes, count) =>
+    if (accBytes >= len) {
+      len;
+    } else if (count >= idx) {
+      accBytes;
+    } else {
+      let nextByte = Zed_utf8.next(str, accBytes);
+      loop(nextByte, count + 1);
+    };
+
+  loop(0, 0) |> ByteIndex.ofInt;
+};
+
+let firstDifference = (a, b) => {
+  let lenA = String.length(a);
+  let lenB = String.length(b);
+
+  let rec loop = idx =>
+    if (idx >= lenA || idx >= lenB) {
+      if (lenA == lenB) {
+        None;
+      } else {
+        Some(idx);
+      };
+    } else {
+      let (charA, idxA) = Zed_utf8.extract_next(a, idx);
+      let (charB, _) = Zed_utf8.extract_next(b, idx);
+
+      if (!Uchar.equal(charA, charB)) {
+        Some(idx);
+      } else {
+        loop(idxA);
+      };
+    };
+
+  loop(0);
+};
+
+let%test_module "splitAt" =
+  (module
+   {
+     let%test "no difference" = {
+       firstDifference("", "") == None;
+     };
+
+     let%test "difference at first byte" = {
+       firstDifference("a", "b") == Some(0);
+     };
+
+     let%test "unicode-aware difference" = {
+       firstDifference("κόσμε", "κόσε") == Some(7);
+     };
+   });
+
+let splitAt = (~byte: int, str) => {
+  let len = String.length(str);
+  if (byte <= 0) {
+    ("", str);
+  } else if (byte >= len) {
+    (str, "");
+  } else {
+    (String.sub(str, 0, byte), String.sub(str, byte, len - byte));
+  };
+};
+
+let%test_module "splitAt" =
+  (module
+   {
+     let%test "out-of-bounds - negative" = {
+       splitAt(~byte=-1, "abc") == ("", "abc");
+     };
+
+     let%test "out-of-bounds - past length" = {
+       splitAt(~byte=100, "abc") == ("abc", "");
+     };
+
+     let%test "valid splits" = {
+       splitAt(~byte=0, "abc") == ("", "abc")
+       && splitAt(~byte=1, "abc") == ("a", "bc")
+       && splitAt(~byte=2, "abc") == ("ab", "c")
+       && splitAt(~byte=3, "abc") == ("abc", "");
+     };
+   });
 
 let isWhitespaceOnly = str => {
   let len = String.length(str);
@@ -152,6 +261,29 @@ let findNonWhitespace = str => {
   loop(0);
 };
 
+/** [leadingWhitespace(str)] returns a string containing the leading whitespace characters of [str] */
+let leadingWhitespace = str => {
+  let maybeIdx = findNonWhitespace(str);
+  switch (maybeIdx) {
+  | None => str
+  | Some(idx) => String.sub(str, 0, idx)
+  };
+};
+
+let%test_module "leadingWhitespace" =
+  (module
+   {
+     let%test "no whitespace" = {
+       leadingWhitespace("abc") == "";
+     };
+     let%test "single space" = {
+       leadingWhitespace(" abc") == " ";
+     };
+     let%test "mixed spaces" = {
+       leadingWhitespace(" \t abc") == " \t ";
+     };
+   });
+
 let isEmpty = str =>
   if (String.equal(str, "")) {
     true;
@@ -278,13 +410,13 @@ let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {
   };
 };
 
-let removeWindowsNewLines = str => {
+let filterAscii = (f, str) => {
   let len = String.length(str);
   let filteredString = Bytes.of_string(str);
 
   let destIdx = ref(0);
   for (srcIdx in 0 to len - 1) {
-    if (str.[srcIdx] != '\r') {
+    if (f(str.[srcIdx])) {
       Bytes.set(filteredString, destIdx^, str.[srcIdx]);
       incr(destIdx);
     };
@@ -292,6 +424,10 @@ let removeWindowsNewLines = str => {
 
   let destLen = destIdx^;
   Bytes.sub(filteredString, 0, destLen) |> Bytes.to_string;
+};
+
+let removeWindowsNewLines = str => {
+  str |> filterAscii(c => c != '\r');
 };
 
 let%test_module "removeWindowsNewLines" =
@@ -386,3 +522,7 @@ let escapeSpaces: string => string =
     List.init(String.length(s), String.get(s))
     |> List.map(c => (c == ' ' ? "\\" : "") ++ String.make(1, c))
     |> String.concat("");
+
+let replace = (~match, ~replace, str) => {
+  Str.global_replace(Str.regexp_string(match), replace, str);
+};

@@ -5,10 +5,11 @@
  */
 
 open Oni_Core;
-open Oni_Syntax;
 
 module Commands = GlobalCommands;
-let windowCommandCondition = "!insertMode || terminalFocus" |> WhenExpr.parse;
+let windowCommandCondition =
+  "!commandLineFocus && !insertMode && !inQuickOpen || terminalFocus"
+  |> WhenExpr.parse;
 
 let isMacCondition = "isMac" |> WhenExpr.parse;
 let defaultKeyBindings =
@@ -30,6 +31,8 @@ let defaultKeyBindings =
     ),
   ]
   @ Feature_SideBar.Contributions.keybindings
+  @ Feature_Clipboard.Contributions.keybindings
+  @ Feature_Configuration.Contributions.keybindings
   @ Feature_Input.Schema.[
       bind(
         ~key="<C-TAB>",
@@ -56,29 +59,6 @@ let defaultKeyBindings =
         ~key="<D-S-P>",
         ~command=Commands.Workbench.Action.showCommands.id,
         ~condition="isMac" |> WhenExpr.parse,
-      ),
-      bind(
-        ~key="<C-V>",
-        ~command=Feature_Clipboard.Commands.paste.id,
-        // The WhenExpr parser doesn't support precedence, so we manually construct it here...
-        // It'd be nice to bring back explicit precedence via '(' and ')'
-        // Alternatively, a manual construction could be done with separate bindings for !isMac OR each condition
-        ~condition=
-          WhenExpr.(
-            And([
-              Not(Defined("isMac")),
-              Or([
-                And([Defined("editorTextFocus"), Defined("insertMode")]),
-                Defined("textInputFocus"),
-                Defined("commandLineFocus"),
-              ]),
-            ])
-          ),
-      ),
-      bind(
-        ~key="<D-V>",
-        ~command=Feature_Clipboard.Commands.paste.id,
-        ~condition=isMacCondition,
       ),
       bind(
         ~key="<ESC>",
@@ -137,6 +117,7 @@ let defaultKeyBindings =
     ]
   @ Feature_Registers.Contributions.keybindings
   @ Feature_LanguageSupport.Contributions.keybindings
+  @ Feature_Buffers.Contributions.keybindings
   @ Feature_Input.Schema.[
       bind(
         ~key="<CR>",
@@ -231,37 +212,8 @@ let defaultKeyBindings =
         ~command=Feature_Layout.Commands.previousEditor.id,
         ~condition=isMacCondition,
       ),
-      bind(
-        ~key="<D-+>",
-        ~command="workbench.action.zoomIn",
-        ~condition=isMacCondition,
-      ),
-      bind(
-        ~key="<C-+>",
-        ~command="workbench.action.zoomIn",
-        ~condition=WhenExpr.Value(True),
-      ),
-      bind(
-        ~key="<D-->",
-        ~command="workbench.action.zoomOut",
-        ~condition=isMacCondition,
-      ),
-      bind(
-        ~key="<C-->",
-        ~command="workbench.action.zoomOut",
-        ~condition=WhenExpr.Value(True),
-      ),
-      bind(
-        ~key="<D-0>",
-        ~command="workbench.action.zoomReset",
-        ~condition=isMacCondition,
-      ),
-      bind(
-        ~key="<C-0>",
-        ~command="workbench.action.zoomReset",
-        ~condition=WhenExpr.Value(True),
-      ),
     ]
+  @ Feature_Zoom.Contributions.keybindings
   @ Feature_Terminal.Contributions.keybindings
   //LAYOUT
   @ Feature_Input.Schema.[
@@ -288,6 +240,41 @@ let defaultKeyBindings =
       bind(
         ~key="<C-W><C-L>",
         ~command=Feature_Layout.Commands.moveRight.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>T",
+        ~command=Feature_Layout.Commands.moveTopLeft.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-T>",
+        ~command=Feature_Layout.Commands.moveTopLeft.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>B",
+        ~command=Feature_Layout.Commands.moveBottomRight.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-B>",
+        ~command=Feature_Layout.Commands.moveBottomRight.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>W",
+        ~command=Feature_Layout.Commands.cycleForward.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-W>",
+        ~command=Feature_Layout.Commands.cycleForward.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><S-W>",
+        ~command=Feature_Layout.Commands.cycleBackward.id,
         ~condition=windowCommandCondition,
       ),
       bind(
@@ -400,12 +387,23 @@ let defaultKeyBindings =
         ~command=Feature_Layout.Commands.toggleMaximize.id,
         ~condition=windowCommandCondition,
       ),
+      bind(
+        ~key="<C-W><C-Q>",
+        ~command=Feature_Layout.Commands.closeActiveSplit.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>q",
+        ~command=Feature_Layout.Commands.closeActiveSplit.id,
+        ~condition=windowCommandCondition,
+      ),
     ]
-  @ Feature_SignatureHelp.Contributions.keybindings
   @ Component_VimWindows.Contributions.keybindings
   @ Component_VimList.Contributions.keybindings
   @ Component_VimTree.Contributions.keybindings
-  @ Feature_Vim.Contributions.keybindings;
+  @ Feature_Snippets.Contributions.keybindings
+  @ Feature_Vim.Contributions.keybindings
+  @ Feature_Diagnostics.Contributions.keybindings;
 
 type windowDisplayMode =
   | Minimized
@@ -416,14 +414,13 @@ type windowDisplayMode =
 type t = {
   buffers: Feature_Buffers.model,
   bufferRenderers: BufferRenderers.t,
-  bufferHighlights: BufferHighlights.t,
   changelog: Feature_Changelog.model,
   cli: Oni_CLI.t,
+  clientServer: Feature_ClientServer.model,
   clipboard: Feature_Clipboard.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   config: Feature_Configuration.model,
-  configuration: Configuration.t,
   decorations: Feature_Decorations.model,
   diagnostics: Feature_Diagnostics.model,
   editorFont: Service_Font.font,
@@ -432,22 +429,20 @@ type t = {
   input: Feature_Input.model,
   logging: Feature_Logging.model,
   messages: Feature_Messages.model,
-  terminalFont: Service_Font.font,
+  output: Feature_Output.model,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
   sideBar: Feature_SideBar.model,
-  // Token theme is theming for syntax highlights
-  tokenTheme: TokenTheme.t,
   extensions: Feature_Extensions.model,
   exthost: Feature_Exthost.model,
   iconTheme: IconTheme.t,
   isQuitting: bool,
   languageSupport: Feature_LanguageSupport.model,
-  languageInfo: Exthost.LanguageInfo.t,
   grammarRepository: Oni_Syntax.GrammarRepository.t,
   lifecycle: Lifecycle.t,
   menuBar: Feature_MenuBar.model,
   notifications: Feature_Notification.model,
+  proxy: Feature_Proxy.model,
   registers: Feature_Registers.model,
   scm: Feature_SCM.model,
   sneak: Feature_Sneak.model,
@@ -456,19 +451,21 @@ type t = {
   terminals: Feature_Terminal.t,
   layout: Feature_Layout.model,
   fileExplorer: Feature_Explorer.model,
-  signatureHelp: Feature_SignatureHelp.model,
   windowIsFocused: bool,
   windowDisplayMode,
   titlebarHeight: float,
   workspace: Feature_Workspace.model,
-  zenMode: bool,
+  zen: Feature_Zen.model,
   // State of the bottom pane
-  pane: Feature_Pane.model,
+  pane: Feature_Pane.model(t, Actions.t),
+  newQuickmenu: Feature_Quickmenu.model(Actions.t),
   searchPane: Feature_Search.model,
   focus: Focus.stack,
   modal: option(Feature_Modals.model),
+  snippets: Feature_Snippets.model,
   textContentProviders: list((int, string)),
   vim: Feature_Vim.model,
+  zoom: Feature_Zoom.model,
   autoUpdate: Feature_AutoUpdate.model,
   registration: Feature_Registration.model,
 };
@@ -480,30 +477,38 @@ let initial =
       ~initialBufferRenderers,
       ~extensionGlobalPersistence,
       ~extensionWorkspacePersistence,
-      ~getUserSettings,
-      ~contributedCommands,
+      ~configurationLoader,
+      ~keybindingsLoader,
       ~workingDirectory,
       ~maybeWorkspace,
       ~extensionsFolder,
       ~licenseKeyPersistence,
       ~titlebarHeight,
+      ~getZoom,
+      ~setZoom,
     ) => {
   let config =
     Feature_Configuration.initial(
-      ~getUserSettings,
+      ~loader=configurationLoader,
       [
+        Component_FileExplorer.Contributions.configuration,
         Feature_AutoUpdate.Contributions.configuration,
         Feature_Buffers.Contributions.configuration,
         Feature_Editor.Contributions.configuration,
         Feature_Input.Contributions.configuration,
         Feature_MenuBar.Contributions.configuration,
+        Feature_Search.Contributions.configuration,
         Feature_SideBar.Contributions.configuration,
-        Feature_SignatureHelp.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
         Feature_Terminal.Contributions.configuration,
+        Feature_Theme.Contributions.configuration,
         Feature_LanguageSupport.Contributions.configuration,
         Feature_Layout.Contributions.configuration,
+        Feature_StatusBar.Contributions.configuration,
         Feature_TitleBar.Contributions.configuration,
+        Feature_Vim.Contributions.configuration,
+        Feature_Zen.Contributions.configuration,
+        Feature_Zoom.Contributions.configuration,
       ],
     );
   let initialEditor = {
@@ -522,10 +527,10 @@ let initial =
 
   {
     buffers: Feature_Buffers.empty |> Feature_Buffers.add(initialBuffer),
-    bufferHighlights: BufferHighlights.initial,
     bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
     cli,
+    clientServer: Feature_ClientServer.create(),
     clipboard: Feature_Clipboard.initial,
     colorTheme:
       Feature_Theme.initial([
@@ -533,15 +538,14 @@ let initial =
         Feature_Terminal.Contributions.colors,
         Feature_Notification.Contributions.colors,
       ]),
-    commands: Feature_Commands.initial(contributedCommands),
+    commands: Feature_Commands.initial([]),
     config,
-    configuration: Configuration.default,
     decorations: Feature_Decorations.initial,
     diagnostics: Feature_Diagnostics.initial,
-    input: Feature_Input.initial(defaultKeyBindings),
+    input:
+      Feature_Input.initial(~loader=keybindingsLoader, defaultKeyBindings),
     quickmenu: None,
     editorFont: defaultEditorFont,
-    terminalFont: defaultEditorFont,
     extensions:
       Feature_Extensions.initial(
         ~globalPersistence=extensionGlobalPersistence,
@@ -556,19 +560,19 @@ let initial =
     messages: Feature_Messages.initial,
     uiFont: UiFont.default,
     sideBar: Feature_SideBar.initial,
-    tokenTheme: TokenTheme.empty,
     help: Feature_Help.initial,
     iconTheme: IconTheme.create(),
     isQuitting: false,
-    languageInfo: Exthost.LanguageInfo.initial,
     menuBar:
       Feature_MenuBar.initial(
         ~menus=[],
         ~groups=
           [Feature_Workspace.Contributions.menuGroup]
+          @ Feature_LanguageSupport.Contributions.menuGroups
           @ Feature_SideBar.Contributions.menuGroups
           @ Feature_Help.Contributions.menuGroups,
       ),
+    output: Feature_Output.initial,
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,
     registers: Feature_Registers.initial,
@@ -582,19 +586,58 @@ let initial =
     titlebarHeight,
     workspace:
       Feature_Workspace.initial(
-        ~openedFolder=maybeWorkspace,
+        ~openedFolder=maybeWorkspace |> Option.map(FpExp.toString),
         workingDirectory,
       ),
     fileExplorer: Feature_Explorer.initial(~rootPath=maybeWorkspace),
-    signatureHelp: Feature_SignatureHelp.initial,
-    zenMode: false,
-    pane: Feature_Pane.initial,
+    zen:
+      Feature_Zen.initial(~isSingleFile=List.length(cli.filesToOpen) == 1),
+    pane:
+      Feature_Pane.initial(
+        [
+          Feature_Diagnostics.Contributions.pane
+          |> Feature_Pane.Schema.map(
+               ~msg=msg => Actions.Diagnostics(msg),
+               ~model=state => state.diagnostics,
+             ),
+          Feature_Notification.Contributions.pane
+          |> Feature_Pane.Schema.map(
+               ~msg=msg => Actions.Notification(msg),
+               ~model=state => state.notifications,
+             ),
+        ]
+        @ (
+          Feature_LanguageSupport.Contributions.panes
+          |> List.map(
+               Feature_Pane.Schema.map(
+                 ~msg=msg => Actions.LanguageSupport(msg),
+                 ~model=state => state.languageSupport,
+               ),
+             )
+        )
+        @ [
+          Feature_Output.Contributions.pane
+          |> Feature_Pane.Schema.map(
+               ~msg=msg => Actions.Output(msg),
+               ~model=state => state.output,
+             ),
+          Feature_Terminal.Contributions.pane
+          |> Feature_Pane.Schema.map(
+               ~msg=msg => Actions.Terminal(msg),
+               ~model=state => state.terminals,
+             ),
+        ],
+      ),
+    proxy: Feature_Proxy.default,
+    newQuickmenu: Feature_Quickmenu.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
     modal: None,
+    snippets: Feature_Snippets.initial,
     terminals: Feature_Terminal.initial,
     textContentProviders: [],
     vim: Feature_Vim.initial,
+    zoom: Feature_Zoom.initial(~getZoom, ~setZoom),
     autoUpdate: Feature_AutoUpdate.initial,
     registration: Feature_Registration.initial(licenseKeyPersistence),
   };

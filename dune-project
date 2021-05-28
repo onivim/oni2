@@ -1,6 +1,8 @@
 (lang dune 2.5)
 (using menhir 2.0)
 
+(formatting (enabled_for reason))
+
 (name oni2)
 
 (package
@@ -23,3 +25,6 @@
 
 (package
  (name treesitter))
+
+(package
+ (name vterm))

@@ -1,3 +1,4 @@
+open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
@@ -14,25 +15,23 @@ let printOpt = sOpt =>
   | Some(v) => "Some(" ++ v ++ ")"
   };
 
-runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
-  wait(
-    ~name="Set configuration to always yank to clipboard", (state: State.t) => {
-    let configuration = state.configuration;
+runTest(~name="ClipboardYankTest", ({dispatch, wait, runEffects, _}) => {
+  wait(~name="Set configuration to always yank to clipboard", _ => {
+    let transformer =
+      ConfigurationTransformer.setField(
+        "vim.useSystemClipboard",
+        `List([`String("yank")]),
+      );
     dispatch(
-      ConfigurationSet({
-        ...configuration,
-        default: {
-          ...configuration.default,
-          vimUseSystemClipboard: {
-            yank: true,
-            delete: false,
-            paste: false,
-          },
-        },
-      }),
+      Configuration(Feature_Configuration.Testing.transform(transformer)),
     );
     runEffects();
     true;
+  });
+
+  wait(~name="Wait for configuration to update", (state: State.t) => {
+    Feature_Vim.useSystemClipboard(state.vim)
+    == Feature_Vim.{yank: true, delete: false, paste: false}
   });
 
   dispatch(KeyboardInput({isText: true, input: "i"}));
@@ -68,26 +67,22 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
     print_endline("CLIPBOARD: " ++ printOpt(getClipboard()));
     optEqual(getClipboard(), "abc\n");
   });
-
-  wait(
-    ~name="Set configuration to not yank to clipboard by default",
-    (state: State.t) => {
-    let configuration = state.configuration;
+  wait(~name="Set configuration to not yank clipboard by default", _ => {
+    let transformer =
+      ConfigurationTransformer.setField(
+        "vim.useSystemClipboard",
+        `Bool(false),
+      );
     dispatch(
-      ConfigurationSet({
-        ...configuration,
-        default: {
-          ...configuration.default,
-          vimUseSystemClipboard: {
-            yank: false,
-            delete: false,
-            paste: false,
-          },
-        },
-      }),
+      Configuration(Feature_Configuration.Testing.transform(transformer)),
     );
     runEffects();
     true;
+  });
+
+  wait(~name="Wait for configuration to update", (state: State.t) => {
+    Feature_Vim.useSystemClipboard(state.vim)
+    == Feature_Vim.{yank: false, delete: false, paste: false}
   });
 
   setClipboard(None);

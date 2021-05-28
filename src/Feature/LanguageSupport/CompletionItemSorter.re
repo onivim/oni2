@@ -1,97 +1,60 @@
 open Oni_Core;
+open Utility;
 
-let compare =
-    (a: Filter.result(CompletionItem.t), b: Filter.result(CompletionItem.t)) => {
-  // First, use the sortText, if available
-  let sortValue =
-    if (!a.item.isFuzzyMatching && !b.item.isFuzzyMatching) {
-      String.compare(a.item.sortText, b.item.sortText);
+let isSnippet = (item: CompletionItem.t) => {
+  item.kind == Exthost.CompletionKind.Snippet;
+};
+
+module Compare = {
+  let snippetSort = (~snippetSortOrder, a, b) => {
+    let isSnippetA = isSnippet(a);
+    let isSnippetB = isSnippet(b);
+
+    if (snippetSortOrder == `Inline || snippetSortOrder == `Hidden) {
+      None;
+    } else if (isSnippetA != isSnippetB) {
+      if (isSnippetA) {
+        Some(snippetSortOrder == `Top ? (-1) : 1);
+      } else {
+        Some(snippetSortOrder == `Top ? 1 : (-1));
+      };
     } else {
-      0;
-      // If we're fuzzy matching,
+      None;
+    };
+  };
+
+  let score = (a: CompletionItem.t, b: CompletionItem.t) =>
+    if (Float.equal(a.score, b.score)) {
+      None;
+    } else {
+      Some(int_of_float((b.score -. a.score) *. 1000.));
     };
 
-  if (sortValue == 0) {
-    let aLen = String.length(a.item.label);
-    let bLen = String.length(b.item.label);
+  let sortBySortText = (a: CompletionItem.t, b: CompletionItem.t) => {
+    let compare = String.compare(a.sortText, b.sortText);
+    if (compare == 0) {
+      None;
+    } else {
+      Some(compare);
+    };
+  };
+
+  let sortByLabel = (a: CompletionItem.t, b: CompletionItem.t) => {
+    let aLen = String.length(a.label);
+    let bLen = String.length(b.label);
     if (aLen == bLen) {
-      String.compare(a.item.label, b.item.label);
+      Some(String.compare(a.label, b.label));
     } else {
-      aLen - bLen;
+      Some(aLen - bLen);
     };
-  } else {
-    sortValue;
   };
 };
 
-let%test_module "compare" =
-  (module
-   {
-     let create = (~isFuzzyMatching, ~label, ~sortText) => {
-       CompletionItem.{
-         chainedCacheId: None,
-         handle: None,
-         label,
-         kind: Exthost.CompletionKind.Method,
-         detail: None,
-         documentation: None,
-         insertText: label,
-         insertTextRules: Exthost.SuggestItem.InsertTextRules.none,
-         filterText: label,
-         sortText,
-         suggestRange: None,
-         commitCharacters: [],
-         additionalTextEdits: [],
-         command: None,
-         isFuzzyMatching,
-       }
-       |> Filter.result;
-     };
-
-     let%test "sortText takes precedence" = {
-       let sortTextZ =
-         create(~isFuzzyMatching=false, ~label="abc", ~sortText="z");
-       let sortTextA =
-         create(~isFuzzyMatching=false, ~label="def", ~sortText="a");
-
-       [sortTextZ, sortTextA]
-       |> List.sort(compare) == [sortTextA, sortTextZ];
-     };
-
-     let%test "falls back to label" = {
-       let abc = create(~isFuzzyMatching=false, ~label="abc", ~sortText="a");
-       let def = create(~isFuzzyMatching=false, ~label="def", ~sortText="a");
-
-       [def, abc] |> List.sort(compare) == [abc, def];
-     };
-
-     let%test "when falling back to label, prefer shorter result" = {
-       let toString =
-         create(~isFuzzyMatching=false, ~label="toString", ~sortText="a");
-       let toLocaleString =
-         create(
-           ~isFuzzyMatching=false,
-           ~label="toLocaleString",
-           ~sortText="a",
-         );
-
-       [toLocaleString, toString]
-       |> List.sort(compare) == [toString, toLocaleString];
-     };
-
-     let%test "#2235: should prefer fuzzy-matches over sort text" = {
-       // ...but once we start searching
-       let forEachWithIndex =
-         create(
-           ~isFuzzyMatching=true,
-           ~label="forEachWithIndex",
-           ~sortText="a",
-         );
-       let range =
-         create(~isFuzzyMatching=true, ~label="range", ~sortText="z");
-
-       // ...prioritize fuzzy score (well, until fzy is hooked up - string length as a proxy)
-       [forEachWithIndex, range]
-       |> List.sort(compare) == [range, forEachWithIndex];
-     };
-   });
+let compare =
+    (~snippetSortOrder=`Inline, a: CompletionItem.t, b: CompletionItem.t) => {
+  Compare.snippetSort(~snippetSortOrder, a, b)
+  |> OptionEx.or_lazy(() => Compare.score(a, b))
+  |> OptionEx.or_lazy(() => Compare.sortBySortText(a, b))
+  |> OptionEx.or_lazy(() => Compare.sortByLabel(a, b))
+  |> Option.value(~default=0);
+};

@@ -27,6 +27,40 @@ module Colors = {
 
   let union = (xs, ys) => Lookup.union((_key, _x, y) => Some(y), xs, ys);
   let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
+
+  let decodeColor =
+    Json.Decode.(
+      {
+        string
+        |> and_then(str =>
+             try(Revery.Color.hex(str) |> succeed) {
+             | exn => fail(Printexc.to_string(exn))
+             }
+           );
+      }
+    );
+
+  let decode =
+    Json.Decode.(
+      key_value_pairs(decodeColor)
+      |> map(pairs => {
+           pairs
+           |> List.map(((colorName, color)) => (key(colorName), color))
+           |> fromList
+         })
+    );
+
+  let encode = lookups =>
+    Json.Encode.(
+      {
+        lookups
+        |> Lookup.bindings
+        |> List.map(((key, color)) => {
+             (Lookup.keyName(key), `String(Revery.Color.toString(color)))
+           })
+        |> obj;
+      }
+    );
 };
 
 // DEFAULTS

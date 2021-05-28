@@ -267,7 +267,7 @@ let getListOfLanguages = (extensions: list(Scanner.ScanResult.t)) => {
   extensions |> List.map(v => v.manifest.contributes.languages) |> List.flatten;
 };
 
-let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
+let addExtensions = (extensions: list(Scanner.ScanResult.t), model: t) => {
   let grammars = getListOfGrammars(extensions);
   let languages = getListOfLanguages(extensions);
 
@@ -280,7 +280,7 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
            let (extension, language) = v;
            StringMap.add(extension, language, prev);
          },
-         StringMap.empty,
+         model.extToLanguage,
        );
 
   let fileNameToLanguage =
@@ -292,7 +292,7 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
            let (fileName, language) = v;
            StringMap.add(fileName, language, prev);
          },
-         StringMap.empty,
+         model.fileNameToLanguage,
        );
 
   let fileNamePatternToLanguage =
@@ -307,7 +307,7 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
            | Ok(pattern) => [{pattern, language}, ...prev]
            };
          },
-         [],
+         model.fileNamePatternToLanguage,
        );
 
   let firstLineToLanguage =
@@ -326,7 +326,7 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
              }
            )
          },
-         [],
+         model.firstLineToLanguage,
        );
   open Contributions.Grammar;
   let languageToScope =
@@ -337,7 +337,7 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
            | None => prev
            | Some(v) => StringMap.add(v, curr.scopeName, prev)
            },
-         StringMap.empty,
+         model.languageToScope,
        );
 
   let languageToConfigurationPath =
@@ -349,11 +349,11 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
            | Some(configPath) => StringMap.add(id, configPath, prev)
            }
          },
-         StringMap.empty,
+         model.languageToConfigurationPath,
        );
 
   {
-    ...initial,
+    ...model,
     languages,
     extToLanguage,
     fileNameToLanguage,

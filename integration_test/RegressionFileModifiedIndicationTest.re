@@ -6,9 +6,9 @@ open Oni_IntegrationTestLib;
 // https://github.com/onivim/oni2/issues/600
 //
 // Verify some simple cases around the file modified flag
-runTestWithInput(
+runTest(
   ~name="RegressionFileModifiedIndication",
-  (input, dispatch, wait, runEffects) => {
+  ({input, dispatch, wait, runEffects, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
@@ -18,7 +18,7 @@ runTestWithInput(
   dispatch(
     Actions.OpenFileByPath(
       "regression-file-modified-indication.txt",
-      None,
+      SplitDirection.Current,
       None,
     ),
   );

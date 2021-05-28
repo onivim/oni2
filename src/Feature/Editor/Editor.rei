@@ -4,6 +4,12 @@ open Oni_Core;
 [@deriving show]
 type t;
 
+// A pixel position relative to the top, left of the current editor
+type relativePixelPosition = PixelPosition.t;
+
+// A pixel position relative to the top, left of the screen
+type absolutePixelPosition = PixelPosition.t;
+
 type scrollbarMetrics = {
   visible: bool,
   thumbSize: int,
@@ -32,11 +38,12 @@ type inlineElement;
 
 let makeInlineElement:
   (
+    ~command: option(Exthost.Command.t)=?,
     ~key: string,
     ~uniqueId: string,
     ~lineNumber: EditorCoreTypes.LineNumber.t,
-    ~view: (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
-           Revery.UI.element
+    (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
+    Revery.UI.element
   ) =>
   inlineElement;
 
@@ -61,6 +68,8 @@ let setInlineElementSize:
   ) =>
   t;
 
+let setBoundingBox: (Revery.Math.BoundingBox2d.t, t) => t;
+
 let getInlineElements:
   (~line: EditorCoreTypes.LineNumber.t, t) => list(InlineElements.element);
 
@@ -83,6 +92,7 @@ let getCharacterAtPosition:
   (~position: CharacterPosition.t, t) => option(Uchar.t);
 let getPrimaryCursor: t => CharacterPosition.t;
 let getPrimaryCursorByte: t => BytePosition.t;
+let cursors: t => list(BytePosition.t);
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
 let getTotalWidthInPixels: t => float;
@@ -90,6 +100,12 @@ let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
+
+let setCursors: (list(BytePosition.t), t) => t;
+let setSelections: (list(ByteRange.t), t) => t;
+
+let horizontalScrollbarThickness: t => int;
+let verticalScrollbarThickness: t => int;
 
 // Get the horizontal width in pixels of the tab/space whitespace in front of a line.
 let getLeadingWhitespacePixels: (EditorCoreTypes.LineNumber.t, t) => float;
@@ -116,8 +132,10 @@ let setMinimap: (~enabled: bool, ~maxColumn: int, t) => t;
 let isMinimapEnabled: t => bool;
 
 // Mouse interactions
-let mouseDown: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
-let mouseUp: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseDown:
+  (~altKey: bool, ~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseUp:
+  (~altKey: bool, ~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
 let mouseMove: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
 let mouseEnter: t => t;
 let mouseLeave: t => t;
@@ -125,6 +143,9 @@ let hasMouseEntered: t => bool;
 let isMouseDown: t => bool;
 let lastMouseMoveTime: t => option(Revery.Time.t);
 let getCharacterUnderMouse: t => option(CharacterPosition.t);
+
+let shouldShowDeprecated: t => bool;
+let shouldShowUnused: t => bool;
 
 // Scale factor between horizontal pixels on the editor surface vs minimap
 let getMinimapWidthScaleFactor: t => float;
@@ -134,7 +155,7 @@ let setLineNumbers:
 let lineNumbers: t => [ | `Off | `On | `Relative | `RelativeOnly];
 
 // [exposePrimaryCursor(editor)] ensures the primary cursor is visible - adjusting the scroll if it isnot.
-let exposePrimaryCursor: t => t;
+let exposePrimaryCursor: (~disableAnimation: bool=?, t) => t;
 
 let getNearestMatchingPair:
   (
@@ -157,12 +178,22 @@ let scrollX: t => float;
 let scrollY: t => float;
 let minimapScrollY: t => float;
 
+let pixelX: t => float;
+let pixelY: t => float;
+
+// `gutterWidth` returns the size of the gutter, which includes:
+// - Line number rendering
+// - Diff marker rendering
+// - Extra margin
+// (...later, vim signs & debugger breakpoints)
+let gutterWidth: (~editorFont: Service_Font.font, t) => float;
+
 let lineHeightInPixels: t => float;
 let linePaddingInPixels: t => float;
 let setLineHeight: (~lineHeight: LineHeight.t, t) => t;
 let characterWidthInPixels: t => float;
 
-let selection: t => option(VisualRange.t);
+let selections: t => list(VisualRange.t);
 
 let selectionOrCursorRange: t => ByteRange.t;
 
@@ -188,6 +219,8 @@ let scrollPage: (~count: int, t) => t;
 
 let getCharacterWidth: t => float;
 
+let singleLineSelectedText: t => option(string);
+
 // Given a start position and a delta screen lines,
 // figure out a destination byte position.
 let moveScreenLines:
@@ -198,6 +231,7 @@ let byteToCharacter: (BytePosition.t, t) => option(CharacterPosition.t);
 let characterToByte: (CharacterPosition.t, t) => option(BytePosition.t);
 
 let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
+let characterRangeToByteRange: (CharacterRange.t, t) => option(ByteRange.t);
 
 // VIEW-SPACE CONVERSION
 
@@ -215,9 +249,12 @@ let viewLineToPixelY: (int, t) => float;
 
 // They return both the pixel position, as well as the character width of the target character.
 let bufferBytePositionToPixel:
-  (~position: BytePosition.t, t) => (PixelPosition.t, float);
+  (~position: BytePosition.t, t) => (relativePixelPosition, float);
 let bufferCharacterPositionToPixel:
-  (~position: CharacterPosition.t, t) => (PixelPosition.t, float);
+  (~position: CharacterPosition.t, t) => (relativePixelPosition, float);
+
+let relativeToAbsolutePixel:
+  (relativePixelPosition, t) => absolutePixelPosition;
 
 // PROJECTION
 
@@ -251,7 +288,13 @@ let unprojectToPixel:
 let setSize: (~pixelWidth: int, ~pixelHeight: int, t) => t;
 
 let updateBuffer:
-  (~update: Oni_Core.BufferUpdate.t, ~buffer: EditorBuffer.t, t) => t;
+  (
+    ~update: Oni_Core.BufferUpdate.t,
+    ~markerUpdate: Oni_Core.MarkerUpdate.t,
+    ~buffer: EditorBuffer.t,
+    t
+  ) =>
+  t;
 let setBuffer: (~buffer: EditorBuffer.t, t) => t;
 
 let configurationChanged:

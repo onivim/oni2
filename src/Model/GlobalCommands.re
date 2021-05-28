@@ -13,32 +13,28 @@ module Internal = {
 
 open Internal;
 
-let copyFilePath =
-  register(
-    ~category="Editor",
-    ~title="Copy Active Filepath to Clipboard",
-    "copyFilePath",
-    CopyActiveFilepathToClipboard,
-  );
+let noop = register("noop", Noop);
 
-let undo = register("undo", Command("undo"));
-let redo = register("redo", Command("redo"));
+let command = cmd => CommandInvoked({command: cmd, arguments: `Null});
 
-let indent = register("indent", Command("indent"));
-let outdent = register("outdent", Command("outdent"));
+let undo = register("undo", command("undo"));
+let redo = register("redo", command("redo"));
+
+let indent = register("indent", command("indent"));
+let outdent = register("outdent", command("outdent"));
 
 module Editor = {
   module Action = {
     let indentLines =
       register(
         "editor.action.indentLines",
-        Command("editor.action.indentLines"),
+        command("editor.action.indentLines"),
       );
 
     let outdentLines =
       register(
         "editor.action.outdentLines",
-        Command("editor.action.outdentLines"),
+        command("editor.action.outdentLines"),
       );
   };
 };
@@ -58,7 +54,7 @@ module Oni = {
       ~category="Help",
       ~title="Open changelog",
       "oni.changelog",
-      Command("oni.changelog"),
+      command("oni.changelog"),
     );
 
   module System = {
@@ -68,7 +64,7 @@ module Oni = {
         ~title="Add Oni2 to System PATH",
         ~isEnabledWhen=WhenExpr.parse("isMac && !symLinkExists"), // NOTE: symLinkExists only defined in command palette
         "system.addToPath",
-        Command("system.addToPath"),
+        command("system.addToPath"),
       );
 
     let removeFromPath =
@@ -77,71 +73,24 @@ module Oni = {
         ~title="Remove Oni2 from System PATH",
         ~isEnabledWhen=WhenExpr.parse("isMac && symLinkExists"), // NOTE: symLinkExists only defined in command palette
         "system.removeFromPath",
-        Command("system.removeFromPath"),
+        command("system.removeFromPath"),
       );
   };
 
   module Vim = {
-    let esc = register("vim.esc", Command("vim.esc"));
+    let esc = register("vim.esc", command("vim.esc"));
     let tutor =
       register(
         ~category="Help",
         ~title="Open Vim Tutor",
         "vim.tutor",
-        Command("vim.tutor"),
+        command("vim.tutor"),
       );
-  };
-
-  module Workbench = {
-    module Action = {
-      let reloadSettings =
-        register(
-          ~category="Preferences",
-          ~title="Reload configuration",
-          "workbench.action.reloadSettings",
-          ConfigurationReload,
-        );
-
-      let enableZenMode =
-        register(
-          ~category="View",
-          ~title="Enable Zen Mode",
-          ~isEnabledWhen=WhenExpr.parse("!zenMode"),
-          "workbench.action.enableZenMode", // use workbench.action.toggleZenMode?
-          //~isEnabled=() => !getState().zenMode,
-          EnableZenMode,
-        );
-
-      let disableZenMode =
-        register(
-          ~category="View",
-          ~title="Disable Zen Mode",
-          ~isEnabledWhen=WhenExpr.parse("zenMode"),
-          "workbench.action.disableZenMode", // use workbench.action.toggleZenMode?
-          DisableZenMode,
-        );
-    };
   };
 };
 
 module Workbench = {
   module Action = {
-    let openSettings =
-      register(
-        ~category="Preferences",
-        ~title="Open configuration file",
-        "workbench.action.openSettings",
-        OpenConfigFile("configuration.json"),
-      );
-
-    let openDefaultKeybindingsFile =
-      register(
-        ~category="Preferences",
-        ~title="Open keybindings file",
-        "workbench.action.openDefaultKeybindingsFile",
-        OpenConfigFile("keybindings.json"),
-      );
-
     let showCommands =
       register(
         ~title="Show All Commands",
@@ -164,6 +113,13 @@ module Workbench = {
         QuickmenuShow(FilesPicker),
       );
 
+    let quickOpenBuffer =
+      register(
+        ~title="Go to Buffer...",
+        "workbench.action.quickOpenBuffer",
+        QuickmenuShow(OpenBuffersPicker),
+      );
+
     let quickOpenNavigateNextInEditorPicker =
       register(
         ~title="Navigate Next in Quick Open",
@@ -181,35 +137,11 @@ module Workbench = {
     let closeQuickOpen =
       register("workbench.action.closeQuickOpen", QuickmenuClose);
 
-    let zoomIn =
-      register(
-        ~category="View",
-        ~title="Zoom In",
-        "workbench.action.zoomIn",
-        Command("workbench.action.zoomIn"),
-      );
-
-    let zoomOut =
-      register(
-        ~category="View",
-        ~title="Zoom Out",
-        "workbench.action.zoomOut",
-        Command("workbench.action.zoomOut"),
-      );
-
-    let zoomReset =
-      register(
-        ~category="View",
-        ~title="Reset Zoom",
-        "workbench.action.zoomReset",
-        Command("workbench.action.zoomReset"),
-      );
-
     module Files = {
       let save =
         register(
           "workbench.action.files.save",
-          Command("workbench.action.files.save"),
+          command("workbench.action.files.save"),
         );
     };
   };

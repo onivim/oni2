@@ -15,3 +15,5 @@ let equals: (t, t) => bool;
 let (==): (t, t) => bool;
 let (>): (t, t) => bool;
 let (<): (t, t) => bool;
+
+let compare: (t, t) => int;

@@ -39,6 +39,7 @@ type outmsg =
 let update: (model, msg) => (model, outmsg);
 
 module View: {
+  let reset: unit => unit;
   module Sneakable: {
     let make:
       (

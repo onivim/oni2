@@ -1,0 +1,8 @@
+(library
+ (name Component_EditorContextMenu)
+ (public_name Oni2.component.editor-context-menu)
+ (inline_tests)
+ (libraries Oni2.core Oni2.components Oni2.component.animation Revery
+   isolinear Oni2.feature.sneak)
+ (preprocess
+  (pps ppx_inline_test ppx_let ppx_deriving.show brisk-reconciler.ppx)))

@@ -1,7 +1,7 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="AddRemoveSplitTest", (dispatch, wait, _runEffects) => {
+runTest(~name="AddRemoveSplitTest", ({dispatch, wait, _}) => {
   wait(~name="Wait for split to be created 1", (state: State.t) => {
     let splitCount =
       state.layout |> Feature_Layout.visibleEditors |> List.length;

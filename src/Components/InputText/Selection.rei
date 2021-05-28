@@ -8,6 +8,7 @@ type t =
 let initial: t;
 
 let create: (~text: string, ~anchor: int, ~focus: int) => t;
+let all: string => t;
 let length: t => int;
 let offsetLeft: t => int;
 let offsetRight: t => int;

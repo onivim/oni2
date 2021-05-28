@@ -17,20 +17,18 @@ let getBufferForEditor = (buffers, editor: Editor.t) => {
   Feature_Buffers.get(Editor.getBufferId(editor), buffers);
 };
 
-let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
-  let fileType =
-    Option.value(
-      ~default=Exthost.LanguageInfo.defaultLanguage,
-      Buffer.getFileType(buffer) |> Buffer.FileType.toOption,
-    );
-  Configuration.getValue(~fileType, f, state.configuration);
-};
-
 let getActiveBuffer = (state: State.t) => {
   state.layout
   |> Feature_Layout.activeEditor
   |> getBufferForEditor(state.buffers);
 };
+
+let getFocusedBuffer = (state: State.t) =>
+  if (FocusManager.current(state) == Focus.Editor) {
+    getActiveBuffer(state);
+  } else {
+    None;
+  };
 
 let withActiveBufferAndFileType = (state: State.t, f) => {
   let () =
@@ -41,16 +39,6 @@ let withActiveBufferAndFileType = (state: State.t, f) => {
        })
     |> Option.iter(((buf, ft)) => f(buf, ft));
   ();
-};
-
-let getActiveConfigurationValue = (state: State.t, f) => {
-  switch (getActiveBuffer(state)) {
-  | None => Configuration.getValue(f, state.configuration)
-  | Some(buffer) =>
-    let fileType = Buffer.getFileType(buffer) |> Buffer.FileType.toString;
-
-    Configuration.getValue(~fileType, f, state.configuration);
-  };
 };
 
 let getActiveTerminal = (state: State.t) => {

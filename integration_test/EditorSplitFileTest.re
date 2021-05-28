@@ -3,7 +3,7 @@ open Oni_IntegrationTestLib;
 
 runTest(
   ~name="#2900: Splitting with a file should just show file",
-  (dispatch, wait, runEffects) => {
+  ({dispatch, wait, runEffects, _}) => {
   wait(~name="Wait for split to be created 1", (state: State.t) => {
     let splitCount =
       state.layout |> Feature_Layout.visibleEditors |> List.length;

@@ -15,16 +15,22 @@ describe("CommandLine", ({describe, _}) => {
   describe("getType", ({test, _}) =>
     test("simple command line", ({expect, _}) => {
       let _ = reset();
-      input(":");
-      expect.bool(CommandLine.getType() == Types.Ex).toBe(true);
+      let ({mode, _}: Vim.Context.t, _) = Vim.input(":");
+
+      let getType =
+        fun
+        | Vim.Mode.CommandLine({commandType, _}) => Some(commandType)
+        | _ => None;
+
+      expect.equal(getType(mode), Some(Types.Ex));
       key("<esc>");
 
-      input("/");
-      expect.bool(CommandLine.getType() == Types.SearchForward).toBe(true);
+      let ({mode, _}: Vim.Context.t, _) = Vim.input("/");
+      expect.equal(getType(mode), Some(Types.SearchForward));
       key("<esc>");
 
-      input("?");
-      expect.bool(CommandLine.getType() == Types.SearchReverse).toBe(true);
+      let ({mode, _}: Vim.Context.t, _) = Vim.input("?");
+      expect.equal(getType(mode), Some(Types.SearchReverse));
       key("<esc>");
     })
   );
@@ -235,6 +241,19 @@ describe("CommandLine", ({describe, _}) => {
       expect.string(line).toEqual("Dhis is the third line of a test file");
     });
 
+    test(
+      "#1159 - substitution command, with confirm flag - should be a no-op",
+      ({expect, _}) => {
+      let buffer = reset();
+      input(":%s!T!D!gc");
+      key("<cr>");
+
+      expect.bool(Vim.Mode.isNormal(Mode.current())).toBe(true);
+
+      let line = Buffer.getLine(buffer, LineNumber.ofOneBased(3));
+      expect.string(line).toEqual("This is the third line of a test file");
+    });
+
     test("move to line", ({expect, _}) => {
       let _ = reset();
       input(":");
@@ -277,26 +296,20 @@ describe("CommandLine", ({describe, _}) => {
       let _ = reset();
 
       input(":");
-      input("a");
+      let ({mode, _}: Vim.Context.t, _) = Vim.input("a");
 
-      switch (CommandLine.getText()) {
-      | Some(v) => expect.string(v).toEqual("a")
-      | None => expect.int(0).toBe(1)
-      };
+      let getText =
+        fun
+        | Vim.Mode.CommandLine({text, _}) => Some(text)
+        | _ => None;
 
-      input("b");
+      expect.equal(getText(mode), Some("a"));
 
-      switch (CommandLine.getText()) {
-      | Some(v) => expect.string(v).toEqual("ab")
-      | None => expect.int(0).toBe(1)
-      };
+      let ({mode, _}: Vim.Context.t, _) = Vim.input("b");
+      expect.equal(getText(mode), Some("ab"));
 
-      input("c");
-
-      switch (CommandLine.getText()) {
-      | Some(v) => expect.string(v).toEqual("abc")
-      | None => expect.int(0).toBe(1)
-      };
+      let ({mode, _}: Vim.Context.t, _) = Vim.input("c");
+      expect.equal(getText(mode), Some("abc"));
     })
   );
 

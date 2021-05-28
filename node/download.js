@@ -1,22 +1,21 @@
-const http = require("follow-redirects").http
-const https = require("follow-redirects").https
+const requestLight = require("@onivim/request-light")
+
 const fs = require("fs")
 
-const url = new URL(process.argv[2])
+const url = process.argv[2]
 const destPath = process.argv[3]
-
-let requestFn = null
-
-if (url.protocol == "http:") {
-    requestFn = http.get
-} else if (url.protocol == "https:") {
-    requestFn = https.get
-} else {
-    throw "Unrecognized protocol: " + url.protocol
-}
-
 const file = fs.createWriteStream(destPath)
 
-requestFn(url, (response) => {
-    response.pipe(file)
-})
+requestLight
+    .xhr({
+        type: "get",
+        url,
+        writeStream: file,
+    })
+    .then((response) => {
+        if (response.status == 200) {
+            process.stdout.write(`Download of ${url} was successful.`)
+        } else {
+            process.stdout.write(`Download of ${url} failed - status code: {response.status}`)
+        }
+    })

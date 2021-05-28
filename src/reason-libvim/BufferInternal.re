@@ -33,7 +33,8 @@ let string_opt = s =>
   };
 
 let doFullUpdate = (buffer: t) => {
-  let bu = BufferUpdate.createFull(buffer);
+  let shouldAdjustCursorPosition = BufferUpdateTracker.shouldAdjustCursors();
+  let bu = BufferUpdate.createFull(~shouldAdjustCursorPosition, buffer);
   notifyUpdate(buffer);
   Event.dispatch(bu, Listeners.bufferUpdate);
 };

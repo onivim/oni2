@@ -50,7 +50,12 @@ describe("CompletionMeet", ({describe, _}) => {
         );
 
       let expected =
-        CompletionMeet.{location: line0column0, base: "a", bufferId: 0};
+        CompletionMeet.{
+          location: line0column1,
+          insertLocation: line0column0,
+          base: "a",
+          bufferId: 0,
+        };
 
       expect.equal(result, Some(expected));
     });
@@ -65,7 +70,12 @@ describe("CompletionMeet", ({describe, _}) => {
         );
 
       let expected =
-        CompletionMeet.{location: line0column1, base: "a", bufferId: 0};
+        CompletionMeet.{
+          location: line0column2,
+          insertLocation: line0column1,
+          base: "a",
+          bufferId: 0,
+        };
       expect.equal(result, Some(expected));
     });
 
@@ -79,7 +89,12 @@ describe("CompletionMeet", ({describe, _}) => {
         );
 
       let expected =
-        CompletionMeet.{location: line0column2, base: "a", bufferId: 0};
+        CompletionMeet.{
+          location: line0column2,
+          insertLocation: line0column2,
+          base: "a",
+          bufferId: 0,
+        };
       expect.equal(result, Some(expected));
     });
 
@@ -92,7 +107,12 @@ describe("CompletionMeet", ({describe, _}) => {
           " abc" |> makeLine,
         );
       let expected =
-        CompletionMeet.{location: line0column1, base: "abc", bufferId: 0};
+        CompletionMeet.{
+          location: line0column2,
+          insertLocation: line0column1,
+          base: "abc",
+          bufferId: 0,
+        };
       expect.equal(result, Some(expected));
     });
 
@@ -105,7 +125,12 @@ describe("CompletionMeet", ({describe, _}) => {
           " ." |> makeLine,
         );
       let expected =
-        CompletionMeet.{location: line0column2, base: "", bufferId: 0};
+        CompletionMeet.{
+          location: line0column2,
+          insertLocation: line0column2,
+          base: "",
+          bufferId: 0,
+        };
       expect.equal(result, Some(expected));
     });
 
@@ -118,7 +143,12 @@ describe("CompletionMeet", ({describe, _}) => {
           "console.lo" |> makeLine,
         );
       let expected =
-        CompletionMeet.{location: line0column8, base: "lo", bufferId: 0};
+        CompletionMeet.{
+          location: line0column8,
+          insertLocation: line0column8,
+          base: "lo",
+          bufferId: 0,
+        };
       expect.equal(result, Some(expected));
     });
   })

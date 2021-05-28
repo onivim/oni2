@@ -51,19 +51,18 @@ let%component make =
                 ~diagnosticsMap,
                 ~selectionRanges,
                 ~matchingPairs,
-                ~bufferHighlights,
+                ~vim,
                 ~languageSupport,
                 ~languageConfiguration,
                 ~bufferSyntaxHighlights,
                 ~maybeYankHighlights,
                 ~mode,
+                ~snippets: Feature_Snippets.model,
                 ~isActiveSplit,
                 ~gutterWidth,
                 ~bufferPixelWidth,
                 ~windowIsFocused,
                 ~config,
-                ~uiFont,
-                ~theme,
                 (),
               ) => {
   let%hook maybeBbox = React.Hooks.ref(None);
@@ -71,35 +70,6 @@ let%component make =
   let indentation = Buffer.getIndentation(buffer);
 
   //let inlineElements = Editor.getInlineElements(editor);
-
-  let topVisibleLine = Editor.getTopVisibleBufferLine(editor);
-  let bottomVisibleLine = Editor.getBottomVisibleBufferLine(editor);
-
-  let rec getInlineElements = (acc: list(Revery.UI.element), lines) =>
-    switch (lines) {
-    | [] => acc
-    | [line, ...tail] =>
-      let isVisible = line >= topVisibleLine && line <= bottomVisibleLine;
-      getInlineElements(
-        [
-          <InlineElementView.Container
-            config
-            uiFont
-            theme
-            editor
-            line
-            dispatch
-            isVisible
-          />,
-          ...acc,
-        ],
-        tail,
-      );
-    };
-
-  let linesWithElements = Editor.linesWithInlineElements(editor);
-
-  let lensElements = getInlineElements([], linesWithElements);
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
     dispatch(
@@ -139,14 +109,18 @@ let%component make =
   let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
     |> Option.iter(((pixelX, pixelY, time)) => {
-         dispatch(Msg.EditorMouseDown({time, pixelX, pixelY}))
+         dispatch(
+           Msg.EditorMouseDown({altKey: evt.ctrlKey, time, pixelX, pixelY}),
+         )
        });
   };
 
   let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
     |> Option.iter(((pixelX, pixelY, time)) => {
-         dispatch(Msg.EditorMouseUp({time, pixelX, pixelY}))
+         dispatch(
+           Msg.EditorMouseUp({altKey: evt.ctrlKey, time, pixelX, pixelY}),
+         )
        });
   };
 
@@ -164,6 +138,23 @@ let%component make =
          />
        )
     |> Option.value(~default=React.empty);
+
+  let cursors =
+    Editor.cursors(editor)
+    |> List.filter_map(pos => Editor.byteToCharacter(pos, editor))
+    |> List.map(cursorPosition => {
+         <CursorView
+           config
+           editor
+           editorFont
+           mode
+           cursorPosition
+           isActiveSplit
+           windowIsFocused
+           colors
+         />
+       })
+    |> React.listToElement;
 
   <View
     onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
@@ -213,6 +204,10 @@ let%component make =
           );
         };
 
+        snippets
+        |> Feature_Snippets.session
+        |> Option.iter(SnippetVisualizer.draw(~colors, ~config, ~context));
+
         ContentView.render(
           ~context,
           ~buffer,
@@ -221,7 +216,7 @@ let%component make =
           ~diagnosticsMap,
           ~selectionRanges,
           ~matchingPairs,
-          ~bufferHighlights,
+          ~vim,
           ~cursorPosition,
           ~languageSupport,
           ~languageConfiguration,
@@ -232,12 +227,14 @@ let%component make =
         if (Config.scrollShadow.get(config)) {
           let () =
             ScrollShadow.renderVertical(
+              ~color=colors.shadow,
               ~editor,
               ~width=float(bufferPixelWidth),
               ~context,
             );
           let () =
             ScrollShadow.renderHorizontal(
+              ~color=colors.shadow,
               ~editor,
               ~width=float(bufferPixelWidth),
               ~context,
@@ -246,17 +243,7 @@ let%component make =
         };
       }}
     />
-    {lensElements |> React.listToElement}
     yankHighlightElement
-    <CursorView
-      config
-      editor
-      editorFont
-      mode
-      cursorPosition
-      isActiveSplit
-      windowIsFocused
-      colors
-    />
+    cursors
   </View>;
 };

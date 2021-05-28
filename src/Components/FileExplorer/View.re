@@ -2,6 +2,7 @@ open Revery.UI;
 
 let make =
     (
+      ~config,
       ~isFocused: bool,
       ~iconTheme,
       ~languageInfo,
@@ -18,6 +19,7 @@ let make =
   | {tree: Some(_), treeView, active, rootName, _} =>
     let focusedIndex = Model.getFocusedIndex(model);
     <FileTreeView
+      config
       rootName
       isFocused
       iconTheme

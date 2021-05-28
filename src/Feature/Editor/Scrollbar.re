@@ -7,7 +7,6 @@ open Revery.UI;
 
 open Oni_Core;
 
-module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Styles = {
@@ -171,7 +170,14 @@ module Common = {
 
 module Vertical = {
   let diagnosticMarkers =
-      (~diagnostics, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
+      (
+        ~scrollBarThickness,
+        ~diagnostics,
+        ~totalHeight,
+        ~editor,
+        ~colors: Colors.t,
+        (),
+      ) => {
     IntMap.bindings(diagnostics)
     |> List.map(binding => {
          let (line, diagnostics) = binding;
@@ -197,7 +203,7 @@ module Vertical = {
              position(`Absolute),
              top(diagTop),
              right(0),
-             width(Constants.scrollBarThickness / 3),
+             width(scrollBarThickness / 3),
              height(Constants.scrollBarCursorSize),
              backgroundColor(diagColor),
            ];
@@ -207,15 +213,8 @@ module Vertical = {
   };
 
   let matchingPairMarkers =
-      (
-        ~matchingPair,
-        ~bufferHighlights,
-        ~totalHeight,
-        ~editor,
-        ~colors: Colors.t,
-        (),
-      ) => {
-    ignore(bufferHighlights);
+      (~matchingPair, ~vim, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
+    ignore(vim);
     ignore(totalHeight);
     ignore(editor);
 
@@ -260,33 +259,6 @@ module Vertical = {
     |> Option.value(~default=React.empty);
   };
 
-  let searchMarkers =
-      (~bufferHighlights, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
-    let searchMatches = t =>
-      Style.[
-        position(`Absolute),
-        top(t - 3),
-        left(4),
-        right(4),
-        height(8),
-        backgroundColor(colors.findMatchBackground),
-      ];
-
-    let searchHighlightToElement = line => {
-      let position =
-        Editor.projectLine(~line, ~pixelHeight=totalHeight, editor)
-        |> int_of_float;
-      <View style={searchMatches(position)} />;
-    };
-
-    BufferHighlights.getHighlights(
-      ~bufferId=Editor.getBufferId(editor),
-      bufferHighlights,
-    )
-    |> List.map(searchHighlightToElement)
-    |> React.listToElement;
-  };
-
   let documentHighlightMarkers =
       (~languageSupport, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
     let searchMatches = t =>
@@ -328,29 +300,29 @@ module Vertical = {
         ),
       ];
     };
-    let getSelectionElements = (selection: option(VisualRange.t)) => {
-      switch (selection) {
-      | None => []
-      | Some(selection) =>
-        let topLine =
-          Editor.projectLine(
-            ~line=selection.range.start.line,
-            ~pixelHeight=totalHeight,
-            editor,
-          )
-          |> int_of_float;
-        let botLine =
-          Editor.projectLine(
-            ~line=EditorCoreTypes.LineNumber.(selection.range.stop.line + 1),
-            ~pixelHeight=totalHeight,
-            editor,
-          )
-          |> int_of_float;
-        [<View style={selectionStyle(topLine, botLine)} />];
-      };
+    let getSelectionElements = (selections: list(VisualRange.t)) => {
+      selections
+      |> List.map((selection: VisualRange.t) => {
+           let topLine =
+             Editor.projectLine(
+               ~line=selection.range.start.line,
+               ~pixelHeight=totalHeight,
+               editor,
+             )
+             |> int_of_float;
+           let botLine =
+             Editor.projectLine(
+               ~line=
+                 EditorCoreTypes.LineNumber.(selection.range.stop.line + 1),
+               ~pixelHeight=totalHeight,
+               editor,
+             )
+             |> int_of_float;
+           <View style={selectionStyle(topLine, botLine)} />;
+         });
     };
 
-    getSelectionElements(Editor.selection(editor)) |> React.listToElement;
+    getSelectionElements(Editor.selections(editor)) |> React.listToElement;
   };
 
   let make =
@@ -363,7 +335,7 @@ module Vertical = {
         ~width as totalWidth,
         ~diagnostics: IntMap.t(list(Diagnostic.t)),
         ~colors: Colors.t,
-        ~bufferHighlights,
+        ~vim,
         ~languageSupport,
         (),
       ) => {
@@ -420,6 +392,8 @@ module Vertical = {
         Msg.VerticalScrollbarMouseWheel({deltaWheel: (-1.0) *. deltaWheel}),
       );
 
+    let scrollBarThickness = Editor.verticalScrollbarThickness(editor);
+
     <Common
       background={colors.scrollbarSliderBackground}
       hoverBackground={colors.scrollbarSliderHoverBackground}
@@ -444,15 +418,14 @@ module Vertical = {
           <View style={Styles.cursor(~cursorLine, ~totalWidth, ~colors)} />
           <View style=Styles.absolute>
             <selectionMarkers totalHeight editor colors />
-            <diagnosticMarkers totalHeight editor diagnostics colors />
-            <matchingPairMarkers
-              matchingPair
-              bufferHighlights
-              editor
+            <diagnosticMarkers
+              scrollBarThickness
               totalHeight
+              editor
+              diagnostics
               colors
             />
-            <searchMarkers bufferHighlights editor totalHeight colors />
+            <matchingPairMarkers matchingPair vim editor totalHeight colors />
             <documentHighlightMarkers
               languageSupport
               editor

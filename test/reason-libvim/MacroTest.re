@@ -99,6 +99,7 @@ describe("Macro", ({test, _}) => {
     let buf = reset();
 
     Vim.Buffer.setLines(
+      ~shouldAdjustCursors=false,
       ~lines=[|
         {|<meta name="”robots”" content="”noindex,nofollow,noarchive,nosnippet,noodp”">|},
         {|<meta name="apple-mobile-web-app-capable" content="yes">|},

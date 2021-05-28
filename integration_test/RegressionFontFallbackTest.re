@@ -4,7 +4,7 @@ open Oni_IntegrationTestLib;
 module Editor = Feature_Editor.Editor;
 module LineNumber = EditorCoreTypes.LineNumber;
 
-runTestWithInput(~name="RegressionFontFallback", (input, dispatch, wait, _) => {
+runTest(~name="RegressionFontFallback", ({input, dispatch, wait, _}) => {
   wait(~name="Wait for split to be created 1", (state: State.t) => {
     let splitCount =
       state.layout |> Feature_Layout.visibleEditors |> List.length;
@@ -17,7 +17,9 @@ runTestWithInput(~name="RegressionFontFallback", (input, dispatch, wait, _) => {
   let testFile = getAssetPath("utf8-test-file.htm");
 
   // Open test file
-  dispatch(Actions.OpenFileByPath(testFile, None, None));
+  dispatch(
+    Actions.OpenFileByPath(testFile, Oni_Core.SplitDirection.Current, None),
+  );
 
   wait(~name="Wait for cursor to be ready", (state: State.t) => {
     let location: CharacterPosition.t =

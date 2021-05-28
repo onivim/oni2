@@ -17,6 +17,7 @@ function activate(context) {
 		showData({
 			type: "workspace.show",
 			workspacePath: vscode.workspace.rootPath,
+			storagePath: context.storagePath,
 			added: 0,
 			removed: 0,
 		});

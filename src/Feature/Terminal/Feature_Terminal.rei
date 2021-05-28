@@ -10,8 +10,8 @@ type terminal =
     columns: int,
     pid: option(int),
     title: option(string),
-    screen: ReveryTerminal.Screen.t,
-    cursor: ReveryTerminal.Cursor.t,
+    screen: EditorTerminal.Screen.t,
+    cursor: EditorTerminal.Cursor.t,
     closeOnExit: bool,
   };
 
@@ -23,47 +23,38 @@ let toList: t => list(terminal);
 
 let getTerminalOpt: (int, t) => option(terminal);
 
+// Font to be used for terminals
+let font: t => Service_Font.font;
+
 // UPDATE
 
-type splitDirection =
-  | Vertical
-  | Horizontal
-  | Current;
-
 [@deriving show({with_path: false})]
-type command =
-  | NewTerminal({
-      cmd: option(string),
-      splitDirection,
-      closeOnExit: bool,
-    })
-  | NormalMode
-  | InsertMode;
+type msg;
 
-[@deriving show({with_path: false})]
-type msg =
-  | Command(command)
-  | Resized({
-      id: int,
-      rows: int,
-      columns: int,
-    })
-  | KeyPressed({
-      id: int,
-      key: string,
-    })
-  | Pasted({
-      id: int,
-      text: string,
-    })
-  | Service(Service_Terminal.msg);
+module Msg: {
+  let terminalCreatedFromVim:
+    (
+      ~cmd: option(string),
+      ~splitDirection: SplitDirection.t,
+      ~closeOnExit: bool
+    ) =>
+    msg;
+
+  let keyPressed: (~id: int, string) => msg;
+
+  let pasted: (~id: int, string) => msg;
+};
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | NotifyError(string)
+  | SwitchToNormalMode
+  | ClosePane({paneId: string})
+  | TogglePane({paneId: string})
   | TerminalCreated({
       name: string,
-      splitDirection,
+      splitDirection: SplitDirection.t,
     })
   | TerminalExit({
       terminalId: int,
@@ -71,12 +62,31 @@ type outmsg =
       shouldClose: bool,
     });
 
-let update: (~config: Config.resolver, t, msg) => (t, outmsg);
+let update:
+  (
+    ~clientServer: Feature_ClientServer.model,
+    ~config: Config.resolver,
+    t,
+    msg
+  ) =>
+  (t, outmsg);
 
 let subscription:
-  (~workspaceUri: Uri.t, Exthost.Client.t, t) => Isolinear.Sub.t(msg);
+  (
+    ~defaultFontFamily: string,
+    ~defaultFontSize: float,
+    ~defaultFontWeight: Revery.Font.Weight.t,
+    ~defaultLigatures: FontLigatures.t,
+    ~defaultSmoothing: FontSmoothing.t,
+    ~config: Oni_Core.Config.resolver,
+    ~setup: Setup.t,
+    ~workspaceUri: Uri.t,
+    Exthost.Client.t,
+    t
+  ) =>
+  Isolinear.Sub.t(msg);
 
-let shellCmd: string;
+// let shellCmd: string;
 
 // COLORS
 
@@ -101,7 +111,7 @@ module Colors: {
   let ansiBrightWhite: ColorTheme.Schema.definition;
 };
 
-let theme: ColorTheme.Colors.t => ReveryTerminal.Theme.t;
+let theme: ColorTheme.Colors.t => EditorTerminal.Theme.t;
 let defaultBackground: ColorTheme.Colors.t => Revery.Color.t;
 let defaultForeground: ColorTheme.Colors.t => Revery.Color.t;
 
@@ -136,6 +146,29 @@ module Commands: {
   };
 };
 
+module Configuration: {
+  let fontFamily: Config.Schema.setting(option(string));
+  let fontSize: Config.Schema.setting(option(float));
+  let fontSmoothing: Config.Schema.setting(option(FontSmoothing.t));
+  let fontWeight: Config.Schema.setting(option(Revery.Font.Weight.t));
+  let fontLigatures: Config.Schema.setting(option(FontLigatures.t));
+};
+
+module TerminalView: {
+  let make:
+    (
+      ~isActive: bool,
+      ~config: Config.resolver,
+      ~id: int,
+      ~terminals: t,
+      ~font: Service_Font.font,
+      ~theme: Oni_Core.ColorTheme.Colors.t,
+      ~dispatch: msg => unit,
+      unit
+    ) =>
+    Revery.UI.element;
+};
+
 // CONTRIBUTIONS
 
 module Contributions: {
@@ -143,4 +176,16 @@ module Contributions: {
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
   let keybindings: list(Feature_Input.Schema.keybinding);
+
+  let pane: Feature_Pane.Schema.t(t, msg);
+};
+
+module Testing: {
+  let newTerminalMsg:
+    (
+      ~cmd: option(string),
+      ~splitDirection: SplitDirection.t,
+      ~closeOnExit: bool
+    ) =>
+    msg;
 };

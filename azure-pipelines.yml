@@ -31,14 +31,16 @@ jobs:
 
 - job: Hygiene_Checks
   displayName: 'Hygiene Checks'
+  # Run if not master - don't need to run hygiene checks for 'master' builds, just for PR validation
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   timeoutInMinutes: 0
   pool:
     vmImage: 'macOS 10.14'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
-    ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3__________________________________________________________________/i
-    ESY__CACHE_BUILD_PATH: /Users/runner/.esy/3__________________________________________________________________/b
+    ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3_________________________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /Users/runner/.esy/3_________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
     MACOSX_DEPLOYMENT_TARGET: 10.12
     CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
@@ -64,8 +66,8 @@ jobs:
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
-    ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
-    ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3_____________________________________________________________________/b
+    ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3____________________________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3____________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
     CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     DISPLAY: :99
@@ -94,8 +96,8 @@ jobs:
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
-    ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3__________________________________________________________________________/i
-    ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3__________________________________________________________________________/b
+    ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_________________________________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3_________________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
     CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-CentOS-docker-install
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
@@ -113,7 +115,7 @@ jobs:
     displayName: 'Check esy root path'
   - script: ls $(ESY__CACHE_INSTALL_PATH)
     displayName: 'Check esy cache install path after build'
-  - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
+  - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --no-log-colors --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-linux.yml
   - template: .ci/publish-build-cache.yml
@@ -126,8 +128,8 @@ jobs:
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
-    ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3__________________________________________________________________/i
-    ESY__CACHE_BUILD_PATH: /Users/runner/.esy/3__________________________________________________________________/b
+    ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3_________________________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /Users/runner/.esy/3_________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
     MACOSX_DEPLOYMENT_TARGET: 10.12
     CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
@@ -149,7 +151,7 @@ jobs:
   - template: .ci/run-integration-tests.yml
     parameters:
       platform: darwin
-  - script: _release/Onivim2.App/Contents/MacOS/Oni2 -f --checkhealth
+  - script: _release/Onivim2.App/Contents/MacOS/Oni2 -f --no-log-colors --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-osx.yml
   - template: .ci/publish-build-cache.yml
@@ -162,8 +164,8 @@ jobs:
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
-    ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/i
-    ESY__CACHE_BUILD_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/b
+    ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3_____________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /C/Users/VssAdministrator/.esy/3_____________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /C/Users/VssAdministrator/.esy/source/i
     CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
@@ -182,9 +184,6 @@ jobs:
   - script: dir
     workingDirectory: _release/win32
     displayName: 'check directory contents'
-  - script: Oni2.exe -f --no-log-colors --checkhealth
-    workingDirectory: _release/win32
-    displayName: 'Release: --checkhealth'
   - template: .ci/publish-win.yml
   - template: .ci/publish-build-cache.yml
 
@@ -198,8 +197,8 @@ jobs:
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
-    ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/i
-    ESY__CACHE_BUILD_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/b
+    ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3_____________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /C/Users/VssAdministrator/.esy/3_____________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /C/Users/VssAdministrator/.esy/source/i
     CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
@@ -315,7 +314,7 @@ jobs:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
 - job: ValidateWindowsRelease
-  timeoutInMinutes: 15
+  timeoutInMinutes: 30
   displayName: "Windows: Validate Release"
   dependsOn: 
   - Kickoff
@@ -343,5 +342,5 @@ jobs:
   # but we need to check from the command prompt, too via %PATH% - for #872
   - script: |
       set PATH=%PATH%;D:/a/1/s/Onivim2
-      Oni2.exe -f --no-log-colors --checkhealth
-    displayName: "Oni2.exe -f --no-log-colors --checkhealth (run installed)"
+      Oni2.exe -f --silent --checkhealth
+    displayName: "Oni2.exe -f --silent --checkhealth (run installed)"

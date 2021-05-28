@@ -4,7 +4,7 @@
   "description": "Lightweight code editor",
   "license": "SEE LICENSE IN Outrun-Labs-EULA-v1.1.md",
   "esy": {
-    "build": "refmterr dune build -p libvim,textmate,treesitter,Oni2 -j4",
+    "build": "dune build -p libvim,textmate,treesitter,Oni2,vterm -j4",
     "buildEnv": {
       "ONI2_ROOT": "#{self.root}",
       "ONI2_BUILD_MODE": "Debug",
@@ -24,172 +24,333 @@
       {
         "name": "Plain text",
         "role": "Editor",
-        "icon": { "mac": "plaintext.icns" },
-        "ext": [ ".txt", ".README", ".LICENSE" ]
+        "icon": {
+          "mac": "plaintext.icns"
+        },
+        "ext": [
+          ".txt",
+          ".README",
+          ".LICENSE"
+        ]
       },
       {
         "name": "YAML document",
         "role": "Editor",
-        "icon": { "mac": "yaml.icns" },
-        "ext": [ ".yml", ".yaml" ]
+        "icon": {
+          "mac": "yaml.icns"
+        },
+        "ext": [
+          ".yml",
+          ".yaml"
+        ]
       },
       {
         "name": "Git configuration",
         "role": "Editor",
-        "icon": { "mac": "git.icns" },
-        "ext": [ ".gitignore", ".gitconfig", ".gitattributes" ]
+        "icon": {
+          "mac": "git.icns"
+        },
+        "ext": [
+          ".gitignore",
+          ".gitconfig",
+          ".gitattributes"
+        ]
       },
       {
         "name": "Docker configuration",
         "role": "Editor",
-        "icon": { "mac": "docker.icns" },
-        "ext": [ ".Dockerfile" ]
+        "icon": {
+          "mac": "docker.icns"
+        },
+        "ext": [
+          ".Dockerfile"
+        ]
       },
       {
         "name": "OPAM configuration",
         "role": "Editor",
-        "icon": { "mac": "opam.icns" },
-        "ext": [ ".opam" ]
+        "icon": {
+          "mac": "opam.icns"
+        },
+        "ext": [
+          ".opam"
+        ]
       },
       {
         "name": "Dune configuration",
         "role": "Editor",
-        "icon": { "mac": "dune.icns" },
-        "ext": [ ".dune", ".dune-project" ]
+        "icon": {
+          "mac": "dune.icns"
+        },
+        "ext": [
+          ".dune",
+          ".dune-project"
+        ]
       },
       {
         "name": "ReasonML source",
         "role": "Editor",
-        "icon": { "mac": "reasonml.icns" },
-        "ext": [ ".re", ".rei" ]
+        "icon": {
+          "mac": "reasonml.icns"
+        },
+        "ext": [
+          ".re",
+          ".rei"
+        ]
       },
       {
         "name": "OCaml source",
         "role": "Editor",
-        "icon": { "mac": "ocaml.icns" },
-        "ext": [ ".ml", ".mli" ]
+        "icon": {
+          "mac": "ocaml.icns"
+        },
+        "ext": [
+          ".ml",
+          ".mli"
+        ]
       },
       {
         "name": "C source",
         "role": "Editor",
-        "icon": { "mac": "c.icns" },
-        "ext": [ ".c" ]
+        "icon": {
+          "mac": "c.icns"
+        },
+        "ext": [
+          ".c"
+        ]
       },
       {
         "name": "C++ source",
-        "icon": { "mac": "cpp.icns" },
+        "icon": {
+          "mac": "cpp.icns"
+        },
         "role": "Editor",
         "ext": [
-          ".cpp", ".cc", ".cxx", ".hpp", ".hh", ".hxx", ".h", ".ino", ".inl",
+          ".cpp",
+          ".cc",
+          ".cxx",
+          ".hpp",
+          ".hh",
+          ".hxx",
+          ".h",
+          ".ino",
+          ".inl",
           ".ipp"
         ]
       },
       {
         "name": "Make configuration",
         "role": "Editor",
-        "icon": { "mac": "makefile.icns" },
-        "ext": [ ".Makefile" ]
+        "icon": {
+          "mac": "makefile.icns"
+        },
+        "ext": [
+          ".Makefile"
+        ]
       },
       {
         "name": "Cascading style sheet",
         "role": "Editor",
-        "icon": { "mac": "css.icns" },
-        "ext": [ ".css" ]
+        "icon": {
+          "mac": "css.icns"
+        },
+        "ext": [
+          ".css"
+        ]
       },
       {
         "name": "HTML document",
         "role": "Editor",
-        "icon": { "mac": "html.icns" },
+        "icon": {
+          "mac": "html.icns"
+        },
         "ext": [
-          ".html", ".htm", ".shtml", ".xhtml", ".mdoc", ".jsp", ".asp",
-          ".aspx", ".jshtm", ".volt", ".ejs", ".rhtml"
+          ".html",
+          ".htm",
+          ".shtml",
+          ".xhtml",
+          ".mdoc",
+          ".jsp",
+          ".asp",
+          ".aspx",
+          ".jshtm",
+          ".volt",
+          ".ejs",
+          ".rhtml"
         ]
       },
       {
         "name": "PHP source",
         "role": "Editor",
-        "icon": { "mac": "php.icns" },
-        "ext": [ ".php", ".php5", ".php7" ]
+        "icon": {
+          "mac": "php.icns"
+        },
+        "ext": [
+          ".php",
+          ".php5",
+          ".php7"
+        ]
       },
       {
         "name": "XML document",
         "role": "Editor",
-        "icon": { "mac": "xml.icns" },
-        "ext": [ ".xml", ".xaml" ]
+        "icon": {
+          "mac": "xml.icns"
+        },
+        "ext": [
+          ".xml",
+          ".xaml"
+        ]
       },
       {
         "name": "SVG image",
         "role": "Editor",
-        "icon": { "mac": "svg.icns" },
-        "ext": [ ".svg", ".svgz" ]
+        "icon": {
+          "mac": "svg.icns"
+        },
+        "ext": [
+          ".svg",
+          ".svgz"
+        ]
       },
       {
         "name": "Java source",
         "role": "Editor",
-        "icon": { "mac": "java.icns" },
-        "ext": [ ".java", ".jav" ]
+        "icon": {
+          "mac": "java.icns"
+        },
+        "ext": [
+          ".java",
+          ".jav"
+        ]
       },
       {
         "name": "Javascript source",
         "role": "Editor",
-        "icon": { "mac": "javascript.icns" },
-        "ext": [ ".js", ".es6", ".mjs", ".pac" ]
+        "icon": {
+          "mac": "javascript.icns"
+        },
+        "ext": [
+          ".js",
+          ".es6",
+          ".mjs",
+          ".pac"
+        ]
       },
       {
         "name": "JSON",
         "role": "Editor",
-        "icon": { "mac": "json.icns" },
+        "icon": {
+          "mac": "json.icns"
+        },
         "ext": [
-          ".json", ".bowerrc", ".jshintrc", ".jscsrc", ".eslintrc", ".swcrc",
-          ".webmanifest", ".js.map", ".css.map"
+          ".json",
+          ".bowerrc",
+          ".jshintrc",
+          ".jscsrc",
+          ".eslintrc",
+          ".swcrc",
+          ".webmanifest",
+          ".js.map",
+          ".css.map"
         ]
       },
       {
         "name": "JSON with Comments",
         "role": "Editor",
-        "icon": { "mac": "json.icns" },
-        "ext": [ ".hintrc", ".babelrc", ".jsonc" ]
+        "icon": {
+          "mac": "json.icns"
+        },
+        "ext": [
+          ".hintrc",
+          ".babelrc",
+          ".jsonc"
+        ]
       },
       {
         "name": "Markdown Source",
-        "icon": { "mac": "markdown.icns" },
+        "icon": {
+          "mac": "markdown.icns"
+        },
         "role": "Editor",
         "ext": [
-          ".md", ".mkd", ".mdwn", ".mdown", ".markdown", ".markdn", ".mdtxt",
-          ".mdtext", ".workbook"
+          ".md",
+          ".mkd",
+          ".mdwn",
+          ".mdown",
+          ".markdown",
+          ".markdn",
+          ".mdtxt",
+          ".mdtext",
+          ".workbook"
         ]
       },
       {
         "name": "Python Source",
-        "icon": { "mac": "python.icns" },
+        "icon": {
+          "mac": "python.icns"
+        },
         "role": "Editor",
         "ext": [
-          ".py", ".rpy", ".pyw", ".cpy", ".gyp", ".gypi", ".snakefile",
-          ".smk", ".pyi", ".ipy"
+          ".py",
+          ".rpy",
+          ".pyw",
+          ".cpy",
+          ".gyp",
+          ".gypi",
+          ".snakefile",
+          ".smk",
+          ".pyi",
+          ".ipy"
         ]
       },
       {
         "name": "Shell source",
         "role": "Editor",
-        "icon": { "mac": "shell.icns" },
+        "icon": {
+          "mac": "shell.icns"
+        },
         "ext": [
-          ".sh", ".bash", ".bashrc", ".bash_aliases", ".bash_profile",
-          ".bash_login", ".ebuild", ".install", ".profile", ".bash_logout",
-          ".zsh", ".zshrc", ".zprofile", ".zlogin", ".zlogout", ".zshenv",
-          ".zsh-theme", ".ksh", ".command"
+          ".sh",
+          ".bash",
+          ".bashrc",
+          ".bash_aliases",
+          ".bash_profile",
+          ".bash_login",
+          ".ebuild",
+          ".install",
+          ".profile",
+          ".bash_logout",
+          ".zsh",
+          ".zshrc",
+          ".zprofile",
+          ".zlogin",
+          ".zlogout",
+          ".zshenv",
+          ".zsh-theme",
+          ".ksh",
+          ".command"
         ]
       },
       {
         "name": "Typescript",
         "role": "Editor",
-        "icon": { "mac": "typescript.icns" },
-        "ext": [ ".ts" ]
+        "icon": {
+          "mac": "typescript.icns"
+        },
+        "ext": [
+          ".ts"
+        ]
       },
       {
         "name": "Typescript React",
         "role": "Editor",
-        "icon": { "mac": "typescript.icns" },
-        "ext": [ ".tsx" ]
+        "icon": {
+          "mac": "typescript.icns"
+        },
+        "ext": [
+          ".tsx"
+        ]
       }
     ]
   },
@@ -209,7 +370,7 @@
     "@opam/charInfo_width": "*",
     "@opam/decoders-yojson": "^0.4.0",
     "@opam/dir": "*",
-    "@opam/dune": "2.5.0",
+    "@opam/dune": "^2.5.0",
     "@opam/dune-configurator": "2.5.1",
     "@opam/dune-private-libs": "2.5.1",
     "@opam/fmt": "^0.8.8",
@@ -221,7 +382,6 @@
     "@opam/lwt": "*",
     "@opam/markup": "^0.8.2",
     "@opam/ocamlbuild": "*",
-    "@opam/ocamlformat": "^0.15.0",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
     "@opam/ppx_inline_test": "v0.14.1",
@@ -229,44 +389,41 @@
     "@opam/ppx_optcomp": "v0.14.0",
     "@opam/ppxlib": ">=0.10.0",
     "@opam/re": "*",
-    "@opam/reason": "3.6.0",
+    "@opam/reason": "^3.6.0",
     "@opam/semver2": "^1.1.0",
     "@opam/uucp": "*",
     "@opam/uutf": "*",
     "@opam/yojson": "1.7.0",
+    "@revery/esy-libvterm": "1.0.5",
     "@revery/timber": "^2.0.0",
     "axios": "^0.19.0",
     "esy-angle-prebuilt": "^1.0.0",
-    "esy-macdylibbundler": "*",
+    "esy-macdylibbundler": "^0.4.5001",
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
     "esy-sdl2": "*",
     "esy-skia": "*",
     "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.83",
-    "ocaml": "4.10.0",
-    "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
-    "reason-fzy": "bryphe/reason-fzy#ab172e1",
-    "refmterr": "*",
-    "rench": "1.7.1",
-    "revery": "*",
-    "revery-terminal": "*"
+    "libvim": "8.10869.88",
+    "ocaml": "~4.12",
+    "reason-native-crash-utils": "onivim/reason-native-crash-utils#a80a9d9",
+    "reason-fzy": "bryphe/reason-fzy#5a1daf4",
+    "rench": "^1.9.1",
+    "revery": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#7191349",
-    "esy-skia": "revery-ui/esy-skia#91c98f6",
-    "rench": "bryphe/rench#a976fe5",
-    "isolinear": "revery-ui/isolinear#53fc4eb",
-    "revery-terminal": "revery-ui/revery-terminal#a9cb168",
-    "@opam/fs": "bryphe/reason-native:fs.opam#5a7a756",
-    "@opam/fp": "bryphe/reason-native:fp.opam#5a7a756",
-    "@opam/dir": "bryphe/reason-native:dir.opam#5a7a756",
-    "@opam/conf-pkg-config": "1.2",
+    "revery": "revery-ui/revery#ed67416",
+    "esy-skia": "revery-ui/esy-skia#6106223",
+    "isolinear": "revery-ui/isolinear#049ad1e",
+    "@opam/fs": "bryphe/reason-native:fs.opam#e16590c",
+    "@opam/fp": "bryphe/reason-native:fp.opam#e16590c",
+    "@opam/dir": "bryphe/reason-native:dir.opam#e16590c",
+    "@esy-ocaml/reason": "EduardoRFS/reason:reason.json#35aa4df3de0daa60bdc1133dcf97855decac48f7",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
     "flex": "bryphe/flex#5e19b05"
   },
   "devDependencies": {
-    "ocaml": "4.10.0",
+    "ocaml": "~4.12",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",
@@ -274,6 +431,6 @@
     "innosetup-compiler": "5.5.9",
     "plist": "3.0.1",
     "rcedit": "2.0.0",
-    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#966a28f"
+    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#d5ba8b9"
   }
 }

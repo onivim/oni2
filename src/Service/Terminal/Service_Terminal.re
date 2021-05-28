@@ -2,11 +2,60 @@ open Oni_Core;
 
 module Time = Revery.Time;
 
+module Log = (val Log.withNamespace("Service_Terminal"));
+
 module Internal = {
   let onExtensionMessage: Revery.Event.t(Exthost.Msg.TerminalService.msg) =
     Revery.Event.create();
 
-  let idToTerminal: Hashtbl.t(int, ReveryTerminal.t) = Hashtbl.create(8);
+  let idToTerminal: Hashtbl.t(int, EditorTerminal.t) = Hashtbl.create(8);
+
+  let getEnvironmentFromConfiguration =
+      (env: Exthost.ShellLaunchConfig.environment) => {
+    let augmentExistingEnvironment = (variablesToAdd: StringMap.t(string)) => {
+      let existingEnv =
+        switch (Luv.Env.environ()) {
+        | Ok(env) =>
+          env
+          |> List.fold_left(
+               (stringMap, cur) => {
+                 let (key, v) = cur;
+                 StringMap.add(key, v, stringMap);
+               },
+               StringMap.empty,
+             )
+        | Error(msg) =>
+          Log.errorf(m =>
+            m("Error getting environment: %s", Luv.Error.strerror(msg))
+          );
+          StringMap.empty;
+        };
+
+      StringMap.merge(
+        (_key, original, augmented) => {
+          switch (original, augmented) {
+          | (None, None) => None
+          | (Some(v), None) => Some(v)
+          | (None, Some(v)) => Some(v)
+          | (Some(_), Some(v)) => Some(v)
+          }
+        },
+        existingEnv,
+        variablesToAdd,
+      );
+    };
+
+    Exthost.ShellLaunchConfig.(
+      {
+        switch (env) {
+        | Inherit => augmentExistingEnvironment(StringMap.empty)
+        | Additive(augmentedEnv) => augmentExistingEnvironment(augmentedEnv)
+        | Strict(env) => env
+        };
+      }
+    )
+    |> StringMap.bindings;
+  };
 };
 
 [@deriving show({with_path: false})]
@@ -25,12 +74,13 @@ type msg =
     })
   | ScreenUpdated({
       id: int,
-      screen: [@opaque] ReveryTerminal.Screen.t,
-      cursor: [@opaque] ReveryTerminal.Cursor.t,
+      screen: [@opaque] EditorTerminal.Screen.t,
+      cursor: [@opaque] EditorTerminal.Cursor.t,
     });
 
 module Sub = {
   type params = {
+    setup: Setup.t,
     id: int,
     launchConfig: Exthost.ShellLaunchConfig.t,
     //    cmd: string,
@@ -44,10 +94,10 @@ module Sub = {
   module TerminalSubscription =
     Isolinear.Sub.Make({
       type state = {
+        maybePty: ref(option(Pty.t)),
         rows: int,
         columns: int,
-        dispose: unit => unit,
-        terminal: ReveryTerminal.t,
+        terminal: EditorTerminal.t,
         isResizing: ref(bool),
       };
 
@@ -60,93 +110,77 @@ module Sub = {
 
       let init = (~params, ~dispatch) => {
         let launchConfig = params.launchConfig;
-        //          Exthost.ShellLaunchConfig.{
-        //            name: "Terminal",
-        //            executable: params.cmd,
-        //            arguments: params.arguments,
-        //            env: Strict(StringMap.add("abc2", "def2", StringMap.empty))
-        //          };
-
-        let isResizing = ref(false);
+        let maybePty = ref(None);
 
         let onEffect = eff =>
           switch (eff) {
-          | ReveryTerminal.ScreenResized(_) => ()
-          | ReveryTerminal.ScreenUpdated(_) => ()
-          | ReveryTerminal.CursorMoved(_) => ()
-          | ReveryTerminal.Output(output) =>
-            Exthost.Request.TerminalService.acceptProcessInput(
-              ~id=params.id,
-              ~data=output,
-              params.extHostClient,
-            )
+          | EditorTerminal.ScreenResized(_) => ()
+          | EditorTerminal.ScreenUpdated(_) => ()
+          | EditorTerminal.CursorMoved(_) => ()
+          | EditorTerminal.Output(output) =>
+            maybePty^ |> Option.iter(pty => Pty.write(pty, output))
           // TODO: Handle term prop changes
-          | ReveryTerminal.TermPropChanged(_) => ()
+          | EditorTerminal.TermPropChanged(_) => ()
           };
 
+        let rows = params.rows;
+        let columns = params.columns;
+
         let terminal =
-          ReveryTerminal.make(
+          EditorTerminal.make(
             ~scrollBackSize=512,
-            ~rows=params.rows,
-            ~columns=params.columns,
+            ~rows,
+            ~columns,
             ~onEffect,
             (),
           );
+        EditorTerminal.resize(~rows, ~columns=40, terminal);
+        let onData = data => {
+          EditorTerminal.write(~input=data, terminal);
+          let cursor = EditorTerminal.cursor(terminal);
+          let screen = EditorTerminal.screen(terminal);
+          dispatch(ScreenUpdated({id: params.id, screen, cursor}));
+        };
+
+        let onExit = (~exitCode) => {
+          dispatch(ProcessExit({id: params.id, exitCode}));
+        };
+
+        let onPidChanged = pid => {
+          dispatch(ProcessStarted({id: params.id, pid}));
+        };
+
+        let onTitleChanged = title => {
+          dispatch(ProcessTitleChanged({id: params.id, title}));
+        };
+
+        let env = Internal.getEnvironmentFromConfiguration(launchConfig.env);
+
+        let ptyResult =
+          Pty.start(
+            ~setup=params.setup,
+            ~env,
+            ~cwd=Sys.getcwd(),
+            ~rows,
+            ~cols=columns,
+            ~cmd=params.launchConfig.executable,
+            ~arguments=params.launchConfig.arguments,
+            ~onData,
+            ~onExit,
+            ~onPidChanged,
+            ~onTitleChanged,
+          );
+
+        switch (ptyResult) {
+        | Error(_) => ()
+        | Ok(pty) => maybePty := Some(pty)
+        };
+
+        let isResizing = ref(false);
 
         Hashtbl.replace(Internal.idToTerminal, params.id, terminal);
 
-        let dispatchIfMatches = (id, msg) =>
-          if (id == params.id) {
-            dispatch(msg);
-          };
-
-        Exthost.Request.TerminalService.spawnExtHostProcess(
-          ~id=params.id,
-          ~shellLaunchConfig=launchConfig,
-          ~activeWorkspaceRoot=params.workspaceUri,
-          ~cols=params.columns,
-          ~rows=params.rows,
-          ~isWorkspaceShellAllowed=true,
-          params.extHostClient,
-        );
-
-        let dispose =
-          Revery.Event.subscribe(
-            Internal.onExtensionMessage,
-            (msg: Exthost.Msg.TerminalService.msg) => {
-            switch (msg) {
-            | SendProcessTitle({terminalId, title}) =>
-              dispatchIfMatches(
-                terminalId,
-                ProcessTitleChanged({id: terminalId, title}),
-              )
-            | SendProcessReady({terminalId, pid, _}) =>
-              dispatchIfMatches(
-                terminalId,
-                ProcessStarted({id: terminalId, pid}),
-              )
-            | SendProcessData({terminalId, data}) =>
-              if (terminalId == params.id) {
-                ReveryTerminal.write(~input=data, terminal);
-                let cursor = ReveryTerminal.cursor(terminal);
-                let screen = ReveryTerminal.screen(terminal);
-                dispatch(ScreenUpdated({id: params.id, screen, cursor}));
-              }
-            | SendProcessExit({terminalId, exitCode}) =>
-              dispatchIfMatches(
-                terminalId,
-                ProcessExit({id: terminalId, exitCode}),
-              )
-            }
-          });
-
-        {
-          dispose,
-          isResizing,
-          rows: params.rows,
-          columns: params.columns,
-          terminal,
-        };
+        {maybePty, isResizing, rows, columns, terminal};
       };
 
       let update = (~params: params, ~state: state, ~dispatch as _) => {
@@ -155,15 +189,9 @@ module Sub = {
         if (rows > 0
             && columns > 0
             && (rows != state.rows || columns != state.columns)) {
-          Exthost.Request.TerminalService.acceptProcessResize(
-            ~id=params.id,
-            ~cols=columns,
-            ~rows,
-            params.extHostClient,
-          );
-
           state.isResizing := true;
-          ReveryTerminal.resize(~rows, ~columns, state.terminal);
+          state.maybePty^ |> Option.iter(Pty.resize(~rows, ~cols=columns));
+          EditorTerminal.resize(~rows, ~columns, state.terminal);
           state.isResizing := false;
           {...state, rows, columns};
         } else {
@@ -172,21 +200,29 @@ module Sub = {
       };
 
       let dispose = (~params, ~state) => {
-        let () =
-          Exthost.Request.TerminalService.acceptProcessShutdown(
-            ~immediate=false,
-            ~id=params.id,
-            params.extHostClient,
-          );
+        switch (state.maybePty^) {
+        | None => ()
+        | Some(pty) => Pty.close(pty)
+        };
+
+        state.maybePty := None;
 
         Hashtbl.remove(Internal.idToTerminal, params.id);
-        state.dispose();
       };
     });
 
   let terminal =
-      (~id, ~launchConfig, ~columns, ~rows, ~workspaceUri, ~extHostClient) =>
+      (
+        ~setup,
+        ~id,
+        ~launchConfig,
+        ~columns,
+        ~rows,
+        ~workspaceUri,
+        ~extHostClient,
+      ) =>
     TerminalSubscription.create({
+      setup,
       id,
       launchConfig,
       columns,
@@ -242,7 +278,7 @@ module Effect = {
         switch (getControlKey(input)) {
         | Some(key) =>
           let keyChar = key |> Char.code |> Uchar.of_int;
-          ReveryTerminal.input(
+          EditorTerminal.input(
             ~key=Unicode(keyChar),
             ~modifier=Control,
             terminal,
@@ -250,10 +286,10 @@ module Effect = {
         | None =>
           if (String.length(input) == 1) {
             let key = input.[0] |> Char.code |> Uchar.of_int;
-            ReveryTerminal.input(~key=Unicode(key), terminal);
+            EditorTerminal.input(~key=Unicode(key), terminal);
           } else {
             switch (Hashtbl.find_opt(keyToVtermKey, input)) {
-            | Some(key) => ReveryTerminal.input(~key, terminal)
+            | Some(key) => EditorTerminal.input(~key, terminal)
             | None => ()
             };
           }
@@ -269,7 +305,7 @@ module Effect = {
       | Some(terminal) =>
         input
         |> Zed_utf8.iter(uchar => {
-             ReveryTerminal.input(~key=Unicode(uchar), terminal)
+             EditorTerminal.input(~key=Unicode(uchar), terminal)
            })
       | None => ()
       }
@@ -284,5 +320,5 @@ let handleExtensionMessage = (msg: Exthost.Msg.TerminalService.msg) => {
 let getScreen = terminalId => {
   terminalId
   |> Hashtbl.find_opt(Internal.idToTerminal)
-  |> Option.map(ReveryTerminal.screen);
+  |> Option.map(EditorTerminal.screen);
 };

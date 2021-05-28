@@ -1,16 +1,6 @@
 open Oni_Core;
 
-[@deriving show]
-type t = array(marker)
-
-and marker =
-  | Modified
-  | Added
-  | DeletedBefore
-  | DeletedAfter
-  | Unmodified;
-
-let generate: (~scm: Feature_SCM.model, Buffer.t) => option(t);
+// let generate: (~scm: Feature_SCM.model, Buffer.t) => option(DiffMarkers.t);
 
 let render:
   (
@@ -20,7 +10,7 @@ let render:
     ~width: float,
     ~canvasContext: Revery.Draw.CanvasContext.t,
     ~colors: Colors.t,
-    t
+    DiffMarkers.t
   ) =>
   unit;
 
@@ -35,6 +25,6 @@ let renderMinimap:
     ~count: int,
     ~canvasContext: Revery.Draw.CanvasContext.t,
     ~colors: Colors.t,
-    t
+    DiffMarkers.t
   ) =>
   unit;

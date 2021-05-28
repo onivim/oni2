@@ -1,7 +1,7 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="EchoNotificationTest", (dispatch, wait, _runEffects) => {
+runTest(~name="EchoNotificationTest", ({dispatch, wait, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );

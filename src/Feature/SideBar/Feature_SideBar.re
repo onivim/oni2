@@ -325,6 +325,16 @@ module ContextKeys = {
   module Focused = {
     let sideBarFocus = bool("sideBarFocus", _ => true);
   };
+
+  let activeViewlet =
+    string("activeViewlet", model => {
+      switch (model.selected) {
+      | FileExplorer => "workbench.view.explorer"
+      | Search => "workbench.view.search"
+      | SCM => "workbench.view.scm"
+      | Extensions => "workbench.view.extensions"
+      }
+    });
 };
 
 module Configuration = {
@@ -440,7 +450,7 @@ module Contributions = {
   MenuBar.Schema.group(~parent=Feature_MenuBar.Global.view, menuItems);
 
   let contextKeys = (~isFocused) => {
-    let common = ContextKeys.[sideBarVisible];
+    let common = ContextKeys.[sideBarVisible, activeViewlet];
 
     let focused = ContextKeys.Focused.[sideBarFocus];
 

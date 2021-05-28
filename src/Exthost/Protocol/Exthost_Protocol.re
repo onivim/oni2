@@ -286,19 +286,19 @@ module Message = {
 
     let bufferToPacket = (~buffer) => {
       let bytes = Buffer.to_bytes(buffer);
-      Packet.create(~bytes, ~packetType=Packet.Regular, ~id=packetId);
+      Packet.create(~packetType=Packet.Regular, ~id=packetId, bytes);
     };
 
     switch (msg) {
     | Terminate =>
       let bytes = Bytes.make(1, Char.chr(3));
-      Packet.create(~bytes, ~packetType=Packet.Regular, ~id=packetId);
+      Packet.create(~packetType=Packet.Regular, ~id=packetId, bytes);
     | Initialize({initData, _}) =>
       let str = initData |> InitData.to_yojson |> Yojson.Safe.to_string;
 
       let bytes = str |> Bytes.of_string;
 
-      Packet.create(~bytes, ~packetType=Packet.Regular, ~id=packetId);
+      Packet.create(~packetType=Packet.Regular, ~id=packetId, bytes);
     | RequestJSONArgs({rpcId, method, args, usesCancellationToken, _}) =>
       let msgType =
         usesCancellationToken

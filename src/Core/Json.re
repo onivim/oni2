@@ -1,12 +1,13 @@
 open EditorCoreTypes;
+open Oniguruma;
 
-type t = Yojson.Safe.json;
+type t = Yojson.Safe.t;
 
 module Decode = {
   open Decoders;
 
-  module Json_decodeable: Decode.Decodeable with type value = Yojson.Safe.json = {
-    type value = Yojson.Safe.json;
+  module Json_decodeable: Decode.Decodeable with type value = Yojson.Safe.t = {
+    type value = Yojson.Safe.t;
     let pp = (fmt, json) =>
       Format.fprintf(fmt, "@[%s@]", Yojson.Safe.pretty_to_string(json));
 
@@ -164,6 +165,42 @@ module Decode = {
         };
       },
     };
+
+  let regexp = {
+    let str =
+      string
+      |> map(OnigRegExp.create)
+      |> and_then(
+           fun
+           | Ok(regexp) => succeed(regexp)
+           | Error(msg) => {
+               fail(Printf.sprintf("Error %s parsing regex", msg));
+             },
+         );
+
+    let dto =
+      obj(({field, _}) => {
+        field.required(
+          "pattern",
+          str,
+          // TODO: Flags field?
+        )
+      });
+
+    one_of([("string", str), ("dto", dto)]);
+  };
+
+  let%test "decode valid regexp" = {
+    Yojson.Safe.from_string({|"abc"|})
+    |> decode_value(regexp)
+    |> Result.is_ok;
+  };
+
+  let%test "decode invalid regexp" = {
+    Yojson.Safe.from_string({|"(invalid"|})
+    |> decode_value(regexp)
+    |> Result.is_error;
+  };
 
   let default = default => map(Option.value(~default));
 };

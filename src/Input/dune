@@ -1,7 +1,8 @@
 (library
  (name Oni_Input)
  (public_name Oni2.input)
+ (inline_tests)
  (libraries str bigarray reason-sdl2 Revery.zed lwt lwt.unix Oni2.core
    Oni2.core.whenExpr Oni2.feature.input Oni2.editor-input Rench Revery)
  (preprocess
-  (pps ppx_deriving_yojson ppx_deriving.show)))
+  (pps ppx_inline_test ppx_deriving_yojson ppx_deriving.show)))

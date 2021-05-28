@@ -8,7 +8,7 @@ module Log = (
 
 runTest(
   ~name="InsertMode test - effects batched to runEffects",
-  (dispatch, wait, runEffects) => {
+  ({dispatch, wait, runEffects, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
@@ -23,7 +23,12 @@ runTest(
 
   /* Simulate multiple events getting dispatched before running effects */
   dispatch(KeyboardInput({isText: true, input: "A"}));
-  dispatch(Command("editor.action.clipboardPasteAction"));
+  dispatch(
+    CommandInvoked({
+      command: "editor.action.clipboardPasteAction",
+      arguments: `Null,
+    }),
+  );
   dispatch(KeyboardInput({isText: true, input: "B"}));
 
   runEffects();

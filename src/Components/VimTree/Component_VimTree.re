@@ -3,6 +3,7 @@ open Utility;
 
 [@deriving show]
 type command =
+  | Select
   | ToggleExpanded;
 
 [@deriving show]
@@ -128,6 +129,11 @@ let findIndex = (f, {treeAsList, _}) => {
   Component_VimList.findIndex(pred, treeAsList);
 };
 
+let setSelected = (~selected, {treeAsList, _} as model) => {
+  let treeAsList' = treeAsList |> Component_VimList.setSelected(~selected);
+  {...model, treeAsList: treeAsList'};
+};
+
 let keyPress = (key, {treeAsList, _} as model) => {
   ...model,
   treeAsList: Component_VimList.keyPress(key, treeAsList),
@@ -156,7 +162,7 @@ let create = (~rowHeight) => {
 
 module Constants = {
   let arrowSize = 15.;
-  let indentSize = 12;
+  let indentCaretSize = 7;
 };
 
 // UPDATE
@@ -166,7 +172,8 @@ type outmsg('node, 'leaf) =
   | Expanded('node)
   | Collapsed('node)
   | Touched('leaf)
-  | Selected('leaf);
+  | Selected('leaf)
+  | SelectedNode('node);
 
 let calculateIndentGuides = model => {
   let selectedIndex = model.treeAsList |> Component_VimList.selectedIndex;
@@ -262,45 +269,55 @@ let toggleExpanded = (~expanded, ~data: withUniqueId('a), model) => {
   );
 };
 
-let update = (msg, model) => {
-  switch (msg) {
-  | List(listMsg) =>
-    let (treeAsList, outmsg) =
-      Component_VimList.update(listMsg, model.treeAsList);
+let update:
+  (msg, model('node, 'leaf)) => (model('node, 'leaf), outmsg('node, 'leaf)) =
+  (msg, model) => {
+    switch (msg) {
+    | List(listMsg) =>
+      let (treeAsList, outmsg) =
+        Component_VimList.update(listMsg, model.treeAsList);
 
-    let model = {...model, treeAsList} |> calculateIndentGuides;
+      let model = {...model, treeAsList} |> calculateIndentGuides;
 
-    switch (outmsg) {
-    | Component_VimList.Nothing => (model, Nothing)
-    | Component_VimList.Touched({index}) =>
-      switch (Component_VimList.get(index, treeAsList)) {
-      | Some(ViewLeaf({data, _})) => (model, Touched(data))
-      // TODO: Expand / collapse
-      | Some(ViewNode({data, expanded, _})) =>
-        toggleExpanded(~expanded, ~data, model)
-      | None => (model, Nothing)
-      }
-    | Component_VimList.Selected({index}) =>
-      switch (Component_VimList.get(index, treeAsList)) {
+      switch (outmsg) {
+      | Component_VimList.Nothing => (model, Nothing)
+      | Component_VimList.Touched({index}) =>
+        switch (Component_VimList.get(index, treeAsList)) {
+        | Some(ViewLeaf({data, _})) => (model, Touched(data))
+        // TODO: Expand / collapse
+        | Some(ViewNode({data, expanded, _})) =>
+          toggleExpanded(~expanded, ~data, model)
+        | None => (model, Nothing)
+        }
+      | Component_VimList.Selected({index}) =>
+        switch (Component_VimList.get(index, treeAsList)) {
+        | Some(ViewLeaf({data, _})) => (model, Selected(data))
+        // TODO: Expand / collapse
+        | Some(ViewNode({data, expanded, _})) =>
+          toggleExpanded(~expanded, ~data, model)
+
+        | None => (model, Nothing)
+        }
+      };
+
+    | Command(Select) =>
+      let selectedIndex = Component_VimList.selectedIndex(model.treeAsList);
+      switch (Component_VimList.get(selectedIndex, model.treeAsList)) {
       | Some(ViewLeaf({data, _})) => (model, Selected(data))
-      // TODO: Expand / collapse
+      | Some(ViewNode({data, _})) => (model, SelectedNode(data.inner))
+      | None => (model, Nothing)
+      };
+
+    | Command(ToggleExpanded) =>
+      let selectedIndex = Component_VimList.selectedIndex(model.treeAsList);
+      switch (Component_VimList.get(selectedIndex, model.treeAsList)) {
+      | None => (model, Nothing)
+      | Some(ViewLeaf(_)) => (model, Nothing)
       | Some(ViewNode({data, expanded, _})) =>
         toggleExpanded(~expanded, ~data, model)
-
-      | None => (model, Nothing)
-      }
-    };
-
-  | Command(ToggleExpanded) =>
-    let selectedIndex = Component_VimList.selectedIndex(model.treeAsList);
-    switch (Component_VimList.get(selectedIndex, model.treeAsList)) {
-    | None => (model, Nothing)
-    | Some(ViewLeaf(_)) => (model, Nothing)
-    | Some(ViewNode({data, expanded, _})) =>
-      toggleExpanded(~expanded, ~data, model)
+      };
     };
   };
-};
 
 let set =
     (
@@ -366,6 +383,8 @@ module Commands = {
 
   let toggleExpanded =
     define("vim.tree.toggleExpanded", Command(ToggleExpanded));
+
+  let select = define("vim.tree.select", Command(Select));
 };
 
 module Keybindings = {
@@ -384,6 +403,11 @@ module Keybindings = {
         ~command=Commands.toggleExpanded.id,
         ~condition=commandCondition,
       ),
+      bind(
+        ~key="<space>",
+        ~command=Commands.select.id,
+        ~condition=commandCondition,
+      ),
     ];
 };
 
@@ -395,7 +419,7 @@ module Contributions = {
       Component_VimList.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => List(msg)))
     )
-    @ Commands.[toggleExpanded];
+    @ Commands.[toggleExpanded, select];
 
   let contextKeys = model => {
     open WhenExpr.ContextKeys;
@@ -431,10 +455,11 @@ module View = {
   };
 
   let indentGuide = (~horizontalSize, ~verticalSize, ~strokeColor) => {
+    let offset = max(0, horizontalSize);
     <View
       style=Style.[
-        marginLeft(horizontalSize / 2 + 1),
-        width(horizontalSize / 2 - 1),
+        marginLeft(Constants.indentCaretSize),
+        width(offset),
         height(verticalSize),
         borderLeft(~color=strokeColor, ~width=1),
       ]
@@ -473,9 +498,23 @@ module View = {
         (),
       ) => {
     let indentHeight = model.rowHeight;
-    let indentWidth = Constants.indentSize;
-    let activeIndentColor = Colors.List.activeIndentGuide.from(theme);
-    let inactiveIndentColor = Colors.List.inactiveIndentGuide.from(theme);
+    let indentWidth =
+      Feature_Configuration.GlobalConfiguration.Workbench.treeIndent.get(
+        config,
+      );
+    let showIndentGuides =
+      Feature_Configuration.GlobalConfiguration.Workbench.treeRenderIndentGuides.
+        get(
+        config,
+      );
+    let activeIndentColor =
+      showIndentGuides
+        ? Colors.List.activeIndentGuide.from(theme)
+        : Revery.Colors.transparentBlack;
+    let inactiveIndentColor =
+      showIndentGuides
+        ? Colors.List.inactiveIndentGuide.from(theme)
+        : Revery.Colors.transparentBlack;
 
     let makeIndent = (~activeLevel, level) => {
       indent(
@@ -542,7 +581,7 @@ module View = {
               ),
             ];
           };
-        <View style=Style.[flexDirection(`Row), marginLeft(4)]>
+        <View style=Style.[flexDirection(`Row)]>
           {innerView |> React.listToElement}
         </View>;
       }}

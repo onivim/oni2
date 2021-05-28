@@ -53,10 +53,16 @@ type msg =
   | ItemDisposed(string)
   | DiagnosticsClicked
   | FileTypeClicked
+  | IndentationClicked
   | ContextMenu(Component_ContextMenu.msg(contextMenuMsg))
   | NotificationCountClicked
   | NotificationsCountRightClicked
   | ContributedItemClicked({command: string});
+
+module Msg = {
+  let itemAdded = item => ItemAdded(item);
+  let itemDisposed = str => ItemDisposed(str);
+};
 
 // TODO: Wire these up to Pane / ContextMenu
 type outmsg =
@@ -65,6 +71,7 @@ type outmsg =
   | ToggleProblems
   | ToggleNotifications
   | ShowFileTypePicker
+  | ShowIndentationPicker
   | Effect(Isolinear.Effect.t(msg));
 
 let notificationContextMenu =
@@ -137,6 +144,8 @@ let update = (~client, model, msg) => {
     |> Option.value(~default=(model, Nothing))
 
   | FileTypeClicked => (model, ShowFileTypePicker)
+
+  | IndentationClicked => (model, ShowIndentationPicker)
 
   | NotificationCountClicked => (model, ToggleNotifications)
 
@@ -219,7 +228,7 @@ module Styles = {
 
 let positionToString =
   fun
-  | Some((loc: CharacterPosition.t)) =>
+  | Some(loc: CharacterPosition.t) =>
     Printf.sprintf(
       "%n,%n",
       EditorCoreTypes.LineNumber.toOneBased(loc.line),
@@ -272,8 +281,7 @@ let notificationCount =
       ~dispatch,
       (),
     ) => {
-  let text =
-    Feature_Notification.all(notifications) |> List.length |> string_of_int;
+  let text = Feature_Notification.count(notifications) |> string_of_int;
 
   let onClick = () => dispatch(NotificationCountClicked);
   let onRightClick = () => dispatch(NotificationsCountRightClicked);
@@ -341,8 +349,6 @@ let diagnosticCount = (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => 
 };
 
 module ModeIndicator = {
-  let transitionDuration = Revery.Time.milliseconds(300);
-
   let make = (~key=?, ~font: UiFont.t, ~theme, ~mode, ~subMode, ()) => {
     let background = Colors.Oni.backgroundFor(mode).from(theme);
     let foreground = Colors.Oni.foregroundFor(mode).from(theme);
@@ -364,11 +370,6 @@ module ModeIndicator = {
     </item>;
   };
 };
-
-let transitionAnimation =
-  Animation.(
-    animate(Time.ms(150)) |> ease(Easing.ease) |> tween(50.0, 0.)
-  );
 
 let indentationToString = (indentation: IndentationSettings.t) => {
   switch (indentation.mode) {
@@ -481,7 +482,12 @@ module View = {
     let indentation = () => {
       let text = indentationSettings |> indentationToString;
 
-      <textItem font theme text />;
+      <textItem
+        font
+        theme
+        text
+        onClick={() => dispatch(IndentationClicked)}
+      />;
     };
 
     let fileType = () => {
@@ -593,4 +599,13 @@ module View = {
       </section>
     </View>;
   };
+};
+
+module Configuration = {
+  open Config.Schema;
+  let visible = setting("workbench.statusBar.visible", bool, ~default=true);
+};
+
+module Contributions = {
+  let configuration = Configuration.[visible.spec];
 };

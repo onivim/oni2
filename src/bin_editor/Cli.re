@@ -15,10 +15,29 @@ module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 module OptionEx = Core.Utility.OptionEx;
 
-let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
+let doRemoteCommand = (~pipe, ~files, ~folderToOpen) => {
+  let result =
+    Feature_ClientServer.Client.openFiles(~server=pipe, ~files, ~folderToOpen)
+    |> LwtEx.sync;
+
+  switch (result) {
+  | Ok () => 0
+  | Error(msg) =>
+    prerr_endline("Error executing command: " ++ Printexc.to_string(msg));
+    1;
+  };
+};
+
+let installExtension =
+    (path, Oni_CLI.{overriddenExtensionsDir, proxyServer: proxy, _}) => {
   let setup = Core.Setup.init();
   let result =
-    ExtM.install(~setup, ~extensionsFolder=?overriddenExtensionsDir, path)
+    ExtM.install(
+      ~proxy,
+      ~setup,
+      ~extensionsFolder=?overriddenExtensionsDir,
+      path,
+    )
     |> LwtEx.sync;
 
   switch (result) {
@@ -30,7 +49,7 @@ let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
     Printf.printf("Failed to install extension: %s\n", path);
 
     let candidates: result(Service_Extensions.Catalog.SearchResponse.t, exn) =
-      ExtC.search(~offset=0, ~setup, path) |> LwtEx.sync;
+      ExtC.search(~proxy, ~offset=0, ~setup, path) |> LwtEx.sync;
 
     switch (candidates) {
     | Ok({extensions, _}) when extensions == [] => ()
@@ -77,7 +96,28 @@ let printVersion = () => {
   0;
 };
 
-let queryExtension = (extension, _cli) => {
+let listDisplays = () => {
+  let _ = Sdl2.init();
+  let displays = Sdl2.Display.getDisplays();
+
+  print_endline("Displays:");
+
+  displays
+  |> List.iteri((idx, display) => {
+       print_endline(
+         Printf.sprintf(
+           "%d: %s - %s",
+           idx,
+           Sdl2.Display.getName(display),
+           Sdl2.Display.getBounds(display) |> Sdl2.Rect.toString,
+         ),
+       )
+     });
+
+  0;
+};
+
+let queryExtension = (extension, {proxyServer: proxy, _}) => {
   let setup = Core.Setup.init();
   Service_Extensions.
     // Try to parse the extension id - either search, or
@@ -85,7 +125,7 @@ let queryExtension = (extension, _cli) => {
     (
       switch (Catalog.Identifier.fromString(extension)) {
       | Some(identifier) =>
-        Catalog.details(~setup, identifier)
+        Catalog.details(~proxy, ~setup, identifier)
         |> LwtEx.sync
         |> (
           fun
@@ -99,7 +139,7 @@ let queryExtension = (extension, _cli) => {
             }
         )
       | None =>
-        Catalog.search(~offset=0, ~setup, extension)
+        Catalog.search(~proxy, ~offset=0, ~setup, extension)
         |> LwtEx.sync
         |> (
           fun

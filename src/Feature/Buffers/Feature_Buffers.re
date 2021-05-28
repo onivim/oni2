@@ -6,18 +6,87 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Utility;
 
 module Log = (val Log.withNamespace("Oni2.Model.Buffers"));
 
-type model = IntMap.t(Buffer.t);
+type model = {
+  autoSave: AutoSave.model,
+  pendingSaveReason: option(SaveReason.t),
+  buffers: IntMap.t(Buffer.t),
+  originalLines: IntMap.t(array(string)),
+  computedDiffs: IntMap.t(DiffMarkers.t),
+  checkForLargeFiles: bool,
+};
 
-let empty = IntMap.empty;
+let empty = {
+  autoSave: AutoSave.initial,
+  pendingSaveReason: None,
 
-let map = IntMap.map;
+  buffers: IntMap.empty,
+  originalLines: IntMap.empty,
+  computedDiffs: IntMap.empty,
 
-let get = (id, model) => IntMap.find_opt(id, model);
+  checkForLargeFiles: true,
+};
 
-let anyModified = (buffers: model) => {
+module Internal = {
+  let recomputeDiff = (~bufferId, model) => {
+    let computedDiffs' =
+      OptionEx.map2(
+        (buffer, originalLines) =>
+          if (Oni_Core.Buffer.getNumberOfLines(buffer)
+              > Constants.diffMarkersMaxLineCount
+              || Array.length(originalLines)
+              > Constants.diffMarkersMaxLineCount) {
+            IntMap.remove(bufferId, model.computedDiffs);
+          } else {
+            let newMarkers = DiffMarkers.generate(~originalLines, buffer);
+
+            IntMap.add(bufferId, newMarkers, model.computedDiffs);
+          },
+        IntMap.find_opt(bufferId, model.buffers),
+        IntMap.find_opt(bufferId, model.originalLines),
+      )
+      |> Option.value(~default=model.computedDiffs);
+
+    {...model, computedDiffs: computedDiffs'};
+  };
+};
+
+let setOriginalLines = (~bufferId, ~originalLines, model) => {
+  {
+    ...model,
+    originalLines: IntMap.add(bufferId, originalLines, model.originalLines),
+  }
+  |> Internal.recomputeDiff(~bufferId);
+};
+
+let getOriginalDiff = (~bufferId, model) => {
+  IntMap.find_opt(bufferId, model.computedDiffs);
+};
+
+let map = (f, {buffers, _} as model) => {
+  ...model,
+  buffers: IntMap.map(f, buffers),
+};
+
+let get = (id, {buffers, _}) => IntMap.find_opt(id, buffers);
+
+let update = (id, updater, {buffers, _} as model) => {
+  {...model, buffers: IntMap.update(id, updater, buffers)};
+};
+
+let configurationChanged = (~config, model) => {
+  ...model,
+  checkForLargeFiles:
+    Feature_Configuration.GlobalConfiguration.Editor.largeFileOptimizations.get(
+      config,
+    ),
+  autoSave: AutoSave.configurationChanged(~config, model),
+};
+
+let anyModified = ({buffers, _}: model) => {
   IntMap.fold(
     (_key, v, prev) => Buffer.isModified(v) || prev,
     buffers,
@@ -26,18 +95,21 @@ let anyModified = (buffers: model) => {
 };
 
 let add = (buffer, model) => {
-  model |> IntMap.add(Buffer.getId(buffer), buffer);
+  {
+    ...model,
+    buffers: model.buffers |> IntMap.add(Buffer.getId(buffer), buffer),
+  };
 };
 
-let filter = (f, model) => {
-  model |> IntMap.to_seq |> Seq.map(snd) |> Seq.filter(f) |> List.of_seq;
+let filter = (f, {buffers, _}) => {
+  buffers |> IntMap.to_seq |> Seq.map(snd) |> Seq.filter(f) |> List.of_seq;
 };
 
-let all = model => {
-  model |> IntMap.to_seq |> Seq.map(snd) |> List.of_seq;
+let all = ({buffers, _}) => {
+  buffers |> IntMap.to_seq |> Seq.map(snd) |> List.of_seq;
 };
 
-let isModifiedByPath = (buffers: model, filePath: string) => {
+let isModifiedByPath = ({buffers, _}: model, filePath: string) => {
   IntMap.exists(
     (_id, v) => {
       let bufferPath = Buffer.getFilePath(v);
@@ -52,9 +124,15 @@ let isModifiedByPath = (buffers: model, filePath: string) => {
   );
 };
 
-// TODO: When do we use this?
-//let disableSyntaxHighlighting =
-//  Option.map(buffer => Buffer.disableSyntaxHighlighting(buffer));
+let isLargeFile = (model, buffer) => {
+  model.checkForLargeFiles
+  && model.buffers
+  |> IntMap.find_opt(Oni_Core.Buffer.getId(buffer))
+  |> Option.map(buffer =>
+       Buffer.getNumberOfLines(buffer) > Constants.largeFileLineCountThreshold
+     )
+  |> Option.value(~default=false);
+};
 
 let setModified = modified =>
   Option.map(buffer => Buffer.setModified(modified, buffer));
@@ -63,48 +141,40 @@ let setLineEndings = le =>
   Option.map(buffer => Buffer.setLineEndings(le, buffer));
 
 let modified = model => {
-  model
+  model.buffers
   |> IntMap.to_seq
   |> Seq.map(snd)
   |> Seq.filter(Buffer.isModified)
   |> List.of_seq;
 };
 
-type outmsg =
-  | Nothing
-  | BufferUpdated({
-      update: Oni_Core.BufferUpdate.t,
-      newBuffer: Oni_Core.Buffer.t,
-      oldBuffer: Oni_Core.Buffer.t,
-      triggerKey: option(string),
-    })
-  | BufferSaved(Oni_Core.Buffer.t)
-  | CreateEditor({
-      buffer: Oni_Core.Buffer.t,
-      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
-      position: option(BytePosition.t),
-      grabFocus: bool,
-      preview: bool,
-    })
-  | BufferModifiedSet(int, bool);
-
 [@deriving show]
 type command =
-  | DetectIndentation;
+  | ChangeIndentation({mode: IndentationSettings.mode})
+  | ChangeFiletype({maybeBufferId: option(int)})
+  | ConvertIndentationToTabs
+  | ConvertIndentationToSpaces
+  | CopyAbsolutePathToClipboard
+  | CopyRelativePathToClipboard
+  | DetectIndentation
+  | SaveWithoutFormatting;
 
 [@deriving show({with_path: false})]
 type msg =
+  | AutoSave(AutoSave.msg)
+  | AutoSaveCompleted
   | Command(command)
   | EditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
-      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      split: SplitDirection.t,
       position: option(CharacterPosition.t),
       grabFocus: bool,
       preview: bool,
     })
+  | FocusedBufferChanged({bufferId: int})
   | NewBufferAndEditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
-      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      split: SplitDirection.t,
       position: option(CharacterPosition.t),
       grabFocus: bool,
       preview: bool,
@@ -114,6 +184,13 @@ type msg =
       id: int,
       fileType: Oni_Core.Buffer.FileType.t,
     })
+  | IndentationChanged({
+      id: int,
+      size: int,
+      mode: IndentationSettings.mode,
+      didBufferGetModified: bool,
+    })
+  | IndentationConversionError(string)
   | FilenameChanged({
       id: int,
       newFilePath: option(string),
@@ -131,8 +208,13 @@ type msg =
       id: int,
       lineEndings: [@opaque] Vim.lineEnding,
     })
+  | StatusBarIndentationClicked
   | Saved(int)
-  | ModifiedSet(int, bool);
+  | ModifiedSet(int, bool)
+  | LargeFileOptimizationsApplied({
+      [@opaque]
+      buffer: Buffer.t,
+    });
 
 module Msg = {
   let fileTypeChanged = (~bufferId, ~fileType) => {
@@ -165,7 +247,107 @@ module Msg = {
   let updated = (~update, ~newBuffer, ~oldBuffer, ~triggerKey) => {
     Update({update, oldBuffer, newBuffer, triggerKey});
   };
+
+  let selectFileTypeClicked = (~bufferId: int) =>
+    Command(ChangeFiletype({maybeBufferId: Some(bufferId)}));
+
+  let statusBarIndentationClicked = StatusBarIndentationClicked;
+
+  let copyActivePathToClipboard = Command(CopyAbsolutePathToClipboard);
 };
+
+let vimSettingChanged = (~activeBufferId, ~name, ~value, model) => {
+  let updateTabsOrSpaces = (mode, buffer) => {
+    let indentation = Buffer.getIndentation(buffer);
+    IndentationChanged({
+      id: Oni_Core.Buffer.getId(buffer),
+      mode,
+      size: indentation.size,
+      didBufferGetModified: false,
+    });
+  };
+
+  let updateShiftWidth = (size, buffer) => {
+    let indentation = Buffer.getIndentation(buffer);
+    IndentationChanged({
+      id: Oni_Core.Buffer.getId(buffer),
+      mode: indentation.mode,
+      size,
+      didBufferGetModified: false,
+    });
+  };
+
+  let maybeUpdater =
+    if (name == "expandtab") {
+      Vim.Setting.(
+        {
+          switch (value) {
+          | Int(0) => Some(updateTabsOrSpaces(IndentationSettings.Tabs))
+          | Int(1) => Some(updateTabsOrSpaces(IndentationSettings.Spaces))
+          | String(_)
+          | Int(_) => None
+          };
+        }
+      );
+    } else if (name == "shiftwidth") {
+      Vim.Setting.(
+        {
+          switch (value) {
+          | Int(size) => Some(updateShiftWidth(size))
+          | String(_) => None
+          };
+        }
+      );
+    } else {
+      None;
+    };
+
+  maybeUpdater
+  |> OptionEx.flatMap(updater => {
+       model.buffers
+       |> IntMap.find_opt(activeBufferId)
+       |> Option.map(updater)
+     })
+  |> Option.map(msg =>
+       EffectEx.value(
+         ~name="Feature_Buffers.Indentation.vimSettingChanged.msg",
+         msg,
+       )
+     )
+  |> Option.value(~default=Isolinear.Effect.none);
+};
+
+type outmsg =
+  | Nothing
+  | BufferIndentationChanged({buffer: Oni_Core.Buffer.t})
+  | BufferUpdated({
+      update: Oni_Core.BufferUpdate.t,
+      markerUpdate: Oni_Core.MarkerUpdate.t,
+      minimalUpdate: Oni_Core.MinimalUpdate.t,
+      newBuffer: Oni_Core.Buffer.t,
+      oldBuffer: Oni_Core.Buffer.t,
+      triggerKey: option(string),
+    })
+  | BufferSaved({
+      buffer: Oni_Core.Buffer.t,
+      reason: SaveReason.t,
+    })
+  | CreateEditor({
+      buffer: Oni_Core.Buffer.t,
+      split: SplitDirection.t,
+      position: option(BytePosition.t),
+      grabFocus: bool,
+      preview: bool,
+    })
+  | BufferModifiedSet(int, bool)
+  | SetClipboardText(string)
+  | ShowMenu(
+      (Exthost.LanguageInfo.t, IconTheme.t) =>
+      Feature_Quickmenu.Schema.menu(msg),
+    )
+  | NotifyInfo(string)
+  | NotifyError(string)
+  | Effect(Isolinear.Effect.t(msg));
 
 module Configuration = {
   open Config.Schema;
@@ -214,10 +396,24 @@ let guessIndentation = (~config, buffer) => {
   |> Option.value(~default=Inferred.implicit(defaultIndentation(~config)));
 };
 
-let update = (~activeBufferId, ~config, msg: msg, model: model) => {
+let update = (~activeBufferId, ~config, ~workspace, msg: msg, model: model) => {
   switch (msg) {
+  | AutoSave(msg) =>
+    let (autoSave', outmsg) = AutoSave.update(msg, model.autoSave);
+
+    let model' = {...model, autoSave: autoSave'};
+    switch (outmsg) {
+    | AutoSave.Nothing => (model', Nothing)
+    | AutoSave.DoAutoSave => (
+        {...model, pendingSaveReason: Some(SaveReason.AutoSave)},
+        Effect(Service_Vim.Effects.saveAll(() => AutoSaveCompleted)),
+      )
+    };
+
+  | AutoSaveCompleted => ({...model, pendingSaveReason: None}, Nothing)
+
   | EditorRequested({buffer, split, position, grabFocus, preview}) => (
-      IntMap.add(Buffer.getId(buffer), buffer, model),
+      add(buffer, model),
       CreateEditor({
         buffer,
         split,
@@ -230,6 +426,10 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         preview,
       }),
     )
+
+  | FocusedBufferChanged({bufferId}) =>
+    let updater = Option.map(Buffer.stampLastUsed);
+    (update(bufferId, updater, model), Nothing);
 
   | NewBufferAndEditorRequested({
       buffer: originalBuffer,
@@ -255,7 +455,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       };
 
     (
-      IntMap.add(Buffer.getId(buffer), buffer, model),
+      add(buffer, model),
       CreateEditor({
         buffer,
         split,
@@ -278,19 +478,18 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         |> Buffer.setFilePath(newFilePath)
         |> Buffer.setFileType(newFileType)
         |> Buffer.setVersion(version)
-        |> Buffer.stampLastUsed
         |> Option.some
       | None => None
     );
-    (IntMap.update(id, updater, model), Nothing);
+    (update(id, updater, model), Nothing);
 
   | ModifiedSet(id, isModified) => (
-      IntMap.update(id, setModified(isModified), model),
+      update(id, setModified(isModified), model),
       BufferModifiedSet(id, isModified),
     )
 
   | LineEndingsChanged({id, lineEndings}) => (
-      IntMap.update(id, setLineEndings(lineEndings), model),
+      update(id, setLineEndings(lineEndings), model),
       Nothing,
     )
 
@@ -306,29 +505,264 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       } else {
         newBuffer;
       };
+    let minimalUpdate =
+      if (update.isFull) {
+        MinimalUpdate.fromBuffers(~original=oldBuffer, ~updated=buffer);
+      } else {
+        MinimalUpdate.fromBufferUpdate(~buffer=oldBuffer, ~update);
+      };
+
+    let markerUpdate = MarkerUpdate.create(minimalUpdate);
     (
-      IntMap.add(update.id, buffer, model),
-      BufferUpdated({update, newBuffer: buffer, oldBuffer, triggerKey}),
+      add(buffer, model) |> Internal.recomputeDiff(~bufferId=update.id),
+      BufferUpdated({
+        update,
+        newBuffer: buffer,
+        oldBuffer,
+        triggerKey,
+        markerUpdate,
+        minimalUpdate,
+      }),
     );
 
   | FileTypeChanged({id, fileType}) => (
-      IntMap.update(id, Option.map(Buffer.setFileType(fileType)), model),
+      update(id, Option.map(Buffer.setFileType(fileType)), model),
       Nothing,
     )
 
-  | Saved(bufferId) =>
+  | IndentationChanged({id, mode, size, didBufferGetModified}) =>
+    let newSettings = IndentationSettings.{mode, size, tabSize: size};
     let model' =
-      IntMap.update(bufferId, Option.map(Buffer.incrementSaveTick), model);
+      model
+      |> update(
+           id,
+           Option.map(buffer => {
+             let buffer' =
+               buffer
+               |> Buffer.setIndentation(Inferred.explicit(newSettings));
+
+             if (didBufferGetModified) {
+               buffer' |> Buffer.setModified(true);
+             } else {
+               buffer';
+             };
+           }),
+         );
     let eff =
-      IntMap.find_opt(bufferId, model)
-      |> Option.map(buffer => BufferSaved(buffer))
+      IntMap.find_opt(id, model'.buffers)
+      |> Option.map(buffer => BufferIndentationChanged({buffer: buffer}))
+      |> Option.value(~default=Nothing);
+
+    (model', eff);
+
+  | IndentationConversionError(errorMsg) => (model, NotifyError(errorMsg))
+
+  | Saved(bufferId) =>
+    let saveReason =
+      model.pendingSaveReason
+      |> Option.value(
+           ~default=SaveReason.UserInitiated({allowFormatting: true}),
+         );
+    let model' =
+      update(bufferId, Option.map(Buffer.incrementSaveTick), model);
+    let eff =
+      IntMap.find_opt(bufferId, model.buffers)
+      |> Option.map(buffer => BufferSaved({buffer, reason: saveReason}))
       |> Option.value(~default=Nothing);
     (model', eff);
 
+  | StatusBarIndentationClicked =>
+    let items = [
+      (
+        "Indent using spaces...",
+        Command(ChangeIndentation({mode: IndentationSettings.Spaces})),
+      ),
+      (
+        "Indent using tabs...",
+        Command(ChangeIndentation({mode: IndentationSettings.Tabs})),
+      ),
+      ("Auto-detect indentation", Command(DetectIndentation)),
+      ("Convert indentation to tabs", Command(ConvertIndentationToTabs)),
+      ("Convert indentation to spaces", Command(ConvertIndentationToSpaces)),
+    ];
+
+    let menuFn =
+        (_languageInfo: Exthost.LanguageInfo.t, _iconTheme: IconTheme.t) => {
+      Feature_Quickmenu.Schema.menu(
+        ~onItemSelected=snd,
+        ~toString=fst,
+        items,
+      );
+    };
+    (model, ShowMenu(menuFn));
+
   | Command(command) =>
     switch (command) {
+    | ChangeIndentation({mode}) =>
+      let items = List.init(8, idx => idx + 1);
+      let menuFn =
+          (_languageInfo: Exthost.LanguageInfo.t, _iconTheme: IconTheme.t) => {
+        Feature_Quickmenu.Schema.menu(
+          ~onItemSelected=
+            size =>
+              IndentationChanged({
+                id: activeBufferId,
+                size,
+                mode,
+                didBufferGetModified: false,
+              }),
+          ~toString=string_of_int,
+          items,
+        );
+      };
+      (model, ShowMenu(menuFn));
+
+    | ChangeFiletype({maybeBufferId}) =>
+      let menuFn =
+          (languageInfo: Exthost.LanguageInfo.t, iconTheme: IconTheme.t) => {
+        let bufferId = maybeBufferId |> Option.value(~default=activeBufferId);
+        let languages =
+          languageInfo
+          |> Exthost.LanguageInfo.languages
+          |> List.map(language =>
+               (
+                 language,
+                 Oni_Core.IconTheme.getIconForLanguage(iconTheme, language),
+               )
+             );
+
+        let itemToIcon = item => {
+          item |> snd |> Option.map(Feature_Quickmenu.Schema.Icon.seti);
+        };
+        Feature_Quickmenu.Schema.menu(
+          ~itemRenderer=
+            Feature_Quickmenu.Schema.Renderer.defaultWithIcon(itemToIcon),
+          ~onItemSelected=
+            language =>
+              FileTypeChanged({
+                id: bufferId,
+                fileType: Buffer.FileType.explicit(fst(language)),
+              }),
+          ~toString=fst,
+          languages,
+        );
+      };
+      (model, ShowMenu(menuFn));
+
+    | ConvertIndentationToSpaces =>
+      let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
+      switch (maybeBuffer) {
+      | None => (model, Nothing)
+      | Some(buffer) =>
+        let allLines = Buffer.getLines(buffer);
+        let indentationSettings = Buffer.getIndentation(buffer);
+        let newLines =
+          allLines
+          |> Array.map(
+               IndentationConverter.indentationToSpaces(
+                 ~size=indentationSettings.size,
+               ),
+             );
+        (
+          model,
+          Effect(
+            Service_Vim.Effects.setLines(
+              ~shouldAdjustCursors=true,
+              ~bufferId=activeBufferId,
+              ~lines=newLines,
+              fun
+              | Error(msg) => IndentationConversionError(msg)
+              | Ok(_) =>
+                IndentationChanged({
+                  id: activeBufferId,
+                  mode: IndentationSettings.Spaces,
+                  size: indentationSettings.size,
+                  didBufferGetModified: true,
+                }),
+            ),
+          ),
+        );
+      };
+
+    | ConvertIndentationToTabs =>
+      let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
+      switch (maybeBuffer) {
+      | None => (model, Nothing)
+      | Some(buffer) =>
+        let allLines = Buffer.getLines(buffer);
+        let indentationSettings = Buffer.getIndentation(buffer);
+        let newLines =
+          allLines
+          |> Array.map(
+               IndentationConverter.indentationToTabs(
+                 ~size=indentationSettings.size,
+               ),
+             );
+        (
+          model,
+          Effect(
+            Service_Vim.Effects.setLines(
+              ~shouldAdjustCursors=true,
+              ~bufferId=activeBufferId,
+              ~lines=newLines,
+              fun
+              | Error(msg) => IndentationConversionError(msg)
+              | Ok(_) =>
+                IndentationChanged({
+                  id: activeBufferId,
+                  mode: IndentationSettings.Tabs,
+                  size: indentationSettings.size,
+                  didBufferGetModified: true,
+                }),
+            ),
+          ),
+        );
+      };
+
+    | CopyAbsolutePathToClipboard =>
+      let eff =
+        model.buffers
+        |> IntMap.find_opt(activeBufferId)
+        |> OptionEx.flatMap(Buffer.getFilePath)
+        |> Option.map(path => SetClipboardText(path))
+        |> Option.value(~default=Nothing);
+
+      (model, eff);
+
+    | CopyRelativePathToClipboard =>
+      let maybeBufferPath =
+        model.buffers
+        |> IntMap.find_opt(activeBufferId)
+        |> OptionEx.flatMap(Buffer.getFilePath)
+        |> OptionEx.flatMap(Oni_Core.FpExp.absoluteCurrentPlatform);
+
+      let default =
+        maybeBufferPath
+        |> Option.map(path => SetClipboardText(FpExp.toString(path)))
+        |> Option.value(~default=Nothing);
+
+      let maybeWorkspacePath =
+        workspace
+        |> Feature_Workspace.openedFolder
+        |> OptionEx.flatMap(Oni_Core.FpExp.absoluteCurrentPlatform);
+
+      let eff =
+        OptionEx.flatMap2(
+          (bufferPath, workspacePath) => {
+            switch (FpExp.relativize(~source=workspacePath, ~dest=bufferPath)) {
+            | Ok(relative) =>
+              Some(SetClipboardText(FpExp.relativeToString(relative)))
+            | Error(_) => None
+            }
+          },
+          maybeBufferPath,
+          maybeWorkspacePath,
+        )
+        |> Option.value(~default);
+      (model, eff);
+
     | DetectIndentation =>
-      let maybeBuffer = IntMap.find_opt(activeBufferId, model);
+      let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
 
       switch (maybeBuffer) {
       // This shouldn't happen...
@@ -339,9 +773,37 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         let config = config(~fileType);
         let indentation = guessIndentation(~config, buffer);
         let updatedBuffer = Buffer.setIndentation(indentation, buffer);
-        (IntMap.add(activeBufferId, updatedBuffer, model), Nothing);
+        (add(updatedBuffer, model), Nothing);
       };
+
+    | SaveWithoutFormatting => (
+        {
+          ...model,
+          pendingSaveReason:
+            Some(SaveReason.UserInitiated({allowFormatting: false})),
+        },
+        Effect(
+          Service_Vim.Effects.save(~bufferId=activeBufferId, () =>
+            Saved(activeBufferId)
+          ),
+        ),
+      )
     }
+
+  | LargeFileOptimizationsApplied({buffer}) =>
+    let maybeFilename = Oni_Core.Buffer.getShortFriendlyName(buffer);
+    let outmsg =
+      maybeFilename
+      |> Option.map(fileName => {
+           let msg =
+             Printf.sprintf(
+               "Syntax highlighting and other features have been turned off for the large file '%s'. These optimizations can be disabled by setting 'editor.largeFileOptimizations' to false.",
+               fileName,
+             );
+           NotifyInfo(msg);
+         })
+      |> Option.value(~default=Nothing);
+    (model, outmsg);
   };
 };
 
@@ -349,10 +811,9 @@ module Effects = {
   let openCommon = (~vimBuffer, ~font, ~languageInfo, ~model, f) => {
     let bufferId = Vim.Buffer.getId(vimBuffer);
 
-    switch (IntMap.find_opt(bufferId, model)) {
+    switch (IntMap.find_opt(bufferId, model.buffers)) {
     // We already have this buffer loaded - so just ask for an editor!
-    | Some(buffer) =>
-      buffer |> Buffer.stampLastUsed |> f(~alreadyLoaded=true)
+    | Some(buffer) => buffer |> f(~alreadyLoaded=true)
 
     | None =>
       // No buffer yet, so we need to create one _and_ ask for an editor.
@@ -365,8 +826,7 @@ module Effects = {
         Oni_Core.Buffer.ofLines(~id=metadata.id, ~font, lines)
         |> Buffer.setVersion(metadata.version)
         |> Buffer.setFilePath(metadata.filePath)
-        |> Buffer.setModified(metadata.modified)
-        |> Buffer.stampLastUsed;
+        |> Buffer.setModified(metadata.modified);
 
       let fileType =
         Exthost.LanguageInfo.getLanguageFromBuffer(languageInfo, buffer);
@@ -399,7 +859,7 @@ module Effects = {
       (
         ~font: Service_Font.font,
         ~languageInfo: Exthost.LanguageInfo.t,
-        ~split=`Current,
+        ~split=SplitDirection.Current,
         ~position=None,
         ~grabFocus=true,
         ~filePath,
@@ -493,6 +953,20 @@ module Effects = {
 module Commands = {
   open Feature_Commands.Schema;
 
+  let indentUsingTabs =
+    define(
+      ~title="Indent using tabs",
+      "editor.action.indentUsingTabs",
+      Command(ChangeIndentation({mode: IndentationSettings.Tabs})),
+    );
+
+  let indentUsingSpaces =
+    define(
+      ~title="Indent using spaces",
+      "editor.action.indentUsingSpaces",
+      Command(ChangeIndentation({mode: IndentationSettings.Spaces})),
+    );
+
   let detectIndentation =
     define(
       ~category="Editor",
@@ -500,6 +974,90 @@ module Commands = {
       "editor.action.detectIndentation",
       Command(DetectIndentation),
     );
+
+  let convertIndentationToSpaces =
+    define(
+      ~title="Convert indentation to spaces",
+      "editor.action.indentationToSpaces",
+      Command(ConvertIndentationToSpaces),
+    );
+
+  let convertIndentationToTabs =
+    define(
+      ~title="Convert indentation to tabs",
+      "editor.action.indentationToTabs",
+      Command(ConvertIndentationToTabs),
+    );
+
+  let changeFiletype =
+    define(
+      ~category="Editor",
+      ~title="Select file type",
+      "workbench.action.editor.changeLanguageMode",
+      Command(ChangeFiletype({maybeBufferId: None})),
+    );
+
+  let copyAbsolutePath =
+    define(
+      ~category="File",
+      ~title="Copy Path of Active File",
+      "copyFilePath",
+      Command(CopyAbsolutePathToClipboard),
+    );
+  let copyRelativePath =
+    define(
+      ~category="File",
+      ~title="Copy Relative Path of Active File",
+      "copyRelativeFilePath",
+      Command(CopyRelativePathToClipboard),
+    );
+
+  let saveWithoutFormatting =
+    define(
+      ~category="File",
+      ~title="Save without formatting",
+      "workbench.action.files.saveWithoutFormatting",
+      Command(SaveWithoutFormatting),
+    );
+};
+
+let sub = (~isWindowFocused, ~maybeFocusedBuffer, model) => {
+  let buffers = model.buffers |> IntMap.bindings |> List.map(snd);
+  let largeFileSub =
+    if (!model.checkForLargeFiles) {
+      Isolinear.Sub.none;
+    } else {
+      buffers
+      |> List.filter((buffer: Buffer.t) => isLargeFile(model, buffer))
+      |> List.map(buffer =>
+           SubEx.value(
+             ~uniqueId=
+               "Feature_Buffers.largeFile:"
+               ++ string_of_int(Buffer.getId(buffer)),
+             LargeFileOptimizationsApplied({buffer: buffer}),
+           )
+         )
+      |> Isolinear.Sub.batch;
+    };
+
+  let focusedBufferSub =
+    switch (maybeFocusedBuffer) {
+    | None => Isolinear.Sub.none
+    | Some(bufferId) =>
+      let uniqueId =
+        "Feature_Buffers.Sub.focusedBuffer:" ++ string_of_int(bufferId);
+      SubEx.value(~uniqueId, FocusedBufferChanged({bufferId: bufferId}));
+    };
+
+  let autoSaveSub =
+    AutoSave.sub(
+      ~isWindowFocused,
+      ~maybeFocusedBuffer,
+      ~buffers,
+      model.autoSave,
+    )
+    |> Isolinear.Sub.map(msg => AutoSave(msg));
+  [largeFileSub, autoSaveSub, focusedBufferSub] |> Isolinear.Sub.batch;
 };
 
 module Contributions = {
@@ -509,7 +1067,39 @@ module Contributions = {
       insertSpaces.spec,
       tabSize.spec,
       indentSize.spec,
-    ];
+    ]
+    @ AutoSave.Contributions.configuration;
 
-  let commands = Commands.[detectIndentation] |> Command.Lookup.fromList;
+  let commands =
+    Commands.[
+      changeFiletype,
+      convertIndentationToSpaces,
+      convertIndentationToTabs,
+      copyAbsolutePath,
+      copyRelativePath,
+      detectIndentation,
+      indentUsingSpaces,
+      indentUsingTabs,
+      saveWithoutFormatting,
+    ]
+    |> Command.Lookup.fromList;
+
+  let keybindings =
+    Feature_Input.Schema.[
+      bind(
+        ~key="<D-N>",
+        ~command=":enew",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-S>",
+        ~command=":w!",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-S-S>",
+        ~command=":wa!",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+    ];
 };

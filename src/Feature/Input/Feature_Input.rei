@@ -7,11 +7,14 @@ module ReveryKeyConverter = ReveryKeyConverter;
 type outmsg =
   | Nothing
   | DebugInputShown
+  | ErrorNotifications(list(string))
   | MapParseError({
       fromKeys: string,
       toKeys: string,
       error: string,
-    });
+    })
+  | OpenFile(FpExp.t(FpExp.absolute))
+  | TimedOut;
 
 [@deriving show]
 type command;
@@ -24,6 +27,16 @@ module Schema: {
   // Bind a key to a command
   let bind:
     (~key: string, ~command: string, ~condition: WhenExpr.t) => keybinding;
+
+  // Bind a key to a command, with arguments
+  let bindWithArgs:
+    (
+      ~arguments: Yojson.Safe.t,
+      ~key: string,
+      ~command: string,
+      ~condition: WhenExpr.t
+    ) =>
+    keybinding;
 
   // Clear all bindings for a key
   let clear: (~key: string) => keybinding;
@@ -42,7 +55,19 @@ module Schema: {
 
   type resolvedKeybinding;
 
+  let resolvedToString: resolvedKeybinding => string;
+
   let resolve: keybinding => result(resolvedKeybinding, string);
+};
+
+// LOADER
+
+module KeybindingsLoader: {
+  type t;
+
+  let none: t;
+
+  let file: FpExp.t(FpExp.absolute) => t;
 };
 
 [@deriving show]
@@ -56,10 +81,13 @@ module Msg: {
 
 type model;
 
-let initial: list(Schema.keybinding) => model;
+let initial: (~loader: KeybindingsLoader.t, list(Schema.keybinding)) => model;
 
 type execute =
-  | NamedCommand(string)
+  | NamedCommand({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   | VimExCommand(string);
 
 type effect =
@@ -81,6 +109,9 @@ let keyDown:
     model
   ) =>
   (model, list(effect));
+
+let timeout:
+  (~context: WhenExpr.ContextKeys.t, model) => (model, list(effect));
 
 let text:
   (~text: string, ~time: Revery.Time.t, model) => (model, list(effect));
@@ -122,13 +153,15 @@ let remove: (uniqueId, model) => model;
 let enable: model => model;
 let disable: model => model;
 
+let notifyFileSaved: (FpExp.t(FpExp.absolute), model) => model;
+
 // UPDATE
 
 let update: (msg, model) => (model, outmsg);
 
 // SUBSCRIPTION
 
-let sub: model => Isolinear.Sub.t(msg);
+let sub: (~config: Config.resolver, model) => Isolinear.Sub.t(msg);
 
 // CONTRIBUTIONS
 

@@ -1,5 +1,4 @@
 opam-version: "2.0"
-version: "5.4.0"
 maintainer: "frederic.bour@lakaban.net"
 authors: [
   "Frédéric Bour <frederic.bour@lakaban.net>"
@@ -11,7 +10,7 @@ bug-reports: "https://github.com/ocaml-ppx/ppx_tools_versioned/issues"
 dev-repo: "git://github.com/ocaml-ppx/ppx_tools_versioned.git"
 tags: [ "syntax" ]
 build: [
-  ["dune" "subst"] {pinned}
+  ["dune" "subst"] {dev}
   ["dune" "build" "-p" name "-j" jobs]
   ["dune" "runtest" "-p" name "-j" jobs] {with-test}
 ]

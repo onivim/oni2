@@ -28,11 +28,16 @@ type outmsg =
 
 let update: (~previewEnabled: bool, model, msg) => (model, option(outmsg));
 
-let resetFocus: model => model;
+let resetFocus: (~query: option(string), model) => model;
 
-let subscriptions:
-  (~workingDirectory: string, Ripgrep.t, msg => unit, model) =>
-  list(Subscription.t(msg));
+let sub:
+  (
+    ~config: Oni_Core.Config.resolver,
+    ~workingDirectory: string,
+    ~setup: Setup.t,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
 
 let make:
   (
@@ -52,4 +57,5 @@ let make:
 module Contributions: {
   let commands: (~isFocused: bool) => list(Command.t(msg));
   let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
+  let configuration: list(Config.Schema.spec);
 };

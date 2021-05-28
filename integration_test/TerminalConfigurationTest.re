@@ -35,7 +35,7 @@ let expectedShellArgs =
 runTest(
   ~configuration,
   ~name="TerminalConfigurationTest",
-  (dispatch, wait, _) => {
+  ({dispatch, wait, _}) => {
     // Wait until the extension is activated
     // Give some time for the exthost to start
     wait(
@@ -52,12 +52,11 @@ runTest(
     // it'll pull the default from configuration
     dispatch(
       Actions.Terminal(
-        Feature_Terminal.Command(
-          NewTerminal({
-            cmd: None,
-            splitDirection: Vertical,
-            closeOnExit: false,
-          }),
+        Feature_Terminal.Testing.newTerminalMsg(
+          ~cmd=None,
+          ~splitDirection=
+            Oni_Core.SplitDirection.Vertical({shouldReuse: false}),
+          ~closeOnExit=false,
         ),
       ),
     );

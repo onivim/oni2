@@ -28,6 +28,7 @@ module TestWorkspaceEvent = {
   type t = {
     eventType: string,
     workspacePath: option(string),
+    storagePath: option(string),
     added: int,
     removed: int,
   };
@@ -38,6 +39,7 @@ module TestWorkspaceEvent = {
         {
           eventType: field.required("type", string),
           workspacePath: field.optional("workspacePath", string),
+          storagePath: field.optional("storagePath", string),
           added: field.required("added", int),
           removed: field.required("removed", int),
         }
@@ -78,7 +80,9 @@ describe("WorkspaceTest", ({test, _}) => {
          ),
        )
     |> waitForWorkspaceEvent(~name="Workspace showActive", evt => {
-         evt.eventType == "workspace.show" && evt.workspacePath != None
+         evt.eventType == "workspace.show"
+         && evt.workspacePath != None
+         && evt.storagePath != None
        })
     |> Test.withClient(
          Request.Workspace.acceptWorkspaceData(~workspace=Some(workspace1)),

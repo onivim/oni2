@@ -144,6 +144,7 @@ let setThemeButton = (~theme, ~font, ~extensionId, ~dispatch, ()) => {
 let header =
     (
       ~model: Model.model,
+      ~proxy,
       ~font: UiFont.t,
       ~publisher,
       ~maybeLogo,
@@ -158,7 +159,7 @@ let header =
     ) => {
   let logo =
     switch (maybeLogo) {
-    | Some(src) => <RemoteImage width=96 height=96 url=src />
+    | Some(src) => <RemoteImage proxy width=96 height=96 url=src />
     // TODO: Replace with real logo
     | None => <Container color=Revery.Colors.gray height=96 width=96 />
     };
@@ -355,7 +356,15 @@ let warning = (~displayName, ~namespace, ~font: UiFont.t, ()) => {
 };
 
 let make =
-    (~model: Model.model, ~theme, ~tokenTheme, ~font: UiFont.t, ~dispatch, ()) => {
+    (
+      ~model: Model.model,
+      ~proxy,
+      ~theme,
+      ~tokenTheme,
+      ~font: UiFont.t,
+      ~dispatch,
+      (),
+    ) => {
   switch (model.selected) {
   | None => <View />
   | Some(selected) =>
@@ -398,6 +407,7 @@ let make =
       | Some(readmeUrl) =>
         <ScrollView style=Style.[paddingLeft(64), flexGrow(1)]>
           <RemoteMarkdown
+            proxy
             url=readmeUrl
             colorTheme=theme
             tokenTheme
@@ -411,6 +421,7 @@ let make =
 
     <View style=Styles.container>
       <header
+        proxy
         theme
         font
         maybeLogo

@@ -16,10 +16,14 @@ module Internal = {
     let singleWidthCharacter =
       BufferLine.measure(bufferLine, Uchar.of_char('W'));
     let doubleWidthCharacter = singleWidthCharacter *. 2.;
+    let tabChar = Uchar.of_char('\t');
+    let tabSize = BufferLine.measure(bufferLine, tabChar);
     if (simpleMeasurement) {
       uchar =>
         if (Uucp.Break.tty_width_hint(uchar) > 1) {
           doubleWidthCharacter;
+        } else if (Uchar.equal(uchar, tabChar)) {
+          tabSize;
         } else {
           singleWidthCharacter;
         };

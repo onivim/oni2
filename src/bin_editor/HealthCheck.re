@@ -107,6 +107,7 @@ let mainChecks = [
     "Verify simple request",
     (setup: Setup.t) => {
       Service_Net.Request.json(
+        ~proxy=Feature_Proxy.(default |> proxy),
         ~setup,
         ~decoder=Json.Decode.value,
         "https://httpbin.org/json",
@@ -184,14 +185,6 @@ let mainChecks = [
       && linkedVersion.major == 2
       && linkedVersion.minor >= 0
       && linkedVersion.patch >= 10;
-    },
-  ),
-  (
-    "Verify bundled reason-language-server executable",
-    (setup: Setup.t) => {
-      let ret = Rench.ChildProcess.spawnSync(setup.rlsPath, [|"--help"|]);
-
-      ret.stdout |> String.trim |> StringEx.contains("Reason Language Server");
     },
   ),
   (

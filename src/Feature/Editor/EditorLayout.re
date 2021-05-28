@@ -25,6 +25,7 @@ let getLayout =
       ~isMinimapShown: bool,
       ~characterWidth: float,
       ~characterHeight: float,
+      ~verticalScrollBarWidth: int,
       ~bufferLineCount: int,
       (),
     ) => {
@@ -43,7 +44,7 @@ let getLayout =
   let availableWidthInPixels =
     pixelWidth
     -. lineNumberWidthInPixels
-    -. float_of_int(Constants.scrollBarThickness)
+    -. float_of_int(verticalScrollBarWidth)
     -. minimapPadding
     *. 2.;
 
@@ -101,7 +102,7 @@ let getLayout =
     -. bufferWidthInPixels
     -. float_of_int(minimapWidthInPixels)
     -. lineNumberWidthInPixels
-    -. float_of_int(Constants.scrollBarThickness)
+    -. float_of_int(verticalScrollBarWidth)
     -. minimapPadding
     *. 2.;
 

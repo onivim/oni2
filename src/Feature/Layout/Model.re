@@ -6,12 +6,15 @@ open Utility;
 open Feature_Editor;
 
 module Group: {
+  type id = int;
   type t =
     pri {
       id: int,
       editors: list(Editor.t),
       selectedId: int,
     };
+
+  let id: t => id;
 
   let create: list(Editor.t) => t;
 
@@ -31,11 +34,15 @@ module Group: {
 
   let allEditors: t => list(Editor.t);
 } = {
+  type id = int;
+
   type t = {
     id: int,
     editors: list(Editor.t),
     selectedId: int,
   };
+
+  let id = ({id, _}) => id;
 
   let allEditors = ({editors, _}) => editors;
 
@@ -242,6 +249,11 @@ let visibleEditors = model =>
 
 let activeLayoutGroups = model => model |> activeLayout |> groups;
 
+let activeLayoutGroup = model => {
+  let layout = model |> activeLayout;
+  layout.activeGroupId;
+};
+
 let editorById = (id, model) =>
   Base.List.find_map(activeLayout(model).groups, ~f=group =>
     List.find_opt(editor => Editor.getId(editor) == id, group.editors)
@@ -252,27 +264,6 @@ let addWindow = (direction, focus) =>
 let insertWindow = (target, direction, focus) =>
   updateTree(Layout.insertWindow(target, direction, focus));
 let removeWindow = target => updateTree(Layout.removeWindow(target));
-
-let split = (~editor, direction, model) => {
-  let newGroup = Group.create([editor]);
-
-  updateActiveLayout(
-    layout =>
-      {
-        groups: [newGroup, ...layout.groups],
-        activeGroupId: newGroup.id,
-        tree:
-          Layout.insertWindow(
-            `After(layout.activeGroupId),
-            direction,
-            newGroup.id,
-            activeTree(layout),
-          ),
-        uncommittedTree: `None,
-      },
-    model,
-  );
-};
 
 let move = (focus, dirX, dirY, layout) => {
   let positioned = Positioned.fromLayout(0, 0, 200, 200, layout);
@@ -285,6 +276,70 @@ let moveLeft = current => move(current, -1, 0);
 let moveRight = current => move(current, 1, 0);
 let moveUp = current => move(current, 0, -1);
 let moveDown = current => move(current, 0, 1);
+
+let rec moveTopLeft = (current, layout) => {
+  let next = move(current, -1, -1, layout);
+
+  if (next == current) {
+    current;
+  } else {
+    moveTopLeft(next, layout);
+  };
+};
+
+let rec moveBottomRight = (current, layout) => {
+  let next = move(current, 1, 1, layout);
+
+  if (next == current) {
+    current;
+  } else {
+    moveBottomRight(next, layout);
+  };
+};
+
+let hasSplitToRight = model => {
+  let layout = model |> activeLayout;
+  let newActiveGroupId =
+    layout |> activeTree |> moveRight(layout.activeGroupId);
+
+  layout.activeGroupId != newActiveGroupId;
+};
+
+let setActiveGroup = (groupId, model) => {
+  model |> updateActiveLayout(layout => {...layout, activeGroupId: groupId});
+};
+
+let split = (~shouldReuse, ~editor, direction, model) =>
+  if (shouldReuse && direction == `Vertical && hasSplitToRight(model)) {
+    // TODO: Consider split open direction?
+    let layout = model |> activeLayout;
+    let newActiveGroupId =
+      layout |> activeTree |> moveRight(layout.activeGroupId);
+    model
+    |> updateActiveLayout(layout =>
+         {...layout, activeGroupId: newActiveGroupId}
+       )
+    |> updateActiveGroup(Group.openEditor(editor));
+  } else {
+    let newGroup = Group.create([editor]);
+
+    updateActiveLayout(
+      layout =>
+        {
+          groups: [newGroup, ...layout.groups],
+          activeGroupId: newGroup.id,
+          tree:
+            Layout.insertWindow(
+              `After(layout.activeGroupId),
+              direction,
+              newGroup.id,
+              activeTree(layout),
+            ),
+          uncommittedTree: `None,
+        },
+      model,
+    );
+  };
 
 let nextEditor = updateActiveGroup(Group.nextEditor);
 

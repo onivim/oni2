@@ -94,14 +94,14 @@ type t = {
   body: Bytes.t,
 };
 
-let create = (~bytes: Bytes.t, ~packetType, ~id: int) => {
+let create = (~ack=0, ~packetType, ~id: int, bytes) => {
   let length = Bytes.length(bytes);
   let header =
     Header.{
       packetType,
       id,
       // TODO: Set up ack
-      ack: 0,
+      ack,
       length,
     };
 

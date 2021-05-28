@@ -6,8 +6,10 @@ open Oni_Components;
 
 module Colors = Feature_Theme.Colors;
 
+module Clickable = Revery.UI.Components.Clickable;
+
 module Constants = {
-  let menuWidth = 400;
+  let menuWidth = 600;
   let menuHeight = 320;
   let rowHeight = 40;
 };
@@ -19,6 +21,8 @@ module Styles = {
     backgroundColor(Colors.Menu.background.from(theme)),
     color(Colors.Menu.foreground.from(theme)),
     width(Constants.menuWidth),
+    marginTop(25),
+    //pointerEvents(`Ignore),
   ];
 
   let inputContainer = [padding(5)];
@@ -128,6 +132,94 @@ let make =
       }
     );
 
+  let defaultRenderer = (normalStyle, highlightStyle, text, highlights) => {
+    <HighlightText
+      fontFamily={font.family}
+      fontSize=12.
+      style=normalStyle
+      highlightStyle
+      text
+      highlights
+    />;
+  };
+
+  let fileRenderer = (normalStyle, highlightStyle, fullPath, highlights) => {
+    // Try and get basename from path
+
+    let fileName = Filename.basename(fullPath);
+    let len = String.length(fullPath);
+    let fileNameLen = String.length(fileName);
+
+    let parentDirectoryLength = len - fileNameLen;
+    let parentDirectory =
+      String.sub(fullPath, 0, len - fileNameLen)
+      |> Utility.Path.trimTrailingSeparator;
+
+    let fileNameHighlights =
+      highlights
+      |> List.filter_map(((low, high)) =>
+           if (low <= parentDirectoryLength && high <= parentDirectoryLength) {
+             None;
+           } else if (low <= parentDirectoryLength) {
+             Some((0, high - parentDirectoryLength));
+           } else {
+             Some((
+               low - parentDirectoryLength,
+               high - parentDirectoryLength,
+             ));
+           }
+         );
+
+    let parentHighlights =
+      highlights
+      |> List.filter_map(((low, high)) =>
+           if (low >= parentDirectoryLength) {
+             None;
+           } else if (high >= parentDirectoryLength) {
+             Some((low, parentDirectoryLength));
+           } else {
+             Some((low, high));
+           }
+         );
+
+    <View style=Style.[flexDirection(`Row)]>
+      //alignItems(`Center)
+
+        <View style=Style.[flexShrink(0), marginTop(2), marginRight(8)]>
+          <HighlightText
+            fontFamily={font.family}
+            fontSize=12.
+            style=normalStyle
+            highlightStyle
+            text=fileName
+            highlights=fileNameHighlights
+          />
+        </View>
+        <View
+          style=Style.[
+            flexShrink(1),
+            marginTop(2),
+            opacity(0.75),
+            transform([Transform.TranslateY(1.)]),
+          ]>
+          <HighlightText
+            fontFamily={font.family}
+            fontSize=11.
+            style=normalStyle
+            highlightStyle
+            text=parentDirectory
+            highlights=parentHighlights
+          />
+        </View>
+      </View>;
+  };
+
+  let renderer =
+    switch (variant) {
+    | FilesPicker => fileRenderer
+    | _ => defaultRenderer
+    };
+
   let renderItem = index => {
     let item = items[index];
     let isFocused = Some(index) == focused;
@@ -137,15 +229,7 @@ let make =
     let highlights = item.highlight;
     let normalStyle = style(~highlighted=false);
     let highlightStyle = style(~highlighted=true);
-    let labelView =
-      <HighlightText
-        fontFamily={font.family}
-        fontSize=12.
-        style=normalStyle
-        highlightStyle
-        text
-        highlights
-      />;
+    let labelView = renderer(normalStyle, highlightStyle, text, highlights);
 
     <MenuItem
       onClick={() => onSelect(index)}
@@ -188,23 +272,49 @@ let make =
       </FlatList>
     </View>;
 
-  <AllowPointer>
-    <OniBoxShadow config theme>
-      <View style={Styles.container(theme)}>
-        {switch (variant) {
-         | EditorsPicker => React.empty
-         | _ => <input />
-         }}
-        {switch (variant) {
-         | Wildmenu(SearchForward | SearchReverse) => React.empty
-         | _ => <dropdown />
-         }}
-        {switch (progress) {
-         | Complete => <progressBar progress=0. theme /> // TODO: SHould be REact.empty, but a reconciliation bug then prevents the progress bar from rendering
-         | InProgress(progress) => <progressBar progress theme />
-         | Loading => <busyBar theme />
-         }}
-      </View>
+  let onClickBackground = () => {
+    GlobalContext.current().dispatch(Actions.QuickmenuClose);
+  };
+
+  let innerClicked = ref(false);
+
+  <View
+    style=Style.[
+      position(`Absolute),
+      top(0),
+      left(0),
+      right(0),
+      bottom(0),
+      pointerEvents(`Allow),
+      alignItems(`Center),
+    ]
+    onMouseDown={_ =>
+      // HACK: This callback would be called last, after the 'inner' callback being called.
+      // We don't want to execute the `onClickBackground` function if we're clicking inside the menu.
+      // A better mechanism would be a robust way to stop propagationnn of the mouse event.
+
+        if (! innerClicked^) {
+          onClickBackground();
+        }
+      }>
+    <OniBoxShadow
+      onMouseDown={_ => {innerClicked := true}}
+      style={Styles.container(theme)}
+      config
+      theme>
+      {switch (variant) {
+       | EditorsPicker => React.empty
+       | _ => <input />
+       }}
+      {switch (variant) {
+       | Wildmenu(SearchForward | SearchReverse) => React.empty
+       | _ => <dropdown />
+       }}
+      {switch (progress) {
+       | Complete => <progressBar progress=0. theme /> // TODO: SHould be REact.empty, but a reconciliation bug then prevents the progress bar from rendering
+       | InProgress(progress) => <progressBar progress theme />
+       | Loading => <busyBar theme />
+       }}
     </OniBoxShadow>
-  </AllowPointer>;
+  </View>;
 };

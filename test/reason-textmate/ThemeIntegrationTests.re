@@ -12,7 +12,7 @@ let resultValue =
   fun
   | Ok(v) => v
   | Error(msg) => {
-      Console.log(msg);
+      print_endline(msg);
       failwith("resultValue");
     };
 

@@ -1,7 +1,7 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="TerminalSetPidTitle", (dispatch, wait, _) => {
+runTest(~name="TerminalSetPidTitle", ({dispatch, wait, _}) => {
   // Wait until the extension is activated
   // Give some time for the exthost to start
   wait(
@@ -17,12 +17,11 @@ runTest(~name="TerminalSetPidTitle", (dispatch, wait, _) => {
   // Spin up a terminal
   dispatch(
     Actions.Terminal(
-      Feature_Terminal.Command(
-        NewTerminal({
-          cmd: None,
-          splitDirection: Vertical,
-          closeOnExit: false,
-        }),
+      Feature_Terminal.Testing.newTerminalMsg(
+        ~cmd=None,
+        ~splitDirection=
+          Oni_Core.SplitDirection.Vertical({shouldReuse: false}),
+        ~closeOnExit=false,
       ),
     ),
   );

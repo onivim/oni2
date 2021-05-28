@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 
 module Log = (val Log.withNamespace("Feature.Logging"));
 
@@ -14,7 +15,7 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
-  | LogFileStarted(string);
+  | LogFileStarted([@opaque] FpExp.t(FpExp.absolute));
 
 // EFFECT
 
@@ -24,9 +25,19 @@ module Effects = {
       ~name="Feature.Logging.traceToFile", dispatch => {
       Log.warn("Switching to trace file; further logging will be to file.");
       let logFileName = "onivim2-trace.log";
-      Timber.App.enable(Timber.Reporter.file(logFileName));
-      Timber.App.setLevel(Timber.Level.trace);
-      dispatch(toMsg(logFileName));
+      let maybeWorkingDirectory = Luv.Path.cwd();
+      let maybeLogPath =
+        maybeWorkingDirectory
+        |> Result.to_option
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform)
+        |> Option.map(path => FpExp.At.(path / logFileName));
+
+      maybeLogPath
+      |> Option.iter(logPath => {
+           Timber.App.enable(Timber.Reporter.file(FpExp.toString(logPath)));
+           Timber.App.setLevel(Timber.Level.trace);
+           dispatch(toMsg(logPath));
+         });
     });
 };
 
@@ -47,7 +58,9 @@ let update = (msg, _model) =>
     }
   | LogFileStarted(filePath) => (
       (),
-      ShowInfoNotification("Logging to: " ++ filePath),
+      ShowInfoNotification(
+        Printf.sprintf("Logging to: %s", FpExp.toString(filePath)),
+      ),
     )
   };
 

@@ -40,6 +40,17 @@ module Window = Window;
 module ViewLineMotion = ViewLineMotion;
 module Yank = Yank;
 
+/**
+[replace(~insert, ~start, ~len, str)] replaces the string segment
+from [start] to [len] with str
+*/
+let replace = (~insert, ~start, ~len, str) => {
+  let totalLen = String.length(str);
+  let prefix = String.sub(str, 0, start);
+  let postfix = String.sub(str, start + len + 1, totalLen - len - start - 1);
+  prefix ++ insert ++ postfix;
+};
+
 module Internal = {
   let nativeFormatRequestToEffect: Native.formatRequest => Format.effect =
     ({bufferId, startLine, endLine, returnCursor, formatType, lineCount}) => {
@@ -172,6 +183,7 @@ let runWith = (~context: Context.t, f) => {
   Options.setTabSize(context.tabSize);
   Options.setInsertSpaces(context.insertSpaces);
 
+  let prevSearchString = Search.getSearchPattern();
   let oldBuf = Buffer.getCurrent();
   let prevMode = Mode.trySet(context.mode);
   let prevModified = Buffer.isModified(oldBuf);
@@ -182,6 +194,7 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.screenPositionMotion := Some(context.screenCursorMotion);
   GlobalState.effects := [];
   GlobalState.toggleComments := Some(context.toggleComments);
+  GlobalState.additionalCursors := [];
 
   let mode = f();
 
@@ -191,22 +204,36 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.toggleComments := None;
 
   let newBuf = Buffer.getCurrent();
-  let newMode = Mode.current();
+  //let newMode = Mode.current();
   let newModified = Buffer.isModified(newBuf);
   let newLineEndings = Buffer.getLineEndings(newBuf);
 
+  let newSearchString = Search.getSearchPattern();
+
+  if (newSearchString != prevSearchString) {
+    queueEffect(SearchStringChanged(newSearchString));
+  };
+
+  // Apply additional cursors
+  let mode =
+    switch (mode) {
+    | Mode.Insert({cursors}) =>
+      Mode.Insert({cursors: cursors @ GlobalState.additionalCursors^})
+    | mode => mode
+    };
+
   BufferInternal.checkCurrentBufferForUpdate();
 
-  if (newMode != prevMode) {
-    if (newMode == CommandLine) {
+  if (!Mode.isCommandLine(mode) || !Mode.isCommandLine(prevMode)) {
+    if (Mode.isCommandLine(mode)) {
       Event.dispatch(
         CommandLineInternal.getState(),
         Listeners.commandLineEnter,
       );
-    } else if (prevMode == CommandLine) {
+    } else if (Mode.isCommandLine(prevMode)) {
       Event.dispatch((), Listeners.commandLineLeave);
     };
-  } else if (newMode == CommandLine) {
+  } else if (Mode.isCommandLine(mode)) {
     Event.dispatch(
       CommandLineInternal.getState(),
       Listeners.commandLineUpdate,
@@ -246,8 +273,15 @@ let _onAutocommand = (autoCommand: Types.autocmd, buffer: Buffer.t) => {
 
 let _onBufferChanged =
     (buffer: Buffer.t, startLine: int, endLine: int, extra: int) => {
+  let shouldAdjustCursorPosition = BufferUpdateTracker.shouldAdjustCursors();
   let update =
-    BufferUpdate.createIncremental(~buffer, ~startLine, ~endLine, ~extra);
+    BufferUpdate.createIncremental(
+      ~shouldAdjustCursorPosition,
+      ~buffer,
+      ~startLine,
+      ~endLine,
+      ~extra,
+    );
 
   BufferInternal.notifyUpdate(buffer);
 
@@ -317,7 +351,7 @@ let _onWriteFailure = (reason, buffer) => {
 };
 
 let _onStopSearch = () => {
-  queue(() => Event.dispatch((), Listeners.stopSearchHighlight));
+  queueEffect(Effect.SearchClearHighlights);
 };
 
 let _onUnhandledEscape = () => {
@@ -513,6 +547,17 @@ let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
   |> Option.value(~default=currentLines);
 };
 
+let _onCursorAdd = (oneBasedLine: int, column: int) => {
+  GlobalState.additionalCursors :=
+    [
+      BytePosition.{
+        line: LineNumber.ofOneBased(oneBasedLine),
+        byte: ByteIndex.ofInt(column),
+      },
+      ...GlobalState.additionalCursors^,
+    ];
+};
+
 let _onGetChar = mode => {
   let mode' =
     switch (mode) {
@@ -567,6 +612,7 @@ let init = () => {
   Callback.register("lv_onToggleComments", _onToggleComments);
   Callback.register("lv_onGetChar", _onGetChar);
   Callback.register("lv_onOutput", _onOutput);
+  Callback.register("lv_onCursorAdd", _onCursorAdd);
 
   Native.vimInit();
 
@@ -576,13 +622,18 @@ let init = () => {
 let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
   let {autoClosingPairs, mode, _}: Context.t = context;
   let cursors = Mode.cursors(mode);
+  let ranges = Mode.ranges(mode);
   runWith(
     ~context,
     () => {
       // Special auto-closing pairs handling...
 
-      let runCursor = cursor => {
+      let runInsertCursor = (cursor: BytePosition.t) => {
+        let lineNumber = EditorCoreTypes.LineNumber.toOneBased(cursor.line);
+        Undo.saveRegion(lineNumber - 1, lineNumber + 1);
+        let originalCursor = cursor;
         Cursor.set(cursor);
+        let originalLine = Buffer.getLine(Buffer.getCurrent(), cursor.line);
         if (Mode.current() |> Mode.isInsert) {
           let position: BytePosition.t = Cursor.get();
           let line = Buffer.getLine(Buffer.getCurrent(), position.line);
@@ -648,7 +699,18 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         } else {
           inputFn(v);
         };
-        Cursor.get();
+        let newCursor = Cursor.get();
+        let delta =
+          if (LineNumber.equals(newCursor.line, originalCursor.line)) {
+            let newLine = Buffer.getLine(Buffer.getCurrent(), newCursor.line);
+            // We need to take the byte-position-delta here,
+            // because the cursor may have moved less characters than
+            // were actually changed (ie, auto-closing pairs: {|})
+            String.length(newLine) - String.length(originalLine);
+          } else {
+            0;
+          };
+        (newCursor, delta);
       };
 
       let mode = Mode.current();
@@ -657,19 +719,244 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         // Run first command, verify we don't go back to normal mode
         switch (cursors) {
         | [hd, ...tail] =>
-          let newHead = runCursor(hd);
+          let (newHead, primaryCursorDelta) = runInsertCursor(hd);
+
+          let adjustCursors =
+              (
+                allCursorDeltas: list((BytePosition.t, int)),
+                position: BytePosition.t,
+              ) => {
+            allCursorDeltas
+            |> List.fold_left(
+                 (cursor: BytePosition.t, candidateOffset) => {
+                   let (positionToConsider: BytePosition.t, deltaBytes) = candidateOffset;
+                   if (LineNumber.equals(cursor.line, positionToConsider.line)
+                       && ByteIndex.(positionToConsider.byte < cursor.byte)) {
+                     {
+                       line: cursor.line,
+                       byte: ByteIndex.(cursor.byte + deltaBytes),
+                     };
+                   } else {
+                     position;
+                   };
+                 },
+                 position,
+               );
+          };
 
           let newMode = Mode.current();
           // If we're still in insert mode, run the command for all the rest of the characters too
           if (Mode.isInsert(newMode)) {
-            let remainingCursors = List.map(runCursor, tail);
-            Insert({cursors: [newHead, ...remainingCursors]});
+            let revCompare = (a, b) => BytePosition.compare(a, b) * (-1);
+            let secondaryCursorAndDeltas =
+              tail
+              |> List.sort(revCompare)
+              |> List.map(adjustCursors([(hd, primaryCursorDelta)]))
+              |> List.map(runInsertCursor);
+
+            let secondaryCursors = secondaryCursorAndDeltas |> List.map(fst);
+
+            let allCursors =
+              [newHead, ...secondaryCursors]
+              |> List.map(adjustCursors(secondaryCursorAndDeltas));
+
+            Insert({cursors: allCursors});
           } else {
             newMode;
           };
 
         // This should never happen...
         | [] => Insert({cursors: cursors})
+        };
+      } else if (Mode.isSelect(mode)) {
+        // Handle multiple selector cursors
+        let maybeEditRange =
+          (
+            switch (mode) {
+            | Select({ranges}) => List.nth_opt(ranges, 0)
+            | _ => None
+            }
+          )
+          |> Option.map(VisualRange.range)
+          |> Option.map(ByteRange.normalize);
+
+        // Check if we can run multi-cursor insert - preconditions are:
+        // 1) All selections are character-wise
+        let allSelectionsCharacterWise =
+          ranges
+          |> List.for_all((range: VisualRange.t) =>
+               range.visualType == Types.Character
+             );
+
+        // 2) All selections individually span a single line
+        let allSelectionsAreSingleLine =
+          ranges
+          |> List.for_all((range: VisualRange.t) =>
+               range.cursor.line == range.anchor.line
+             );
+
+        let originalCursor = Cursor.get();
+        let originalLine =
+          Buffer.getLine(Buffer.getCurrent(), originalCursor.line);
+
+        // Run the cursor as normal...
+        switch (cursors) {
+        | [hd, ..._] => Cursor.set(hd)
+        | _ => ()
+        };
+        inputFn(v);
+
+        let newCursor = Cursor.get();
+        let newLine = Buffer.getLine(Buffer.getCurrent(), newCursor.line);
+
+        let cursorStayedOnSameLine = originalCursor.line == newCursor.line;
+
+        let hasEditRange = maybeEditRange != None;
+
+        // In subsequent iterations, would be nice to remove this limitation..
+        let canDoMultiCursorSelect =
+          allSelectionsAreSingleLine
+          && allSelectionsCharacterWise
+          && cursorStayedOnSameLine
+          && hasEditRange;
+
+        if (!canDoMultiCursorSelect) {
+          Mode.current();
+        } else {
+          // Apply multi-selection behavior:
+          // 1) Shift the secondary ranges by the edit range (the delta between the cursor-selection and inserted text)
+          // 2) Replace all the secondary ranges with the inserted text
+          // 3) Set up insert mode cursor positions
+
+          let editRange = Option.get(maybeEditRange);
+
+          let byteDelta =
+            String.length(newLine) - String.length(originalLine);
+
+          let shiftIfImpactedByPrimaryCursorEdit = (range: ByteRange.t) =>
+            // If the cursor shifted, adjust ranges on the same lines
+            if (range.start.line == newCursor.line
+                && range.start.byte > newCursor.byte) {
+              ByteRange.{
+                start: {
+                  line: range.start.line,
+                  byte: ByteIndex.(range.start.byte + byteDelta),
+                },
+                stop: {
+                  line: range.stop.line,
+                  byte: ByteIndex.(range.stop.byte + byteDelta),
+                },
+              };
+            } else {
+              range;
+            };
+
+          let insertedText =
+            String.sub(
+              newLine,
+              ByteIndex.toInt(editRange.start.byte),
+              ByteIndex.toInt(editRange.stop.byte)
+              + byteDelta
+              - ByteIndex.toInt(editRange.start.byte)
+              + 1,
+            );
+
+          // Filter out all ranges that intersected with the cursor
+          let secondaryRanges =
+            ranges
+            |> List.map(range => VisualRange.range(range))
+            |> List.map(ByteRange.normalize)
+            |> List.filter(range =>
+                 !ByteRange.contains(originalCursor, range)
+               )
+            |> List.map(shiftIfImpactedByPrimaryCursorEdit);
+
+          let buffer = Buffer.getCurrent();
+
+          // We sort edits in descending order, so we can apply them
+          // without adjusting positions. However, we'll need to account
+          // for updated positions when mapping to cursors.
+          let revCompare = (a, b) => ByteRange.compare(a, b) * (-1);
+
+          // Update subsequent selections - replace current text with insert text
+          secondaryRanges
+          |> Base.List.sort(~compare=revCompare)
+          |> List.iter(range => {
+               open EditorCoreTypes.ByteRange;
+
+               let currentLine =
+                 Buffer.getLine(Buffer.getCurrent(), range.start.line);
+
+               let updatedLine =
+                 replace(
+                   ~insert=insertedText,
+                   ~start=ByteIndex.toInt(range.start.byte),
+                   ~len=
+                     ByteIndex.toInt(range.stop.byte)
+                     - ByteIndex.toInt(range.start.byte),
+                   currentLine,
+                 );
+
+               let lineNumber =
+                 EditorCoreTypes.LineNumber.toOneBased(range.start.line);
+               Undo.saveRegion(lineNumber - 1, lineNumber + 1);
+               // Clear out range, and replace with current line
+               Buffer.setLines(
+                 ~shouldAdjustCursors=false,
+                 ~start=range.start.line,
+                 ~stop=EditorCoreTypes.LineNumber.(range.start.line + 1),
+                 ~lines=[|updatedLine|],
+                 buffer,
+               );
+             });
+
+          // Remap the ranges from the 'source' text position to the range
+          // after we've applied all edits.
+          let adjustPositionBasedOnPreviousRanges = (allRanges, position) => {
+            allRanges
+            |> List.fold_left(
+                 (curr: BytePosition.t, rangeToConsider: ByteRange.t) =>
+                   // If the line is equal, and the range to consider is _before_
+                   // our current range, shift the current range by the delta bytes.
+                   if (LineNumber.equals(
+                         curr.line,
+                         rangeToConsider.start.line,
+                       )
+                       && ByteIndex.(rangeToConsider.start.byte < curr.byte)) {
+                     let originalByteLength =
+                       ByteIndex.toInt(rangeToConsider.stop.byte)
+                       - ByteIndex.toInt(rangeToConsider.start.byte)
+                       + 1;
+                     let delta =
+                       String.length(insertedText) - originalByteLength;
+                     {line: curr.line, byte: ByteIndex.(curr.byte + delta)};
+                   } else {
+                     curr;
+                   },
+                 position,
+               );
+          };
+
+          let cursors =
+            secondaryRanges
+            |> List.map((range: ByteRange.t) => range.start)
+            |> List.map(
+                 adjustPositionBasedOnPreviousRanges(secondaryRanges),
+               )
+            |> List.map((pos: BytePosition.t) => {
+                 BytePosition.{
+                   line: pos.line,
+                   byte: ByteIndex.(pos.byte + String.length(insertedText)),
+                 }
+               });
+
+          // Primary cursor may also need to be updated,
+          // if there were select ranges before it on the same line
+          let primaryCursor =
+            newCursor |> adjustPositionBasedOnPreviousRanges(secondaryRanges);
+
+          // Transition to insert mode, with multiple cursors for each range
+          Mode.Insert({cursors: [primaryCursor, ...cursors]});
         };
       } else {
         switch (cursors) {
@@ -695,6 +982,16 @@ let command = (~context=Context.current(), v) => {
     ~context,
     () => {
       Native.vimCommand(v);
+      Mode.current();
+    },
+  );
+};
+
+let commands = (~context=Context.current(), lines) => {
+  runWith(
+    ~context,
+    () => {
+      Native.vimCommands(lines);
       Mode.current();
     },
   );

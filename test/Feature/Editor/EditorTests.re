@@ -36,7 +36,10 @@ describe("Editor", ({describe, _}) => {
     |> Editor.setSize(
          ~pixelWidth=
            int_of_float(
-             3. *. aWidth +. 1.0 +. float(Constants.scrollBarThickness),
+             3.
+             *. aWidth
+             +. 1.0
+             +. float(Editor.verticalScrollbarThickness(editor)),
            ),
          ~pixelHeight=500,
        )
@@ -56,7 +59,10 @@ describe("Editor", ({describe, _}) => {
           },
         command:
           Some(
-            Command.{id: uniqueId, label: Some(Label.ofString(uniqueId))},
+            Command.{
+              id: Some(uniqueId),
+              label: Some(Label.ofString(uniqueId)),
+            },
           ),
       }
     );
@@ -228,6 +234,29 @@ describe("Editor", ({describe, _}) => {
     });
   });
 
+  describe("setMode", ({test, _}) => {
+    test(
+      "#3405: Moving cursor in insert mode to edge shouldn't cause scroll",
+      ({expect, _}) => {
+      let editor = createThreeWideWithWrapping([|"aaaaaa"|]);
+
+      let position = b => {
+        BytePosition.{line: LineNumber.zero, byte: ByteIndex.ofInt(b)};
+      };
+
+      // Simulate 'typing' in insert mode across the word wrap boundary -
+      // the same case that occurred in #3405
+      let editor' =
+        editor
+        |> Editor.setMode(Vim.Mode.Insert({cursors: [position(0)]}))
+        |> Editor.setMode(Vim.Mode.Insert({cursors: [position(1)]}))
+        |> Editor.setMode(Vim.Mode.Insert({cursors: [position(2)]}))
+        |> Editor.setMode(Vim.Mode.Insert({cursors: [position(3)]}));
+
+      expect.float(Editor.scrollX(editor')).toBeCloseTo(0.0);
+    })
+  });
+
   describe("bufferLineByteToPixel", ({test, _}) => {
     test("first line, byte should be at position (nowrap)", ({expect, _}) => {
       let (editor, _buffer) = create([|"aaaaaa"|]);
@@ -329,5 +358,48 @@ describe("Editor", ({describe, _}) => {
 
       expect.equal(Editor.getCharacterUnderMouse(editor'), None);
     })
+  });
+
+  describe("singleLineSelectedText", ({test, _}) => {
+    test("no selection in normal mode", ({expect, _}) => {
+      let (editor, _buffer) = create([|"abc"|]);
+
+      let maybeSelectedText =
+        editor
+        |> Editor.setMode(Vim.Mode.Normal({cursor: BytePosition.zero}))
+        |> Editor.singleLineSelectedText;
+
+      expect.option(maybeSelectedText).toBeNone();
+    });
+    test("select single character", ({expect, _}) => {
+      let (editor, _buffer) = create([|"abc"|]);
+
+      let maybeSelectedText =
+        editor
+        |> Editor.setSelections([ByteRange.zero])
+        |> Editor.singleLineSelectedText;
+
+      expect.equal(maybeSelectedText, Some("a"));
+    });
+    test("select past entire line", ({expect, _}) => {
+      let (editor, _buffer) = create([|"abc"|]);
+
+      let maybeSelectedText =
+        editor
+        |> Editor.setSelections([
+             ByteRange.{
+               start:
+                 BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+               stop:
+                 BytePosition.{
+                   line: LineNumber.zero,
+                   byte: ByteIndex.(zero + 100),
+                 },
+             },
+           ])
+        |> Editor.singleLineSelectedText;
+
+      expect.equal(maybeSelectedText, Some("abc"));
+    });
   });
 });

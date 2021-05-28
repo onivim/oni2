@@ -72,6 +72,65 @@ let drawRect = {
     );
   };
 };
+
+let drawSquiggly = {
+  let paint = Skia.Paint.make();
+
+  let squiggleHeight = 1.4;
+
+  let squigglePath = Skia.Path.make();
+  Skia.Path.lineTo(squigglePath, squiggleHeight, squiggleHeight);
+  Skia.Path.lineTo(
+    squigglePath,
+    squiggleHeight *. 3.0,
+    (-1.0) *. squiggleHeight,
+  );
+  Skia.Path.lineTo(squigglePath, squiggleHeight *. 4.0, 0.0);
+
+  let scale = squiggleHeight *. 4.0;
+  let translate =
+    Skia.Matrix.makeScale(
+      scale,
+      squiggleHeight,
+      squiggleHeight,
+      squiggleHeight,
+    );
+
+  Skia.Paint.setStyle(paint, Stroke);
+  Skia.Paint.setAntiAlias(paint, true);
+  Skia.Paint.setStrokeWidth(paint, 1.);
+
+  (~context, ~x, ~y, ~width, ~color) => {
+    // Shift the squiggle left a bit, halfway through the start of the squiggle
+    let left = x -. squiggleHeight *. 2.;
+    let top = y -. squiggleHeight;
+    let height = squiggleHeight;
+
+    // Confusingly, the Skia 2D path effect (which we used to draw the squiggle)
+    // starts the pattern with respect to the _screen_ top/left coordinates.
+    // We need to offset this so it's correct for the diagnostic itself,
+    // so we compute the remainder based on the y and squiggle height,
+    // and transform to 'undo' the screen space shift.
+    let translateY = Float.rem(top, squiggleHeight);
+    Skia.Matrix.setTranslateY(translate, 1.0 *. translateY);
+
+    let pathEffect =
+      Skia.PathEffect.create2dPath(~matrix=translate, squigglePath);
+    Skia.Paint.setPathEffect(paint, pathEffect);
+
+    let color = color |> Revery.Color.toSkia;
+    Skia.Paint.setColor(paint, color);
+    CanvasContext.drawRectLtwh(
+      ~left,
+      ~top,
+      ~width,
+      ~height,
+      ~paint,
+      context.canvasContext,
+    );
+  };
+};
+
 let rect = drawRect;
 
 let drawText = (~context, ~x, ~y, ~paint, text) =>
@@ -165,7 +224,53 @@ let underline =
   );
 };
 
-open {};
+let strikethrough =
+    (~context, ~color=Revery.Colors.black, range: CharacterRange.t) => {
+  let ({y: startPixelY, x: startPixelX}: PixelPosition.t, _) =
+    Editor.bufferCharacterPositionToPixel(
+      ~position=range.start,
+      context.editor,
+    );
+
+  let ({x: stopPixelX, _}: PixelPosition.t, _) =
+    Editor.bufferCharacterPositionToPixel(
+      ~position=range.stop,
+      context.editor,
+    );
+
+  drawRect(
+    ~context,
+    ~x=startPixelX -. 1.,
+    ~y=startPixelY +. Editor.lineHeightInPixels(context.editor) /. 2.,
+    ~height=1.,
+    ~width=max(stopPixelX -. startPixelX, 1.0) +. 2.,
+    ~color,
+  );
+};
+
+let squiggly = (~context, ~color=Revery.Colors.black, range: CharacterRange.t) => {
+  let ({x: startPixelX, y: startPixelY}: PixelPosition.t, _) =
+    Editor.bufferCharacterPositionToPixel(
+      ~position=range.start,
+      context.editor,
+    );
+
+  let ({x: stopPixelX, _}: PixelPosition.t, _) =
+    Editor.bufferCharacterPositionToPixel(
+      ~position=range.stop,
+      context.editor,
+    );
+
+  let paddingY = context.editor |> Editor.linePaddingInPixels;
+
+  drawSquiggly(
+    ~context,
+    ~x=startPixelX,
+    ~y=startPixelY -. paddingY +. Editor.lineHeightInPixels(context.editor),
+    ~width=max(stopPixelX -. startPixelX, 1.0),
+    ~color,
+  );
+};
 
 let rangeCharacter =
     (~context, ~padding=0., ~color=Revery.Colors.black, r: CharacterRange.t) => {
@@ -414,7 +519,6 @@ module Gradient = {
 };
 
 module Shadow = {
-  let shadowStartColor = Revery.Color.rgba(0., 0., 0., 0.22);
   let shadowStopColor = Revery.Color.rgba(0., 0., 0., 0.);
 
   type direction =
@@ -423,11 +527,11 @@ module Shadow = {
     | Down
     | Up;
 
-  let render = (~direction, ~x, ~y, ~width, ~height, ~context) => {
+  let render = (~color, ~direction, ~x, ~y, ~width, ~height, ~context) => {
     switch (direction) {
     | Right =>
       Gradient.drawLeftToRight(
-        ~leftColor=shadowStartColor,
+        ~leftColor=color,
         ~rightColor=shadowStopColor,
         ~x,
         ~y,
@@ -438,7 +542,7 @@ module Shadow = {
     | Left =>
       Gradient.drawLeftToRight(
         ~leftColor=shadowStopColor,
-        ~rightColor=shadowStartColor,
+        ~rightColor=color,
         ~x,
         ~y,
         ~width,
@@ -447,7 +551,7 @@ module Shadow = {
       )
     | Down =>
       Gradient.drawTopToBottom(
-        ~topColor=shadowStartColor,
+        ~topColor=color,
         ~bottomColor=shadowStopColor,
         ~x,
         ~y,
@@ -458,7 +562,7 @@ module Shadow = {
     | Up =>
       Gradient.drawTopToBottom(
         ~topColor=shadowStopColor,
-        ~bottomColor=shadowStartColor,
+        ~bottomColor=color,
         ~x,
         ~y,
         ~width,

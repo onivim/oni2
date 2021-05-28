@@ -82,23 +82,34 @@ let setLineEndings = (buffer, lineEnding) => {
      );
 };
 
-let setLines = (~start=?, ~stop=?, ~lines, buffer) => {
-  let startLine =
-    switch (start) {
-    | Some(v) => LineNumber.toOneBased(v) - 1
-    | None => 0
-    };
+let setLines =
+    (~undoable=false, ~start=?, ~stop=?, ~shouldAdjustCursors, ~lines, buffer) => {
+  BufferUpdateTracker.watch(
+    ~shouldAdjustCursors,
+    () => {
+      let startLine =
+        switch (start) {
+        | Some(v) => LineNumber.toOneBased(v) - 1
+        | None => 0
+        };
 
-  let endLine =
-    switch (stop) {
-    | Some(v) => LineNumber.toOneBased(v) - 1
-    | None => (-1)
-    };
+      let endLine =
+        switch (stop) {
+        | Some(v) => LineNumber.toOneBased(v) - 1
+        | None => (-1)
+        };
 
-  Native.vimBufferSetLines(buffer, startLine, endLine, lines);
+      if (undoable) {
+        let undoEndLine = endLine == (-1) ? getLineCount(buffer) : endLine;
+        Undo.saveRegion(startLine - 1, undoEndLine + 1);
+      };
+
+      Native.vimBufferSetLines(buffer, startLine, endLine, lines);
+    },
+  );
 };
 
-let applyEdits = (~edits, buffer) => {
+let applyEdits = (~shouldAdjustCursors, ~edits, buffer) => {
   let provider = idx => {
     let lineCount = getLineCount(buffer);
     if (idx >= lineCount) {
@@ -149,7 +160,13 @@ let applyEdits = (~edits, buffer) => {
                   Some(LineNumber.(oldEndLine + 1));
                 };
 
-              setLines(~start=oldStartLine, ~stop?, ~lines=newLines, buffer);
+              setLines(
+                ~shouldAdjustCursors,
+                ~start=oldStartLine,
+                ~stop?,
+                ~lines=newLines,
+                buffer,
+              );
               loop(tail);
             }
           )

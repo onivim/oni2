@@ -1,30 +1,19 @@
-
-# 1. Environment
-
-## 1.1 Validate PATH set correctly on OSX (#1161)
-
-- Run release Onivim from Finder (NOT terminal)
-- Run `:echo $PATH`
-- Validate full shell path is available
-
-__Pass:__
-- [ ] OSX
-
-## 1.2 Validate launches from dock in OSX (#2659)
-
-- Update .zshrc to have blocking input: (`read var`, `echo $var`)
-- Update .zshrc to have canary entry in `PATH`
-- Run Onivim 2 from dock
-- Validate Onivim 2 launches and PATH is correct
-
-__Pass:__
-- [ ] OSX
-
-# 2. First-run Experience
+# 1. First-run Experience
 
 Test cases covering launching and using Onivim without any persistence or configuration.
 
-## 2.1 No directory set [OSX|Win|Linux]
+## 1.1 Validate Welcome screen
+
+- Clear the Onivim 2 configuration folder (`rm -rf ~/.config/oni2`)
+- Launch Onivim
+- Validate Welcome screen shows correct version
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 1.2 No directory set [OSX|Win|Linux]
 
 - Clear the Onivim 2 configuration folder (`rm -rf ~/.config/oni2`)
 - Launch Onivim
@@ -37,7 +26,7 @@ __Pass:__
 - [ ] OSX
 - [ ] Linux
 
-## 2.2 Home directory set [OSX]
+## 1.3 Home directory set [OSX]
 
 This case is related to #2742 - previous builds of Onivim may have persisted
 the startup folder as `~/Documents`. This is problematic because Onivim may
@@ -50,6 +39,27 @@ not have permission to read that folder.
 - Verify explorer shows 'No folder opened'
 - Verify Control+P/Command+P shows only the 'Welcome' buffer
 - Verify Control+Shift+P/Command+Shift+P shows the command palette
+
+__Pass:__
+- [ ] OSX
+
+# 2. Environment
+
+## 2.1 Validate PATH set correctly on OSX (#1161)
+
+- Run release Onivim from Finder (NOT terminal)
+- Run `:echo $PATH`
+- Validate full shell path is available
+
+__Pass:__
+- [ ] OSX
+
+## 2.2 Validate launches from dock in OSX (#2659)
+
+- Update .zshrc to have blocking input: (`read var`, `echo $var`)
+- Update .zshrc to have canary entry in `PATH`
+- Run Onivim 2 from dock
+- Validate Onivim 2 launches and PATH is correct
 
 __Pass:__
 - [ ] OSX
@@ -173,19 +183,37 @@ Prerequisite:
 __Pass:__
 - [ ] Windows
 - [ ] OSX
-- [ ] LInux
+- [ ] Linux
 
-## 7.3 Japanese / Romanji layout
+## 7.3 Japanese / Romaji layout
 
 Regression test for #2924
 
 Prerequisite:
-- Install Romanji keyboard layout
+- Install Romaji keyboard layout
 
-- Switch keyboard layout to Romanji
+- Switch keyboard layout to Romaji
 - Run Onivim 2
 - Verify can open quickopen menu (Command+P/Control+P)
 - Verify can enter insert mode and type text
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 7.4 Dead Keys
+
+Regresion test for #3157
+
+Prerequisite:
+- Install ENG-INTL keyboard layout
+
+- Switch keyboard layout to English (International)
+- Run Onivim 2
+- Enter dead key (') followed by space -> should type key
+- Press dead key twice (") - platform dependent, should output one or two instances of the key
+- Enter dead key (') followed by composing character (like a) - should get à
 
 __Pass:__
 - [ ] Win
@@ -209,6 +237,178 @@ Prerequisite:
 - Select 'Open folder'
 - Press 'Cancel'
 - Verify folder did not change
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 8.2 Windows-style path handling
+
+### 8.2.1 Verify can `:cd` into a UNC path
+
+Regression test for #3151
+
+- Open Onivim 2
+- `:cd` into a UNC path - for example: `\\\\LOCALHOST\\c$\\oni2`
+- Verify the explorer is refreshed
+- Verify directory nodes can be expanded
+- Verify files can be opened
+
+__Pass:__
+- [ ] Win
+
+# 9. Terminal
+
+## 9.1 Check that `ONIVIM_TERMINAL` is set
+
+- Open Onivim 2
+- Run `:term`
+- On OSX, Linux - run `echo $ONIVIM_TERMINAL`
+- On Windows Powershell - run `$env:ONIVIM_TERMINAL`
+- Validate version string is displayed
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 9.2 Open a file from integrated terminal
+
+- Open Onivim 2
+- Run `:term`
+- Run `oni2 test-file.ts`
+- Validate `test-file.ts` is opened in a new split
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 9.3 Open a folder from integrated terminal
+
+- Open Onivim2
+- Run `:term`
+- Run `oni2 ~/some-valid-folder`, replacing `some-valid-folder` with an actual folder on the filesystem
+- Validate the explorer has switched to the new folder
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+# 10. Menubar
+
+## 10.1 Verify simple command 
+
+Regression test for #3108
+
+- Open Onivim 2
+- Click on File -> Open Folder
+- Verify Open Folder dialog is shown
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+# 10. Extension Management
+
+# 10.1 Install large extension (`redhat.java`)
+
+- Open Onivim 2
+- Go to extensions pane (Command+Shift+X / Control+Shift+X)
+- Install `redhat.java` 
+- Validate installation is successful
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+# 11. Buffers
+
+## 11.1 Large Files
+
+### 11.1.1 Large file should show notification (#1670)
+
+_Setup:_
+- Download test file: https://mdq-preview.incommon.org/entities/idps/all
+
+- Open Onivim 2 with default settings
+- Open test file (`:e /path/to/all`)
+- Verify file opens, and a large-file notification is shown
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+### 11.1.2 Disabling `"editor.largeFileOptimizations"` should still load files
+
+_Setup:_
+- Download test file: https://mdq-preview.incommon.org/entities/idps/all
+
+- Open Onivim 2 with default settings
+- Open test file (`:e /path/to/all`)
+- Verify file opens
+- Verify no large-file notification is shown
+- Verify syntax highlighting shows up
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+# 12. Proxy 
+
+## 12.1 Windows Proxy
+
+### 12.1.1 Verify proxy settings
+
+__Setup:__
+- Install Fiddler classic
+- Run Fiddler classic
+- Use the 'require authentication' proxy setting
+
+- Open Onivim 2 with default settings
+- Search for an extension - verify there is no connection
+- Set `http.proxy` to `"http://1:1@127.0.0.1:88888"`
+- Search again - verify now connection
+- Download extension - verify installed
+
+__Pass:__
+- [ ] Win
+
+# 13. CLI
+
+## 13.1 Single Instance - Open file in running instance
+
+- Open Onivim 2
+- From CLI, run `oni2 some-file-that-exists.txt`
+- Validate the file is opened in the current instance
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 13.2 Single Instance - Open folder in running instance
+
+- Open Onivim 2
+- From CLI, run `oni2 /some/folder/that/exists`
+- Validate the folder is opened in the current instance
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 13.3 Force new instance
+
+- Open Onivim 2
+- From CLI, run `oni2 --new-window test.txt`
+- Validate a new instance of Onivim is opened, with the specified file active
 
 __Pass:__
 - [ ] Win

@@ -2,26 +2,37 @@ open Oni_Core;
 
 [@deriving show({with_path: false})]
 type metadata = {
-  path: string,
+  path: FpExp.t(FpExp.absolute),
   displayName: string,
-  hash: int // hash of basename, so only comparable locally
+  hash: int, // hash of basename, so only comparable locally
+  isSymlink: bool,
 };
 
 [@deriving show({with_path: false})]
 type t = Tree.t(metadata, metadata);
 
-let file: string => t;
-let directory: (~isOpen: bool=?, string, ~children: list(t)) => t;
+let file: (~isSymlink: bool, FpExp.t(FpExp.absolute)) => t;
+let directory:
+  (
+    ~isOpen: bool=?,
+    ~isSymlink: bool,
+    FpExp.t(FpExp.absolute),
+    ~children: list(t)
+  ) =>
+  t;
 
-let getPath: t => string;
+let getPath: t => FpExp.t(FpExp.absolute);
 let displayName: t => string;
 
+let isSymlink: t => bool;
+
 let findNodesByPath:
-  (string, t) => [ | `Success(list(t)) | `Partial(t) | `Failed];
-let findByPath: (string, t) => option(t);
+  (FpExp.t(FpExp.absolute), t) =>
+  [ | `Success(list(t)) | `Partial(t) | `Failed];
+let findByPath: (FpExp.t(FpExp.absolute), t) => option(t);
 
 let replace: (~replacement: t, t) => t;
-let updateNodesInPath: (t => t, string, t) => t;
+let updateNodesInPath: (t => t, FpExp.t(FpExp.absolute), t) => t;
 let toggleOpen: t => t;
 let setOpen: t => t;
 

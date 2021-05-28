@@ -19,7 +19,7 @@ let _getTextForVimBuffer = () => {
       [Vim.Buffer.getLine(buffer, LineNumber.ofOneBased(i^)), ...lines^];
     incr(i);
   };
-  "fulltext:" ++ String.concat("|", lines^ |> List.rev) ++ "|";
+  "fulltext:" ++ String.concat("|", lines^ |> List.rev);
 };
 
 let _getTextForOnivimBuffer = state => {
@@ -27,7 +27,7 @@ let _getTextForOnivimBuffer = state => {
   |> Option.map(Core.Buffer.getLines)
   |> Option.map(Array.to_list)
   |> Option.map(String.concat("|"))
-  |> Option.map(s => "fulltext:" ++ s ++ "|")
+  |> Option.map(s => "fulltext:" ++ s)
   |> Option.value(~default="(Empty)");
 };
 

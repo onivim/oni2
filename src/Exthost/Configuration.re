@@ -158,7 +158,12 @@ module Overrides = {
       obj(({field, _}) =>
         {
           overrideIdentifier: field.optional("overrideIdentifier", string),
-          resource: field.optional("resource", Oni_Core.Uri.decode),
+          resource:
+            field.withDefault(
+              "resource",
+              None,
+              nullable(Oni_Core.Uri.decode),
+            ),
         }
       )
     );

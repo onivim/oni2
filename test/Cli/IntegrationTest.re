@@ -14,6 +14,15 @@ describe("CLI Integration Tests", ({describe, _}) => {
       )
     });
 
+    test("-v should show output", _ => {
+      TestRunner.(
+        startWithArgs(["-v"])
+        |> validateOutputContains("Onivim 2")
+        |> validateExitStatus(WEXITED(0))
+        |> finish
+      )
+    });
+
     test("--list-extensions should show extensions", _ => {
       TestRunner.(
         startWithArgs([

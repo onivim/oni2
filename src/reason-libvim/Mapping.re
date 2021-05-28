@@ -10,7 +10,7 @@ type mode =
   | Operator // omap, onoremap
   | Terminal // tmap, tnoremap
   | InsertAndCommandLine // :map!
-  | All; // :map;
+  | NormalAndVisualAndSelectAndOperator; // :map;
 
 module ScriptId = {
   [@deriving show]

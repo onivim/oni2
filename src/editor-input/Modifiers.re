@@ -4,7 +4,7 @@ type t = {
   alt: bool,
   altGr: bool,
   shift: bool,
-  meta: bool,
+  super: bool,
 };
 
 let none = {
@@ -12,7 +12,7 @@ let none = {
   alt: false,
   altGr: false,
   shift: false,
-  meta: false,
+  super: false,
 };
 
 let equals = (mod1, mod2) => {
@@ -20,5 +20,5 @@ let equals = (mod1, mod2) => {
   && mod1.alt == mod2.alt
   && mod1.altGr == mod2.altGr
   && mod1.shift == mod2.shift
-  && mod1.meta == mod2.meta;
+  && mod1.super == mod2.super;
 };

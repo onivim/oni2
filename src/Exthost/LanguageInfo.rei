@@ -23,4 +23,4 @@ let getScopeFromBuffer: (t, Buffer.t) => option(string);
 
 let getLanguageConfiguration: (t, string) => option(LanguageConfiguration.t);
 
-let ofExtensions: list(Scanner.ScanResult.t) => t;
+let addExtensions: (list(Scanner.ScanResult.t), t) => t;

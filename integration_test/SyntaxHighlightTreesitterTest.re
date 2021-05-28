@@ -10,7 +10,7 @@ let configuration = Some({|
 runTest(
   ~configuration,
   ~name="SyntaxHighlightTreesitterTest",
-  (dispatch, wait, _runEffects) => {
+  ({dispatch, wait, _}) => {
     wait(~name="Capture initial state", (state: State.t) =>
       Selectors.mode(state) |> Vim.Mode.isNormal
     );
@@ -22,7 +22,7 @@ runTest(
     let testFile = getAssetPath("some-test-file.json");
 
     // Create a buffer
-    dispatch(Actions.OpenFileByPath(testFile, None, None));
+    dispatch(Actions.OpenFileByPath(testFile, SplitDirection.Current, None));
 
     // Wait for highlights to show up
     wait(

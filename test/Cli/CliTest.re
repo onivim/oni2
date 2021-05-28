@@ -57,6 +57,17 @@ describe("CLI", ({describe, test, _}) => {
     })
   });
   describe("log level", ({test, _}) => {
+    test("--debug-exthost should set logExthost", ({expect, _}) => {
+      let (options, _eff) =
+        Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "--debug-exthost"|]);
+      expect.equal(options.logExthost, true);
+    });
+    test("--silent should still require a console", ({expect, _}) => {
+      let (options, _eff) =
+        Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "-f", "--silent"|]);
+      expect.equal(options.logLevel, None);
+      expect.equal(options.needsConsole, true);
+    });
     test("--trace should set log level", ({expect, _}) => {
       let (options, _eff) =
         Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "-f", "--trace"|]);
@@ -75,6 +86,53 @@ describe("CLI", ({describe, test, _}) => {
     test("no log level set by default", ({expect, _}) => {
       let (options, _eff) = Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor"|]);
       expect.equal(options.logLevel, None);
+    });
+  });
+
+  describe("--proxy-server", ({test, _}) => {
+    test("simple proxy server", ({expect, _}) => {
+      let (options, _eff) =
+        Oni_CLI.parse(
+          ~getenv=noenv,
+          [|"Oni2_editor", "--proxy-server=127.0.0.1:8001"|],
+        );
+
+      expect.equal(
+        options.proxyServer,
+        Service_Net.Proxy.{
+          httpsUrl: Some("127.0.0.1:8001"),
+          httpUrl: Some("127.0.0.1:8001"),
+          strictSSL: true,
+        },
+      );
+    })
+  });
+
+  describe("window management", ({describe, test, _}) => {
+    test("--list-displays", ({expect, _}) => {
+      let (_options, effects) =
+        Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "--list-displays"|]);
+
+      expect.equal(effects, ListDisplays);
+    });
+
+    describe("--window-position", ({test, _}) => {
+      test("comma-separated values are parsed correctly", ({expect, _}) => {
+        let (options, _eff) =
+          Oni_CLI.parse(
+            ~getenv=noenv,
+            [|"Oni2_editor", "--window-position", "100,200"|],
+          );
+        expect.equal(options.windowPosition, Some({x: 100, y: 200}));
+      });
+      test("single value is parsed correctly", ({expect, _}) => {
+        let (options, _eff) =
+          Oni_CLI.parse(
+            ~getenv=noenv,
+            [|"Oni2_editor", "--window-position", "150"|],
+          );
+        expect.equal(options.windowPosition, Some({x: 150, y: 150}));
+      });
     });
   });
 

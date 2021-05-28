@@ -127,7 +127,7 @@ let startWithExtensions =
       ~env=[
         ("PATH", Oni_Core.ShellUtility.getPathFromEnvironment()),
         (
-          "AMD_ENTRYPOINT",
+          "VSCODE_AMD_ENTRYPOINT",
           "vs/workbench/services/extensions/node/extensionHostProcess",
         ),
         ("PIPE_LOGGING", "true"), // Pipe logging to parent
@@ -147,7 +147,9 @@ let close = context => {
 };
 
 let activateByEvent = (~event, context) => {
-  Request.ExtensionService.activateByEvent(~event, context.client);
+  Request.ExtensionService.activateByEvent(~event, context.client)
+  |> Utility.LwtEx.sync
+  |> Result.get_ok;
   context;
 };
 
