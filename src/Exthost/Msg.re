@@ -1749,7 +1749,8 @@ module TextEditors = {
         edits: list(Edit.SingleEditOperation.t),
       });
 
-  let handle = (method, args: Yojson.Safe.t) => {
+  let handle = (_method, _args: Yojson.Safe.t) => {
+    // TODO: Implement parsing
     Error("Unhandled text editor operation");
   };
 };

@@ -11,7 +11,8 @@ module Internal = {
   let getVscodeEditorId = editorId =>
     "onivim.editor:" ++ string_of_int(editorId);
 
-  let editorIdFromVscodeEditorId = (vscodeEditorId: string) => {
+  // TODO: Use this when applying edits...
+  let _editorIdFromVscodeEditorId = (vscodeEditorId: string) => {
     String.sub(
       vscodeEditorId,
       prefixLength,
