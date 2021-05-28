@@ -576,6 +576,15 @@ module Commands = {
       Command(ToggleIntegratedTerminal),
     );
 
+  let newIntegratedTerminal =
+    define(
+      ~category="Terminal",
+      ~title="New Integrated Terminal",
+      "workbench.action.terminal.new",
+      // TODO: Handle multiple instances
+      Command(ToggleIntegratedTerminal),
+    );
+
   module New = {
     let horizontal =
       define(
@@ -748,7 +757,9 @@ module Contributions = {
 
   let focusedContextKeys = {
     WhenExpr.ContextKeys.(
-      [Schema.bool("terminalFocus", _ => true)]
+      [
+      Schema.bool("terminalFocus", _ => true),
+      Schema.bool("terminalProcessSupported", _ => true)]
       |> Schema.fromList
       |> fromSchema()
     );

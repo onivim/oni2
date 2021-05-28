@@ -14,6 +14,15 @@ let toPhysicalKey =
   | PhysicalKey(key) => Some(key)
   | SpecialKey(_) => None;
 
+let isValidUtf8String = str => {
+  ZedBundled.(
+    switch (check(str)) {
+    | Correct(_) => true
+    | Message(_) => false
+    }
+  );
+};
+
 let equals = (keyA, keyB) => {
   switch (keyA, keyB) {
   | (SpecialKey(specialKeyA), SpecialKey(specialKeyB)) =>
@@ -50,6 +59,9 @@ let ofInternal =
   };
   switch (key) {
   | Matcher_internal.UnmatchedString(str) =>
+    if (!isValidUtf8String(str)) {
+      [Error("Keybinding is not a valid UTF-8 string")]
+    } else {
     ZedBundled.explode(str)
     |> List.map(uchar =>
          if (Uchar.is_char(uchar)) {
@@ -67,7 +79,8 @@ let ofInternal =
          } else {
            keyToKeyPress(Key.Character(uchar));
          }
-       )
+       );
+       }
   | Matcher_internal.Special(special) => [Ok(SpecialKey(special))]
   | Matcher_internal.Physical(key) => [keyToKeyPress(key)]
   };
@@ -86,7 +99,9 @@ let combineUnmatchedStrings = (keys: list(Matcher_internal.keyMatcher)) => {
             | None => combine(acc, Some((str, mods)), tail)
 
             // Might be able to accumulate, check if the modifiers match (#2980)
-            | Some((prev, prevMods)) when prevMods == mods =>
+            // ...or if the string is part of a unicode character (#3599)
+            | Some((prev, prevMods))
+                when prevMods == mods || !isValidUtf8String(prev) =>
               combine(acc, Some((prev ++ str, mods)), tail)
 
             // Modifiers don't match, so append the current to the key sequence,
