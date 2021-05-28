@@ -1,5 +1,7 @@
 ### Features 
 
+- #3613 - Input: add Emoji & Symbols panel on macOS
+
 ### Bug Fixes
 
 - #3597 - Registration: Trim license key before submitting
