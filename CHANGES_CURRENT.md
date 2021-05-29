@@ -11,6 +11,7 @@
 - #3606 - Vim: Fix hang when using `function` in `experimental.viml`
 - #3616 - OSX: Fix crash on IME switch (fixes #3614)
 - #3621 - Sneak: Grab editor focus when using sneak to jump to an editor (fixes #2569)
+- #3630 - Editor: Cursor / line number disappearing when deleting entire buffer (fixes #3629)
 
 ### Performance
 
