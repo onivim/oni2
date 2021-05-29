@@ -6,6 +6,7 @@ let ofBuffer = buffer =>
   if (Buffer.getNumberOfLines(buffer) > 0) {
     buffer;
   } else {
+    // #3629 - From the editor UI perspective, never render a totally empty buffer.
     let font = Buffer.getFont(buffer);
     let id = Buffer.getId(buffer);
 
