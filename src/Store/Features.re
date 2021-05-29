@@ -680,6 +680,16 @@ let update =
 
     ({...state, input: model}, eff);
 
+  | Keyboard(msg) =>
+    let (model, outmsg) = Feature_Keyboard.update(state.keyboard, msg);
+    switch (outmsg) {
+    | Nothing => ({...state, keyboard: model}, Isolinear.Effect.none)
+    | Effect(eff) => (
+        {...state, keyboard: model},
+        eff |> Isolinear.Effect.map(eff => Keyboard(eff)),
+      )
+    };
+
   | LanguageSupport(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
     let editor = state.layout |> Feature_Layout.activeEditor;

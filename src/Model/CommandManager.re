@@ -30,6 +30,9 @@ let current = {
       Feature_Zen.Contributions.commands
       |> Command.Lookup.fromList
       |> Command.Lookup.map(msg => Actions.Zen(msg)),
+      Feature_Keyboard.Contributions.commands
+      |> Command.Lookup.fromList
+      |> Command.Lookup.map(msg => Actions.Keyboard(msg)),
     ]);
 
   state => {

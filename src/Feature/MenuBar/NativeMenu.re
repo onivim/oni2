@@ -22,21 +22,10 @@ module Internal = {
           |> Option.map(({modifiers, key}: EditorInput.PhysicalKey.t) => {
                open Revery.Native.Menu;
                let key =
-                 KeyEquivalent.ofString(EditorInput.Key.toString(key));
-
-               let key =
-                 if (modifiers.shift) {
-                   KeyEquivalent.enableShift(key);
-                 } else {
-                   key;
-                 };
-
-               let key =
-                 if (modifiers.alt) {
-                   KeyEquivalent.enableAlt(key);
-                 } else {
-                   key;
-                 };
+                 KeyEquivalent.ofString(EditorInput.Key.toString(key))
+                 |> (key => KeyEquivalent.enableShift(key, modifiers.shift))
+                 |> (key => KeyEquivalent.enableAlt(key, modifiers.alt))
+                 |> (key => KeyEquivalent.enableCtrl(key, modifiers.control));
 
                key;
              })

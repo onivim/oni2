@@ -28,6 +28,7 @@ type t =
   | EditorFont(Service_Font.msg)
   | Help(Feature_Help.msg)
   | Input(Feature_Input.msg)
+  | Keyboard(Feature_Keyboard.msg)
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
