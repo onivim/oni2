@@ -2296,6 +2296,16 @@ let update =
 
     ({...state, newQuickmenu: quickmenu'}, eff);
 
+  | QuickOpen(msg) =>
+    
+    let (quickOpen', outmsg) = Feature_QuickOpen.update(msg, state.quickOpen);
+
+    let eff = switch (outmsg) {
+    | Nothing => Isolinear.Effect.none
+    };
+
+    ({...state, quickOpen: quickOpen'}, eff);
+
   | Snippets(msg) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);

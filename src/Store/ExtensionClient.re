@@ -161,6 +161,8 @@ let create =
         | QuickOpen.SetItems({instance, items}) =>
           dispatch(QuickmenuUpdateExtensionItems({id: instance, items}));
           Lwt.return(Reply.okEmpty);
+
+        // | QuickOpen.Input(_) => Lwt.return(Reply.okJson(`String("Testing")))
         | msg =>
           // TODO: Additional quick open messages
           Log.warnf(m =>

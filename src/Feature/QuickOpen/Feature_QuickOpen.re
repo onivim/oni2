@@ -5,6 +5,7 @@ let initial = ();
 type outmsg =
   | Nothing;
 
+[@deriving show]
 type msg =
   | Noop;
 
