@@ -2,11 +2,12 @@ type model;
 
 let initial: model;
 
-type outmsg =
-  | Nothing;
-
 [@deriving show]
 type msg;
+
+type outmsg =
+  | Nothing
+  | ShowMenu(Feature_Quickmenu.Schema.menu(msg));
 
 module Msg: {let exthost: Exthost.Msg.QuickOpen.msg => msg;};
 
