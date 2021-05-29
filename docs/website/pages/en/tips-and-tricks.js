@@ -42,7 +42,7 @@ const tips = [
       <Key name="Control+w h" description="Focus window to the left of the current one" />,
       <Key name="Control+w j" description="Focus window below the current one" />,
       <Key name="Control+w l" description="Focus window to the right of the current one" />,
-      <Key name="Control+w k" description="Focus window below the current one" />,
+      <Key name="Control+w k" description="Focus window above the current one" />,
     ],
     videoFile: "Xpfb2pMmeVg",
   },
