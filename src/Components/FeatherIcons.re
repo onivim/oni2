@@ -1,15 +1,8 @@
 open Revery;
 open Revery.UI.Components;
 
-let colorToCSS = color => {
-  let (r, g, b, _) = Color.toRgba(color);
-  Printf.sprintf(
-    "#%02X%02X%02X",
-    int_of_float(r *. 255.),
-    int_of_float(g *. 255.),
-    int_of_float(b *. 255.),
-  );
-};
+/* Sourced from https://feathericons.com
+   Licensed under MIT */
 
 let folder: SVGIcon.t =
   (~size=24, ~strokeWidth=2, ~color=Colors.white, ()) =>
@@ -36,7 +29,7 @@ let folder: SVGIcon.t =
                 size,
                 size,
                 size,
-                colorToCSS(color),
+                SVGIcon.colorToHex(color),
                 strokeWidth,
               ),
             )
@@ -73,7 +66,7 @@ let codeSandbox: SVGIcon.t =
                 size,
                 size,
                 size,
-                colorToCSS(color),
+                SVGIcon.colorToHex(color),
                 strokeWidth,
               ),
             )
@@ -105,7 +98,7 @@ let search: SVGIcon.t =
                 size,
                 size,
                 size,
-                colorToCSS(color),
+                SVGIcon.colorToHex(color),
                 strokeWidth,
               ),
             )
@@ -140,7 +133,7 @@ let gitPullRequest: SVGIcon.t =
                 size,
                 size,
                 size,
-                colorToCSS(color),
+                SVGIcon.colorToHex(color),
                 strokeWidth,
               ),
             )
