@@ -18,5 +18,6 @@
 ### Refactoring
 
 - #3595 - Dependency: OCaml -> 4.12
+- #3624 - Dependency: SDL2 -> 2.0.14 (thanks @zbaylin !)
 
 ### Infrastructure
