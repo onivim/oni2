@@ -200,7 +200,7 @@ let make =
       sideBar
       theme
       isActive={isSidebarVisible(Extensions)}
-      icon=FeatherIcons.codeSandbox
+      icon=FeatherIcons.package
       notification=?extensionNotification
     />
   </View>;
