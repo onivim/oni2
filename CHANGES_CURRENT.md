@@ -16,6 +16,7 @@
 ### Documentation
 
 - #3601 - Visual Mode: Add note about switching to block mode on Windows / Linux (thanks @rogererens !)
+- #3620 - Building: Add steps for Docker based build.
 
 ### Refactoring
 
