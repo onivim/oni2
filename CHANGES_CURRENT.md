@@ -10,6 +10,7 @@
 - #3604 - Editor: Fix CodeLens blocking mousewheel
 - #3606 - Vim: Fix hang when using `function` in `experimental.viml`
 - #3616 - OSX: Fix crash on IME switch (fixes #3614)
+- #3621 - Sneak: Grab editor focus when using sneak to jump to an editor (fixes #2569)
 
 ### Performance
 
