@@ -13,6 +13,7 @@
    Oni2.feature.registers Oni2.feature.snippets Oni2.feature.statusbar
    Oni2.feature.terminal Oni2.feature.modals Oni2.feature.vim
    Oni2.feature.editor Oni2.service.autoupdate Oni2.feature.registration
+   Oni2.feature.keyboard
    isolinear libvim Oni2.KeyboardLayout textmate treesitter)
  (preprocess
   (pps ppx_let brisk-reconciler.ppx ppx_deriving_yojson ppx_deriving.show)))
