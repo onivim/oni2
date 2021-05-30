@@ -412,8 +412,8 @@
     "revery": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#d737fcd",
-    "esy-skia": "revery-ui/esy-skia#6106223",
+    "revery": "revery-ui/revery#79c2572",
+    "esy-skia": "revery-ui/esy-skia#66db8c5",
     "isolinear": "revery-ui/isolinear#049ad1e",
     "@opam/fs": "bryphe/reason-native:fs.opam#e16590c",
     "@opam/fp": "bryphe/reason-native:fp.opam#e16590c",

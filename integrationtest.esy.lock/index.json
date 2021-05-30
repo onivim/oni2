@@ -1,5 +1,5 @@
 {
-  "checksum": "d4785760c0beebd3f505f35d2c5ef71d",
+  "checksum": "357bd4e0a8664597a399ed34e4bc63ee",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -91,20 +91,20 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#d737fcd@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#d737fcd@d41d8cd9",
+    "revery@github:revery-ui/revery#79c2572@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#79c2572@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#d737fcd",
+      "version": "github:revery-ui/revery#79c2572",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#d737fcd" ]
+        "source": [ "github:revery-ui/revery#79c2572" ]
       },
       "overrides": [],
       "dependencies": [
         "reperf@1.5.1@d41d8cd9", "rench@1.10.0@d41d8cd9",
         "rebez@github:jchavarri/rebez#03fa3b7@d41d8cd9",
         "flex@github:bryphe/flex#5e19b05@d41d8cd9",
-        "esy-skia@github:revery-ui/esy-skia#6106223@d41d8cd9",
+        "esy-skia@github:revery-ui/esy-skia#66db8c5@d41d8cd9",
         "esy-sdl2@2.0.14000@d41d8cd9", "esy-freetype2@2.9.1008@d41d8cd9",
         "esy-angle-prebuilt@1.0.0@d41d8cd9", "@revery/timber@2.0.0@d41d8cd9",
         "@revery/esy-harfbuzz@2.6.8002@d41d8cd9",
@@ -618,13 +618,13 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-skia@github:revery-ui/esy-skia#6106223@d41d8cd9": {
-      "id": "esy-skia@github:revery-ui/esy-skia#6106223@d41d8cd9",
+    "esy-skia@github:revery-ui/esy-skia#66db8c5@d41d8cd9": {
+      "id": "esy-skia@github:revery-ui/esy-skia#66db8c5@d41d8cd9",
       "name": "esy-skia",
-      "version": "github:revery-ui/esy-skia#6106223",
+      "version": "github:revery-ui/esy-skia#66db8c5",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/esy-skia#6106223" ]
+        "source": [ "github:revery-ui/esy-skia#66db8c5" ]
       },
       "overrides": [],
       "dependencies": [
@@ -853,14 +853,14 @@
       },
       "overrides": [ "integrationtest.json" ],
       "dependencies": [
-        "revery@github:revery-ui/revery#d737fcd@d41d8cd9",
+        "revery@github:revery-ui/revery#79c2572@d41d8cd9",
         "rench@1.10.0@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#a80a9d9@d41d8cd9",
         "reason-fzy@github:bryphe/reason-fzy#5a1daf4@d41d8cd9",
         "ocaml@4.12.0@d41d8cd9", "libvim@8.10869.88@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#049ad1e@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
-        "esy-skia@github:revery-ui/esy-skia#6106223@d41d8cd9",
+        "esy-skia@github:revery-ui/esy-skia#66db8c5@d41d8cd9",
         "esy-sdl2@2.0.14000@d41d8cd9",
         "esy-oniguruma@github:onivim/esy-oniguruma#4698ce4@d41d8cd9",
         "esy-macdylibbundler@0.4.5001@d41d8cd9",
