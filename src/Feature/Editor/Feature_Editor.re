@@ -41,8 +41,10 @@ module Constants = {
 };
 
 let update = (~config, editor, msg) => {
-  let mouseWheelScroll = 
-  Feature_Configuration.GlobalConfiguration.Editor.mouseWheelScrollPixels.get(config);
+  let mouseWheelScroll =
+    Feature_Configuration.GlobalConfiguration.Editor.mouseWheelScrollPixels.get(
+      config,
+    );
   switch (msg) {
   | VerticalScrollbarAfterTrackClicked({newPixelScrollY})
   | VerticalScrollbarBeforeTrackClicked({newPixelScrollY})
@@ -53,7 +55,8 @@ let update = (~config, editor, msg) => {
   | MinimapMouseWheel({deltaWheel}) => (
       Editor.scrollDeltaPixelY(
         ~animated=true,
-        ~pixelY=deltaWheel *. mouseWheelScroll *. Constants.minimapWheelMultiplier,
+        ~pixelY=
+          deltaWheel *. mouseWheelScroll *. Constants.minimapWheelMultiplier,
         editor,
       ),
       Nothing,
@@ -70,8 +73,13 @@ let update = (~config, editor, msg) => {
       Editor.scrollDeltaPixelXY(
         ~animated=true,
         ~pixelX=
-          (shiftKey ? deltaY : deltaX) *. mouseWheelScroll *. Constants.editorWheelMultiplier,
-        ~pixelY=(shiftKey ? 0. : deltaY) *. mouseWheelScroll *. Constants.editorWheelMultiplier,
+          (shiftKey ? deltaY : deltaX)
+          *. mouseWheelScroll
+          *. Constants.editorWheelMultiplier,
+        ~pixelY=
+          (shiftKey ? 0. : deltaY)
+          *. mouseWheelScroll
+          *. Constants.editorWheelMultiplier,
         editor,
       ),
       Nothing,
@@ -79,7 +87,8 @@ let update = (~config, editor, msg) => {
   | VerticalScrollbarMouseWheel({deltaWheel}) => (
       Editor.scrollDeltaPixelY(
         ~animated=true,
-        ~pixelY=deltaWheel *. mouseWheelScroll *. Constants.scrollbarWheelMultiplier,
+        ~pixelY=
+          deltaWheel *. mouseWheelScroll *. Constants.scrollbarWheelMultiplier,
         editor,
       ),
       Nothing,
@@ -93,7 +102,8 @@ let update = (~config, editor, msg) => {
   | HorizontalScrollbarMouseWheel({deltaWheel}) => (
       Editor.scrollDeltaPixelX(
         ~animated=true,
-        ~pixelX=deltaWheel *. mouseWheelScroll *. Constants.scrollbarWheelMultiplier,
+        ~pixelX=
+          deltaWheel *. mouseWheelScroll *. Constants.scrollbarWheelMultiplier,
         editor,
       ),
       Nothing,

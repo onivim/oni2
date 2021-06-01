@@ -986,7 +986,17 @@ module View = {
       unit
     ) =>
     _ =
-    (~config, ~isActive, ~font, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
+    (
+      ~config,
+      ~isActive,
+      ~font,
+      ~focusedIndex,
+      ~theme,
+      ~model,
+      ~dispatch,
+      ~render,
+      (),
+    ) => {
       component(hooks => {
         let {rowHeight, viewportWidth, viewportHeight, _} = model;
 
@@ -1005,11 +1015,12 @@ module View = {
             hooks,
           );
         let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-
           let mouseWheelPixels =
-          Feature_Configuration.GlobalConfiguration.Editor.mouseWheelScrollPixels.get(config);
-          let delta =
-            wheelEvent.deltaY *. -1. *. mouseWheelPixels;
+            Feature_Configuration.GlobalConfiguration.Editor.mouseWheelScrollPixels.
+              get(
+              config,
+            );
+          let delta = wheelEvent.deltaY *. (-1.) *. mouseWheelPixels;
 
           dispatch(MouseWheelScrolled({delta: delta}));
         };

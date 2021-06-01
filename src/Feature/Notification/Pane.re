@@ -162,7 +162,15 @@ module View = {
     ];
   };
   let make =
-      (~config, ~isFocused: bool, ~model: t, ~theme, ~uiFont: UiFont.t, ~dispatch, ()) => {
+      (
+        ~config,
+        ~isFocused: bool,
+        ~model: t,
+        ~theme,
+        ~uiFont: UiFont.t,
+        ~dispatch,
+        (),
+      ) => {
     let innerElement =
       if (Component_VimList.count(model.notificationsView) == 0) {
         <View style=Styles.noResultsContainer>

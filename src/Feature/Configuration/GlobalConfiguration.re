@@ -226,11 +226,7 @@ module Editor = {
     );
 
   let mouseWheelScrollPixels =
-    setting(
-      "editor.mouseWheelScrollPixels",
-      float,
-      ~default=50.
-    )
+    setting("editor.mouseWheelScrollPixels", float, ~default=50.);
   let lineHeight =
     setting(
       ~vim=VimSettings.lineSpace,

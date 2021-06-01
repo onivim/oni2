@@ -123,6 +123,7 @@ let versionToString: option(Semver.t) => string =
 
 let%component make =
               (
+                ~config,
                 ~model,
                 ~proxy,
                 ~theme,
@@ -220,6 +221,7 @@ let%component make =
       [
         <Component_Accordion.VimList
           title="Installed"
+          config
           expanded={installedExpanded || isInstalledFocused}
           model={Model.ViewModel.installed(model.viewModel)}
           uiFont=font
@@ -233,6 +235,7 @@ let%component make =
         />,
         <Component_Accordion.VimList
           title="Bundled"
+          config
           expanded={bundledExpanded || isBundledFocused}
           model={Model.ViewModel.bundled(model.viewModel)}
           uiFont=font
@@ -249,6 +252,7 @@ let%component make =
     } else {
       let resultsList =
         <Component_VimList.View
+          config
           isActive={isInstalledFocused || isBundledFocused}
           font
           focusedIndex=None

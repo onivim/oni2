@@ -195,7 +195,8 @@ module Internal = {
           layout,
         );
       (layout', Isolinear.Effect.batch(effects));
-    | Editor(editorId) => updateEditor(~config, ~client, ~editorId, ~msg, layout)
+    | Editor(editorId) =>
+      updateEditor(~config, ~client, ~editorId, ~msg, layout)
     };
   };
 
@@ -285,7 +286,6 @@ module Internal = {
       |> Feature_Layout.activeEditor
       |> Feature_Editor.Editor.getPrimaryCursor;
 
-    let config = Selectors.configResolver(state);
     let editor = Feature_Layout.activeEditor(state.layout);
     let maybeBuffer = Selectors.getActiveBuffer(state);
 
@@ -301,7 +301,7 @@ module Internal = {
     let msg: Feature_Editor.msg =
       ModeChanged({allowAnimation, mode, effects});
     let scope = EditorScope.Editor(activeEditorId);
-      let config = Selectors.configResolver(state);
+    let config = Selectors.configResolver(state);
     let (layout, editorEffect) =
       updateEditors(~config, ~client, ~scope, ~msg, state.layout);
 

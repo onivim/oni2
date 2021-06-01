@@ -1132,7 +1132,7 @@ module Pane = {
               |> Option.value(~default=true);
 
             <groupView
-            config
+              config
               provider
               expanded
               group
