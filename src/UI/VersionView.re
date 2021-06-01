@@ -143,5 +143,10 @@ let make = (~theme, ~uiFont, ~editorFont, ()) => {
       name="GLSL"
       version={Sdl2.Gl.getString(Sdl2.Gl.ShadingLanguageVersion)}
     />
+    <header text="Sparkle/WinSparkle" />
+    <version
+      name="Version"
+      version={Option.value(~default="N/A", Oni2_Sparkle.version)}
+    />
   </View>;
 };
