@@ -7,8 +7,12 @@ type msg;
 
 type outmsg =
   | Nothing
+  | Effect(Isolinear.Effect.t(msg))
   | ShowMenu(Feature_Quickmenu.Schema.menu(msg));
 
-module Msg: {let exthost: Exthost.Msg.QuickOpen.msg => msg;};
+module Msg: {
+  let exthost:
+    (~resolver: Lwt.u(Exthost.Reply.t), Exthost.Msg.QuickOpen.msg) => msg;
+};
 
 let update: (msg, model) => (model, outmsg);
