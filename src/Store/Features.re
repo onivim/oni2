@@ -46,11 +46,15 @@ module Internal = {
               Feature_Theme.Msg.menuPreviewTheme(~themeId=id(theme)),
             )
           },
-        ~onItemSelected=
-          theme => {
-            Actions.Theme(
-              Feature_Theme.Msg.menuCommitTheme(~themeId=id(theme)),
-            )
+        ~onAccepted=
+          (~text as _, ~item) => {
+            item
+            |> Option.map(item => {
+                 Actions.Theme(
+                   Feature_Theme.Msg.menuCommitTheme(~themeId=id(item)),
+                 )
+               })
+            |> Option.value(~default=Actions.Noop)
           },
         ~toString=theme => "Theme: " ++ label(theme),
         themes,
@@ -681,6 +685,16 @@ let update =
       };
 
     ({...state, input: model}, eff);
+
+  | Keyboard(msg) =>
+    let (model, outmsg) = Feature_Keyboard.update(state.keyboard, msg);
+    switch (outmsg) {
+    | Nothing => ({...state, keyboard: model}, Isolinear.Effect.none)
+    | Effect(eff) => (
+        {...state, keyboard: model},
+        eff |> Isolinear.Effect.map(eff => Keyboard(eff)),
+      )
+    };
 
   | LanguageSupport(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
@@ -2289,6 +2303,27 @@ let update =
       };
 
     ({...state, newQuickmenu: quickmenu'}, eff);
+
+  | QuickOpen(msg) =>
+    let (quickOpen', outmsg) =
+      Feature_QuickOpen.update(msg, state.quickOpen);
+
+    let (state', eff) =
+      switch (outmsg) {
+      | Nothing => (state, Isolinear.Effect.none)
+      | Effect(eff) => (
+          state,
+          eff |> Isolinear.Effect.map(msg => Actions.QuickOpen(msg)),
+        )
+      | ShowMenu(menu) =>
+        let menu' =
+          menu |> Feature_Quickmenu.Schema.map(msg => Actions.QuickOpen(msg));
+        let quickmenu' =
+          Feature_Quickmenu.show(~menu=menu', state.newQuickmenu);
+        ({...state, newQuickmenu: quickmenu'}, Isolinear.Effect.none);
+      };
+
+    ({...state', quickOpen: quickOpen'}, eff);
 
   | Snippets(msg) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);

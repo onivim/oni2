@@ -400,7 +400,7 @@
     "esy-angle-prebuilt": "^1.0.0",
     "esy-macdylibbundler": "^0.4.5001",
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
-    "esy-sdl2": "*",
+    "esy-sdl2": "^2.0.14000",
     "esy-skia": "*",
     "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
@@ -412,7 +412,7 @@
     "revery": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#ed67416",
+    "revery": "revery-ui/revery#d737fcd",
     "esy-skia": "revery-ui/esy-skia#6106223",
     "isolinear": "revery-ui/isolinear#049ad1e",
     "@opam/fs": "bryphe/reason-native:fs.opam#e16590c",
