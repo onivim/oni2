@@ -510,21 +510,11 @@ let _colorSchemesGet = pattern => {
 };
 
 let _onMacroStartRecording = (register: char) => {
-  queue(() => {
-    Event.dispatch(
-      Effect.MacroRecordingStarted({register: register}),
-      Listeners.effect,
-    )
-  });
+  queueEffect(MacroRecordingStarted({register: register}));
 };
 
 let _onMacroStopRecording = (register: char, value: option(string)) => {
-  queue(() => {
-    Event.dispatch(
-      Effect.MacroRecordingStopped({register, value}),
-      Listeners.effect,
-    )
-  });
+  queueEffect(MacroRecordingStopped({register, value}));
 };
 
 let _onInputMap = (mapping: Mapping.t) => {
