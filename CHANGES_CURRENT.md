@@ -13,6 +13,7 @@
 - #3621 - Sneak: Grab editor focus when using sneak to jump to an editor (fixes #2569)
 - #3630 - Editor: Cursor / line number disappearing when deleting entire buffer (fixes #3629)
 - #3637 - Extensions: Unable to enter API key for WakaTime (fixes #3619)
+- #3638 - Editor: Add clear search highlights default keybinding (fixes #3636)
 
 ### Performance
 
