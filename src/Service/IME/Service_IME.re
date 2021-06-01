@@ -26,5 +26,10 @@ module Sub = {
   };
 
   let ime =
-      (~window as _, ~compositionStart as _, ~compositionEdit as _, ~compositionEnd as _) => Isolinear.Sub.none;
+      (
+        ~window as _,
+        ~compositionStart as _,
+        ~compositionEdit as _,
+        ~compositionEnd as _,
+      ) => Isolinear.Sub.none;
 };
