@@ -354,61 +354,6 @@ module View = {
         ~model,
         ~workingDirectory,
         (),
-<<<<<<< HEAD
-      ) =>
-    switch (selected) {
-    | Locations =>
-      <LocationsPaneView
-        config
-        isFocused
-        locationsList
-        iconTheme
-        languageInfo
-        theme
-        uiFont
-        workingDirectory
-        dispatch=locationsDispatch
-      />
-
-    | Diagnostics =>
-      <DiagnosticsPaneView
-        config
-        isFocused
-        diagnosticsList
-        iconTheme
-        languageInfo
-        theme
-        uiFont
-        workingDirectory
-        dispatch=diagnosticDispatch
-      />
-    | Notifications =>
-      <NotificationsPaneView
-        config
-        isFocused
-        notificationsList
-        theme
-        uiFont
-        dispatch=notificationsDispatch
-        onDismiss={notification =>
-          dispatch(DismissNotificationClicked(notification))
-        }
-      />
-    | Output =>
-      outputPane
-      |> Option.map(model => {
-           <Component_Output.View
-              config
-             model
-             isActive=isFocused
-             editorFont
-             uiFont
-             theme
-             dispatch=outputDispatch
-           />
-         })
-      |> Option.value(~default=React.empty)
-=======
       ) => {
     switch (activePane) {
     | None => React.empty
@@ -430,7 +375,6 @@ module View = {
           );
         }
       )
->>>>>>> master
     };
   };
 
@@ -518,73 +462,6 @@ module View = {
         : Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
             config,
           );
-<<<<<<< HEAD
-    <View style={Styles.pane(~opacity, ~isFocused, ~theme, ~height)}>
-      <View style=Styles.resizer>
-        <ResizeHandle.Horizontal
-          onDrag={delta =>
-            dispatch(Msg.resizeHandleDragged(int_of_float(delta)))
-          }
-          onDragComplete={() => dispatch(Msg.resizeCommitted)}
-        />
-      </View>
-      <View style=Styles.header>
-        <View style=Styles.tabs>
-          <PaneTab
-            uiFont
-            theme
-            title="Problems"
-            onClick=problemsTabClicked
-            isActive={isSelected(Diagnostics, pane)}
-          />
-          <PaneTab
-            uiFont
-            theme
-            title="Notifications"
-            onClick=notificationsTabClicked
-            isActive={isSelected(Notifications, pane)}
-          />
-          <PaneTab
-            uiFont
-            theme
-            title="Locations"
-            onClick=locationsTabClicked
-            isActive={isSelected(Locations, pane)}
-          />
-          <PaneTab
-            uiFont
-            theme
-            title="Output"
-            onClick=outputTabClicked
-            isActive={isSelected(Output, pane)}
-          />
-        </View>
-        <closeButton dispatch theme />
-      </View>
-      <View style=Styles.content>
-        <content
-          config
-          isFocused
-          iconTheme
-          languageInfo
-          diagnosticsList={pane.diagnosticsView}
-          locationsList={pane.locationsView}
-          notificationsList={pane.notificationsView}
-          selected={selected(pane)}
-          outputPane={pane.outputPane}
-          theme
-          dispatch
-          uiFont
-          editorFont
-          diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
-          locationsDispatch={msg => dispatch(LocationsList(msg))}
-          notificationsDispatch={msg => dispatch(NotificationsList(msg))}
-          outputDispatch={msg => dispatch(OutputPane(msg))}
-          workingDirectory
-        />
-      </View>
-    </View>;
-=======
     height == 0
       ? React.empty
       : <View
@@ -637,7 +514,6 @@ module View = {
             />
           </View>
         </View>;
->>>>>>> master
   };
 };
 
