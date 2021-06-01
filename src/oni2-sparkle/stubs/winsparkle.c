@@ -54,6 +54,15 @@ CAMLprim value oni2_SparkleInit() {
   CAMLreturn(Val_unit);
 }
 
+CAMLprim value oni2_SparkleVersion() {
+  CAMLparam0();
+  CAMLlocal1(vVersion);
+
+  vVersion = caml_copy_string(WIN_SPARKLE_VERSION_STRING);
+
+  CAMLreturn(vVersion);
+}
+
 // On WinSparkle, there is no instance -- the library just uses global variables.
 // So here we just return a basic `unit`
 CAMLprim value oni2_SparkleGetSharedInstance() {
