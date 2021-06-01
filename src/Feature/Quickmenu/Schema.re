@@ -124,7 +124,7 @@ module Renderer = {
 
 type internal('item, 'outmsg) = {
   onItemFocused: option('item => 'outmsg),
-  onItemSelected: option('item => 'outmsg),
+  onAccepted: option((~text: string, ~item: option('item)) => 'outmsg),
   onCancelled: option(unit => 'outmsg),
   placeholderText: string,
   itemRenderer: Renderer.t('item),
@@ -138,7 +138,7 @@ type menu('outmsg) =
 let menu:
   (
     ~onItemFocused: 'item => 'outmsg=?,
-    ~onItemSelected: 'item => 'outmsg=?,
+    ~onAccepted: (~text: string, ~item: option('item)) => 'outmsg=?,
     ~onCancelled: unit => 'outmsg=?,
     ~placeholderText: string=?,
     ~itemRenderer: Renderer.t('item)=?,
@@ -148,7 +148,7 @@ let menu:
   menu('outmsg) =
   (
     ~onItemFocused=?,
-    ~onItemSelected=?,
+    ~onAccepted=?,
     ~onCancelled=?,
     ~placeholderText="type to search...",
     ~itemRenderer=Renderer.default,
@@ -157,7 +157,7 @@ let menu:
   ) => {
     Menu({
       onItemFocused,
-      onItemSelected,
+      onAccepted,
       onCancelled,
       placeholderText,
       itemRenderer,
@@ -174,11 +174,14 @@ let mapFunction: ('a => 'b, 'item => 'a, 'item) => 'b =
 let map: ('a => 'b, menu('a)) => menu('b) =
   (f, model) => {
     switch (model) {
-    | Menu({onItemFocused, onItemSelected, onCancelled, _} as orig) =>
+    | Menu({onItemFocused, onAccepted, onCancelled, _} as orig) =>
       Menu({
         ...orig,
         onItemFocused: onItemFocused |> Option.map(mapFunction(f)),
-        onItemSelected: onItemSelected |> Option.map(mapFunction(f)),
+        onAccepted: {
+          onAccepted
+          |> Option.map((orig, ~text, ~item) => {f(orig(~text, ~item))});
+        },
         onCancelled: onCancelled |> Option.map(mapFunction(f)),
       })
     };
@@ -312,17 +315,20 @@ module Instance = {
 
   let select: t('a) => option('a) =
     fun
-    | Instance({schema, filteredItems, focused, _}) => {
+    | Instance({schema, filteredItems, focused, text, _}) => {
         let len = Array.length(filteredItems);
-        focused
-        |> OptionEx.flatMap(focusedIndex =>
-             if (focusedIndex >= 0 && focusedIndex < len) {
-               let item = filteredItems[focusedIndex];
-               schema.onItemSelected |> Option.map(f => f(item.item));
-             } else {
-               None;
-             }
-           );
+        let item =
+          focused
+          |> OptionEx.flatMap(focusedIndex =>
+               if (focusedIndex >= 0 && focusedIndex < len) {
+                 Some(filteredItems[focusedIndex].item);
+               } else {
+                 None;
+               }
+             );
+
+        let text = Component_InputText.value(text);
+        schema.onAccepted |> Option.map(f => f(~text, ~item));
       };
 
   let focusMsg: t('a) => option('a) =

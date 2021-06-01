@@ -981,6 +981,27 @@ CAMLprim value libvim_vimCommand(value v) {
   return Val_unit;
 }
 
+CAMLprim value libvim_vimCommands(value vLines) {
+  CAMLparam1(vLines);
+
+  int lineCount = Wosize_val(vLines);
+
+  char_u **lines = malloc(sizeof(char_u *) * lineCount);
+  for (int i = 0; i < lineCount; i++) {
+    const char *sz = String_val(Field(vLines, i));
+    lines[i] = malloc((sizeof(char) * strlen(sz)) + 1);
+    strcpy((char *)lines[i], sz);
+  }
+  vimExecuteLines(lines, lineCount);
+
+  for (int i = 0; i < lineCount; i++) {
+    free(lines[i]);
+  }
+  free(lines);
+  CAMLreturn(Val_unit);
+}
+
+
 CAMLprim value libvim_vimGetMode(value unit) {
   int mode = vimGetMode();
 

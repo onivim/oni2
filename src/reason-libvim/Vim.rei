@@ -569,6 +569,9 @@ The command [cmd] is processed synchronously.
 */
 let command: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
+let commands:
+  (~context: Context.t=?, array(string)) => (Context.t, list(Effect.t));
+
 /**
 [onDirectoryChanged(f)] registers a directory changed listener [f].
 

@@ -196,7 +196,7 @@ let start =
 
       // TODO: Move internal to Feature_Vim
       | Output({cmd, output}) => {
-          dispatch(Actions.Vim(Feature_Vim.Output({cmd, output})));
+          dispatch(Actions.Vim(Feature_Vim.Msg.output(~cmd, ~output)));
         }
 
       | Clear({target, count}) =>
@@ -233,7 +233,7 @@ let start =
           ),
         )
       | SettingChanged(setting) =>
-        dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
+        dispatch(Actions.Vim(Feature_Vim.Msg.settingChanged(~setting)))
 
       | ColorSchemeChanged(maybeColorScheme) =>
         switch (maybeColorScheme) {
@@ -246,15 +246,9 @@ let start =
           )
         }
 
-      | MacroRecordingStarted({register}) =>
-        dispatch(
-          Actions.Vim(
-            Feature_Vim.MacroRecordingStarted({register: register}),
-          ),
-        )
+      | MacroRecordingStarted(_) => ()
 
-      | MacroRecordingStopped(_) =>
-        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped))
+      | MacroRecordingStopped(_) => ()
 
       | WindowSplit(split) => handleSplit(split) |> dispatch,
     );
@@ -590,7 +584,12 @@ let start =
     dispatch(
       // TODO
       Actions.Vim(
-        Feature_Vim.ModeChanged({allowAnimation, subMode, mode, effects}),
+        Feature_Vim.Msg.modeChanged(
+          ~allowAnimation,
+          ~subMode,
+          ~mode,
+          ~effects,
+        ),
       ),
     );
   };
@@ -707,14 +706,10 @@ let start =
   let synchronizeViml = lines =>
     Isolinear.Effect.create(~name="vim.synchronizeViml", () =>
       if (prevViml^ != lines) {
-        List.iter(
-          l => {
-            Log.info("Running VimL from config: " ++ l);
-            Vim.command(l) |> ignore;
-            Log.info("VimL command completed.");
-          },
-          lines,
-        );
+        let linesArray = Array.of_list(lines);
+        Log.info("Running VimL from config...");
+        Vim.commands(linesArray) |> ignore;
+        Log.info("VimL command completed.");
         prevViml := lines;
       }
     );
