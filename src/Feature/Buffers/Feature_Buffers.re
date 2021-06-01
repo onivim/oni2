@@ -164,6 +164,7 @@ type msg =
   | AutoSave(AutoSave.msg)
   | AutoSaveCompleted
   | Command(command)
+  | Noop
   | EditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
       split: SplitDirection.t,
@@ -589,7 +590,10 @@ let update = (~activeBufferId, ~config, ~workspace, msg: msg, model: model) => {
     let menuFn =
         (_languageInfo: Exthost.LanguageInfo.t, _iconTheme: IconTheme.t) => {
       Feature_Quickmenu.Schema.menu(
-        ~onItemSelected=snd,
+        ~onAccepted=
+          (~text as _, ~item) => {
+            item |> Option.map(snd) |> Option.value(~default=Noop)
+          },
         ~toString=fst,
         items,
       );
@@ -603,14 +607,18 @@ let update = (~activeBufferId, ~config, ~workspace, msg: msg, model: model) => {
       let menuFn =
           (_languageInfo: Exthost.LanguageInfo.t, _iconTheme: IconTheme.t) => {
         Feature_Quickmenu.Schema.menu(
-          ~onItemSelected=
-            size =>
-              IndentationChanged({
-                id: activeBufferId,
-                size,
-                mode,
-                didBufferGetModified: false,
-              }),
+          ~onAccepted=
+            (~text as _, ~item as maybeSize) =>
+              maybeSize
+              |> Option.map(size => {
+                   IndentationChanged({
+                     id: activeBufferId,
+                     size,
+                     mode,
+                     didBufferGetModified: false,
+                   })
+                 })
+              |> Option.value(~default=Noop),
           ~toString=string_of_int,
           items,
         );
@@ -637,12 +645,17 @@ let update = (~activeBufferId, ~config, ~workspace, msg: msg, model: model) => {
         Feature_Quickmenu.Schema.menu(
           ~itemRenderer=
             Feature_Quickmenu.Schema.Renderer.defaultWithIcon(itemToIcon),
-          ~onItemSelected=
-            language =>
-              FileTypeChanged({
-                id: bufferId,
-                fileType: Buffer.FileType.explicit(fst(language)),
-              }),
+          ~onAccepted=
+            (~text as _, ~item as maybeLanguage) => {
+              maybeLanguage
+              |> Option.map(language => {
+                   FileTypeChanged({
+                     id: bufferId,
+                     fileType: Buffer.FileType.explicit(fst(language)),
+                   })
+                 })
+              |> Option.value(~default=Noop)
+            },
           ~toString=fst,
           languages,
         );
@@ -804,6 +817,8 @@ let update = (~activeBufferId, ~config, ~workspace, msg: msg, model: model) => {
          })
       |> Option.value(~default=Nothing);
     (model, outmsg);
+
+  | Noop => (model, Nothing)
   };
 };
 
