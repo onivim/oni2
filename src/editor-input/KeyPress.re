@@ -60,27 +60,27 @@ let ofInternal =
   switch (key) {
   | Matcher_internal.UnmatchedString(str) =>
     if (!isValidUtf8String(str)) {
-      [Error("Keybinding is not a valid UTF-8 string")]
+      [Error("Keybinding is not a valid UTF-8 string")];
     } else {
-    ZedBundled.explode(str)
-    |> List.map(uchar =>
-         if (Uchar.is_char(uchar)) {
-           let char = Uchar.to_char(uchar);
-           let lowercaseChar = Char.lowercase_ascii(char);
-           let isCapitalized = lowercaseChar != char;
-           if (isCapitalized && addShiftKeyToCapital) {
-             keyToKeyPress(
-               ~mods=[Shift, ...mods],
-               Key.Character(Uchar.of_char(lowercaseChar)),
-             );
+      ZedBundled.explode(str)
+      |> List.map(uchar =>
+           if (Uchar.is_char(uchar)) {
+             let char = Uchar.to_char(uchar);
+             let lowercaseChar = Char.lowercase_ascii(char);
+             let isCapitalized = lowercaseChar != char;
+             if (isCapitalized && addShiftKeyToCapital) {
+               keyToKeyPress(
+                 ~mods=[Shift, ...mods],
+                 Key.Character(Uchar.of_char(lowercaseChar)),
+               );
+             } else {
+               keyToKeyPress(Key.Character(Uchar.of_char(lowercaseChar)));
+             };
            } else {
-             keyToKeyPress(Key.Character(Uchar.of_char(lowercaseChar)));
-           };
-         } else {
-           keyToKeyPress(Key.Character(uchar));
-         }
-       );
-       }
+             keyToKeyPress(Key.Character(uchar));
+           }
+         );
+    }
   | Matcher_internal.Special(special) => [Ok(SpecialKey(special))]
   | Matcher_internal.Physical(key) => [keyToKeyPress(key)]
   };

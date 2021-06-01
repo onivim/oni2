@@ -661,6 +661,7 @@ module Contributions = {
   let commands =
     Commands.[
       toggleIntegratedTerminal,
+      newIntegratedTerminal,
       New.horizontal,
       New.vertical,
       New.current,
@@ -758,8 +759,9 @@ module Contributions = {
   let focusedContextKeys = {
     WhenExpr.ContextKeys.(
       [
-      Schema.bool("terminalFocus", _ => true),
-      Schema.bool("terminalProcessSupported", _ => true)]
+        Schema.bool("terminalFocus", _ => true),
+        Schema.bool("terminalProcessSupported", _ => true),
+      ]
       |> Schema.fromList
       |> fromSchema()
     );
