@@ -92,6 +92,7 @@ type t =
     })
   | QuickmenuSearch(string)
   | QuickmenuClose
+  | QuickOpen(Feature_QuickOpen.msg)
   | ListFocus(int)
   | ListFocusUp
   | ListFocusDown
