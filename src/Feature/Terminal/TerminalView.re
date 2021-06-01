@@ -46,6 +46,14 @@ module Terminal = {
             config,
           );
 
+    let lineHeight =
+      Configuration.lineHeight.get(config)
+      |> Oni_Core.Utility.OptionEx.value_or_lazy(() => {
+           Feature_Configuration.GlobalConfiguration.Editor.lineHeight.get(
+             config,
+           )
+         });
+
     let%hook lastDimensions = Hooks.ref(None);
 
     let%hook lastBoundingBox = Hooks.ref(None);
@@ -78,13 +86,21 @@ module Terminal = {
     | _ => ()
     };
 
+    let lineHeightSize =
+      Oni_Core.LineHeight.calculate(~measuredFontHeight=fontSize, lineHeight);
+    let terminalFont =
+      EditorTerminal.Font.make(
+        ~smoothing,
+        ~size=fontSize,
+        ~lineHeight=lineHeightSize,
+        resolvedFont,
+      );
+
     let onDimensionsChanged =
         (
           {height, width, _}: Revery.UI.NodeEvents.DimensionsChangedEventParams.t,
         ) => {
       // If we have a loaded font, figure out how many columns and rows we can show
-      let terminalFont =
-        ReveryTerminal.Font.make(~size=fontSize, resolvedFont);
       let rows =
         float_of_int(height) /. terminalFont.lineHeight |> int_of_float;
       let columns =
@@ -100,15 +116,13 @@ module Terminal = {
     let {screen, cursor, _}: Model.terminal = terminal;
 
     let element = {
-      let font =
-        ReveryTerminal.Font.make(~smoothing, ~size=fontSize, resolvedFont);
-      ReveryTerminal.render(
+      EditorTerminal.render(
         ~opacity,
         ~defaultBackground,
         ~defaultForeground,
         ~theme=terminalTheme,
         ~cursor,
-        ~font,
+        ~font=terminalFont,
         ~scrollBarThickness=Constants.scrollBarThickness,
         ~scrollBarThumb=Constants.scrollThumbColor,
         ~scrollBarBackground=Constants.scrollTrackColor,

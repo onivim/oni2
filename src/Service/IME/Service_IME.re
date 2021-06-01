@@ -1,5 +1,5 @@
-open Revery;
-open Oni_Core;
+// open Revery;
+// open Oni_Core;
 
 module BoundingBox2d = Revery.Math.BoundingBox2d;
 
@@ -26,5 +26,5 @@ module Sub = {
   };
 
   let ime =
-      (~window as _, ~compositionStart, ~compositionEdit, ~compositionEnd) => Isolinear.Sub.none;
+      (~window as _, ~compositionStart as _, ~compositionEdit as _, ~compositionEnd as _) => Isolinear.Sub.none;
 };

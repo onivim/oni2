@@ -46,11 +46,15 @@ module Internal = {
               Feature_Theme.Msg.menuPreviewTheme(~themeId=id(theme)),
             )
           },
-        ~onItemSelected=
-          theme => {
-            Actions.Theme(
-              Feature_Theme.Msg.menuCommitTheme(~themeId=id(theme)),
-            )
+        ~onAccepted=
+          (~text as _, ~item) => {
+            item
+            |> Option.map(item => {
+                 Actions.Theme(
+                   Feature_Theme.Msg.menuCommitTheme(~themeId=id(item)),
+                 )
+               })
+            |> Option.value(~default=Actions.Noop)
           },
         ~toString=theme => "Theme: " ++ label(theme),
         themes,
@@ -686,6 +690,16 @@ let update =
 
     ({...state, input: model}, eff);
 
+  | Keyboard(msg) =>
+    let (model, outmsg) = Feature_Keyboard.update(state.keyboard, msg);
+    switch (outmsg) {
+    | Nothing => ({...state, keyboard: model}, Isolinear.Effect.none)
+    | Effect(eff) => (
+        {...state, keyboard: model},
+        eff |> Isolinear.Effect.map(eff => Keyboard(eff)),
+      )
+    };
+
   | LanguageSupport(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
     let editor = state.layout |> Feature_Layout.activeEditor;
@@ -1313,7 +1327,13 @@ let update =
     let config = Feature_Configuration.resolver(state.config, state.vim);
 
     let (buffers, outmsg) =
-      Feature_Buffers.update(~activeBufferId, ~config, msg, state.buffers);
+      Feature_Buffers.update(
+        ~activeBufferId,
+        ~config,
+        ~workspace=state.workspace,
+        msg,
+        state.buffers,
+      );
 
     let state = {...state, buffers};
 
@@ -1323,6 +1343,11 @@ let update =
     | Effect(eff) => (
         state,
         eff |> Isolinear.Effect.map(msg => Buffers(msg)),
+      )
+
+    | SetClipboardText(text) => (
+        state,
+        Service_Clipboard.Effects.setClipboardText(text),
       )
 
     | ShowMenu(menuFn) =>
@@ -2281,6 +2306,27 @@ let update =
 
     ({...state, newQuickmenu: quickmenu'}, eff);
 
+  | QuickOpen(msg) =>
+    let (quickOpen', outmsg) =
+      Feature_QuickOpen.update(msg, state.quickOpen);
+
+    let (state', eff) =
+      switch (outmsg) {
+      | Nothing => (state, Isolinear.Effect.none)
+      | Effect(eff) => (
+          state,
+          eff |> Isolinear.Effect.map(msg => Actions.QuickOpen(msg)),
+        )
+      | ShowMenu(menu) =>
+        let menu' =
+          menu |> Feature_Quickmenu.Schema.map(msg => Actions.QuickOpen(msg));
+        let quickmenu' =
+          Feature_Quickmenu.show(~menu=menu', state.newQuickmenu);
+        ({...state, newQuickmenu: quickmenu'}, Isolinear.Effect.none);
+      };
+
+    ({...state', quickOpen: quickOpen'}, eff);
+
   | Snippets(msg) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
@@ -2663,9 +2709,12 @@ let update =
 
       // Pop open and focus sidebar
       let sideBar =
-        if (!Feature_SideBar.isOpen(state.sideBar)
-            || Feature_SideBar.selected(state.sideBar)
-            !== Feature_SideBar.FileExplorer) {
+        if (shouldFocusExplorer
+            && (
+              !Feature_SideBar.isOpen(state.sideBar)
+              || Feature_SideBar.selected(state.sideBar)
+              !== Feature_SideBar.FileExplorer
+            )) {
           Feature_SideBar.toggle(FileExplorer, state.sideBar);
         } else {
           state.sideBar;

@@ -987,6 +987,16 @@ let command = (~context=Context.current(), v) => {
   );
 };
 
+let commands = (~context=Context.current(), lines) => {
+  runWith(
+    ~context,
+    () => {
+      Native.vimCommands(lines);
+      Mode.current();
+    },
+  );
+};
+
 let eval = (~context=Context.current(), v) =>
   // Error messages come through the message handler,
   // so we'll temporarily override it during the course of the eval

@@ -128,7 +128,7 @@ let update = (~focus, model, msg) => {
         updateGroup(groupId, Group.select(editorId)),
         model,
       ),
-      Nothing,
+      Focus(Center),
     )
   | EditorTabDoubleClicked({groupId, editorId}) => (
       updateActiveLayout(
@@ -155,7 +155,7 @@ let update = (~focus, model, msg) => {
 
   | LayoutTabClicked(index) => (
       {...model, activeLayoutIndex: index},
-      Nothing,
+      Focus(Center),
     )
 
   | LayoutCloseButtonClicked(index) =>

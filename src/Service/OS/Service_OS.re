@@ -6,8 +6,24 @@ let wrap = LuvEx.wrapPromise;
 
 let bind = (fst, snd) => Lwt.bind(snd, fst);
 
+module InnerApi = {
+  let stat = path => {
+    Log.infof(m => m("Luv.stat: %s", path));
+    path
+    |> wrap(Luv.File.stat)
+    |> LwtEx.tap(_ => Log.infof(m => m("Stat completed: %s", path)));
+  };
+
+  let lstat = path => {
+    Log.infof(m => m("Luv.lstat: %s", path));
+    path
+    |> wrap(Luv.File.lstat)
+    |> LwtEx.tap(_ => Log.infof(m => m("Lstat completed: %s", path)));
+  };
+};
+
 module Internal = {
-  let copyfile = (~overwrite=true, ~source, ~target) => {
+  let copyfile = (~overwrite=true, ~source, target) => {
     source |> wrap(Luv.File.copyfile(~excl=!overwrite, ~to_=target));
   };
   let openfile = (~flags, path) => flags |> wrap(Luv.File.open_(path));
@@ -18,7 +34,82 @@ module Internal = {
   let readdir = wrap(Luv.File.readdir);
 };
 
+module DirectoryEntry = {
+  type kind = [ | `File | `Directory];
+
+  type t = {
+    kind,
+    isSymbolicLink: bool,
+    name: string,
+    path: FpExp.t(FpExp.absolute),
+  };
+
+  let name = ({name, _}) => name;
+
+  let path = ({path, _}) => path;
+
+  let isSymbolicLink = ({isSymbolicLink, _}) => isSymbolicLink;
+
+  let isFile = ({kind, _}) => kind == `File;
+
+  let isDirectory = ({kind, _}) => kind == `Directory;
+
+  let fromStat = (~name, path) => {
+    let ofMode = (~isSymbolicLink, mode) => {
+      let kind =
+        if (Luv.File.Mode.test([`IFDIR], mode)) {
+          `Directory;
+        } else {
+          `File;
+        };
+
+      Some({path, name, kind, isSymbolicLink});
+    };
+
+    let pathStr = FpExp.toString(path);
+
+    Lwt.catch(
+      () => {
+        InnerApi.lstat(pathStr)
+        |> LwtEx.flatMap((lstat: Luv.File.Stat.t) =>
+             if (Luv.File.Mode.test([`IFLNK], lstat.mode)) {
+               InnerApi.stat(pathStr)
+               |> Lwt.map((stat: Luv.File.Stat.t) =>
+                    ofMode(~isSymbolicLink=true, stat.mode)
+                  );
+             } else {
+               Lwt.return(ofMode(~isSymbolicLink=false, lstat.mode));
+             }
+           )
+      },
+      exn => {
+        Log.errorf(m =>
+          m("Error stat'ing file: %s (%s)", pathStr, Printexc.to_string(exn))
+        );
+        Lwt.return(None);
+      },
+    );
+  };
+
+  let fromDirent =
+      (~dirent: Luv.File.Dirent.t, path: FpExp.t(FpExp.absolute)) => {
+    let name = dirent.name;
+    switch (dirent.kind) {
+    | `FILE =>
+      Lwt.return(Some({name, kind: `File, isSymbolicLink: false, path}))
+    | `DIR =>
+      Lwt.return(Some({name, kind: `Directory, isSymbolicLink: false, path}))
+    // Wasn't enough information from the direntry - could be `LINK, `UNKNOWN, etc -
+    // fall back to using stat. We don't use stat by default for everything since the additional
+    // I/O is slow on Windows
+    | _ => fromStat(~name, path)
+    };
+  };
+};
+
 module Api = {
+  include InnerApi;
+
   let unlink = {
     let wrapped = wrap(Luv.File.unlink);
 
@@ -36,13 +127,6 @@ module Api = {
     };
   };
 
-  let stat = path => {
-    Log.infof(m => m("Luv.stat: %s", path));
-    path
-    |> wrap(Luv.File.stat)
-    |> LwtEx.tap(_ => Log.infof(m => m("Stat completed: %s", path)));
-  };
-
   let readdir = path => {
     Log.infof(m => m("readdir called for: %s", path));
     path
@@ -55,6 +139,25 @@ module Api = {
            m("readdir returned %d items", Array.length(results))
          );
          Internal.closedir(dir) |> Lwt.map(() => results |> Array.to_list);
+       });
+  };
+
+  let readdir2 = path => {
+    readdir(FpExp.toString(path))
+    |> LwtEx.flatMap(dirItems => {
+         let joiner = (acc, curr) => {
+           [curr, ...acc];
+         };
+         let resolvedItems =
+           dirItems
+           |> List.map((dirent: Luv.File.Dirent.t) => {
+                let fullPath = FpExp.At.(path / dirent.name);
+                DirectoryEntry.fromDirent(~dirent, fullPath);
+              });
+
+         resolvedItems
+         |> LwtEx.all(~initial=[], joiner)
+         |> Lwt.map(OptionEx.values);
        });
   };
 
@@ -205,14 +308,98 @@ module Api = {
   };
 
   let copy = (~source, ~target, ~overwrite) => {
-    Internal.copyfile(~source, ~target, ~overwrite);
+    Internal.copyfile(~overwrite, ~source, target);
   };
 
   let rename = (~source, ~target, ~overwrite) => {
     copy(~source, ~target, ~overwrite) |> bind(() => unlink(source));
   };
   let mkdir = path => {
-    path |> wrap(Luv.File.mkdir);
+    Log.tracef(m => m("Calling mkdir for path: %s", path));
+    let maybeStat = str => {
+      Lwt.catch(
+        () => stat(str) |> Lwt.map(stat => Some(stat)),
+        _exn => Lwt.return(None),
+      );
+    };
+
+    let isDirectory = (stat: Luv.File.Stat.t) => {
+      Luv.File.Mode.test([`IFDIR], stat.mode);
+    };
+
+    let doMkdir = path => path |> wrap(Luv.File.mkdir);
+
+    let attemptCheckOrCreateDirectory = path => {
+      path
+      |> maybeStat
+      |> LwtEx.flatMap(maybeStatResult => {
+           maybeStatResult
+           |> Option.map(statResult =>
+                if (isDirectory(statResult)) {
+                  Lwt.return();
+                } else {
+                  doMkdir(path);
+                }
+              )
+           |> OptionEx.value_or_lazy(() => doMkdir(path))
+         });
+    };
+
+    let rec loop = attemptCount =>
+      if (attemptCount >= 3) {
+        attemptCheckOrCreateDirectory(path);
+      } else {
+        Lwt.catch(
+          () => {attemptCheckOrCreateDirectory(path)},
+          _exn => loop(attemptCount + 1),
+        );
+      };
+
+    loop(0);
+  };
+
+  let mkdirp = (path: FpExp.t(FpExp.absolute)) => {
+    let rec loop = path =>
+      // Hit the root!
+      if (FpExp.eq(path, FpExp.root) || FpExp.eq(path, FpExp.dirName(path))) {
+        Lwt.return();
+      } else {
+        let parent = FpExp.dirName(path);
+        let pathStr = FpExp.toString(path);
+
+        let maybeStat = str => {
+          Lwt.catch(
+            () => stat(str) |> Lwt.map(stat => Some(stat)),
+            _exn => Lwt.return(None),
+          );
+        };
+
+        let isDirectory = (stat: Luv.File.Stat.t) => {
+          Luv.File.Mode.test([`IFDIR], stat.mode);
+        };
+
+        parent
+        |> loop
+        |> LwtEx.flatMap(() => {
+             // Does the directory already exist?
+             maybeStat(pathStr)
+           })
+        |> LwtEx.flatMap(maybeStatResult => {
+             switch (maybeStatResult) {
+             | None => mkdir(pathStr)
+             | Some(stat) when isDirectory(stat) => Lwt.return()
+             | Some(_stat) =>
+               Lwt.fail_with(
+                 Printf.sprintf(
+                   "mkdirp: Path %s exists but is not a directory",
+                   pathStr,
+                 ),
+               )
+             }
+           });
+      };
+
+    loop(path);
   };
 
   let rmdir = (~recursive=true, path) => {
@@ -345,27 +532,28 @@ module Effect = {
 module Sub = {
   type dirParams = {
     id: string,
+    cwdPath: FpExp.t(FpExp.absolute),
     cwd: string,
   };
   module DirSub =
     Isolinear.Sub.Make({
-      type nonrec msg = result(list(Luv.File.Dirent.t), string);
+      type nonrec msg = result(list(DirectoryEntry.t), string);
 
       type nonrec params = dirParams;
 
       type state = unit;
 
       let name = "Service_OS.Sub.dir";
-      let id = ({id, cwd}) => id ++ cwd;
+      let id = ({id, cwd, _}) => id ++ cwd;
 
       let init = (~params, ~dispatch) => {
-        let promise = Api.readdir(params.cwd);
+        let promise = params.cwdPath |> Api.readdir2;
 
-        Lwt.on_success(promise, dirItems => dispatch(Ok(dirItems)));
+        Lwt.on_success(promise, dirItems => {dispatch(Ok(dirItems))});
 
-        Lwt.on_failure(promise, exn =>
+        Lwt.on_failure(promise, exn => {
           dispatch(Error(Printexc.to_string(exn)))
-        );
+        });
 
         ();
       };
@@ -379,6 +567,7 @@ module Sub = {
       };
     });
   let dir = (~uniqueId, ~toMsg, path) => {
-    DirSub.create({id: uniqueId, cwd: path}) |> Isolinear.Sub.map(toMsg);
+    DirSub.create({id: uniqueId, cwdPath: path, cwd: FpExp.toString(path)})
+    |> Isolinear.Sub.map(toMsg);
   };
 };

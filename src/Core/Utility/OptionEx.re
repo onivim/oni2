@@ -14,6 +14,12 @@ let flatMap = f =>
   | Some(x) => f(x)
   | None => None;
 
+let flatMap2 = (f, x, y) =>
+  switch (x, y) {
+  | (Some(x), Some(y)) => f(x, y)
+  | _ => None
+  };
+
 let map2 = (f, a, b) =>
   switch (a, b) {
   | (Some(aVal), Some(bVal)) => Some(f(aVal, bVal))

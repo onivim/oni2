@@ -1,5 +1,5 @@
 open Oni_Core;
-open Utility;
+// open Utility;
 
 module BoundingBox2d = Revery.Math.BoundingBox2d;
 
@@ -43,7 +43,7 @@ let update = (msg, model) =>
     )
   };
 
-let sub = (~imeBoundingArea, ime) => {
+let sub = (~imeBoundingArea, _ime) => {
   switch (imeBoundingArea) {
   | None =>
     SubEx.value(~uniqueId="Feature_Input.IME.noTextInput", StopTextInput)
@@ -63,7 +63,7 @@ let sub = (~imeBoundingArea, ime) => {
 };
 
 module View = {
-  open Revery;
+  // open Revery;
   open Revery.UI;
   let make = (~ime, ()) => {
     switch (ime.currentRect) {

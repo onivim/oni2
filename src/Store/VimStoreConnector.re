@@ -703,26 +703,14 @@ let start =
       }
     );
 
-  let copyActiveFilepathToClipboardEffect =
-    Isolinear.Effect.create(~name="vim.copyActiveFilepathToClipboard", () =>
-      switch (Vim.Buffer.getCurrent() |> Vim.Buffer.getFilename) {
-      | Some(filename) => setClipboardText(filename)
-      | None => ()
-      }
-    );
-
   let prevViml = ref([]);
   let synchronizeViml = lines =>
     Isolinear.Effect.create(~name="vim.synchronizeViml", () =>
       if (prevViml^ != lines) {
-        List.iter(
-          l => {
-            Log.info("Running VimL from config: " ++ l);
-            Vim.command(l) |> ignore;
-            Log.info("VimL command completed.");
-          },
-          lines,
-        );
+        let linesArray = Array.of_list(lines);
+        Log.info("Running VimL from config...");
+        Vim.commands(linesArray) |> ignore;
+        Log.info("VimL command completed.");
         prevViml := lines;
       }
     );
@@ -816,11 +804,6 @@ let start =
 
     | Init => (state, initEffect)
     | KeyboardInput({isText, input}) => (state, inputEffect(~isText, input))
-
-    | CopyActiveFilepathToClipboard => (
-        state,
-        copyActiveFilepathToClipboardEffect,
-      )
 
     | VimMessageReceived({priority, message, _}) =>
       let kind =

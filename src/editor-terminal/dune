@@ -1,0 +1,6 @@
+(library
+ (name EditorTerminal)
+ (public_name Oni2.editor-terminal)
+ (preprocess
+  (pps brisk-reconciler.ppx))
+ (libraries Oni2.core isolinear vterm Revery reason-skia))

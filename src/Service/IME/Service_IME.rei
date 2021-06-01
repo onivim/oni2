@@ -1,5 +1,4 @@
 open Revery;
-open Oni_Core;
 
 module Effects: {
   let setIMEPosition: Math.BoundingBox2d.t => Isolinear.Effect.t(_);

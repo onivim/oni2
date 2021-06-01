@@ -3,7 +3,6 @@ module ChunkyQueue = ChunkyQueue;
 module Cache = Cache;
 module File = File;
 module FloatEx = FloatEx;
-module FpEx = FpEx;
 module FunEx = FunEx;
 module IndexEx = IndexEx;
 module IntEx = IntEx;

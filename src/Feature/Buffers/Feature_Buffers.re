@@ -154,6 +154,8 @@ type command =
   | ChangeFiletype({maybeBufferId: option(int)})
   | ConvertIndentationToTabs
   | ConvertIndentationToSpaces
+  | CopyAbsolutePathToClipboard
+  | CopyRelativePathToClipboard
   | DetectIndentation
   | SaveWithoutFormatting;
 
@@ -162,6 +164,7 @@ type msg =
   | AutoSave(AutoSave.msg)
   | AutoSaveCompleted
   | Command(command)
+  | Noop
   | EditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
       split: SplitDirection.t,
@@ -250,6 +253,8 @@ module Msg = {
     Command(ChangeFiletype({maybeBufferId: Some(bufferId)}));
 
   let statusBarIndentationClicked = StatusBarIndentationClicked;
+
+  let copyActivePathToClipboard = Command(CopyAbsolutePathToClipboard);
 };
 
 let vimSettingChanged = (~activeBufferId, ~name, ~value, model) => {
@@ -336,6 +341,7 @@ type outmsg =
       preview: bool,
     })
   | BufferModifiedSet(int, bool)
+  | SetClipboardText(string)
   | ShowMenu(
       (Exthost.LanguageInfo.t, IconTheme.t) =>
       Feature_Quickmenu.Schema.menu(msg),
@@ -391,7 +397,7 @@ let guessIndentation = (~config, buffer) => {
   |> Option.value(~default=Inferred.implicit(defaultIndentation(~config)));
 };
 
-let update = (~activeBufferId, ~config, msg: msg, model: model) => {
+let update = (~activeBufferId, ~config, ~workspace, msg: msg, model: model) => {
   switch (msg) {
   | AutoSave(msg) =>
     let (autoSave', outmsg) = AutoSave.update(msg, model.autoSave);
@@ -584,7 +590,10 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
     let menuFn =
         (_languageInfo: Exthost.LanguageInfo.t, _iconTheme: IconTheme.t) => {
       Feature_Quickmenu.Schema.menu(
-        ~onItemSelected=snd,
+        ~onAccepted=
+          (~text as _, ~item) => {
+            item |> Option.map(snd) |> Option.value(~default=Noop)
+          },
         ~toString=fst,
         items,
       );
@@ -598,14 +607,18 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       let menuFn =
           (_languageInfo: Exthost.LanguageInfo.t, _iconTheme: IconTheme.t) => {
         Feature_Quickmenu.Schema.menu(
-          ~onItemSelected=
-            size =>
-              IndentationChanged({
-                id: activeBufferId,
-                size,
-                mode,
-                didBufferGetModified: false,
-              }),
+          ~onAccepted=
+            (~text as _, ~item as maybeSize) =>
+              maybeSize
+              |> Option.map(size => {
+                   IndentationChanged({
+                     id: activeBufferId,
+                     size,
+                     mode,
+                     didBufferGetModified: false,
+                   })
+                 })
+              |> Option.value(~default=Noop),
           ~toString=string_of_int,
           items,
         );
@@ -632,12 +645,17 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         Feature_Quickmenu.Schema.menu(
           ~itemRenderer=
             Feature_Quickmenu.Schema.Renderer.defaultWithIcon(itemToIcon),
-          ~onItemSelected=
-            language =>
-              FileTypeChanged({
-                id: bufferId,
-                fileType: Buffer.FileType.explicit(fst(language)),
-              }),
+          ~onAccepted=
+            (~text as _, ~item as maybeLanguage) => {
+              maybeLanguage
+              |> Option.map(language => {
+                   FileTypeChanged({
+                     id: bufferId,
+                     fileType: Buffer.FileType.explicit(fst(language)),
+                   })
+                 })
+              |> Option.value(~default=Noop)
+            },
           ~toString=fst,
           languages,
         );
@@ -714,6 +732,48 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         );
       };
 
+    | CopyAbsolutePathToClipboard =>
+      let eff =
+        model.buffers
+        |> IntMap.find_opt(activeBufferId)
+        |> OptionEx.flatMap(Buffer.getFilePath)
+        |> Option.map(path => SetClipboardText(path))
+        |> Option.value(~default=Nothing);
+
+      (model, eff);
+
+    | CopyRelativePathToClipboard =>
+      let maybeBufferPath =
+        model.buffers
+        |> IntMap.find_opt(activeBufferId)
+        |> OptionEx.flatMap(Buffer.getFilePath)
+        |> OptionEx.flatMap(Oni_Core.FpExp.absoluteCurrentPlatform);
+
+      let default =
+        maybeBufferPath
+        |> Option.map(path => SetClipboardText(FpExp.toString(path)))
+        |> Option.value(~default=Nothing);
+
+      let maybeWorkspacePath =
+        workspace
+        |> Feature_Workspace.openedFolder
+        |> OptionEx.flatMap(Oni_Core.FpExp.absoluteCurrentPlatform);
+
+      let eff =
+        OptionEx.flatMap2(
+          (bufferPath, workspacePath) => {
+            switch (FpExp.relativize(~source=workspacePath, ~dest=bufferPath)) {
+            | Ok(relative) =>
+              Some(SetClipboardText(FpExp.relativeToString(relative)))
+            | Error(_) => None
+            }
+          },
+          maybeBufferPath,
+          maybeWorkspacePath,
+        )
+        |> Option.value(~default);
+      (model, eff);
+
     | DetectIndentation =>
       let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
 
@@ -757,6 +817,8 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
          })
       |> Option.value(~default=Nothing);
     (model, outmsg);
+
+  | Noop => (model, Nothing)
   };
 };
 
@@ -950,6 +1012,21 @@ module Commands = {
       Command(ChangeFiletype({maybeBufferId: None})),
     );
 
+  let copyAbsolutePath =
+    define(
+      ~category="File",
+      ~title="Copy Path of Active File",
+      "copyFilePath",
+      Command(CopyAbsolutePathToClipboard),
+    );
+  let copyRelativePath =
+    define(
+      ~category="File",
+      ~title="Copy Relative Path of Active File",
+      "copyRelativeFilePath",
+      Command(CopyRelativePathToClipboard),
+    );
+
   let saveWithoutFormatting =
     define(
       ~category="File",
@@ -1013,6 +1090,8 @@ module Contributions = {
       changeFiletype,
       convertIndentationToSpaces,
       convertIndentationToTabs,
+      copyAbsolutePath,
+      copyRelativePath,
       detectIndentation,
       indentUsingSpaces,
       indentUsingTabs,

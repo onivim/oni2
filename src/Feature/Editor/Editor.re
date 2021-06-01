@@ -535,7 +535,12 @@ let configure = (~config, editor) => {
        ~enabled=EditorConfiguration.Minimap.enabled.get(config),
        ~maxColumn=EditorConfiguration.Minimap.maxColumn.get(config),
      )
-  |> setLineHeight(~lineHeight=EditorConfiguration.lineHeight.get(config))
+  |> setLineHeight(
+       ~lineHeight=
+         Feature_Configuration.GlobalConfiguration.Editor.lineHeight.get(
+           config,
+         ),
+     )
   |> setLineNumbers(
        ~lineNumbers=EditorConfiguration.lineNumbers.get(config),
      )
@@ -974,7 +979,7 @@ let withSteadyCursor = (f, editor) => {
   };
 };
 
-let makeInlineElement = (~command=None, ~key, ~uniqueId, ~lineNumber, ~view) => {
+let makeInlineElement = (~command=None, ~key, ~uniqueId, ~lineNumber, view) => {
   hidden: false,
   reconcilerKey: Brisk_reconciler.Key.create(),
   key,
@@ -1063,7 +1068,7 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
            ~key="codelens:" ++ string_of_int(handle),
            ~uniqueId,
            ~lineNumber,
-           ~view,
+           view,
          );
        });
 
@@ -1380,9 +1385,23 @@ let scrollToPixelY = (~animated, ~pixelY as newScrollY, editor) => {
   |> synchronizeMinimapScroll(~animated=!instant);
 };
 
-let scrollToLine = (~line, view) => {
-  let pixelY = float_of_int(line) *. lineHeightInPixels(view);
-  scrollToPixelY(~animated=true, ~pixelY, view);
+let halfViewportHeight = editor => {
+  let heightInPixels = float(editor.pixelHeight);
+  (heightInPixels -. lineHeightInPixels(editor)) /. 2.;
+};
+
+let scrollToLine = (~line, editor) => {
+  let inlineElementSpace =
+    InlineElements.getReservedSpace(
+      EditorCoreTypes.LineNumber.ofZeroBased(line),
+      editor.inlineElements,
+    );
+  let pixelY =
+    float_of_int(line)
+    *. lineHeightInPixels(editor)
+    +. inlineElementSpace
+    -. halfViewportHeight(editor);
+  scrollToPixelY(~animated=true, ~pixelY, editor);
 };
 
 let scrollToPixelX = (~animated, ~pixelX as newScrollX, editor) => {
@@ -1532,12 +1551,10 @@ let scrollCenterCursorVertically = editor => {
       editor,
     );
 
-  let heightInPixels = float(editor.pixelHeight);
   let pixelY =
     pixelPosition.y
     +. Spring.getTarget(editor.scrollY)
-    -. heightInPixels
-    /. 2.;
+    -. halfViewportHeight(editor);
   scrollToPixelY(~animated=true, ~pixelY, editor);
 };
 

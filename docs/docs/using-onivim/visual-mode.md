@@ -11,7 +11,7 @@ There are three variations of visual mode, and they can be entered from normal m
 
 - Line mode: <kbd>V</kbd>
 - Character mode: <kbd>v</kbd>
-- Block mode: <kbd>Ctrl</kbd><kbd>v</kbd>
+- Block mode: <kbd>Ctrl</kbd><kbd>v</kbd> (although when this key chord is in use to paste, an alternative is <kbd>Ctrl</kbd><kbd>q</kbd>)
 
 When in visual mode, pressing a [motion] key - like <kbd>h</kbd>, <kdb>w</kbd>, etc - will extend the visual range.
 

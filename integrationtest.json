@@ -4,10 +4,12 @@
     "run": "esy '@integrationtest' x bash -c run-tests.sh"
   },
   "override": {
-      "build": ["dune build -p libvim,textmate,treesitter,Oni2,OniIntegrationTests -j4"],
-      "install": [
-          "esy-installer Oni2.install",
-          "esy-installer OniIntegrationTests.install"
-      ]
+    "build": [
+      "dune build -p libvim,textmate,treesitter,Oni2,OniIntegrationTests,vterm -j4"
+    ],
+    "install": [
+      "esy-installer Oni2.install",
+      "esy-installer OniIntegrationTests.install"
+    ]
   }
 }
