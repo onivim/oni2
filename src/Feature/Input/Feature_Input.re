@@ -393,6 +393,7 @@ let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
       ...model,
       inputStateMachine: inputStateMachine',
       keyDisplayer: keyDisplayer',
+      ime: IME.clear(model.ime),
     }
     |> incrementTick,
     effects,
