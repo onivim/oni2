@@ -83,7 +83,7 @@ module View = {
           height(h -. y |> int_of_float),
           backgroundColor(Revery.Color.rgba(1.0, 0., 0., 0.5)),
         ]>
-        <Text text={ime.candidateText} />
+        <Text text={ime.candidateText} underlined=true />
       </View>;
     | _ => React.empty
     };
