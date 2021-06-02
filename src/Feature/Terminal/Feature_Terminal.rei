@@ -28,6 +28,8 @@ let getTerminalOpt: (int, t) => option(Terminal.t);
 // Font to be used for terminals
 let font: t => Service_Font.font;
 
+let configurationChanged: (~config: Config.resolver, t) => t;
+
 // UPDATE
 
 [@deriving show({with_path: false})]

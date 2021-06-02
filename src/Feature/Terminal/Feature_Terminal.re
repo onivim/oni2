@@ -73,6 +73,10 @@ let recomputeFont = (~config, ~font: Service_Font.font, model) => {
   |> updateAll(Terminal.setFont(~font=resolvedFont));
 };
 
+let configurationChanged = (~config, model) => {
+  recomputeFont(~config, ~font=model.font, model);
+};
+
 let update =
     (
       ~clientServer: Feature_ClientServer.model,
@@ -85,6 +89,7 @@ let update =
       model |> updateById(id, Terminal.update(msg)),
       Nothing,
     )
+
   | Font(Service_Font.FontLoaded(font)) =>
     let model' = model |> recomputeFont(~config, ~font);
     (model', Nothing);
