@@ -318,19 +318,28 @@ let update =
            Effect(inputEffect);
          })
       |> Option.value(~default=Nothing);
-    (model, eff);
+
+    let model' =
+      model.paneTerminalId
+      |> Option.map(paneId =>
+           updateById(paneId, Terminal.scrollToBottom, model)
+         )
+      |> Option.value(~default=model);
+    (model', eff);
 
   | KeyPressed({id, key}) =>
     let inputEffect =
       Service_Terminal.Effect.input(~id, key)
       |> Isolinear.Effect.map(msg => Service(msg));
-    (model, Effect(inputEffect));
+    let model' = model |> updateById(id, Terminal.scrollToBottom);
+    (model', Effect(inputEffect));
 
   | Pasted({id, text}) =>
     let inputEffect =
       Service_Terminal.Effect.paste(~id, text)
       |> Isolinear.Effect.map(msg => Service(msg));
-    (model, Effect(inputEffect));
+    let model' = model |> updateById(id, Terminal.scrollToBottom);
+    (model', Effect(inputEffect));
 
   | Resized({id, rows, columns}) =>
     let newModel = updateById(id, term => {...term, rows, columns}, model);
@@ -346,7 +355,8 @@ let update =
     (newModel, Nothing);
 
   | Service(ScreenUpdated({id, screen, cursor})) =>
-    let newModel = updateById(id, term => {...term, screen, cursor}, model);
+    let newModel =
+      updateById(id, Terminal.updateScreen(~screen, ~cursor), model);
     (newModel, Nothing);
 
   | Service(ProcessExit({id, exitCode})) =>
