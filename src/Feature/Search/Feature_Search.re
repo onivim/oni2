@@ -94,7 +94,7 @@ type msg =
   | FindInput(Component_InputText.msg)
   | VimWindowNav(Component_VimWindows.msg)
   | ResultsList(Component_VimTree.msg)
-  | EnableRegex(bool);
+  | ToggleRegexButtonClicked;
 
 module Msg = {
   let input = str => Input(str);
@@ -223,8 +223,12 @@ let update = (~previewEnabled, model, msg) => {
 
   | SearchError(_) => (model, None)
 
-  | EnableRegex(enableRegex) => (
-      {...model, enableRegex, searchNonce: model.searchNonce + 1}
+  | ToggleRegexButtonClicked => (
+      {
+        ...model,
+        enableRegex: !model.enableRegex,
+        searchNonce: model.searchNonce + 1,
+      }
       |> setHits([]),
       None,
     )
@@ -334,19 +338,22 @@ let make =
           />
         </View>
         <View style=Styles.inputOptions>
-          <View
-            style=Styles.inputOption
-            onMouseUp={_ => dispatch(EnableRegex(!model.enableRegex))}>
-            <Codicon
-              icon=Codicon.regex
-              fontSize=18.
-              color={
-                model.enableRegex
-                  ? Colors.PanelTitle.activeForeground.from(theme)
-                  : Colors.PanelTitle.inactiveForeground.from(theme)
-              }
-            />
-          </View>
+          <Tooltip text="Toggle regular expression syntax">
+            <Feature_Sneak.View.Sneakable
+              sneakId="search.toggleRegex"
+              style=Styles.inputOption
+              onClick={() => dispatch(ToggleRegexButtonClicked)}>
+              <Codicon
+                icon=Codicon.regex
+                fontSize=18.
+                color={
+                  model.enableRegex
+                    ? Colors.PanelTitle.activeForeground.from(theme)
+                    : Colors.PanelTitle.inactiveForeground.from(theme)
+                }
+              />
+            </Feature_Sneak.View.Sneakable>
+          </Tooltip>
         </View>
       </View>
     </View>
