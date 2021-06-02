@@ -10,19 +10,6 @@ module Terminal: {
   let title: t => option(string);
   let launchConfig: t => Exthost.ShellLaunchConfig.t;
 };
-// type terminal;
-// pri {
-//   id: int,
-//   launchConfig: Exthost.ShellLaunchConfig.t,
-//   rows: int,
-//   columns: int,
-//   pid: option(int),
-//   title: option(string),
-//   screen: EditorTerminal.Screen.t,
-//   cursor: EditorTerminal.Cursor.t,
-//   closeOnExit: bool,
-//   scrollY: float,
-// };
 
 type t;
 
