@@ -141,6 +141,7 @@ let render =
       ~scrollBarThumb=?,
       ~scrollBarThickness=?,
       ~theme=Theme.default,
+      ~scrollY,
       ~font,
       ~cursor,
       screen,
@@ -152,6 +153,7 @@ let render =
     ?scrollBarBackground
     ?scrollBarThumb
     ?scrollBarThickness
+    scrollY
     theme
     screen
     cursor

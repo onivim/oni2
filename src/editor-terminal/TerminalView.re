@@ -41,25 +41,17 @@ let%component make =
                 ~scrollBarThumb=Colors.darkGray,
                 ~scrollBarThickness=8,
                 ~theme=Theme.default,
+                ~scrollY: float,
                 ~screen: Screen.t,
                 ~cursor: Cursor.t,
                 ~font: Font.t,
                 (),
               ) => {
   let%hook (size, setSize) = Hooks.state({width: 0, height: 0});
-  let%hook (userScrollY, setUserScrollY) = Hooks.state(None);
 
   let totalRows = Screen.getTotalRows(screen);
   let screenRows = Screen.getVisibleRows(screen);
   let scrollBackRows = totalRows - screenRows;
-
-  let screenScrollY = float(scrollBackRows) *. font.lineHeight;
-
-  let scrollY =
-    switch (userScrollY) {
-    | Some(v) => v
-    | None => screenScrollY
-    };
 
   let bg =
     switch (defaultBackground) {
@@ -86,26 +78,31 @@ let%component make =
     |> Revery.Color.toSkia;
 
   let onScroll = y => {
-    let y = y <= 0. ? 0. : y;
-    let maxScroll = float(scrollBackRows) *. font.lineHeight;
-    let y = y >= maxScroll ? maxScroll : y;
-
-    if (Float.abs(y -. screenScrollY) <= 10.0) {
-      setUserScrollY(_ => None);
-    } else {
-      setUserScrollY(_ => Some(y));
-    };
+    prerr_endline(
+      "onScroll: " ++ string_of_float(y),
+      // let y = y <= 0. ? 0. : y;
+      // let maxScroll = float(scrollBackRows) *. font.lineHeight;
+      // let y = y >= maxScroll ? maxScroll : y;
+      // if (Float.abs(y -. screenScrollY) <= 10.0) {
+      //   setUserScrollY(_ => None);
+      // } else {
+      //   setUserScrollY(_ => Some(y));
+      // };
+    );
   };
 
-  let onWheel = ({deltaY, _}: NodeEvents.mouseWheelEventParams) => {
-    let newScroll = scrollY -. deltaY *. 25.0;
-    onScroll(newScroll);
-  };
+  // let onWheel = ({deltaY, _}: NodeEvents.mouseWheelEventParams) => {
+  //   prerr_endline(
+  //     "onWheel, in terminal view",
+  // let newScroll = scrollY -. deltaY *. 25.0;
+  // onScroll(newScroll);
+  //   );
+  // };
 
   let element =
     <View
       style={Styles.container(bg)}
-      onMouseWheel=onWheel
+      // onMouseWheel=onWheel
       onDimensionsChanged={({width, height, _}) => {
         setSize(_ => {width, height})
       }}>

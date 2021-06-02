@@ -28,17 +28,10 @@ module Terminal = {
                   ~isActive,
                   ~config,
                   ~terminal: Model.terminal,
-                  ~font: Service_Font.font,
                   ~theme: Oni_Core.ColorTheme.Colors.t,
                   ~dispatch,
                   (),
                 ) => {
-    let resolvedFont =
-      Service_Font.resolveWithFallback(
-        Revery.Font.Weight.Normal,
-        font.fontFamily,
-      );
-
     let opacity =
       isActive
         ? 1.0
@@ -46,13 +39,8 @@ module Terminal = {
             config,
           );
 
-    let lineHeight =
-      Configuration.lineHeight.get(config)
-      |> Oni_Core.Utility.OptionEx.value_or_lazy(() => {
-           Feature_Configuration.GlobalConfiguration.Editor.lineHeight.get(
-             config,
-           )
-         });
+    let font = terminal.font;
+    let lineHeight = font.lineHeight;
 
     let%hook lastDimensions = Hooks.ref(None);
 
@@ -73,17 +61,8 @@ module Terminal = {
         },
       );
 
-    let Service_Font.{fontSize, smoothing, _} = font;
+    let terminalFont = font;
 
-    let lineHeightSize =
-      Oni_Core.LineHeight.calculate(~measuredFontHeight=fontSize, lineHeight);
-    let terminalFont =
-      EditorTerminal.Font.make(
-        ~smoothing,
-        ~size=fontSize,
-        ~lineHeight=lineHeightSize,
-        resolvedFont,
-      );
     let onDimensionsChanged =
         (
           {height, width, _}: Revery.UI.NodeEvents.DimensionsChangedEventParams.t,
@@ -114,10 +93,22 @@ module Terminal = {
         ~scrollBarThickness=Constants.scrollBarThickness,
         ~scrollBarThumb=Constants.scrollThumbColor,
         ~scrollBarBackground=Constants.scrollTrackColor,
+        ~scrollY=terminal.scrollY,
         screen,
       );
     };
-    <View onDimensionsChanged style={Styles.container(opacity)}>
+
+    let onMouseWheel = ({deltaY, _}: NodeEvents.mouseWheelEventParams) => {
+      prerr_endline("onWheel, main view");
+      dispatch(
+        Terminal({
+          id: terminal.id,
+          msg: MouseWheelScrolled({deltaY: deltaY *. 25.0}),
+        }),
+      );
+    };
+
+    <View onDimensionsChanged onMouseWheel style={Styles.container(opacity)}>
       element
     </View>;
   };
@@ -129,7 +120,6 @@ let make =
       ~config,
       ~id: int,
       ~terminals: Model.t,
-      ~font: Service_Font.font,
       ~theme: Oni_Core.ColorTheme.Colors.t,
       ~dispatch,
       (),
@@ -137,7 +127,7 @@ let make =
   terminals
   |> Model.getTerminalOpt(id)
   |> Option.map(terminal => {
-       <Terminal config isActive theme font terminal dispatch />
+       <Terminal config isActive theme terminal dispatch />
      })
   |> Option.value(~default=Revery.UI.React.empty);
 };

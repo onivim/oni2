@@ -2,9 +2,7 @@ open Oni_Core;
 
 // MODEL
 
-module Terminal : {
-  type t;
-}
+module Terminal: {type t;};
 // type terminal;
 // pri {
 //   id: int,
@@ -165,7 +163,6 @@ module TerminalView: {
       ~config: Config.resolver,
       ~id: int,
       ~terminals: t,
-      ~font: Service_Font.font,
       ~theme: Oni_Core.ColorTheme.Colors.t,
       ~dispatch: msg => unit,
       unit

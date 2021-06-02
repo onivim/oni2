@@ -9,6 +9,7 @@ type t = {
   nextId: int,
   paneTerminalId: option(int),
   font: Service_Font.font,
+  resolvedFont: EditorTerminal.Font.t,
 };
 
 let font = ({font, _}) => font;
@@ -17,6 +18,15 @@ let initial = {
   nextId: 0,
   paneTerminalId: None,
   font: Service_Font.default(),
+  resolvedFont:
+    EditorTerminal.Font.make(
+      ~size=14.0,
+      ~lineHeight=14.0,
+      Service_Font.resolveWithFallback(
+        Revery.Font.Weight.Normal,
+        Service_Font.default().fontFamily,
+      ),
+    ),
 };
 
 let getBufferName = (id, cmd) =>
@@ -44,6 +54,10 @@ type command =
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
+  | Terminal({
+      id: int,
+      msg: Terminal.msg,
+    })
   | Font(Service_Font.msg)
   | Resized({
       id: int,

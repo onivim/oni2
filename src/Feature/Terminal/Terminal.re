@@ -9,11 +9,16 @@ type t = {
   cursor: EditorTerminal.Cursor.t,
   closeOnExit: bool,
   scrollY: float,
+  font: EditorTerminal.Font.t,
 };
+
+[@deriving show]
+type msg =
+  | MouseWheelScrolled({deltaY: float});
 
 let closeOnExit = ({closeOnExit, _}) => closeOnExit;
 
-let initial = (~id, ~launchConfig) => {
+let initial = (~font, ~id, ~launchConfig) => {
   id,
   launchConfig,
   rows: 40,
@@ -24,5 +29,25 @@ let initial = (~id, ~launchConfig) => {
   cursor: EditorTerminal.Cursor.initial,
   closeOnExit: true,
   scrollY: 0.,
+  font,
+};
+
+let setFont = (~font, terminal) => {...terminal, font};
+
+let totalHeight = ({rows, font, _}) => {
+  float(rows) *. EditorTerminal.Font.(font.lineHeight);
+};
+
+let availableScrollY = ({screen, rows, _}) => {};
+
+let scroll = (~deltaY, terminal) => {
+  ...terminal,
+  scrollY: terminal.scrollY +. deltaY,
+};
+
+let update = (msg, terminal) => {
+  switch (msg) {
+  | MouseWheelScrolled({deltaY}) => scroll(~deltaY, terminal)
+  };
 };
 

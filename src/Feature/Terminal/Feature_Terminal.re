@@ -37,6 +37,42 @@ let updateById = (id, f, model) => {
   {...model, idToTerminal};
 };
 
+let updateAll = (f, model) => {
+  let idToTerminal = IntMap.map(f, model.idToTerminal);
+  {...model, idToTerminal};
+};
+
+let recomputeFont = (~config, ~font: Service_Font.font, model) => {
+  let resolvedFont =
+    Service_Font.resolveWithFallback(
+      Revery.Font.Weight.Normal,
+      font.fontFamily,
+    );
+
+  let lineHeight =
+    Configuration.lineHeight.get(config)
+    |> Oni_Core.Utility.OptionEx.value_or_lazy(() => {
+         Feature_Configuration.GlobalConfiguration.Editor.lineHeight.get(
+           config,
+         )
+       });
+
+  let Service_Font.{fontSize, smoothing, _} = font;
+
+  let lineHeightSize =
+    Oni_Core.LineHeight.calculate(~measuredFontHeight=fontSize, lineHeight);
+  let resolvedFont =
+    EditorTerminal.Font.make(
+      ~smoothing,
+      ~size=fontSize,
+      ~lineHeight=lineHeightSize,
+      resolvedFont,
+    );
+
+  {...model, font, resolvedFont}
+  |> updateAll(Terminal.setFont(~font=resolvedFont));
+};
+
 let update =
     (
       ~clientServer: Feature_ClientServer.model,
@@ -45,7 +81,13 @@ let update =
       msg,
     ) => {
   switch (msg) {
-  | Font(Service_Font.FontLoaded(font)) => ({...model, font}, Nothing)
+  | Terminal({id, msg}) => (
+      model |> updateById(id, Terminal.update(msg)),
+      Nothing,
+    )
+  | Font(Service_Font.FontLoaded(font)) =>
+    let model' = model |> recomputeFont(~config, ~font);
+    (model', Nothing);
 
   | Font(Service_Font.FontLoadError(message)) => (
       model,
@@ -146,7 +188,7 @@ let update =
     let idToTerminal =
       IntMap.add(
         id,
-        Terminal.initial(~id, ~launchConfig),
+        Terminal.initial(~font=model.resolvedFont, ~id, ~launchConfig),
         model.idToTerminal,
       );
     (
@@ -246,7 +288,7 @@ let update =
     let idToTerminal =
       IntMap.add(
         id,
-        Terminal.initial(~id, ~launchConfig),
+        Terminal.initial(~font=model.resolvedFont, ~id, ~launchConfig),
         model.idToTerminal,
       );
     (
@@ -780,7 +822,6 @@ module Contributions = {
                    isActive=isFocused
                    config
                    terminal
-                   font={model.font}
                    theme
                    dispatch
                  />

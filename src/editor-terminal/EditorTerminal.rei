@@ -115,6 +115,7 @@ let render:
     ~scrollBarThumb: Revery.Color.t=?,
     ~scrollBarThickness: int=?,
     ~theme: Theme.t=?,
+    ~scrollY: float,
     ~font: Font.t,
     ~cursor: Cursor.t,
     Screen.t
