@@ -40,7 +40,6 @@ module Terminal = {
           );
 
     let font = terminal.font;
-    let lineHeight = font.lineHeight;
 
     let%hook lastDimensions = Hooks.ref(None);
 
@@ -53,7 +52,7 @@ module Terminal = {
         If((!=), terminal.id),
         () => {
           lastDimensions^
-          |> Option.iter(((rows, columns)) => {
+          |> Option.iter(((rows, columns, _pixelHeight)) => {
                dispatch(Model.Resized({id: terminal.id, rows, columns}))
              });
 
@@ -73,7 +72,7 @@ module Terminal = {
       let columns =
         float_of_int(width) /. terminalFont.characterWidth |> int_of_float;
 
-      lastDimensions := Some((rows, columns));
+      lastDimensions := Some((rows, columns, height));
       dispatch(Model.Resized({id: terminal.id, rows, columns}));
     };
 
@@ -90,16 +89,12 @@ module Terminal = {
         ~theme=terminalTheme,
         ~cursor,
         ~font=terminalFont,
-        ~scrollBarThickness=Constants.scrollBarThickness,
-        ~scrollBarThumb=Constants.scrollThumbColor,
-        ~scrollBarBackground=Constants.scrollTrackColor,
         ~scrollY=terminal.scrollY,
         screen,
       );
     };
 
     let onMouseWheel = ({deltaY, _}: NodeEvents.mouseWheelEventParams) => {
-      prerr_endline("onWheel, main view");
       dispatch(
         Terminal({
           id: terminal.id,
@@ -108,8 +103,33 @@ module Terminal = {
       );
     };
 
+    let pixelHeight =
+      switch (lastDimensions^) {
+      | None => Terminal.viewportHeight(terminal)
+      | Some((_, _, pixelY)) => float(pixelY)
+      };
+
+    let scrollBar =
+      <Oni_Components.Scrollbar
+        config
+        theme
+        pixelHeight
+        viewportHeight={Terminal.viewportHeight(terminal)}
+        totalHeight={Terminal.totalHeight(terminal)}
+        scrollY={terminal.scrollY}
+        onScroll={scrollY =>
+          dispatch(
+            Terminal({
+              id: terminal.id,
+              msg: ScrollbarMoved({scrollY: scrollY}),
+            }),
+          )
+        }
+      />;
+
+    let elems = [element, scrollBar] |> React.listToElement;
     <View onDimensionsChanged onMouseWheel style={Styles.container(opacity)}>
-      element
+      elems
     </View>;
   };
 };

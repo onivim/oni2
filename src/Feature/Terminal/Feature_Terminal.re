@@ -193,7 +193,7 @@ let update =
     let idToTerminal =
       IntMap.add(
         id,
-        Terminal.initial(~font=model.resolvedFont, ~id, ~launchConfig),
+        Terminal.initial(~font=model.resolvedFont, ~id, ~launchConfig, ()),
         model.idToTerminal,
       );
     (
@@ -293,7 +293,13 @@ let update =
     let idToTerminal =
       IntMap.add(
         id,
-        Terminal.initial(~font=model.resolvedFont, ~id, ~launchConfig),
+        Terminal.initial(
+          ~closeOnExit,
+          ~font=model.resolvedFont,
+          ~id,
+          ~launchConfig,
+          (),
+        ),
         model.idToTerminal,
       );
     (

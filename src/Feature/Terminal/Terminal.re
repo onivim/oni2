@@ -16,11 +16,19 @@ type t = {
 
 [@deriving show]
 type msg =
-  | MouseWheelScrolled({deltaY: float});
+  | MouseWheelScrolled({deltaY: float})
+  | ScrollbarMoved({scrollY: float});
 
 let closeOnExit = ({closeOnExit, _}) => closeOnExit;
 
-let initial = (~font, ~id, ~launchConfig) => {
+let launchConfig = ({launchConfig, _}) => launchConfig;
+
+let id = ({id, _}) => id;
+let pid = ({pid, _}) => pid;
+
+let title = ({title, _}) => title;
+
+let initial = (~closeOnExit=true, ~font, ~id, ~launchConfig, ()) => {
   id,
   launchConfig,
   rows: 40,
@@ -29,7 +37,7 @@ let initial = (~font, ~id, ~launchConfig) => {
   title: None,
   screen: EditorTerminal.Screen.initial,
   cursor: EditorTerminal.Cursor.initial,
-  closeOnExit: true,
+  closeOnExit,
   scrollY: 0.,
   // Whether the terminal should auto-scroll when content is added..
   autoScroll: true,
@@ -57,8 +65,8 @@ let scrollToBottom = terminal => {
   {...terminal, scrollY, autoScroll: true};
 };
 
-let scroll = (~deltaY, terminal) => {
-  let candidateScrollY = terminal.scrollY +. deltaY;
+let scrollTo = (~scrollY, terminal) => {
+  let candidateScrollY = scrollY;
   let availableScrollY = availableScrollY(terminal);
 
   let scrollY =
@@ -77,6 +85,12 @@ let scroll = (~deltaY, terminal) => {
   {...terminal, autoScroll, scrollY};
 };
 
+let scroll = (~deltaY, terminal) => {
+  let candidateScrollY = terminal.scrollY +. deltaY;
+
+  scrollTo(~scrollY=candidateScrollY, terminal);
+};
+
 let updateScreen = (~screen, ~cursor, terminal) => {
   let terminal' = {...terminal, screen, cursor};
 
@@ -90,6 +104,7 @@ let updateScreen = (~screen, ~cursor, terminal) => {
 let update = (msg, terminal) => {
   switch (msg) {
   | MouseWheelScrolled({deltaY}) => scroll(~deltaY, terminal)
+  | ScrollbarMoved({scrollY}) => scrollTo(~scrollY, terminal)
   };
 };
 

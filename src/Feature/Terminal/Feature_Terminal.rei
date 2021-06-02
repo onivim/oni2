@@ -2,7 +2,14 @@ open Oni_Core;
 
 // MODEL
 
-module Terminal: {type t;};
+module Terminal: {
+  type t;
+
+  let id: t => int;
+  let pid: t => option(int);
+  let title: t => option(string);
+  let launchConfig: t => Exthost.ShellLaunchConfig.t;
+};
 // type terminal;
 // pri {
 //   id: int,

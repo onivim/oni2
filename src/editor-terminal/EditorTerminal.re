@@ -137,9 +137,6 @@ let render =
       ~opacity=?,
       ~defaultForeground=?,
       ~defaultBackground=?,
-      ~scrollBarBackground=?,
-      ~scrollBarThumb=?,
-      ~scrollBarThickness=?,
       ~theme=Theme.default,
       ~scrollY,
       ~font,
@@ -150,9 +147,6 @@ let render =
     ?opacity
     ?defaultForeground
     ?defaultBackground
-    ?scrollBarBackground
-    ?scrollBarThumb
-    ?scrollBarThickness
     scrollY
     theme
     screen
