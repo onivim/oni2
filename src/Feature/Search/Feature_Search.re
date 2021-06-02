@@ -2,11 +2,16 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Components;
 
+module Constants = {
+  let optionIconSize = 14.;
+};
+
 // MODEL
 
 type focus =
   | FindInput
-  | ResultsPane;
+  | ResultsPane
+  | EnableRegexButton;
 
 type model = {
   findInput: Component_InputText.model,
@@ -143,6 +148,11 @@ let update = (~previewEnabled, model, msg) => {
         },
         None,
       )
+    | EnableRegexButton =>
+      switch (key) {
+      | "<CR>" => ({...model, enableRegex: !model.enableRegex}, None)
+      | _ => (model, None)
+      }
     }
 
   | Pasted(text) =>
@@ -150,8 +160,9 @@ let update = (~previewEnabled, model, msg) => {
     | FindInput =>
       let findInput = Component_InputText.paste(~text, model.findInput);
       ({...model, findInput}, None);
+    | EnableRegexButton
     | ResultsPane =>
-      // Paste is a no-op in search pane
+      // Paste is a no-op in search pane and button
       (model, None)
     }
 
@@ -177,19 +188,26 @@ let update = (~previewEnabled, model, msg) => {
     let model' = {...model, vimWindowNavigation: windowNav};
     switch (outmsg) {
     | Nothing => (model', None)
-    | FocusLeft => (model', Some(UnhandledWindowMovement(outmsg)))
-    | FocusRight => (model', Some(UnhandledWindowMovement(outmsg)))
+    | FocusLeft =>
+      switch (model'.focus) {
+      | EnableRegexButton => ({...model', focus: FindInput}, None)
+      | _ => (model', Some(UnhandledWindowMovement(outmsg)))
+      }
+    | FocusRight =>
+      switch (model'.focus) {
+      | FindInput => ({...model', focus: EnableRegexButton}, None)
+      | _ => (model', Some(UnhandledWindowMovement(outmsg)))
+      }
     | FocusDown =>
-      if (model'.focus == FindInput) {
-        ({...model', focus: ResultsPane}, None);
-      } else {
-        (model', Some(UnhandledWindowMovement(outmsg)));
+      switch (model'.focus) {
+      | FindInput
+      | EnableRegexButton => ({...model', focus: ResultsPane}, None)
+      | _ => (model', Some(UnhandledWindowMovement(outmsg)))
       }
     | FocusUp =>
-      if (model'.focus == ResultsPane) {
-        ({...model', focus: FindInput}, None);
-      } else {
-        (model', Some(UnhandledWindowMovement(outmsg)));
+      switch (model'.focus) {
+      | ResultsPane => ({...model', focus: FindInput}, None)
+      | _ => (model', Some(UnhandledWindowMovement(outmsg)))
       }
     // TODO: What should tabs do for search? Toggle sidebar panes?
     | PreviousTab
@@ -224,7 +242,12 @@ let update = (~previewEnabled, model, msg) => {
   | SearchError(_) => (model, None)
 
   | EnableRegex(enableRegex) => (
-      {...model, enableRegex, searchNonce: model.searchNonce + 1}
+      {
+        ...model,
+        enableRegex,
+        searchNonce: model.searchNonce + 1,
+        focus: EnableRegexButton,
+      }
       |> setHits([]),
       None,
     )
@@ -275,11 +298,12 @@ module Styles = {
 
   let pane = [flexGrow(1), flexDirection(`Column)];
 
+  let focusColor = (~isFocused, ~theme) =>
+    isFocused
+      ? Colors.focusBorder.from(theme) : Revery.Colors.transparentWhite;
+
   let resultsPane = (~isFocused, ~theme) => {
-    let focusColor =
-      isFocused
-        ? Colors.focusBorder.from(theme) : Revery.Colors.transparentWhite;
-    [flexGrow(1), border(~color=focusColor, ~width=1)];
+    [flexGrow(1), border(~color=focusColor(~isFocused, ~theme), ~width=1)];
   };
 
   let row = [
@@ -295,8 +319,12 @@ module Styles = {
   ];
 
   let inputContainer = [width(150), flexShrink(0), flexGrow(1)];
-  let inputOptions = [paddingLeft(10)];
-  let inputOption = [cursor(Revery.MouseCursors.pointer)];
+  let inputOptions = [paddingLeft(2)];
+  let inputOption = (~isFocused, ~theme) => [
+    cursor(Revery.MouseCursors.pointer),
+    padding(2),
+    border(~color=focusColor(~isFocused, ~theme), ~width=1),
+  ];
 };
 
 let make =
@@ -335,11 +363,14 @@ let make =
         </View>
         <View style=Styles.inputOptions>
           <View
-            style=Styles.inputOption
+            style={Styles.inputOption(
+              ~isFocused=model.focus == EnableRegexButton,
+              ~theme,
+            )}
             onMouseUp={_ => dispatch(EnableRegex(!model.enableRegex))}>
             <Codicon
               icon=Codicon.regex
-              fontSize=18.
+              fontSize=Constants.optionIconSize
               color={
                 model.enableRegex
                   ? Colors.PanelTitle.activeForeground.from(theme)
