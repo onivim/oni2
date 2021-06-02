@@ -80,6 +80,7 @@ module Internal = {
          open EditorInput;
          open KeyPress;
          open Modifiers;
+         prerr_endline ("KEYMAP: " ++ Oni2_KeyboardLayout.Keymap.show_entry(keymap));
 
          let modifiers = {shift, control, alt, super, altGr};
          let defaultCandidate =
@@ -169,8 +170,15 @@ let reveryKeyToKeyPress =
         let ctrlKey = altGr ? false : control;
         let altKey = altGr ? false : alt;
         (altGr, ctrlKey, altKey);
+
+      | Mac(_) =>
+        let altGr = (altGr || alt);
+        let altKey = altGr ? false : alt;
+        (altGr, control, altKey)
+
       | _ => (altGr, control, alt)
       };
+
     let modifiers = EditorInput.Modifiers.{shift, control, alt, super, altGr};
 
     keycode

@@ -6,6 +6,7 @@ let getCurrentLanguage: unit => string;
 let getCurrentLayout: unit => string;
 
 module Keymap: {
+  [@deriving show]
   type entry = {
     unmodified: option(string),
     withShift: option(string),

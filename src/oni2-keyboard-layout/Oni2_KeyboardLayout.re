@@ -21,6 +21,7 @@ external getCurrentLanguage: unit => string =
 Callback.register("oni2_CallKeyboardCallbacks", callKeyboardCallbacks);
 
 module Keymap = {
+  [@deriving show]
   type entry = {
     unmodified: option(string),
     withShift: option(string),
