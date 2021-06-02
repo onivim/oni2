@@ -2,18 +2,7 @@ open Oni_Core;
 
 // MODEL
 
-type terminal = {
-  id: int,
-  launchConfig: Exthost.ShellLaunchConfig.t,
-  rows: int,
-  columns: int,
-  pid: option(int),
-  title: option(string),
-  screen: EditorTerminal.Screen.t,
-  cursor: EditorTerminal.Cursor.t,
-  closeOnExit: bool,
-  scrollY: float,
-};
+type terminal = Terminal.t;
 
 type t = {
   idToTerminal: IntMap.t(terminal),

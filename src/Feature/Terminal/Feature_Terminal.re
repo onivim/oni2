@@ -1,5 +1,7 @@
 open Oni_Core;
 
+module Terminal = Terminal;
+
 // MODEL
 include Model;
 
@@ -26,7 +28,7 @@ module Configuration = Configuration;
 
 let shouldClose = (~id, {idToTerminal, _}) => {
   IntMap.find_opt(id, idToTerminal)
-  |> Option.map(({closeOnExit, _}) => closeOnExit)
+  |> Option.map(Terminal.closeOnExit)
   |> Option.value(~default=true);
 };
 
@@ -144,18 +146,7 @@ let update =
     let idToTerminal =
       IntMap.add(
         id,
-        {
-          id,
-          launchConfig,
-          rows: 40,
-          columns: 40,
-          pid: None,
-          title: None,
-          screen: EditorTerminal.Screen.initial,
-          cursor: EditorTerminal.Cursor.initial,
-          closeOnExit: true,
-          scrollY: 0.,
-        },
+        Terminal.initial(~id, ~launchConfig),
         model.idToTerminal,
       );
     (
@@ -255,18 +246,7 @@ let update =
     let idToTerminal =
       IntMap.add(
         id,
-        {
-          id,
-          launchConfig,
-          rows: 40,
-          columns: 40,
-          pid: None,
-          title: None,
-          screen: EditorTerminal.Screen.initial,
-          cursor: EditorTerminal.Cursor.initial,
-          closeOnExit,
-          scrollY: 0.,
-        },
+        Terminal.initial(~id, ~launchConfig),
         model.idToTerminal,
       );
     (
