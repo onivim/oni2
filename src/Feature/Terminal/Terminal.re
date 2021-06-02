@@ -107,4 +107,3 @@ let update = (msg, terminal) => {
   | ScrollbarMoved({scrollY}) => scrollTo(~scrollY, terminal)
   };
 };
-

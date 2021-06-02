@@ -62,4 +62,3 @@ let make =
     React.empty;
   };
 };
-
