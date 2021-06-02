@@ -13,6 +13,7 @@ type terminal =
     screen: EditorTerminal.Screen.t,
     cursor: EditorTerminal.Cursor.t,
     closeOnExit: bool,
+    scrollY: float,
   };
 
 type t;

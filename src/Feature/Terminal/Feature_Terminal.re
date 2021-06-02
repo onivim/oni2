@@ -154,6 +154,7 @@ let update =
           screen: EditorTerminal.Screen.initial,
           cursor: EditorTerminal.Cursor.initial,
           closeOnExit: true,
+          scrollY: 0.,
         },
         model.idToTerminal,
       );
@@ -264,6 +265,7 @@ let update =
           screen: EditorTerminal.Screen.initial,
           cursor: EditorTerminal.Cursor.initial,
           closeOnExit,
+          scrollY: 0.,
         },
         model.idToTerminal,
       );
