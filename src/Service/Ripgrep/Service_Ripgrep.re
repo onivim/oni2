@@ -41,6 +41,7 @@ module Sub = {
             ~onUpdate=items => dispatch(GotMatches(items)),
             ~onComplete=() => {dispatch(Completed)},
             ~onError=msg => dispatch(Error(msg)),
+            (),
           );
         {dispose: dispose};
       };
