@@ -10,6 +10,7 @@ type focus =
 
 type model = {
   findInput: Component_InputText.model,
+  enableRegex: bool,
   query: string,
   searchNonce: int,
   hits: list(Ripgrep.Match.t),
@@ -33,6 +34,7 @@ let resetFocus = (~query: option(string), model) => {
 
 let initial = {
   findInput: Component_InputText.create(~placeholder="Search"),
+  enableRegex: false,
   query: "",
   searchNonce: 0,
   hits: [],
@@ -91,7 +93,8 @@ type msg =
   | SearchError(string)
   | FindInput(Component_InputText.msg)
   | VimWindowNav(Component_VimWindows.msg)
-  | ResultsList(Component_VimTree.msg);
+  | ResultsList(Component_VimTree.msg)
+  | EnableRegex(bool);
 
 module Msg = {
   let input = str => Input(str);
@@ -219,6 +222,12 @@ let update = (~previewEnabled, model, msg) => {
   | Complete => (model, None)
 
   | SearchError(_) => (model, None)
+
+  | EnableRegex(enableRegex) => (
+      {...model, enableRegex, searchNonce: model.searchNonce + 1}
+      |> setHits([]),
+      None,
+    )
   };
 };
 
@@ -249,6 +258,7 @@ let sub = (~config, ~workingDirectory, ~setup, model) => {
       ~query=model.query,
       ~uniqueId=string_of_int(model.searchNonce),
       ~setup,
+      ~enableRegex=model.enableRegex,
       toMsg,
     );
   };
@@ -285,6 +295,8 @@ module Styles = {
   ];
 
   let inputContainer = [width(150), flexShrink(0), flexGrow(1)];
+  let inputOptions = [paddingLeft(10)];
+  let inputOption = [cursor(Revery.MouseCursors.pointer)];
 };
 
 let make =
@@ -320,6 +332,21 @@ let make =
             dispatch={msg => dispatch(FindInput(msg))}
             theme
           />
+        </View>
+        <View style=Styles.inputOptions>
+          <View
+            style=Styles.inputOption
+            onMouseUp={_ => dispatch(EnableRegex(!model.enableRegex))}>
+            <Codicon
+              icon=Codicon.regex
+              fontSize=18.
+              color={
+                model.enableRegex
+                  ? Colors.PanelTitle.activeForeground.from(theme)
+                  : Colors.PanelTitle.inactiveForeground.from(theme)
+              }
+            />
+          </View>
         </View>
       </View>
     </View>
