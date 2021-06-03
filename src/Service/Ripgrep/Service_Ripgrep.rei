@@ -14,6 +14,7 @@ module Sub: {
       ~query: string,
       ~setup: Setup.t,
       ~enableRegex: bool=?,
+      ~caseSensitive: bool=?,
       findInFilesMsg => 'msg
     ) =>
     Isolinear.Sub.t('msg);
