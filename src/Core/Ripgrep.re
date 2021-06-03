@@ -73,7 +73,9 @@ type t = {
       ~query: string,
       ~onUpdate: list(Match.t) => unit,
       ~onComplete: unit => unit,
-      ~onError: string => unit
+      ~onError: string => unit,
+      ~enableRegex: bool=?,
+      unit
     ) =>
     dispose,
 }
@@ -282,6 +284,8 @@ let findInFiles =
       ~onUpdate,
       ~onComplete,
       ~onError,
+      ~enableRegex=false,
+      (),
     ) => {
   let excludeArgs =
     searchExclude
@@ -289,15 +293,8 @@ let findInFiles =
     |> List.concat_map(x => ["-g", "!" ++ x]);
   let args =
     excludeArgs
-    @ [
-      "--fixed-strings",
-      "--smart-case",
-      "--hidden",
-      "--json",
-      "--",
-      query,
-      directory,
-    ];
+    @ (enableRegex ? [] : ["--fixed-strings"])
+    @ ["--smart-case", "--hidden", "--json", "--", query, directory];
   process(
     executablePath,
     args,

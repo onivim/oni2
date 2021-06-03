@@ -13,6 +13,7 @@ module Sub: {
       ~directory: string,
       ~query: string,
       ~setup: Setup.t,
+      ~enableRegex: bool=?,
       findInFilesMsg => 'msg
     ) =>
     Isolinear.Sub.t('msg);

@@ -1,6 +1,7 @@
 ### Features 
 
 - #3613 - Input: add Emoji & Symbols panel on macOS
+- #3641 - Search: add button to enable RegEx
 
 ### Bug Fixes
 
