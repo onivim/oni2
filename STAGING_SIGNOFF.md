@@ -1,3 +1,5 @@
+0.5.6-staging
+
 # 1. First-run Experience
 
 Test cases covering launching and using Onivim without any persistence or configuration.
