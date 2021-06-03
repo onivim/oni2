@@ -2,6 +2,7 @@
 
 - #3613 - Input: add Emoji & Symbols panel on macOS
 - #3641 - Search: add button to enable RegEx
+- #3654 - Search: add button to enable case-sensitivity
 
 ### Bug Fixes
 
