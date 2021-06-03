@@ -93,6 +93,24 @@ let setHits = (hits, model) => {
     ),
 };
 
+let toggleRegex = model =>
+  {
+    ...model,
+    enableRegex: !model.enableRegex,
+    searchNonce: model.searchNonce + 1,
+    focus: ToggleRegexButton,
+  }
+  |> setHits([]);
+
+let toggleCaseSensitive = model =>
+  {
+    ...model,
+    caseSensitive: !model.caseSensitive,
+    searchNonce: model.searchNonce + 1,
+    focus: ToggleCaseSensitiveButton,
+  }
+  |> setHits([]);
+
 // UPDATE
 
 [@deriving show({with_path: false})]
@@ -158,12 +176,12 @@ let update = (~previewEnabled, model, msg) => {
       )
     | ToggleRegexButton =>
       switch (key) {
-      | "<CR>" => ({...model, enableRegex: !model.enableRegex}, None)
+      | "<CR>" => (toggleRegex(model), None)
       | _ => (model, None)
       }
     | ToggleCaseSensitiveButton =>
       switch (key) {
-      | "<CR>" => ({...model, caseSensitive: !model.caseSensitive}, None)
+      | "<CR>" => (toggleCaseSensitive(model), None)
       | _ => (model, None)
       }
     | ToggleOptionsButton =>
@@ -290,26 +308,8 @@ let update = (~previewEnabled, model, msg) => {
       None,
     )
 
-  | ToggleRegexButtonClicked => (
-      {
-        ...model,
-        enableRegex: !model.enableRegex,
-        searchNonce: model.searchNonce + 1,
-        focus: ToggleRegexButton,
-      }
-      |> setHits([]),
-      None,
-    )
-  | ToggleCaseSensitiveButtonClicked => (
-      {
-        ...model,
-        caseSensitive: !model.caseSensitive,
-        searchNonce: model.searchNonce + 1,
-        focus: ToggleCaseSensitiveButton,
-      }
-      |> setHits([]),
-      None,
-    )
+  | ToggleRegexButtonClicked => (toggleRegex(model), None)
+  | ToggleCaseSensitiveButtonClicked => (toggleCaseSensitive(model), None)
   };
 };
 
