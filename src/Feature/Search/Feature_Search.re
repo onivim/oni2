@@ -11,11 +11,13 @@ module Constants = {
 type focus =
   | FindInput
   | ResultsPane
-  | EnableRegexButton;
+  | EnableRegexButton
+  | ToggleOptionsButton;
 
 type model = {
   findInput: Component_InputText.model,
   enableRegex: bool,
+  optionsVisible: bool,
   query: string,
   searchNonce: int,
   hits: list(Ripgrep.Match.t),
@@ -40,6 +42,7 @@ let resetFocus = (~query: option(string), model) => {
 let initial = {
   findInput: Component_InputText.create(~placeholder="Search"),
   enableRegex: false,
+  optionsVisible: false,
   query: "",
   searchNonce: 0,
   hits: [],
@@ -99,7 +102,8 @@ type msg =
   | FindInput(Component_InputText.msg)
   | VimWindowNav(Component_VimWindows.msg)
   | ResultsList(Component_VimTree.msg)
-  | ToggleRegexButtonClicked;
+  | ToggleRegexButtonClicked
+  | ToggleOptionsButtonClicked;
 
 module Msg = {
   let input = str => Input(str);
@@ -153,6 +157,11 @@ let update = (~previewEnabled, model, msg) => {
       | "<CR>" => ({...model, enableRegex: !model.enableRegex}, None)
       | _ => (model, None)
       }
+    | ToggleOptionsButton =>
+      switch (key) {
+      | "<CR>" => ({...model, optionsVisible: !model.optionsVisible}, None)
+      | _ => (model, None)
+      }
     }
 
   | Pasted(text) =>
@@ -161,8 +170,9 @@ let update = (~previewEnabled, model, msg) => {
       let findInput = Component_InputText.paste(~text, model.findInput);
       ({...model, findInput}, None);
     | EnableRegexButton
+    | ToggleOptionsButton
     | ResultsPane =>
-      // Paste is a no-op in search pane and button
+      // Paste is a no-op in search pane and buttons
       (model, None)
     }
 
@@ -190,23 +200,35 @@ let update = (~previewEnabled, model, msg) => {
     | Nothing => (model', None)
     | FocusLeft =>
       switch (model'.focus) {
-      | EnableRegexButton => ({...model', focus: FindInput}, None)
+      | ToggleOptionsButton => ({...model', focus: FindInput}, None)
       | _ => (model', Some(UnhandledWindowMovement(outmsg)))
       }
     | FocusRight =>
       switch (model'.focus) {
-      | FindInput => ({...model', focus: EnableRegexButton}, None)
+      | FindInput => ({...model', focus: ToggleOptionsButton}, None)
       | _ => (model', Some(UnhandledWindowMovement(outmsg)))
       }
     | FocusDown =>
-      switch (model'.focus) {
-      | FindInput
-      | EnableRegexButton => ({...model', focus: ResultsPane}, None)
+      switch (model'.focus, model'.optionsVisible) {
+      | (FindInput, true)
+      | (ToggleOptionsButton, true) => (
+          {...model', focus: EnableRegexButton},
+          None,
+        )
+
+      | (EnableRegexButton, _)
+      | (FindInput, false)
+      | (ToggleOptionsButton, false) => (
+          {...model', focus: ResultsPane},
+          None,
+        )
       | _ => (model', Some(UnhandledWindowMovement(outmsg)))
       }
     | FocusUp =>
-      switch (model'.focus) {
-      | ResultsPane => ({...model', focus: FindInput}, None)
+      switch (model'.focus, model'.optionsVisible) {
+      | (ResultsPane, true) => ({...model', focus: EnableRegexButton}, None)
+      | (ResultsPane, false) => ({...model', focus: FindInput}, None)
+      | (EnableRegexButton, _) => ({...model', focus: FindInput}, None)
       | _ => (model', Some(UnhandledWindowMovement(outmsg)))
       }
     // TODO: What should tabs do for search? Toggle sidebar panes?
@@ -240,6 +262,15 @@ let update = (~previewEnabled, model, msg) => {
   | Complete => (model, None)
 
   | SearchError(_) => (model, None)
+
+  | ToggleOptionsButtonClicked => (
+      {
+        ...model,
+        optionsVisible: !model.optionsVisible,
+        focus: ToggleOptionsButton,
+      },
+      None,
+    )
 
   | ToggleRegexButtonClicked => (
       {
@@ -319,7 +350,6 @@ module Styles = {
   ];
 
   let inputContainer = [width(150), flexShrink(0), flexGrow(1)];
-  let inputOptions = [paddingLeft(2)];
   let inputOption = (~isFocused, ~theme) => [
     cursor(Revery.MouseCursors.pointer),
     padding(2),
@@ -361,28 +391,47 @@ let make =
             theme
           />
         </View>
-        <View style=Styles.inputOptions>
-          <Tooltip text="Toggle regular expression syntax">
-            <Feature_Sneak.View.Sneakable
-              sneakId="search.toggleRegex"
-              style={Styles.inputOption(
-                ~isFocused=model.focus == EnableRegexButton,
-                ~theme,
-              )}
-              onClick={_ => dispatch(ToggleRegexButtonClicked)}>
-              <Codicon
-                icon=Codicon.regex
-                fontSize=Constants.optionIconSize
-                color={
-                  model.enableRegex
-                    ? Colors.PanelTitle.activeForeground.from(theme)
-                    : Colors.PanelTitle.inactiveForeground.from(theme)
-                }
-              />
-            </Feature_Sneak.View.Sneakable>
-          </Tooltip>
-        </View>
+        <Tooltip text="Toggle advanced search options">
+          <Feature_Sneak.View.Sneakable
+            sneakId="search.toggleOptions"
+            style={Styles.inputOption(
+              ~isFocused=model.focus == ToggleOptionsButton,
+              ~theme,
+            )}
+            onClick={_ => dispatch(ToggleOptionsButtonClicked)}>
+            <Codicon
+              icon={
+                model.optionsVisible ? Codicon.chevronUp : Codicon.chevronDown
+              }
+              fontSize=10.
+              color={Colors.PanelTitle.inactiveForeground.from(theme)}
+            />
+          </Feature_Sneak.View.Sneakable>
+        </Tooltip>
       </View>
+      {model.optionsVisible
+         ? <View style=Styles.row>
+             <Tooltip text="Toggle regular expression syntax">
+               <Feature_Sneak.View.Sneakable
+                 sneakId="search.toggleRegex"
+                 style={Styles.inputOption(
+                   ~isFocused=model.focus == EnableRegexButton,
+                   ~theme,
+                 )}
+                 onClick={_ => dispatch(ToggleRegexButtonClicked)}>
+                 <Codicon
+                   icon=Codicon.regex
+                   fontSize=Constants.optionIconSize
+                   color={
+                     model.enableRegex
+                       ? Colors.PanelTitle.activeForeground.from(theme)
+                       : Colors.PanelTitle.inactiveForeground.from(theme)
+                   }
+                 />
+               </Feature_Sneak.View.Sneakable>
+             </Tooltip>
+           </View>
+         : <View />}
     </View>
     <View
       style={Styles.resultsPane(
