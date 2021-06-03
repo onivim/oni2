@@ -17,6 +17,7 @@
 - #3637 - Extensions: Unable to enter API key for WakaTime (fixes #3619)
 - #3638 - Editor: Add clear search highlights default keybinding (fixes #3636)
 - #3645 - Terminal: Auto-scroll when key is pressed
+- #3652 - Syntax: Fix highlighting being lost after movement (fixes #3647)
 
 ### Performance
 

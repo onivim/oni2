@@ -195,7 +195,6 @@ type msg =
   | FilenameChanged({
       id: int,
       newFilePath: option(string),
-      newFileType: Oni_Core.Buffer.FileType.t,
       version: int,
       isModified: bool,
     })
@@ -230,15 +229,8 @@ module Msg = {
     Saved(bufferId);
   };
 
-  let fileNameChanged =
-      (~bufferId, ~newFilePath, ~newFileType, ~version, ~isModified) => {
-    FilenameChanged({
-      id: bufferId,
-      newFilePath,
-      newFileType,
-      version,
-      isModified,
-    });
+  let fileNameChanged = (~bufferId, ~newFilePath, ~version, ~isModified) => {
+    FilenameChanged({id: bufferId, newFilePath, version, isModified});
   };
 
   let modified = (~bufferId, ~isModified) => {
@@ -397,7 +389,15 @@ let guessIndentation = (~config, buffer) => {
   |> Option.value(~default=Inferred.implicit(defaultIndentation(~config)));
 };
 
-let update = (~activeBufferId, ~config, ~workspace, msg: msg, model: model) => {
+let update =
+    (
+      ~activeBufferId,
+      ~config,
+      ~languageInfo,
+      ~workspace,
+      msg: msg,
+      model: model,
+    ) => {
   switch (msg) {
   | AutoSave(msg) =>
     let (autoSave', outmsg) = AutoSave.update(msg, model.autoSave);
@@ -470,16 +470,22 @@ let update = (~activeBufferId, ~config, ~workspace, msg: msg, model: model) => {
       }),
     );
 
-  | FilenameChanged({id, newFileType, newFilePath, version, isModified}) =>
+  | FilenameChanged({id, newFilePath, version, isModified}) =>
     let updater = (
       fun
-      | Some(buffer) =>
-        buffer
-        |> Buffer.setModified(isModified)
-        |> Buffer.setFilePath(newFilePath)
-        |> Buffer.setFileType(newFileType)
-        |> Buffer.setVersion(version)
-        |> Option.some
+      | Some(buffer) => {
+          let buffer' =
+            buffer
+            |> Buffer.setModified(isModified)
+            |> Buffer.setFilePath(newFilePath)
+            |> Buffer.setVersion(version);
+
+          let language =
+            Exthost.LanguageInfo.getLanguageFromBuffer(languageInfo, buffer');
+          buffer'
+          |> Buffer.setFileType(Buffer.FileType.inferred(language))
+          |> Option.some;
+        }
       | None => None
     );
     (update(id, updater, model), Nothing);

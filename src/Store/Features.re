@@ -1327,10 +1327,13 @@ let update =
       |> Feature_Editor.Editor.getBufferId;
     let config = Feature_Configuration.resolver(state.config, state.vim);
 
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let (buffers, outmsg) =
       Feature_Buffers.update(
         ~activeBufferId,
         ~config,
+        ~languageInfo,
         ~workspace=state.workspace,
         msg,
         state.buffers,
