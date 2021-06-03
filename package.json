@@ -412,7 +412,7 @@
     "revery": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#79c2572",
+    "revery": "revery-ui/revery#9ec44ff",
     "esy-skia": "revery-ui/esy-skia#66db8c5",
     "isolinear": "revery-ui/isolinear#049ad1e",
     "@opam/fs": "bryphe/reason-native:fs.opam#e16590c",
