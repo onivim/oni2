@@ -208,11 +208,19 @@ let update = (~previewEnabled, model, msg) => {
     | FocusLeft =>
       switch (model'.focus) {
       | ToggleOptionsButton => ({...model', focus: FindInput}, None)
+      | ToggleCaseSensitiveButton => (
+          {...model', focus: ToggleRegexButton},
+          None,
+        )
       | _ => (model', Some(UnhandledWindowMovement(outmsg)))
       }
     | FocusRight =>
       switch (model'.focus) {
       | FindInput => ({...model', focus: ToggleOptionsButton}, None)
+      | ToggleRegexButton => (
+          {...model', focus: ToggleCaseSensitiveButton},
+          None,
+        )
       | _ => (model', Some(UnhandledWindowMovement(outmsg)))
       }
     | FocusDown =>
@@ -223,7 +231,7 @@ let update = (~previewEnabled, model, msg) => {
           None,
         )
 
-      | (ToggleRegexButton, _)
+      | (ToggleRegexButton | ToggleCaseSensitiveButton, _)
       | (FindInput, false)
       | (ToggleOptionsButton, false) => (
           {...model', focus: ResultsPane},
@@ -235,7 +243,10 @@ let update = (~previewEnabled, model, msg) => {
       switch (model'.focus, model'.optionsVisible) {
       | (ResultsPane, true) => ({...model', focus: ToggleRegexButton}, None)
       | (ResultsPane, false) => ({...model', focus: FindInput}, None)
-      | (ToggleRegexButton, _) => ({...model', focus: FindInput}, None)
+      | (ToggleRegexButton | ToggleCaseSensitiveButton, _) => (
+          {...model', focus: FindInput},
+          None,
+        )
       | _ => (model', Some(UnhandledWindowMovement(outmsg)))
       }
     // TODO: What should tabs do for search? Toggle sidebar panes?
