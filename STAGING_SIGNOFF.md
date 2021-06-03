@@ -13,7 +13,7 @@ Test cases covering launching and using Onivim without any persistence or config
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 1.2 No directory set [OSX|Win|Linux]
 
@@ -24,7 +24,7 @@ __Pass:__
 - Verify Control+Shift+P/Command+P shows the command palette
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [ ] Linux
 
@@ -77,7 +77,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [F] Linux
 
 # 4. Editing
 
@@ -97,7 +97,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 4.2 Verify horizontal scroll
 
@@ -112,7 +112,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 5. File Preview
 
@@ -130,7 +130,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 6. Font Rendering
 
@@ -138,6 +138,9 @@ __Pass:__
 
 Prerequisite:
 - In configuration file, key "editor.fontFamily" either set to a __non absolute__ font name or absent (Ideally test both).
+  - Linux: "Inconsolata"
+  - Windows: "Consolas"
+  - OSX: "Menlo"
 
 - Run Onivim 2
 - Open configuration file
@@ -147,7 +150,7 @@ Prerequisite:
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 7. Input
 
@@ -157,6 +160,7 @@ Regression test for #2926
 
 Prerequisite:
 - Install German (de-de) keyboard layout
+  - Linux: `setxkbmap -layout de` (`setxkbmap -layout us` to revert)
 
 - Run Onivim 2
 - Create new file (`:new test.txt`)
@@ -168,7 +172,7 @@ Prerequisite:
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 7.2 Leader Key
 
@@ -185,7 +189,7 @@ Prerequisite:
 __Pass:__
 - [ ] Windows
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 7.3 Japanese / Romaji layout
 
@@ -193,6 +197,7 @@ Regression test for #2924
 
 Prerequisite:
 - Install Romaji keyboard layout
+  - Linux: Use ibus to switch to Romaji
 
 - Switch keyboard layout to Romaji
 - Run Onivim 2
@@ -202,7 +207,7 @@ Prerequisite:
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 7.4 Dead Keys
 
@@ -210,6 +215,7 @@ Regresion test for #3157
 
 Prerequisite:
 - Install ENG-INTL keyboard layout
+  - Linux: ibus w/ French+AltGr dead keys
 
 - Switch keyboard layout to English (International)
 - Run Onivim 2
@@ -220,7 +226,7 @@ Prerequisite:
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 8. Workspace
 
@@ -243,7 +249,7 @@ Prerequisite:
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 8.2 Windows-style path handling
 
@@ -273,7 +279,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 9.2 Open a file from integrated terminal
 
@@ -285,7 +291,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 9.3 Open a folder from integrated terminal
 
@@ -297,7 +303,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 10. Menubar
 
@@ -312,7 +318,7 @@ Regression test for #3108
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 10. Extension Management
 
@@ -326,7 +332,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 11. Buffers
 
@@ -344,7 +350,7 @@ _Setup:_
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ### 11.1.2 Disabling `"editor.largeFileOptimizations"` should still load files
 
@@ -360,7 +366,7 @@ _Setup:_
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 12. Proxy 
 
@@ -393,7 +399,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 13.2 Single Instance - Open folder in running instance
 
@@ -404,7 +410,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 13.3 Force new instance
 
@@ -415,4 +421,4 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
