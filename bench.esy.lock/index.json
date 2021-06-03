@@ -1,5 +1,5 @@
 {
-  "checksum": "357bd4e0a8664597a399ed34e4bc63ee",
+  "checksum": "2f31c20523deb998fb20beb7e0a45b22",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -91,13 +91,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#79c2572@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#79c2572@d41d8cd9",
+    "revery@github:revery-ui/revery#9ec44ff@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#9ec44ff@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#79c2572",
+      "version": "github:revery-ui/revery#9ec44ff",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#79c2572" ]
+        "source": [ "github:revery-ui/revery#9ec44ff" ]
       },
       "overrides": [],
       "dependencies": [
@@ -115,7 +115,7 @@
         "@opam/ppx_deriving@opam:4.5@99c603e5",
         "@opam/omd@github:ocaml/omd:omd.opam#1535e3c@d41d8cd9",
         "@opam/markup@opam:0.8.2@53ccafce",
-        "@opam/lwt_ppx@opam:2.0.1@edf5ad68", "@opam/lwt@opam:5.4.0@1ec6dbfd",
+        "@opam/lwt_ppx@opam:2.0.1@edf5ad68", "@opam/lwt@opam:5.4.1@37ffbe37",
         "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.1@5f41e4d9",
         "@opam/dune@opam:2.8.5@01003f12",
@@ -853,7 +853,7 @@
       },
       "overrides": [ "bench.json" ],
       "dependencies": [
-        "revery@github:revery-ui/revery#79c2572@d41d8cd9",
+        "revery@github:revery-ui/revery#9ec44ff@d41d8cd9",
         "reperf@1.5.1@d41d8cd9", "rench@1.10.0@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#a80a9d9@d41d8cd9",
         "reason-fzy@github:bryphe/reason-fzy#5a1daf4@d41d8cd9",
@@ -878,7 +878,7 @@
         "@opam/ppx_deriving_yojson@opam:3.5.3@253e094d",
         "@opam/ppx_deriving@opam:4.5@99c603e5",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
-        "@opam/markup@opam:0.8.2@53ccafce", "@opam/lwt@opam:5.4.0@1ec6dbfd",
+        "@opam/markup@opam:0.8.2@53ccafce", "@opam/lwt@opam:5.4.1@37ffbe37",
         "@opam/luv@github:bryphe/luv:luv.opam#8e9f2b0@d41d8cd9",
         "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9",
         "@opam/logs@opam:0.7.0@1d03143e",
@@ -2572,30 +2572,30 @@
         "ocaml@4.12.0@d41d8cd9",
         "@opam/ppx_tools_versioned@opam:5.4.0@71229b42",
         "@opam/ocaml-migrate-parsetree@opam:1.8.0@caf9847c",
-        "@opam/lwt@opam:5.4.0@1ec6dbfd", "@opam/dune@opam:2.8.5@01003f12",
+        "@opam/lwt@opam:5.4.1@37ffbe37", "@opam/dune@opam:2.8.5@01003f12",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.12.0@d41d8cd9",
         "@opam/ppx_tools_versioned@opam:5.4.0@71229b42",
         "@opam/ocaml-migrate-parsetree@opam:1.8.0@caf9847c",
-        "@opam/lwt@opam:5.4.0@1ec6dbfd", "@opam/dune@opam:2.8.5@01003f12"
+        "@opam/lwt@opam:5.4.1@37ffbe37", "@opam/dune@opam:2.8.5@01003f12"
       ]
     },
-    "@opam/lwt@opam:5.4.0@1ec6dbfd": {
-      "id": "@opam/lwt@opam:5.4.0@1ec6dbfd",
+    "@opam/lwt@opam:5.4.1@37ffbe37": {
+      "id": "@opam/lwt@opam:5.4.1@37ffbe37",
       "name": "@opam/lwt",
-      "version": "opam:5.4.0",
+      "version": "opam:5.4.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/fc/fc4721bdb1a01225b96e3a2debde95fa#md5:fc4721bdb1a01225b96e3a2debde95fa",
-          "archive:https://github.com/ocsigen/lwt/archive/5.4.0.zip#md5:fc4721bdb1a01225b96e3a2debde95fa"
+          "archive:https://opam.ocaml.org/cache/md5/5a/5a8d2a83ee9314781f137d147a4c62ae#md5:5a8d2a83ee9314781f137d147a4c62ae",
+          "archive:https://github.com/ocsigen/lwt/archive/refs/tags/5.4.1.tar.gz#md5:5a8d2a83ee9314781f137d147a4c62ae"
         ],
         "opam": {
           "name": "lwt",
-          "version": "5.4.0",
-          "path": "bench.esy.lock/opam/lwt.5.4.0"
+          "version": "5.4.1",
+          "path": "bench.esy.lock/opam/lwt.5.4.1"
         }
       },
       "overrides": [],
@@ -2682,7 +2682,7 @@
         "ocaml@4.12.0@d41d8cd9", "@opam/topkg@opam:1.0.3@e4e10f1c",
         "@opam/ocamlfind@opam:1.9.1@b748edf6",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
-        "@opam/lwt@opam:5.4.0@1ec6dbfd", "@opam/fmt@opam:0.8.9@e0843a5b",
+        "@opam/lwt@opam:5.4.1@37ffbe37", "@opam/fmt@opam:0.8.9@e0843a5b",
         "@opam/base-threads@opam:base@36803084",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
