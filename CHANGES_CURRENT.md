@@ -30,5 +30,6 @@
 - #3595 - Dependency: OCaml -> 4.12
 - #3624 - Dependency: SDL2 -> 2.0.14 (thanks @zbaylin !)
 - #3632 - Dependency: revery -> 79c2572
+- #3639 - Dependency: Sparkle -> 1.26.0
 
 ### Infrastructure
