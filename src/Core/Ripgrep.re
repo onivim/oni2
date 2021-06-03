@@ -75,6 +75,7 @@ type t = {
       ~onComplete: unit => unit,
       ~onError: string => unit,
       ~enableRegex: bool=?,
+      ~caseSensitive: bool=?,
       unit
     ) =>
     dispose,
@@ -285,6 +286,7 @@ let findInFiles =
       ~onComplete,
       ~onError,
       ~enableRegex=false,
+      ~caseSensitive=false,
       (),
     ) => {
   let excludeArgs =
@@ -294,7 +296,8 @@ let findInFiles =
   let args =
     excludeArgs
     @ (enableRegex ? [] : ["--fixed-strings"])
-    @ ["--smart-case", "--hidden", "--json", "--", query, directory];
+    @ (caseSensitive ? ["--case-sensitive"] : ["--ignore-case"])
+    @ ["--hidden", "--json", "--", query, directory];
   process(
     executablePath,
     args,
