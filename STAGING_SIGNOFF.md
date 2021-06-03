@@ -11,7 +11,7 @@ Test cases covering launching and using Onivim without any persistence or config
 - Validate Welcome screen shows correct version
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -26,7 +26,7 @@ __Pass:__
 __Pass:__
 - [x] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 1.3 Home directory set [OSX]
 
@@ -75,9 +75,11 @@ __Pass:__
 - Verify diff markers show 
 
 __Pass:__
-- [ ] Win
+- [F] Win
 - [ ] OSX
 - [F] Linux
+
+> NOTE: Seems to work for other files - need to investigate
 
 # 4. Editing
 
@@ -95,7 +97,7 @@ __Pass:__
 - In normal mode, verify `1000L` goes to the same position as `H`
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -110,9 +112,11 @@ __Pass:__
 - Validate can no longer scroll horizontally, and no text overflows
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
+
+> NOTE: ScrollX should snap back to 0 after `:set wrap`
 
 # 5. File Preview
 
@@ -128,7 +132,7 @@ __Pass:__
 - Verify that a new editor is created for `CHANGES_CURRENT.md`
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -148,7 +152,7 @@ Prerequisite:
 - Check that bold text is always effectively bolder than normal text.
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -170,7 +174,7 @@ Prerequisite:
 - Verify character shows
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -187,7 +191,7 @@ Prerequisite:
 - Verify quick open shows
 
 __Pass:__
-- [ ] Windows
+- [x] Windows
 - [ ] OSX
 - [x] Linux
 
@@ -205,7 +209,7 @@ Prerequisite:
 - Verify can enter insert mode and type text
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -224,7 +228,7 @@ Prerequisite:
 - Enter dead key (') followed by composing character (like a) - should get à
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -247,7 +251,7 @@ Prerequisite:
 - Verify folder did not change
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -264,7 +268,7 @@ Regression test for #3151
 - Verify files can be opened
 
 __Pass:__
-- [ ] Win
+- [x] Win
 
 # 9. Terminal
 
@@ -277,7 +281,7 @@ __Pass:__
 - Validate version string is displayed
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -289,7 +293,7 @@ __Pass:__
 - Validate `test-file.ts` is opened in a new split
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -301,7 +305,7 @@ __Pass:__
 - Validate the explorer has switched to the new folder
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -316,7 +320,7 @@ Regression test for #3108
 - Verify Open Folder dialog is shown
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -330,7 +334,7 @@ __Pass:__
 - Validate installation is successful
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -352,6 +356,8 @@ __Pass:__
 - [ ] OSX
 - [x] Linux
 
+> NOTE: Seems like a performance regression here...
+
 ### 11.1.2 Disabling `"editor.largeFileOptimizations"` should still load files
 
 _Setup:_
@@ -364,9 +370,11 @@ _Setup:_
 - Verify syntax highlighting shows up
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
+
+> NOTE: Seems to be a performance regression when opening
 
 # 12. Proxy 
 
@@ -381,12 +389,12 @@ __Setup:__
 
 - Open Onivim 2 with default settings
 - Search for an extension - verify there is no connection
-- Set `http.proxy` to `"http://1:1@127.0.0.1:88888"`
+- Set `http.proxy` to `"http://1:1@127.0.0.1:8888"`
 - Search again - verify now connection
 - Download extension - verify installed
 
 __Pass:__
-- [ ] Win
+- [x] Win
 
 # 13. CLI
 
@@ -397,7 +405,7 @@ __Pass:__
 - Validate the file is opened in the current instance
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -408,7 +416,7 @@ __Pass:__
 - Validate the folder is opened in the current instance
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
 
@@ -419,6 +427,6 @@ __Pass:__
 - Validate a new instance of Onivim is opened, with the specified file active
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [ ] OSX
 - [x] Linux
