@@ -241,6 +241,12 @@ module Internal = {
           state.layout,
         );
 
+      let terminals =
+        Feature_Terminal.configurationChanged(
+          ~config=resolver,
+          state.terminals,
+        );
+
       let vim = Feature_Vim.configurationChanged(~config=resolver, state.vim);
       let vimEffect =
         Oni_Core.EffectEx.value(
@@ -263,6 +269,7 @@ module Internal = {
           sideBar,
           layout,
           proxy,
+          terminals,
           vim,
           zen,
           zoom,
