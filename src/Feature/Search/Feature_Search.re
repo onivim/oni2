@@ -11,12 +11,14 @@ module Constants = {
 type focus =
   | FindInput
   | ResultsPane
-  | EnableRegexButton
+  | ToggleRegexButton
+  | ToggleCaseSensitiveButton
   | ToggleOptionsButton;
 
 type model = {
   findInput: Component_InputText.model,
   enableRegex: bool,
+  caseSensitive: bool,
   optionsVisible: bool,
   query: string,
   searchNonce: int,
@@ -42,6 +44,7 @@ let resetFocus = (~query: option(string), model) => {
 let initial = {
   findInput: Component_InputText.create(~placeholder="Search"),
   enableRegex: false,
+  caseSensitive: false,
   optionsVisible: false,
   query: "",
   searchNonce: 0,
@@ -103,7 +106,8 @@ type msg =
   | VimWindowNav(Component_VimWindows.msg)
   | ResultsList(Component_VimTree.msg)
   | ToggleRegexButtonClicked
-  | ToggleOptionsButtonClicked;
+  | ToggleOptionsButtonClicked
+  | ToggleCaseSensitiveButtonClicked;
 
 module Msg = {
   let input = str => Input(str);
@@ -152,9 +156,14 @@ let update = (~previewEnabled, model, msg) => {
         },
         None,
       )
-    | EnableRegexButton =>
+    | ToggleRegexButton =>
       switch (key) {
       | "<CR>" => ({...model, enableRegex: !model.enableRegex}, None)
+      | _ => (model, None)
+      }
+    | ToggleCaseSensitiveButton =>
+      switch (key) {
+      | "<CR>" => ({...model, caseSensitive: !model.caseSensitive}, None)
       | _ => (model, None)
       }
     | ToggleOptionsButton =>
@@ -169,9 +178,7 @@ let update = (~previewEnabled, model, msg) => {
     | FindInput =>
       let findInput = Component_InputText.paste(~text, model.findInput);
       ({...model, findInput}, None);
-    | EnableRegexButton
-    | ToggleOptionsButton
-    | ResultsPane =>
+    | _ =>
       // Paste is a no-op in search pane and buttons
       (model, None)
     }
@@ -212,11 +219,11 @@ let update = (~previewEnabled, model, msg) => {
       switch (model'.focus, model'.optionsVisible) {
       | (FindInput, true)
       | (ToggleOptionsButton, true) => (
-          {...model', focus: EnableRegexButton},
+          {...model', focus: ToggleRegexButton},
           None,
         )
 
-      | (EnableRegexButton, _)
+      | (ToggleRegexButton, _)
       | (FindInput, false)
       | (ToggleOptionsButton, false) => (
           {...model', focus: ResultsPane},
@@ -226,9 +233,9 @@ let update = (~previewEnabled, model, msg) => {
       }
     | FocusUp =>
       switch (model'.focus, model'.optionsVisible) {
-      | (ResultsPane, true) => ({...model', focus: EnableRegexButton}, None)
+      | (ResultsPane, true) => ({...model', focus: ToggleRegexButton}, None)
       | (ResultsPane, false) => ({...model', focus: FindInput}, None)
-      | (EnableRegexButton, _) => ({...model', focus: FindInput}, None)
+      | (ToggleRegexButton, _) => ({...model', focus: FindInput}, None)
       | _ => (model', Some(UnhandledWindowMovement(outmsg)))
       }
     // TODO: What should tabs do for search? Toggle sidebar panes?
@@ -277,7 +284,17 @@ let update = (~previewEnabled, model, msg) => {
         ...model,
         enableRegex: !model.enableRegex,
         searchNonce: model.searchNonce + 1,
-        focus: EnableRegexButton,
+        focus: ToggleRegexButton,
+      }
+      |> setHits([]),
+      None,
+    )
+  | ToggleCaseSensitiveButtonClicked => (
+      {
+        ...model,
+        caseSensitive: !model.caseSensitive,
+        searchNonce: model.searchNonce + 1,
+        focus: ToggleCaseSensitiveButton,
       }
       |> setHits([]),
       None,
@@ -313,6 +330,7 @@ let sub = (~config, ~workingDirectory, ~setup, model) => {
       ~uniqueId=string_of_int(model.searchNonce),
       ~setup,
       ~enableRegex=model.enableRegex,
+      ~caseSensitive=model.caseSensitive,
       toMsg,
     );
   };
@@ -415,7 +433,7 @@ let make =
                <Feature_Sneak.View.Sneakable
                  sneakId="search.toggleRegex"
                  style={Styles.inputOption(
-                   ~isFocused=model.focus == EnableRegexButton,
+                   ~isFocused=model.focus == ToggleRegexButton,
                    ~theme,
                  )}
                  onClick={_ => dispatch(ToggleRegexButtonClicked)}>
@@ -424,6 +442,25 @@ let make =
                    fontSize=Constants.optionIconSize
                    color={
                      model.enableRegex
+                       ? Colors.PanelTitle.activeForeground.from(theme)
+                       : Colors.PanelTitle.inactiveForeground.from(theme)
+                   }
+                 />
+               </Feature_Sneak.View.Sneakable>
+             </Tooltip>
+             <Tooltip text="Toggle case-sensitivity">
+               <Feature_Sneak.View.Sneakable
+                 sneakId="search.toggleCaseSensitive"
+                 style={Styles.inputOption(
+                   ~isFocused=model.focus == ToggleCaseSensitiveButton,
+                   ~theme,
+                 )}
+                 onClick={_ => dispatch(ToggleCaseSensitiveButtonClicked)}>
+                 <Codicon
+                   icon=Codicon.caseSensitive
+                   fontSize=Constants.optionIconSize
+                   color={
+                     model.caseSensitive
                        ? Colors.PanelTitle.activeForeground.from(theme)
                        : Colors.PanelTitle.inactiveForeground.from(theme)
                    }

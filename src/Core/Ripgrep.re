@@ -296,7 +296,7 @@ let findInFiles =
   let args =
     excludeArgs
     @ (enableRegex ? [] : ["--fixed-strings"])
-    @ (caseSensitive ? ["--case-sensitive"] : ["--smart-case"])
+    @ (caseSensitive ? ["--case-sensitive"] : ["--ignore-case"])
     @ ["--hidden", "--json", "--", query, directory];
   process(
     executablePath,
