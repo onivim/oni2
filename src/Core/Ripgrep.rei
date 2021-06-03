@@ -27,6 +27,7 @@ type t = {
       ~onComplete: unit => unit,
       ~onError: string => unit,
       ~enableRegex: bool=?,
+      ~caseSensitive: bool=?,
       unit
     ) =>
     dispose,
