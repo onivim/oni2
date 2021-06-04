@@ -12,7 +12,7 @@ Test cases covering launching and using Onivim without any persistence or config
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 1.2 No directory set [OSX|Win|Linux]
@@ -25,7 +25,7 @@ __Pass:__
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 1.3 Home directory set [OSX]
@@ -43,7 +43,7 @@ not have permission to read that folder.
 - Verify Control+Shift+P/Command+Shift+P shows the command palette
 
 __Pass:__
-- [ ] OSX
+- [x] OSX
 
 # 2. Environment
 
@@ -54,7 +54,7 @@ __Pass:__
 - Validate full shell path is available
 
 __Pass:__
-- [ ] OSX
+- [x] OSX
 
 ## 2.2 Validate launches from dock in OSX (#2659)
 
@@ -64,7 +64,7 @@ __Pass:__
 - Validate Onivim 2 launches and PATH is correct
 
 __Pass:__
-- [ ] OSX
+- [x] OSX
 
 # 3. SCM
 
@@ -76,10 +76,10 @@ __Pass:__
 
 __Pass:__
 - [F] Win
-- [ ] OSX
+- [F] OSX
 - [F] Linux
 
-> NOTE: Seems to work for other files - need to investigate
+> NOTE: Seems to work for other files - need to investigate. Seems like it does not reproduce with `:set nowrap`
 
 # 4. Editing
 
@@ -98,7 +98,7 @@ __Pass:__
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 4.2 Verify horizontal scroll
@@ -113,7 +113,7 @@ __Pass:__
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 > NOTE: ScrollX should snap back to 0 after `:set wrap`
@@ -133,7 +133,7 @@ __Pass:__
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 # 6. Font Rendering
@@ -153,7 +153,7 @@ Prerequisite:
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 # 7. Input
@@ -175,7 +175,7 @@ Prerequisite:
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 7.2 Leader Key
@@ -192,7 +192,7 @@ Prerequisite:
 
 __Pass:__
 - [x] Windows
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 7.3 Japanese / Romaji layout
@@ -210,7 +210,7 @@ Prerequisite:
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 7.4 Dead Keys
@@ -229,7 +229,7 @@ Prerequisite:
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 # 8. Workspace
@@ -252,7 +252,7 @@ Prerequisite:
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 8.2 Windows-style path handling
@@ -282,7 +282,7 @@ __Pass:__
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 9.2 Open a file from integrated terminal
@@ -294,7 +294,7 @@ __Pass:__
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 9.3 Open a folder from integrated terminal
@@ -306,7 +306,7 @@ __Pass:__
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 # 10. Menubar
@@ -321,7 +321,7 @@ Regression test for #3108
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 # 10. Extension Management
@@ -335,7 +335,7 @@ __Pass:__
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 # 11. Buffers
@@ -352,12 +352,14 @@ _Setup:_
 - Verify file opens, and a large-file notification is shown
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
+- [x] Win
+- [F] OSX
 - [x] Linux
 
 > NOTE: Seems like a performance regression here...
 
+> NOTE: OSX - Failed to open downloads folder. Fails on 0.5.5 as well. Specific to opening via Finder. Running `:cd ~/Downloads` crashes.
+ 
 ### 11.1.2 Disabling `"editor.largeFileOptimizations"` should still load files
 
 _Setup:_
@@ -371,7 +373,7 @@ _Setup:_
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [F] OSX
 - [x] Linux
 
 > NOTE: Seems to be a performance regression when opening
@@ -406,7 +408,7 @@ __Pass:__
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 13.2 Single Instance - Open folder in running instance
@@ -417,7 +419,7 @@ __Pass:__
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 13.3 Force new instance
@@ -428,5 +430,5 @@ __Pass:__
 
 __Pass:__
 - [x] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
