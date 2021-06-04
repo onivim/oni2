@@ -21,6 +21,8 @@
 
 ### Performance
 
+- #3603 - UX: Fix a couple of orphaned animation timers (related #2407)
+
 ### Documentation
 
 - #3601 - Visual Mode: Add note about switching to block mode on Windows / Linux (thanks @rogererens !)
