@@ -69,6 +69,7 @@ type t = {
   findInFiles:
     (
       ~searchExclude: list(string),
+      ~searchInclude: list(string),
       ~directory: string,
       ~query: string,
       ~onUpdate: list(Match.t) => unit,
@@ -280,6 +281,7 @@ let findInFiles =
     (
       ~executablePath,
       ~searchExclude,
+      ~searchInclude,
       ~directory,
       ~query,
       ~onUpdate,
@@ -293,8 +295,13 @@ let findInFiles =
     searchExclude
     |> List.filter(str => !StringEx.isEmpty(str))
     |> List.concat_map(x => ["-g", "!" ++ x]);
+  let includeArgs =
+    searchInclude
+    |> List.filter(str => !StringEx.isEmpty(str))
+    |> List.concat_map(x => ["-g", x]);
   let args =
     excludeArgs
+    @ includeArgs
     @ (enableRegex ? [] : ["--fixed-strings"])
     @ (caseSensitive ? ["--case-sensitive"] : ["--ignore-case"])
     @ ["--hidden", "--json", "--", query, directory];
