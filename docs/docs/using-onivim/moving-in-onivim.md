@@ -55,6 +55,10 @@ The search motion - <kbd>/</kbd> - can be used for moving the cursor to a partic
 - <kbd>*</kbd> will search for the next instance of the identifier under the cursor.
 - <kbd>%</kbd> will move the cursor to a matching bracket.
 
+While searching with <kbd>/</kbd> or <kbd>?</kbd>, matches will be automatically highlighted in the visible editors.
+
+- <kbd>Control</kbd>+</kbd>L</kbd> will clear the search highlights.
+
 ## Sneak Mode
 
 Vim's model of modal editing, which Onivim is based off of, was really designed for terminal user interfaces. 

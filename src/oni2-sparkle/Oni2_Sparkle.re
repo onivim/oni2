@@ -6,6 +6,10 @@ ENABLE_AUTOUPDATE;
 
 external init: unit => unit = "oni2_SparkleInit";
 
+external c_version: unit => string = "oni2_SparkleVersion";
+
+let version = Some(c_version());
+
 module Updater = {
   type t;
 
@@ -32,6 +36,8 @@ module Debug = {
 [%%else];
 
 let init = () => ();
+
+let version = None;
 
 module Updater = {
   type t = unit;

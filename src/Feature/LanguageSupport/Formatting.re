@@ -65,6 +65,7 @@ type msg =
       fileType: string,
       extensionId: string,
     })
+  | NoFormatterSelected
   | FormatRange({
       startLine: EditorCoreTypes.LineNumber.t,
       endLine: EditorCoreTypes.LineNumber.t,
@@ -230,7 +231,7 @@ module Internal = {
          );
 
     Feature_Quickmenu.Schema.menu(
-      ~onItemSelected=toMsg,
+      ~onAccepted=toMsg,
       ~toString=Fun.id,
       ~placeholderText="Select a default formatter...",
       itemNames,
@@ -319,11 +320,17 @@ module Internal = {
       // No default formatter... let the user pick
       | None =>
         let menu =
-          selectFormatterMenu(~formatters=matchingFormatters, msg => {
-            DefaultFormatterSelected({
-              fileType: Buffer.getFileType(buf) |> Buffer.FileType.toString,
-              extensionId: msg,
-            })
+          selectFormatterMenu(
+            ~formatters=matchingFormatters, (~text as _, ~item as maybeItem) => {
+            maybeItem
+            |> Option.map(item => {
+                 DefaultFormatterSelected({
+                   fileType:
+                     Buffer.getFileType(buf) |> Buffer.FileType.toString,
+                   extensionId: item,
+                 })
+               })
+            |> Option.value(~default=NoFormatterSelected)
           });
         (model, ShowMenu(menu));
 
@@ -622,6 +629,8 @@ let update =
       ~maybeBuffer,
       model,
     )
+
+  | NoFormatterSelected => (model, Nothing)
 
   | DefaultFormatterSelected({fileType, extensionId}) =>
     let transformer =

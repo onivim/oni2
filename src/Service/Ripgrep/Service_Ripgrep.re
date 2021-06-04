@@ -12,6 +12,8 @@ module Sub = {
     query: string,
     uniqueId: string,
     setup: Setup.t,
+    enableRegex: bool,
+    caseSensitive: bool,
   };
 
   module FindInFilesSub =
@@ -41,6 +43,9 @@ module Sub = {
             ~onUpdate=items => dispatch(GotMatches(items)),
             ~onComplete=() => {dispatch(Completed)},
             ~onError=msg => dispatch(Error(msg)),
+            ~enableRegex=params.enableRegex,
+            ~caseSensitive=params.caseSensitive,
+            (),
           );
         {dispose: dispose};
       };
@@ -61,8 +66,18 @@ module Sub = {
         ~directory: string,
         ~query: string,
         ~setup: Setup.t,
+        ~enableRegex=false,
+        ~caseSensitive=false,
         toMsg,
       ) =>
-    FindInFilesSub.create({uniqueId, exclude, directory, query, setup})
+    FindInFilesSub.create({
+      uniqueId,
+      exclude,
+      directory,
+      query,
+      setup,
+      enableRegex,
+      caseSensitive,
+    })
     |> Isolinear.Sub.map(toMsg);
 };

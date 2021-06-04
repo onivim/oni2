@@ -161,15 +161,22 @@ let create =
         | QuickOpen.SetItems({instance, items}) =>
           dispatch(QuickmenuUpdateExtensionItems({id: instance, items}));
           Lwt.return(Reply.okEmpty);
+
+        // | QuickOpen.Input(_) => Lwt.return(Reply.okJson(`String("Testing")))
         | msg =>
-          // TODO: Additional quick open messages
-          Log.warnf(m =>
-            m(
-              "Unhandled QuickOpen message: %s",
-              Exthost.Msg.QuickOpen.show_msg(msg),
-            )
+          let (promise, resolver) = Lwt.task();
+          dispatch(
+            Actions.QuickOpen(Feature_QuickOpen.Msg.exthost(~resolver, msg)),
           );
-          Lwt.return(Reply.okEmpty);
+          // TODO: Additional quick open messages
+          // Log.warnf(m =>
+          //   m(
+          //     "Unhandled QuickOpen message: %s",
+          //     Exthost.Msg.QuickOpen.show_msg(msg),
+          //   )
+          // );
+          // TODO: Pass resolver to feature
+          promise;
         }
 
       | StatusBar(

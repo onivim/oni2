@@ -68,6 +68,7 @@ external vimInit: unit => unit = "libvim_vimInit";
 external vimInput: string => unit = "libvim_vimInput";
 external vimKey: string => unit = "libvim_vimKey";
 external vimCommand: string => unit = "libvim_vimCommand";
+external vimCommands: array(string) => unit = "libvim_vimCommands";
 
 external vimGetMode: unit => mode = "libvim_vimGetMode";
 external vimGetSubMode: unit => SubMode.t = "libvim_vimGetSubMode";

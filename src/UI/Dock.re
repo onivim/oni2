@@ -2,6 +2,7 @@ open Revery.UI;
 
 open Oni_Core;
 open Oni_Model;
+open Oni_Components;
 
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
@@ -105,8 +106,7 @@ let%component item =
                 ~sideBar,
                 ~theme,
                 ~isActive,
-                ~icon,
-                ~iconStyle=`Solid,
+                ~icon: SVGIcon.t,
                 ~font: UiFont.t,
                 (),
               ) => {
@@ -114,16 +114,8 @@ let%component item =
   let onMouseOver = _ => setHovered(_ => true);
   let onMouseOut = _ => setHovered(_ => false);
 
-  let icon = () => {
-    let color = isActive ? Colors.foreground : Colors.inactiveForeground;
-    let fontFamily =
-      switch (iconStyle) {
-      | `Solid => FontAwesome.FontFamily.solid
-      | `Regular => FontAwesome.FontFamily.regular
-      };
-
-    <FontIcon fontFamily color={color.from(theme)} fontSize=22. icon />;
-  };
+  let color =
+    (isActive ? Colors.foreground : Colors.inactiveForeground).from(theme);
 
   let notificationElement =
     switch (notification) {
@@ -136,7 +128,7 @@ let%component item =
       sneakId="item"
       onClick
       style={Styles.item(~isHovered, ~isActive, ~theme, ~sideBar)}>
-      <icon />
+      <icon size=24 strokeWidth=2 color />
       notificationElement
     </Sneakable>
   </View>;
@@ -183,8 +175,7 @@ let make =
       sideBar
       theme
       isActive={isSidebarVisible(FileExplorer)}
-      icon=FontAwesome.copy
-      iconStyle=`Regular
+      icon=FeatherIcons.folder
     />
     <item
       font
@@ -192,7 +183,7 @@ let make =
       sideBar
       theme
       isActive={isSidebarVisible(Search)}
-      icon=FontAwesome.search
+      icon=FeatherIcons.search
     />
     <item
       font
@@ -200,7 +191,7 @@ let make =
       sideBar
       theme
       isActive={isSidebarVisible(SCM)}
-      icon=FontAwesome.codeBranch
+      icon=FeatherIcons.gitPullRequest
       notification=?scmNotification
     />
     <item
@@ -209,7 +200,7 @@ let make =
       sideBar
       theme
       isActive={isSidebarVisible(Extensions)}
-      icon=FontAwesome.thLarge
+      icon=FeatherIcons.package
       notification=?extensionNotification
     />
   </View>;
