@@ -92,7 +92,7 @@ jobs:
   displayName: 'Linux - CentOS - Docker Image'
   timeoutInMinutes: 120
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-18.04'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
@@ -213,13 +213,13 @@ jobs:
     parameters:
       platform: windows
 
-- job: ValidateLinuxReleaseUbuntu16
-  displayName: "Linux: Validate Release (Ubuntu 16.04)"
+- job: ValidateLinuxReleaseUbuntu18
+  displayName: "Linux: Validate Release (Ubuntu 18.04)"
   dependsOn: 
   - Kickoff
   - CentOS
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-18.04'
   variables:
     ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
