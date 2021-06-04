@@ -327,7 +327,14 @@ let update = (~previewEnabled, model, msg) => {
           None,
         )
 
-      | (ToggleRegexButton | ToggleCaseSensitiveButton, _)
+      | (ToggleRegexButton | ToggleCaseSensitiveButton, _) => (
+          {...model', focus: IncludeInput},
+          None,
+        )
+
+      | (IncludeInput, _) => ({...model', focus: ExcludeInput}, None)
+
+      | (ExcludeInput, _)
       | (FindInput, false)
       | (ToggleOptionsButton, false) => (
           {...model', focus: ResultsPane},
@@ -337,8 +344,10 @@ let update = (~previewEnabled, model, msg) => {
       }
     | FocusUp =>
       switch (model'.focus, model'.optionsVisible) {
-      | (ResultsPane, true) => ({...model', focus: ToggleRegexButton}, None)
+      | (ResultsPane, true) => ({...model', focus: ExcludeInput}, None)
       | (ResultsPane, false) => ({...model', focus: FindInput}, None)
+      | (ExcludeInput, _) => ({...model', focus: IncludeInput}, None)
+      | (IncludeInput, _) => ({...model', focus: ToggleRegexButton}, None)
       | (ToggleRegexButton | ToggleCaseSensitiveButton, _) => (
           {...model', focus: FindInput},
           None,
