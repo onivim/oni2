@@ -175,7 +175,7 @@ module VimSettings = {
       |> Option.value(~default=false)
     });
 
-  let guifont =
+  let guifontFamily =
     vim("guifont", guifontSetting => {
       guifontSetting
       |> VimSetting.decode_value_opt(font)
@@ -183,6 +183,16 @@ module VimSettings = {
            fontFamily
          )
       |> Option.value(~default="JetBrainsMono-Regular.ttf")
+    });
+
+  let guifontSize =
+    vim("guifont", guifontSetting => {
+      guifontSetting
+      |> VimSetting.decode_value_opt(font)
+      |> OptionEx.flatMap(({height, _}: VimSetting.fontDescription) =>
+           height
+         )
+      |> Option.value(~default=14.)
     });
 
   let wrap =
@@ -252,7 +262,7 @@ let detectIndentation =
 
 let fontFamily =
   setting(
-    ~vim=VimSettings.guifont,
+    ~vim=VimSettings.guifontFamily,
     "editor.fontFamily",
     string,
     ~default=Constants.defaultFontFile,
@@ -271,7 +281,13 @@ let fontLigatures =
     Codecs.fontLigatures,
     ~default=FontLigatures.enabled,
   );
-let fontSize = setting("editor.fontSize", Codecs.fontSize, ~default=14.);
+let fontSize =
+  setting(
+    ~vim=VimSettings.guifontSize,
+    "editor.fontSize",
+    Codecs.fontSize,
+    ~default=14.,
+  );
 let fontWeight =
   setting(
     "editor.fontWeight",

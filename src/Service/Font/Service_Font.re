@@ -78,9 +78,9 @@ let setFont =
       Constants.defaultFontFamily;
     } else {
       switch (FpExp.absoluteCurrentPlatform(familyString)) {
-      | None => Revery_Font.Family.system(familyString);
-      | Some(fp) => Revery_Font.Family.fromFile(FpExp.toString(fp));
-      }
+      | None => Revery_Font.Family.system(familyString)
+      | Some(fp) => Revery_Font.Family.fromFile(FpExp.toString(fp))
+      };
     };
 
   let features = fontLigatures |> FontLigatures.toHarfbuzzFeatures;
