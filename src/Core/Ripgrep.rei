@@ -21,6 +21,7 @@ type t = {
   findInFiles:
     (
       ~searchExclude: list(string),
+      ~searchInclude: list(string),
       ~directory: string,
       ~query: string,
       ~onUpdate: list(Match.t) => unit,
