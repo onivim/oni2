@@ -1,3 +1,5 @@
+0.5.6-staging
+
 # 1. First-run Experience
 
 Test cases covering launching and using Onivim without any persistence or configuration.
@@ -9,9 +11,9 @@ Test cases covering launching and using Onivim without any persistence or config
 - Validate Welcome screen shows correct version
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 ## 1.2 No directory set [OSX|Win|Linux]
 
@@ -22,9 +24,9 @@ __Pass:__
 - Verify Control+Shift+P/Command+P shows the command palette
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 ## 1.3 Home directory set [OSX]
 
@@ -41,7 +43,7 @@ not have permission to read that folder.
 - Verify Control+Shift+P/Command+Shift+P shows the command palette
 
 __Pass:__
-- [ ] OSX
+- [x] OSX
 
 # 2. Environment
 
@@ -52,7 +54,7 @@ __Pass:__
 - Validate full shell path is available
 
 __Pass:__
-- [ ] OSX
+- [x] OSX
 
 ## 2.2 Validate launches from dock in OSX (#2659)
 
@@ -62,7 +64,7 @@ __Pass:__
 - Validate Onivim 2 launches and PATH is correct
 
 __Pass:__
-- [ ] OSX
+- [x] OSX
 
 # 3. SCM
 
@@ -73,9 +75,11 @@ __Pass:__
 - Verify diff markers show 
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [F] Win
+- [F] OSX
+- [F] Linux
+
+> NOTE: Seems to work for other files - need to investigate. Seems like it does not reproduce with `:set nowrap`
 
 # 4. Editing
 
@@ -93,9 +97,9 @@ __Pass:__
 - In normal mode, verify `1000L` goes to the same position as `H`
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 ## 4.2 Verify horizontal scroll
 
@@ -108,9 +112,11 @@ __Pass:__
 - Validate can no longer scroll horizontally, and no text overflows
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
+
+> NOTE: ScrollX should snap back to 0 after `:set wrap`
 
 # 5. File Preview
 
@@ -126,9 +132,9 @@ __Pass:__
 - Verify that a new editor is created for `CHANGES_CURRENT.md`
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 # 6. Font Rendering
 
@@ -136,6 +142,9 @@ __Pass:__
 
 Prerequisite:
 - In configuration file, key "editor.fontFamily" either set to a __non absolute__ font name or absent (Ideally test both).
+  - Linux: "Inconsolata"
+  - Windows: "Consolas"
+  - OSX: "Menlo"
 
 - Run Onivim 2
 - Open configuration file
@@ -143,9 +152,9 @@ Prerequisite:
 - Check that bold text is always effectively bolder than normal text.
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 # 7. Input
 
@@ -155,6 +164,7 @@ Regression test for #2926
 
 Prerequisite:
 - Install German (de-de) keyboard layout
+  - Linux: `setxkbmap -layout de` (`setxkbmap -layout us` to revert)
 
 - Run Onivim 2
 - Create new file (`:new test.txt`)
@@ -164,9 +174,9 @@ Prerequisite:
 - Verify character shows
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 ## 7.2 Leader Key
 
@@ -181,9 +191,9 @@ Prerequisite:
 - Verify quick open shows
 
 __Pass:__
-- [ ] Windows
-- [ ] OSX
-- [ ] Linux
+- [x] Windows
+- [x] OSX
+- [x] Linux
 
 ## 7.3 Japanese / Romaji layout
 
@@ -191,6 +201,7 @@ Regression test for #2924
 
 Prerequisite:
 - Install Romaji keyboard layout
+  - Linux: Use ibus to switch to Romaji
 
 - Switch keyboard layout to Romaji
 - Run Onivim 2
@@ -198,9 +209,9 @@ Prerequisite:
 - Verify can enter insert mode and type text
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 ## 7.4 Dead Keys
 
@@ -208,6 +219,7 @@ Regresion test for #3157
 
 Prerequisite:
 - Install ENG-INTL keyboard layout
+  - Linux: ibus w/ French+AltGr dead keys
 
 - Switch keyboard layout to English (International)
 - Run Onivim 2
@@ -216,9 +228,9 @@ Prerequisite:
 - Enter dead key (') followed by composing character (like a) - should get à
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 # 8. Workspace
 
@@ -239,9 +251,9 @@ Prerequisite:
 - Verify folder did not change
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 ## 8.2 Windows-style path handling
 
@@ -256,7 +268,7 @@ Regression test for #3151
 - Verify files can be opened
 
 __Pass:__
-- [ ] Win
+- [x] Win
 
 # 9. Terminal
 
@@ -269,9 +281,9 @@ __Pass:__
 - Validate version string is displayed
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 ## 9.2 Open a file from integrated terminal
 
@@ -281,9 +293,9 @@ __Pass:__
 - Validate `test-file.ts` is opened in a new split
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 ## 9.3 Open a folder from integrated terminal
 
@@ -293,9 +305,9 @@ __Pass:__
 - Validate the explorer has switched to the new folder
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 # 10. Menubar
 
@@ -308,9 +320,9 @@ Regression test for #3108
 - Verify Open Folder dialog is shown
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 # 10. Extension Management
 
@@ -322,9 +334,9 @@ __Pass:__
 - Validate installation is successful
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 # 11. Buffers
 
@@ -340,10 +352,14 @@ _Setup:_
 - Verify file opens, and a large-file notification is shown
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [F] OSX
+- [x] Linux
 
+> NOTE: Seems like a performance regression here...
+
+> NOTE: OSX - Failed to open downloads folder. Fails on 0.5.5 as well. Specific to opening via Finder. Running `:cd ~/Downloads` crashes.
+ 
 ### 11.1.2 Disabling `"editor.largeFileOptimizations"` should still load files
 
 _Setup:_
@@ -356,9 +372,11 @@ _Setup:_
 - Verify syntax highlighting shows up
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [F] OSX
+- [x] Linux
+
+> NOTE: Seems to be a performance regression when opening
 
 # 12. Proxy 
 
@@ -373,12 +391,12 @@ __Setup:__
 
 - Open Onivim 2 with default settings
 - Search for an extension - verify there is no connection
-- Set `http.proxy` to `"http://1:1@127.0.0.1:88888"`
+- Set `http.proxy` to `"http://1:1@127.0.0.1:8888"`
 - Search again - verify now connection
 - Download extension - verify installed
 
 __Pass:__
-- [ ] Win
+- [x] Win
 
 # 13. CLI
 
@@ -389,9 +407,9 @@ __Pass:__
 - Validate the file is opened in the current instance
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 ## 13.2 Single Instance - Open folder in running instance
 
@@ -400,9 +418,9 @@ __Pass:__
 - Validate the folder is opened in the current instance
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 ## 13.3 Force new instance
 
@@ -411,6 +429,6 @@ __Pass:__
 - Validate a new instance of Onivim is opened, with the specified file active
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
