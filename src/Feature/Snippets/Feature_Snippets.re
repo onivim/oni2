@@ -343,6 +343,7 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
+  | NoSnippetSelected
   | SnippetInserted([@opaque] Session.t)
   | SnippetInsertionError(string)
   | SnippetsLoadedForPicker(list(Service_Snippets.SnippetWithMetadata.t))
@@ -733,9 +734,14 @@ let update =
   | SnippetsLoadedForPicker(snippetsWithMetadata) =>
     let menu =
       Feature_Quickmenu.Schema.menu(
-        ~onItemSelected=
-          (item: Service_Snippets.SnippetWithMetadata.t) =>
-            InsertInternal({snippetString: item.snippet}),
+        ~onAccepted=
+          (~text as _, ~item: option(Service_Snippets.SnippetWithMetadata.t)) => {
+            item
+            |> Option.map((item: Service_Snippets.SnippetWithMetadata.t) =>
+                 InsertInternal({snippetString: item.snippet})
+               )
+            |> Option.value(~default=NoSnippetSelected)
+          },
         ~toString=
           (snippet: Service_Snippets.SnippetWithMetadata.t) => {
             snippet.prefix ++ ":" ++ snippet.description
@@ -764,8 +770,14 @@ let update =
 
     let menu =
       Feature_Quickmenu.Schema.menu(
-        ~onItemSelected=
-          item => EditSnippetFileRequested({snippetFile: item |> snd}),
+        ~onAccepted=
+          (~text as _, ~item as maybeItem) => {
+            maybeItem
+            |> Option.map(item => {
+                 EditSnippetFileRequested({snippetFile: item |> snd})
+               })
+            |> Option.value(~default=NoSnippetSelected)
+          },
         ~toString=item => fst(item),
         filesAndPaths,
       );
@@ -798,6 +810,8 @@ let update =
       |> Option.value(~default=Nothing);
 
     (model, eff);
+
+  | NoSnippetSelected => (model, Nothing)
   };
 
 module Commands = {

@@ -25,7 +25,10 @@ type t = {
       ~query: string,
       ~onUpdate: list(Match.t) => unit,
       ~onComplete: unit => unit,
-      ~onError: string => unit
+      ~onError: string => unit,
+      ~enableRegex: bool=?,
+      ~caseSensitive: bool=?,
+      unit
     ) =>
     dispose,
 }
