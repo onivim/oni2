@@ -42,7 +42,7 @@ module Styles = {
 };
 
 module Item = {
-  let%component make =
+  let make =
                 (
                   ~dispatch: Msg.t => unit,
                   ~inlineKey: string,
@@ -54,31 +54,10 @@ module Item = {
                   ~children,
                   (),
                 ) => {
-    let%hook (measuredHeight, heightChangedDispatch) =
-      Hooks.reducer(~initialState=0, (newHeight, _prev) => newHeight);
-
-    let%hook () =
-      Hooks.effect(
-        If((!=), (measuredHeight, uniqueId)),
-        () => {
-          if (measuredHeight > 0) {
-            dispatch(
-              Msg.InlineElementSizeChanged({
-                key: inlineKey,
-                uniqueId,
-                line: lineNumber,
-                height: measuredHeight,
-              }),
-            );
-          };
-          None;
-        },
-      );
     // COMPONENT
     <View
       style={Styles.inner(~xOffset, ~yOffset, ~opacity)}
-      onDimensionsChanged={({height, _}) => {heightChangedDispatch(height)}}>
-      children
+      children>
     </View>;
   };
 };

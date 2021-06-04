@@ -28,6 +28,7 @@ type element = {
   view:
     (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
     Revery.UI.element,
+  measure: (~width:int) => int,
   command: option(Exthost.Command.t),
 };
 

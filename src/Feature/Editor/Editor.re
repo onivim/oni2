@@ -28,6 +28,8 @@ type inlineElement = {
   view:
     (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
     Revery.UI.element,
+  measure: (~width: int) => int,
+  initialHeight: int,
   command: option(Exthost.Command.t),
 };
 
@@ -979,7 +981,7 @@ let withSteadyCursor = (f, editor) => {
   };
 };
 
-let makeInlineElement = (~command=None, ~key, ~uniqueId, ~lineNumber, view) => {
+let makeInlineElement = (~command=None, ~key, ~uniqueId, ~lineNumber, ~measure, ~initialHeight, view) => {
   hidden: false,
   reconcilerKey: Brisk_reconciler.Key.create(),
   key,
@@ -987,6 +989,8 @@ let makeInlineElement = (~command=None, ~key, ~uniqueId, ~lineNumber, view) => {
   lineNumber,
   view,
   command,
+  measure,
+  initialHeight,
 };
 
 let linesWithInlineElements = ({inlineElements, _}) => {
@@ -1031,10 +1035,11 @@ let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => 
            key: inlineElement.key,
            uniqueId: inlineElement.uniqueId,
            line: inlineElement.lineNumber,
-           height: Component_Animation.make(Animation.expand(0., 0.)),
+           height: Component_Animation.make(Animation.expand(0., float(inlineElement.initialHeight))),
            view: inlineElement.view,
            opacity: Component_Animation.make(Animation.fadeIn),
            command: inlineElement.command,
+           measure: inlineElement.measure,
          }
        );
   editor
@@ -1063,10 +1068,19 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
          let uniqueId = Feature_LanguageSupport.CodeLens.text(lens);
          let view =
            Feature_LanguageSupport.CodeLens.View.make(~codeLens=lens);
+
+         // TODO: Actual item...
+         let measure = (~width as _) => 100;
+
+         // TODO: Editor size
+         let initialHeight = measure(0);
+
          makeInlineElement(
            ~command=lens.command,
            ~key="codelens:" ++ string_of_int(handle),
            ~uniqueId,
+           ~measure,
+           ~initialHeight,
            ~lineNumber,
            view,
          );

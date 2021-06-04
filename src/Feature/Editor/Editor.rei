@@ -36,16 +36,16 @@ let copy: t => t;
 
 type inlineElement;
 
-let makeInlineElement:
-  (
-    ~command: option(Exthost.Command.t)=?,
-    ~key: string,
-    ~uniqueId: string,
-    ~lineNumber: EditorCoreTypes.LineNumber.t,
-    (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
-    Revery.UI.element
-  ) =>
-  inlineElement;
+// let makeInlineElement:
+//   (
+//     ~command: option(Exthost.Command.t)=?,
+//     ~key: string,
+//     ~uniqueId: string,
+//     ~lineNumber: EditorCoreTypes.LineNumber.t,
+//     (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
+//     Revery.UI.element
+//   ) =>
+//   inlineElement;
 
 let setCodeLens:
   (
