@@ -61,6 +61,7 @@ type command =
 
 [@deriving show]
 type quickmenu =
+  | NoSymbolSelected
   | SymbolSelected({
       filePath: string,
       symbol,
@@ -103,8 +104,12 @@ let update = (~maybeBuffer, msg, model) => {
                   )
                |> List.sort(sortSymbolsByPosition);
 
-             let onItemSelected = symbol => {
-               Quickmenu(SymbolSelected({filePath, symbol}));
+             let onAccepted = (~text as _, ~item as maybeSymbol) => {
+               maybeSymbol
+               |> Option.map(symbol =>
+                    Quickmenu(SymbolSelected({filePath, symbol}))
+                  )
+               |> Option.value(~default=Quickmenu(NoSymbolSelected));
              };
 
              let itemToIcon = ({kind, _}: symbol) => {
@@ -118,7 +123,7 @@ let update = (~maybeBuffer, msg, model) => {
                Feature_Quickmenu.Schema.Renderer.defaultWithIcon(itemToIcon);
              Outmsg.ShowMenu(
                Feature_Quickmenu.Schema.menu(
-                 ~onItemSelected,
+                 ~onAccepted,
                  ~toString=(symbol: symbol) => symbol.name,
                  ~itemRenderer,
                  allItems,
@@ -144,6 +149,8 @@ let update = (~maybeBuffer, msg, model) => {
         direction: SplitDirection.Current,
       }),
     )
+
+  | Quickmenu(NoSymbolSelected) => (model, Outmsg.Nothing)
   };
 };
 

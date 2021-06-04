@@ -33,7 +33,7 @@ module Schema: {
   let menu:
     (
       ~onItemFocused: 'item => 'outmsg=?,
-      ~onItemSelected: 'item => 'outmsg=?,
+      ~onAccepted: (~text: string, ~item: option('item)) => 'outmsg=?,
       ~onCancelled: unit => 'outmsg=?,
       ~placeholderText: string=?,
       ~itemRenderer: Renderer.t('item)=?,

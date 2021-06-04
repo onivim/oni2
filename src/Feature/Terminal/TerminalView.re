@@ -28,17 +28,10 @@ module Terminal = {
                   ~isActive,
                   ~config,
                   ~terminal: Model.terminal,
-                  ~font: Service_Font.font,
                   ~theme: Oni_Core.ColorTheme.Colors.t,
                   ~dispatch,
                   (),
                 ) => {
-    let resolvedFont =
-      Service_Font.resolveWithFallback(
-        Revery.Font.Weight.Normal,
-        font.fontFamily,
-      );
-
     let opacity =
       isActive
         ? 1.0
@@ -46,13 +39,7 @@ module Terminal = {
             config,
           );
 
-    let lineHeight =
-      Configuration.lineHeight.get(config)
-      |> Oni_Core.Utility.OptionEx.value_or_lazy(() => {
-           Feature_Configuration.GlobalConfiguration.Editor.lineHeight.get(
-             config,
-           )
-         });
+    let font = terminal.font;
 
     let%hook lastDimensions = Hooks.ref(None);
 
@@ -65,7 +52,7 @@ module Terminal = {
         If((!=), terminal.id),
         () => {
           lastDimensions^
-          |> Option.iter(((rows, columns)) => {
+          |> Option.iter(((rows, columns, _pixelHeight)) => {
                dispatch(Model.Resized({id: terminal.id, rows, columns}))
              });
 
@@ -73,17 +60,8 @@ module Terminal = {
         },
       );
 
-    let Service_Font.{fontSize, smoothing, _} = font;
+    let terminalFont = font;
 
-    let lineHeightSize =
-      Oni_Core.LineHeight.calculate(~measuredFontHeight=fontSize, lineHeight);
-    let terminalFont =
-      EditorTerminal.Font.make(
-        ~smoothing,
-        ~size=fontSize,
-        ~lineHeight=lineHeightSize,
-        resolvedFont,
-      );
     let onDimensionsChanged =
         (
           {height, width, _}: Revery.UI.NodeEvents.DimensionsChangedEventParams.t,
@@ -94,7 +72,7 @@ module Terminal = {
       let columns =
         float_of_int(width) /. terminalFont.characterWidth |> int_of_float;
 
-      lastDimensions := Some((rows, columns));
+      lastDimensions := Some((rows, columns, height));
       dispatch(Model.Resized({id: terminal.id, rows, columns}));
     };
 
@@ -111,14 +89,47 @@ module Terminal = {
         ~theme=terminalTheme,
         ~cursor,
         ~font=terminalFont,
-        ~scrollBarThickness=Constants.scrollBarThickness,
-        ~scrollBarThumb=Constants.scrollThumbColor,
-        ~scrollBarBackground=Constants.scrollTrackColor,
+        ~scrollY=terminal.scrollY,
         screen,
       );
     };
-    <View onDimensionsChanged style={Styles.container(opacity)}>
-      element
+
+    let onMouseWheel = ({deltaY, _}: NodeEvents.mouseWheelEventParams) => {
+      dispatch(
+        Terminal({
+          id: terminal.id,
+          msg: MouseWheelScrolled({deltaY: deltaY *. 25.0}),
+        }),
+      );
+    };
+
+    let pixelHeight =
+      switch (lastDimensions^) {
+      | None => Terminal.viewportHeight(terminal)
+      | Some((_, _, pixelY)) => float(pixelY)
+      };
+
+    let scrollBar =
+      <Oni_Components.Scrollbar
+        config
+        theme
+        pixelHeight
+        viewportHeight={Terminal.viewportHeight(terminal)}
+        totalHeight={Terminal.totalHeight(terminal)}
+        scrollY={terminal.scrollY}
+        onScroll={scrollY =>
+          dispatch(
+            Terminal({
+              id: terminal.id,
+              msg: ScrollbarMoved({scrollY: scrollY}),
+            }),
+          )
+        }
+      />;
+
+    let elems = [element, scrollBar] |> React.listToElement;
+    <View onDimensionsChanged onMouseWheel style={Styles.container(opacity)}>
+      elems
     </View>;
   };
 };
@@ -129,7 +140,6 @@ let make =
       ~config,
       ~id: int,
       ~terminals: Model.t,
-      ~font: Service_Font.font,
       ~theme: Oni_Core.ColorTheme.Colors.t,
       ~dispatch,
       (),
@@ -137,7 +147,7 @@ let make =
   terminals
   |> Model.getTerminalOpt(id)
   |> Option.map(terminal => {
-       <Terminal config isActive theme font terminal dispatch />
+       <Terminal config isActive theme terminal dispatch />
      })
   |> Option.value(~default=Revery.UI.React.empty);
 };

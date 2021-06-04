@@ -42,7 +42,6 @@ module Msg: {
     (
       ~bufferId: int,
       ~newFilePath: option(string),
-      ~newFileType: Oni_Core.Buffer.FileType.t,
       ~version: int,
       ~isModified: bool
     ) =>
@@ -105,6 +104,7 @@ let update:
   (
     ~activeBufferId: int,
     ~config: Config.fileTypeResolver,
+    ~languageInfo: Exthost.LanguageInfo.t,
     ~workspace: Feature_Workspace.model,
     msg,
     model

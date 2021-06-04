@@ -26,7 +26,7 @@ const extensionsSourceDirectory = path.join(process.cwd(), "extensions")
 
 const eulaFile = path.join(process.cwd(), "Outrun-Labs-EULA-v1.1.md")
 const thirdPartyFile = path.join(process.cwd(), "ThirdPartyLicenses.txt")
-const sparkleFramework = path.join(rootDirectory, "vendor", "Sparkle-1.23.0", "Sparkle.framework")
+const sparkleFramework = path.join(rootDirectory, "vendor", "Sparkle-1.26.0", "Sparkle.framework")
 const winSparkleDLL = path.join(
     rootDirectory,
     "vendor",

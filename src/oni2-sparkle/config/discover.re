@@ -2,7 +2,7 @@ module Configurator = Configurator.V1;
 open Configurator.C_define;
 
 let projectRoot = Sys.getenv("ONI2_ROOT");
-let sparkleDir = projectRoot ++ "/vendor/Sparkle-1.23.0/";
+let sparkleDir = projectRoot ++ "/vendor/Sparkle-1.26.0/";
 let winSparkleDir = projectRoot ++ "/vendor/WinSparkle-0.7.0/";
 
 let ccopt = s => ["-ccopt", s];

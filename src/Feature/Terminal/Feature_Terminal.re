@@ -1,5 +1,7 @@
 open Oni_Core;
 
+module Terminal = Terminal;
+
 // MODEL
 include Model;
 
@@ -26,13 +28,53 @@ module Configuration = Configuration;
 
 let shouldClose = (~id, {idToTerminal, _}) => {
   IntMap.find_opt(id, idToTerminal)
-  |> Option.map(({closeOnExit, _}) => closeOnExit)
+  |> Option.map(Terminal.closeOnExit)
   |> Option.value(~default=true);
 };
 
 let updateById = (id, f, model) => {
   let idToTerminal = IntMap.update(id, Option.map(f), model.idToTerminal);
   {...model, idToTerminal};
+};
+
+let updateAll = (f, model) => {
+  let idToTerminal = IntMap.map(f, model.idToTerminal);
+  {...model, idToTerminal};
+};
+
+let recomputeFont = (~config, ~font: Service_Font.font, model) => {
+  let resolvedFont =
+    Service_Font.resolveWithFallback(
+      Revery.Font.Weight.Normal,
+      font.fontFamily,
+    );
+
+  let lineHeight =
+    Configuration.lineHeight.get(config)
+    |> Oni_Core.Utility.OptionEx.value_or_lazy(() => {
+         Feature_Configuration.GlobalConfiguration.Editor.lineHeight.get(
+           config,
+         )
+       });
+
+  let Service_Font.{fontSize, smoothing, _} = font;
+
+  let lineHeightSize =
+    Oni_Core.LineHeight.calculate(~measuredFontHeight=fontSize, lineHeight);
+  let resolvedFont =
+    EditorTerminal.Font.make(
+      ~smoothing,
+      ~size=fontSize,
+      ~lineHeight=lineHeightSize,
+      resolvedFont,
+    );
+
+  {...model, font, resolvedFont}
+  |> updateAll(Terminal.setFont(~font=resolvedFont));
+};
+
+let configurationChanged = (~config, model) => {
+  recomputeFont(~config, ~font=model.font, model);
 };
 
 let update =
@@ -43,7 +85,14 @@ let update =
       msg,
     ) => {
   switch (msg) {
-  | Font(Service_Font.FontLoaded(font)) => ({...model, font}, Nothing)
+  | Terminal({id, msg}) => (
+      model |> updateById(id, Terminal.update(msg)),
+      Nothing,
+    )
+
+  | Font(Service_Font.FontLoaded(font)) =>
+    let model' = model |> recomputeFont(~config, ~font);
+    (model', Nothing);
 
   | Font(Service_Font.FontLoadError(message)) => (
       model,
@@ -144,17 +193,7 @@ let update =
     let idToTerminal =
       IntMap.add(
         id,
-        {
-          id,
-          launchConfig,
-          rows: 40,
-          columns: 40,
-          pid: None,
-          title: None,
-          screen: EditorTerminal.Screen.initial,
-          cursor: EditorTerminal.Cursor.initial,
-          closeOnExit: true,
-        },
+        Terminal.initial(~font=model.resolvedFont, ~id, ~launchConfig, ()),
         model.idToTerminal,
       );
     (
@@ -254,17 +293,13 @@ let update =
     let idToTerminal =
       IntMap.add(
         id,
-        {
-          id,
-          launchConfig,
-          rows: 40,
-          columns: 40,
-          pid: None,
-          title: None,
-          screen: EditorTerminal.Screen.initial,
-          cursor: EditorTerminal.Cursor.initial,
-          closeOnExit,
-        },
+        Terminal.initial(
+          ~closeOnExit,
+          ~font=model.resolvedFont,
+          ~id,
+          ~launchConfig,
+          (),
+        ),
         model.idToTerminal,
       );
     (
@@ -289,19 +324,28 @@ let update =
            Effect(inputEffect);
          })
       |> Option.value(~default=Nothing);
-    (model, eff);
+
+    let model' =
+      model.paneTerminalId
+      |> Option.map(paneId =>
+           updateById(paneId, Terminal.scrollToBottom, model)
+         )
+      |> Option.value(~default=model);
+    (model', eff);
 
   | KeyPressed({id, key}) =>
     let inputEffect =
       Service_Terminal.Effect.input(~id, key)
       |> Isolinear.Effect.map(msg => Service(msg));
-    (model, Effect(inputEffect));
+    let model' = model |> updateById(id, Terminal.scrollToBottom);
+    (model', Effect(inputEffect));
 
   | Pasted({id, text}) =>
     let inputEffect =
       Service_Terminal.Effect.paste(~id, text)
       |> Isolinear.Effect.map(msg => Service(msg));
-    (model, Effect(inputEffect));
+    let model' = model |> updateById(id, Terminal.scrollToBottom);
+    (model', Effect(inputEffect));
 
   | Resized({id, rows, columns}) =>
     let newModel = updateById(id, term => {...term, rows, columns}, model);
@@ -317,7 +361,8 @@ let update =
     (newModel, Nothing);
 
   | Service(ScreenUpdated({id, screen, cursor})) =>
-    let newModel = updateById(id, term => {...term, screen, cursor}, model);
+    let newModel =
+      updateById(id, Terminal.updateScreen(~screen, ~cursor), model);
     (newModel, Nothing);
 
   | Service(ProcessExit({id, exitCode})) =>
@@ -798,7 +843,6 @@ module Contributions = {
                    isActive=isFocused
                    config
                    terminal
-                   font={model.font}
                    theme
                    dispatch
                  />
