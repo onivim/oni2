@@ -336,6 +336,7 @@ let sub = (~config, ~workingDirectory, ~setup, model) => {
 
     Service_Ripgrep.Sub.findInFiles(
       ~exclude,
+      ~include_=[],
       ~directory=workingDirectory,
       ~query=model.query,
       ~uniqueId=string_of_int(model.searchNonce),
