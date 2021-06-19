@@ -3,7 +3,8 @@ open Oni_Core;
 
 [@deriving show]
 type command =
-  | Reload;
+  | Reload
+  | CollapseAll;
 
 [@deriving show]
 type msg =
@@ -53,6 +54,13 @@ let initial = (~rootPath) => {
     active: None,
     focus: None,
   };
+};
+
+let collapseAll = (model) => {
+  ...model,
+  expandedPaths: [model.rootPath],
+  pathsToLoad: [model.rootPath],
+  treeView: Component_VimTree.collapse(model.treeView)
 };
 
 let setRoot = (~rootPath, model) => {

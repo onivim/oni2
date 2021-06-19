@@ -13,6 +13,8 @@ let initial: (~rootPath: FpExp.t(FpExp.absolute)) => model;
 let setRoot: (~rootPath: FpExp.t(FpExp.absolute), model) => model;
 let root: model => FpExp.t(FpExp.absolute);
 
+let collapseAll: model => model;
+
 let keyPress: (string, model) => model;
 
 let reload: model => model;

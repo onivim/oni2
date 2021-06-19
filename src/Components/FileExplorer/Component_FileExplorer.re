@@ -249,6 +249,10 @@ let collapse = (path, model) => {
   {...model, expandedPaths};
 };
 
+let collapseAll = (model) => {
+  Model.collapseAll(model);
+};
+
 let markNodeAsLoaded = (node, model) => {
   let pathsToLoad =
     model.pathsToLoad
@@ -307,6 +311,8 @@ let update = (~config, msg, model) => {
     }
 
   | Command(Reload) => (reload(model), Nothing)
+
+  | Command(CollapseAll) => (collapseAll(model), Nothing)
 
   | Tree(treeMsg) =>
     let (treeView, outmsg) =
@@ -425,13 +431,21 @@ module Commands = {
       "workbench.todo.explorer-reload",
       Command(Reload),
     );
+
+  let collapseAll =
+    define(
+      ~category="Explorer",
+      ~title="Collapse All",
+      "workbench.todo.explorer-collapse-all",
+      Command(CollapseAll),
+    );
 };
 
 module Contributions = {
   let commands = (~isFocused) => {
     !isFocused
       ? []
-      : [Commands.reload]
+      : [Commands.reload, Commands.collapseAll]
         @ (
           Component_VimTree.Contributions.commands
           |> List.map(Oni_Core.Command.map(msg => Tree(msg)))
