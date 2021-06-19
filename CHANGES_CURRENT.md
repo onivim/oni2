@@ -3,6 +3,7 @@
 - #3613 - Input: add Emoji & Symbols panel on macOS
 - #3641 - Search: add button to enable RegEx
 - #3654 - Search: add button to enable case-sensitivity
+- #3661 - Search: add include/exclude file boxes
 
 ### Bug Fixes
 
@@ -18,6 +19,7 @@
 - #3638 - Editor: Add clear search highlights default keybinding (fixes #3636)
 - #3645 - Terminal: Auto-scroll when key is pressed
 - #3652 - Syntax: Fix highlighting being lost after movement (fixes #3647)
+- #3607 - Vim: Fix crash when specifying empty guifont (fixes #3605)
 
 ### Performance
 

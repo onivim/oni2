@@ -232,8 +232,9 @@ let start =
             ),
           ),
         )
-      | SettingChanged(setting) =>
-        dispatch(Actions.Vim(Feature_Vim.Msg.settingChanged(~setting)))
+      | SettingChanged(setting) => {
+          dispatch(Actions.Vim(Feature_Vim.Msg.settingChanged(~setting)));
+        }
 
       | ColorSchemeChanged(maybeColorScheme) =>
         switch (maybeColorScheme) {
