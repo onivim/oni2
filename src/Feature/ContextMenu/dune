@@ -1,0 +1,5 @@
+(library
+ (name Feature_ContextMenu)
+ (public_name Oni2.feature.contextmenu)
+ (libraries Oni2.core Oni2.component.contextMenu Oni2.feature.commands isolinear base)
+ (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))

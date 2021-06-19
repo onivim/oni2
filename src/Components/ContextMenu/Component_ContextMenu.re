@@ -111,13 +111,6 @@ module View = {
         backgroundColor(bg(~isFocused).from(theme)),
       ];
 
-      // let icon = fgColor => [
-      //   fontFamily("seti.ttf"),
-      //   fontSize(Constants.fontSize),
-      //   marginRight(10),
-      //   color(fgColor),
-      // ];
-
       let label = (~theme, ~isFocused) => [
         textOverflow(`Ellipsis),
         color(Colors.Menu.foreground.from(theme)),
@@ -142,19 +135,6 @@ module View = {
           let ((isFocused, setIsFocused), hooks) =
             Hooks.state(false, hooks);
           let ((maybeBbox, setBbox), hooks) = Hooks.state(None, hooks);
-
-          // let iconView =
-          //   switch (item.icon) {
-          //   | Some(icon) =>
-          //     IconTheme.IconDefinition.(
-          //       <Text
-          //         style={Styles.icon(icon.fontColor)}
-          //         text={FontIcon.codeToIcon(icon.fontCharacter)}
-          //       />
-          //     )
-
-          //   | None => <Text style={Styles.icon(Colors.transparentWhite)} text="" />
-          //   };
 
           let labelView = {
             let style = Styles.label(~theme, ~isFocused);
