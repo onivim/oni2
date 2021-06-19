@@ -1,5 +1,5 @@
 open Oni_Core;
-open MenuBar;
+open ContextMenu;
 
 module Colors = Feature_Theme.Colors;
 
@@ -77,16 +77,17 @@ type outmsg =
   | ExecuteCommand({command: string});
 
 let show = (~contextKeys, ~commands, ~uniqueId, model) => {
-  let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
-  let topLevelItems = MenuBar.top(model.menuSchema);
+  let builtMenu =
+    ContextMenu.build(~contextKeys, ~commands, model.menuSchema);
+  let topLevelItems = ContextMenu.top(model.menuSchema);
   let maybeMenu =
     topLevelItems
     |> List.filter((menu: Menu.t) => Menu.uniqueId(menu) == uniqueId)
     |> (l => List.nth_opt(l, 0));
 
-  let rec groupToContextMenu = (group: MenuBar.Group.t) => {
+  let rec groupToContextMenu = (group: ContextMenu.Group.t) => {
     let items =
-      MenuBar.Group.items(group)
+      ContextMenu.Group.items(group)
       |> List.map(item =>
            if (Item.isSubmenu(item)) {
              let submenuItems = Item.submenu(item);
@@ -323,7 +324,7 @@ module View = {
     let bgColor = bgTheme.from(theme);
     let fgColor = fgTheme.from(theme);
 
-    let topLevelMenuItems = MenuBar.top(model.menuSchema);
+    let topLevelMenuItems = ContextMenu.top(model.menuSchema);
 
     let getShortcutKey = command => {
       Feature_Input.commandToAvailableBindings(
@@ -382,7 +383,8 @@ module View = {
 // SUBSCRIPTIOn
 
 let sub = (~config, ~contextKeys, ~commands, ~input, model) => {
-  let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
+  let builtMenu =
+    ContextMenu.build(~contextKeys, ~commands, model.menuSchema);
   NativeMenu.sub(
     ~config,
     ~context=contextKeys,

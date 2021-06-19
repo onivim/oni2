@@ -1,5 +1,5 @@
 open Oni_Core;
-open MenuBar.Schema;
+open ContextMenu.Schema;
 
 module OSX = {
   let application =
