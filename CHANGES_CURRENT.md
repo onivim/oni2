@@ -38,5 +38,6 @@
 - #3632 - Dependency: revery -> 79c2572
 - #3639 - Dependency: Sparkle -> 1.26.0
 - #3653 - Dependency: revery -> 9ec44ff (fixes #3646)
+- #3688 - Dependency: esy-skia -> 1c81aac
 
 ### Infrastructure
