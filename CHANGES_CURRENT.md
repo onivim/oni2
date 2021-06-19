@@ -20,6 +20,7 @@
 - #3645 - Terminal: Auto-scroll when key is pressed
 - #3652 - Syntax: Fix highlighting being lost after movement (fixes #3647)
 - #3607 - Vim: Fix crash when specifying empty guifont (fixes #3605)
+- #3668 - UX: Toggle drop-down menu on click (fixes #3569 - thanks @sijad !)
 
 ### Performance
 
