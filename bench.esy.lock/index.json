@@ -1,5 +1,5 @@
 {
-  "checksum": "2f31c20523deb998fb20beb7e0a45b22",
+  "checksum": "b138568fd351cc00e09695b0e277fac7",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -104,12 +104,12 @@
         "reperf@1.5.1@d41d8cd9", "rench@1.10.0@d41d8cd9",
         "rebez@github:jchavarri/rebez#03fa3b7@d41d8cd9",
         "flex@github:bryphe/flex#5e19b05@d41d8cd9",
-        "esy-skia@github:revery-ui/esy-skia#66db8c5@d41d8cd9",
+        "esy-skia@github:revery-ui/esy-skia#1c81aac@d41d8cd9",
         "esy-sdl2@2.0.14000@d41d8cd9", "esy-freetype2@2.9.1008@d41d8cd9",
         "esy-angle-prebuilt@1.0.0@d41d8cd9", "@revery/timber@2.0.0@d41d8cd9",
         "@revery/esy-harfbuzz@2.6.8002@d41d8cd9",
         "@reason-native/rely@3.2.1@d41d8cd9",
-        "@opam/uutf@opam:1.0.2@4440868f", "@opam/uucp@opam:13.0.0@e9b515e0",
+        "@opam/uutf@opam:1.0.2@4440868f", "@opam/uucp@opam:13.0.0@647d53e6",
         "@opam/reason@opam:3.7.0@494dd52d",
         "@opam/ppx_optcomp@opam:v0.14.0@27dab73f",
         "@opam/ppx_deriving@opam:4.5@99c603e5",
@@ -121,7 +121,7 @@
         "@opam/dune@opam:2.8.5@01003f12",
         "@opam/ctypes@opam:0.15.1@9c7ab4ec",
         "@opam/charInfo_width@opam:1.1.0@4296bdfe",
-        "@opam/bos@opam:0.2.0@df49e63f",
+        "@opam/bos@opam:0.2.0@8000d437",
         "@onivim/reason-native-crash-utils@1.0.2@d41d8cd9",
         "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#c9d5c4c@d41d8cd9"
       ],
@@ -618,13 +618,13 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-skia@github:revery-ui/esy-skia#66db8c5@d41d8cd9": {
-      "id": "esy-skia@github:revery-ui/esy-skia#66db8c5@d41d8cd9",
+    "esy-skia@github:revery-ui/esy-skia#1c81aac@d41d8cd9": {
+      "id": "esy-skia@github:revery-ui/esy-skia#1c81aac@d41d8cd9",
       "name": "esy-skia",
-      "version": "github:revery-ui/esy-skia#66db8c5",
+      "version": "github:revery-ui/esy-skia#1c81aac",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/esy-skia#66db8c5" ]
+        "source": [ "github:revery-ui/esy-skia#1c81aac" ]
       },
       "overrides": [],
       "dependencies": [
@@ -860,7 +860,7 @@
         "ocaml@4.12.0@d41d8cd9", "libvim@8.10869.88@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#049ad1e@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
-        "esy-skia@github:revery-ui/esy-skia#66db8c5@d41d8cd9",
+        "esy-skia@github:revery-ui/esy-skia#1c81aac@d41d8cd9",
         "esy-sdl2@2.0.14000@d41d8cd9",
         "esy-oniguruma@github:onivim/esy-oniguruma#4698ce4@d41d8cd9",
         "esy-macdylibbundler@0.4.5001@d41d8cd9",
@@ -868,7 +868,7 @@
         "@revery/timber@2.0.0@d41d8cd9",
         "@revery/esy-libvterm@1.0.5@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
-        "@opam/uutf@opam:1.0.2@4440868f", "@opam/uucp@opam:13.0.0@e9b515e0",
+        "@opam/uutf@opam:1.0.2@4440868f", "@opam/uucp@opam:13.0.0@647d53e6",
         "@opam/semver2@opam:1.2.0@ced7107e",
         "@opam/reason@opam:3.7.0@494dd52d", "@opam/re@opam:1.9.0@9373f267",
         "@opam/ppxlib@opam:0.15.0@bab450db",
@@ -1085,8 +1085,8 @@
         "ocaml@4.12.0@d41d8cd9", "@opam/uchar@opam:0.0.2@c8218eea"
       ]
     },
-    "@opam/uucp@opam:13.0.0@e9b515e0": {
-      "id": "@opam/uucp@opam:13.0.0@e9b515e0",
+    "@opam/uucp@opam:13.0.0@647d53e6": {
+      "id": "@opam/uucp@opam:13.0.0@647d53e6",
       "name": "@opam/uucp",
       "version": "opam:13.0.0",
       "source": {
@@ -1530,7 +1530,7 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
-        "@opam/uucp@opam:13.0.0@e9b515e0", "@opam/tyxml@opam:4.5.0@4676c9e9",
+        "@opam/uucp@opam:13.0.0@647d53e6", "@opam/tyxml@opam:4.5.0@4676c9e9",
         "@opam/dune@opam:2.8.5@01003f12",
         "@opam/base-bytes@opam:base@19d0c2ff",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
@@ -3316,8 +3316,8 @@
         "ocaml@4.12.0@d41d8cd9", "@opam/dune@opam:2.8.5@01003f12"
       ]
     },
-    "@opam/bos@opam:0.2.0@df49e63f": {
-      "id": "@opam/bos@opam:0.2.0@df49e63f",
+    "@opam/bos@opam:0.2.0@8000d437": {
+      "id": "@opam/bos@opam:0.2.0@8000d437",
       "name": "@opam/bos",
       "version": "opam:0.2.0",
       "source": {
