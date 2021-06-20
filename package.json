@@ -4,7 +4,7 @@
   "description": "Lightweight code editor",
   "license": "SEE LICENSE IN Outrun-Labs-EULA-v1.1.md",
   "esy": {
-    "build": "refmterr dune build -p libvim,textmate,treesitter,Oni2 -j4",
+    "build": "dune build -p libvim,textmate,treesitter,Oni2,vterm -j4",
     "buildEnv": {
       "ONI2_ROOT": "#{self.root}",
       "ONI2_BUILD_MODE": "Debug",
@@ -370,7 +370,7 @@
     "@opam/charInfo_width": "*",
     "@opam/decoders-yojson": "^0.4.0",
     "@opam/dir": "*",
-    "@opam/dune": "2.5.0",
+    "@opam/dune": "^2.5.0",
     "@opam/dune-configurator": "2.5.1",
     "@opam/dune-private-libs": "2.5.1",
     "@opam/fmt": "^0.8.8",
@@ -382,7 +382,6 @@
     "@opam/lwt": "*",
     "@opam/markup": "^0.8.2",
     "@opam/ocamlbuild": "*",
-    "@opam/ocamlformat": "^0.15.0",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
     "@opam/ppx_inline_test": "v0.14.1",
@@ -395,39 +394,36 @@
     "@opam/uucp": "*",
     "@opam/uutf": "*",
     "@opam/yojson": "1.7.0",
+    "@revery/esy-libvterm": "1.0.5",
     "@revery/timber": "^2.0.0",
     "axios": "^0.19.0",
     "esy-angle-prebuilt": "^1.0.0",
     "esy-macdylibbundler": "^0.4.5001",
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
-    "esy-sdl2": "*",
+    "esy-sdl2": "^2.0.14000",
     "esy-skia": "*",
     "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.87",
-    "ocaml": "4.10.0",
-    "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
-    "reason-fzy": "CrossR/reason-fzy#485cae1",
-    "refmterr": "*",
+    "libvim": "8.10869.88",
+    "ocaml": "~4.12",
+    "reason-native-crash-utils": "onivim/reason-native-crash-utils#a80a9d9",
+    "reason-fzy": "bryphe/reason-fzy#5a1daf4",
     "rench": "^1.9.1",
-    "revery": "*",
-    "revery-terminal": "*"
+    "revery": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#373b087",
-    "esy-skia": "revery-ui/esy-skia#91c98f6",
-    "isolinear": "revery-ui/isolinear#53fc4eb",
-    "revery-terminal": "revery-ui/revery-terminal#a9cb168",
+    "revery": "revery-ui/revery#9ec44ff",
+    "esy-skia": "revery-ui/esy-skia#66db8c5",
+    "isolinear": "revery-ui/isolinear#049ad1e",
     "@opam/fs": "bryphe/reason-native:fs.opam#e16590c",
     "@opam/fp": "bryphe/reason-native:fp.opam#e16590c",
     "@opam/dir": "bryphe/reason-native:dir.opam#e16590c",
-    "@opam/conf-pkg-config": "1.2",
+    "@esy-ocaml/reason": "EduardoRFS/reason:reason.json#35aa4df3de0daa60bdc1133dcf97855decac48f7",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
-    "flex": "bryphe/flex#5e19b05",
-    "@revery/esy-libvterm": "1.0.4"
+    "flex": "bryphe/flex#5e19b05"
   },
   "devDependencies": {
-    "ocaml": "4.10.0",
+    "ocaml": "~4.12",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",
@@ -435,6 +431,6 @@
     "innosetup-compiler": "5.5.9",
     "plist": "3.0.1",
     "rcedit": "2.0.0",
-    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#966a28f"
+    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#d5ba8b9"
   }
 }

@@ -7,12 +7,96 @@ open Helpers;
 
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 
+let renderDiagnostics =
+    (
+      ~context: Draw.context,
+      ~colors: Colors.t,
+      ~diagnosticsMap,
+      ~languageConfiguration,
+      viewLine,
+      _offset,
+    ) => {
+  let topViewLine = Editor.getTopViewLine(context.editor);
+  let bottomViewLine = Editor.getBottomViewLine(context.editor);
+
+  // Since this drawing logic is per-buffer-line, we only want to draw
+  // each buffer once. So, we'll draw the _primary_ view line (the
+  // first one for a buffer line), or the top/bottom if we're in the middle
+  // of a buffer line.
+  let shouldRenderViewLine =
+    Editor.viewLineIsPrimary(viewLine, context.editor)
+    || viewLine == topViewLine
+    || viewLine == bottomViewLine;
+
+  if (shouldRenderViewLine) {
+    let index = Editor.viewLineToBufferLine(viewLine, context.editor);
+    let item = EditorCoreTypes.LineNumber.toZeroBased(index);
+
+    let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) => {
+      // If at single character, get the token under the cursor
+      let range =
+        if (diagnostic.range.start == diagnostic.range.stop) {
+          Editor.getTokenAt(
+            ~languageConfiguration,
+            diagnostic.range.start,
+            context.editor,
+          )
+          |> Option.map(range
+               // In addition, bump the end position out - the range returned from the editor is inclusive,
+               // but the squiggly rendering is exclusive.
+               =>
+                 CharacterRange.{
+                   start: range.start,
+                   stop: {
+                     ...range.stop,
+                     character: CharacterIndex.(range.stop.character + 1),
+                   },
+                 }
+               )
+          |> Option.value(~default=diagnostic.range);
+        } else {
+          diagnostic.range;
+        };
+
+      let color =
+        Exthost.Diagnostic.Severity.(
+          switch (diagnostic.severity) {
+          | Error => colors.errorForeground
+          | Warning => colors.warningForeground
+          | Hint => colors.hintForeground
+          | Info => colors.infoForeground
+          }
+        );
+
+      if (diagnostic.isDeprecated
+          && Editor.shouldShowDeprecated(context.editor)) {
+        let color = colors.editorForeground;
+        Draw.strikethrough(~context, ~color, range);
+      } else if (diagnostic.isUnused
+                 && Editor.shouldShowUnused(context.editor)) {
+        let invAlpha = colors.unnecessaryCodeOpacity |> Revery.Color.getAlpha;
+        let alpha = 1.0 -. invAlpha;
+        let color =
+          colors.editorBackground |> Revery.Color.multiplyAlpha(alpha);
+        Draw.rangeCharacter(~context, ~color, range);
+      } else {
+        Draw.squiggly(~context, ~color, range);
+      };
+    };
+
+    /* Draw error markers */
+    switch (IntMap.find_opt(item, diagnosticsMap)) {
+    | None => ()
+    | Some(diagnostics) => List.iter(renderDiagnostics(colors), diagnostics)
+    };
+  };
+};
+
 let renderLine =
     (
       ~context: Draw.context,
       ~buffer,
       ~colors: Colors.t,
-      ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
       ~vim,
@@ -34,26 +118,6 @@ let renderLine =
 
   if (shouldRenderViewLine) {
     let index = Editor.viewLineToBufferLine(viewLine, context.editor);
-    let item = EditorCoreTypes.LineNumber.toZeroBased(index);
-
-    let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) => {
-      let color =
-        Exthost.Diagnostic.Severity.(
-          switch (diagnostic.severity) {
-          | Error => colors.errorForeground
-          | Warning => colors.warningForeground
-          | Hint => colors.hintForeground
-          | Info => colors.infoForeground
-          }
-        );
-      Draw.squiggly(~context, ~color, diagnostic.range);
-    };
-
-    /* Draw error markers */
-    switch (IntMap.find_opt(item, diagnosticsMap)) {
-    | None => ()
-    | Some(diagnostics) => List.iter(renderDiagnostics(colors), diagnostics)
-    };
 
     switch (Hashtbl.find_opt(selectionRanges, index)) {
     | None => ()
@@ -112,7 +176,6 @@ let renderEmbellishments =
       ~context,
       ~buffer,
       ~colors,
-      ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
       ~vim,
@@ -124,7 +187,6 @@ let renderEmbellishments =
       ~context,
       ~buffer,
       ~colors,
-      ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
       ~vim,
@@ -267,7 +329,6 @@ let render =
     ~context,
     ~buffer,
     ~colors,
-    ~diagnosticsMap,
     ~selectionRanges,
     ~matchingPairs,
     ~vim,
@@ -301,5 +362,15 @@ let render =
     ~matchingPairs,
     ~bufferSyntaxHighlights,
     ~shouldRenderWhitespace,
+  );
+
+  Draw.renderImmediate(
+    ~context,
+    renderDiagnostics(
+      ~context,
+      ~colors,
+      ~diagnosticsMap,
+      ~languageConfiguration,
+    ),
   );
 };

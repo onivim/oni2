@@ -239,8 +239,6 @@ module View = {
           ~backgroundColor,
           (),
         ) => {
-      // let%hook (isFocused, setIsFocused) = Hooks.state(false);
-
       let uniqueId = Menu.uniqueId(menu);
       let isFocused = Some(uniqueId) == model.hoverId;
       let maybeElem =

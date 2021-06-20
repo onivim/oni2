@@ -29,6 +29,7 @@ Unix.putenv("CAML_LD_LIBRARY_PATH", "");
 Unix.putenv("MAN_PATH", "");
 Unix.putenv("OCAMLPATH", "");
 
+VTerm_Test.TestFramework.run |> initializeRunConfig;
 Oni_Core_Test.TestFramework.run |> initializeRunConfig;
 
 Oni_Core_Utility_Test.TestFramework.run |> initializeRunConfig;

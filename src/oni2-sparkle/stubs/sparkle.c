@@ -19,6 +19,18 @@ CAMLprim value oni2_SparkleInit() {
   CAMLreturn(Val_unit);
 }
 
+CAMLprim value oni2_SparkleVersion() {
+  CAMLparam0();
+  CAMLlocal1(vVersion);
+
+  NSDictionary *infoDictionary = [[NSBundle bundleForClass: [SUUpdater class]] infoDictionary];
+  NSString *version = [infoDictionary valueForKey:(__bridge NSString*)kCFBundleVersionKey];
+
+  vVersion = caml_copy_string([version UTF8String]);
+
+  CAMLreturn(vVersion);
+}
+
 CAMLprim value oni2_SparkleGetSharedInstance() {
   CAMLparam0();
   CAMLlocal1(vUpdater);

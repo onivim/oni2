@@ -1,4 +1,4 @@
 [@deriving show]
 type t =
-  | UserInitiated
+  | UserInitiated({allowFormatting: bool})
   | AutoSave;

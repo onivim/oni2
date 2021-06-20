@@ -23,7 +23,9 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 ### Editor
 
-- `editor.acceptSuggestionOnEnter` __(_bool_ default: `false`)__ - When `true`, the enter key can be used to select a suggestion. By default, the enter key will not be used, so as not to interfere with creating a new line.
+- `editor.acceptSuggestionOnEnter` __(_bool_ default: `true`)__ - When `true`, the enter key can be used to accept a suggestion. Users may wish to set to `false` to avoid a conflict with inserting a new line.
+
+- `editor.acceptSuggestionOnTab` __(_bool_ default: `true`)__ - When `true`, the tab key can be used to accept a suggestion. Users may wish to turn to `false` to avoid ambiguity with inserting a tab character.
 
 - `editor.autoClosingBrackets` __(_"LanguageDefined"|"Never"_ default: `"LanguageDefined"`)__ - When set to `"LanguageDefined"`, Onivim will automatically close brackets and pairs, based on language configuration.
 
@@ -48,6 +50,10 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `editor.hover.enabled` __(_bool_ default: `true`)__ - Controls whether or not the hover UI is enabled.
 
 - `editor.largeFileOptimizations` __(_bool_ default: `true`)__ - When `true`, Onivim will turn off certain settings like syntax highlighting for large files.
+
+- `editor.showDeprecated` __(_bool_ default: `true`)__ - When `true`, Onivim will render deprecated code with a strike-through.
+
+- `editor.showUnused` __(_bool_ default: `true`)__ - When `true`, Onivim will fade out unused code.
 
 - `workbench.editor.enablePreview` __(_bool_ default: `true`)__ - When `true`, Onivim will open files in _preview mode_ unless a change is made or the tab is double-clicked. In _preview mode_, the editor tab will be re-used.
 
@@ -122,11 +128,22 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `search.exclude` __(_list of string_ default: `[]`)__ - When using `Find in files` Onivim will not look at files located at the directories listed here, this inherit all the values from `files.exclude`
 
+- `workbench.colorCustomizations` __(_json_ default: `{}`)__ - Color theme overrides, using the same [Theme Colors as Code](https://code.visualstudio.com/api/references/theme-color) - for example:
+
+```json
+  "workbench.colorCustomizations": {
+    "terminal.background": "#0F0",
+    "terminal.foreground": "#FFF"
+  },
+```
+
 - `workbench.colorTheme` __(_string_ default:`"One Dark Pro"`)__ - Color theme to use.
 
 - `workbench.iconTheme` __(_string_ default: `"vs-seti"`)__ - Icon theme to use.
 
 - `workbench.tree.indent` __(_int_ default: `5`)__ - Indentation of the tree explorer.
+
+- `workbench.tree.renderIndentGuides` __(_bool_ default: `true`)__ - Controls whether indent guide lines are rendered in tree views.
 
 - `vim.highlightedyank.enable` __(_bool_ default: `true`)__ - When `true`, briefly highlight yanks on the editor surface.
 
@@ -144,7 +161,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `explorer.autoReveal` __(_string|bool_ default: `true`)__  - When `true`, the file explorer will jump to highlight the file current focused. When `false` the file explorer will remain static. If a string is entered it must be `"focusNoScroll"` which will still highlight the currently focused file in the file explorer but the file explorer will not scroll to it. Any other string supplied will be treated as if `false` was entered and the file explorer will remain static and not highlight the currently focused file.
 
-- `files.useExperimentalFileWatcher` __(_bool_ default: `false`)__ When `true`, a file watcher will be used to monitor file system changes and update the explorer in the sidebar.
+- `files.useExperimentalFileWatcher` __(_bool_ default: `true`)__ When `true`, a file watcher will be used to monitor file system changes and update the explorer in the sidebar.
 
 ### Layout
 

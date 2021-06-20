@@ -91,43 +91,90 @@ let update = (msg, model) => {
   switch (msg) {
   | Exthost(Stat({uri}), resolver) =>
     let promise =
-      uri
-      |> Uri.toFileSystemPath
-      |> Service_OS.Api.stat
-      |> Lwt.map(Internal.statToExthostStat)
-      |> Lwt.map(Internal.mapEncoder(Files.StatResult.encode));
+      Lwt.catch(
+        () => {
+          uri
+          |> Uri.toFileSystemPath
+          |> Service_OS.Api.stat
+          |> Lwt.map(Internal.statToExthostStat)
+          |> Lwt.map(Internal.mapEncoder(Files.StatResult.encode))
+        },
+        _exn => {
+          Exthost.Files.FileSystemError.(
+            make(Code.fileNotFound)
+            |> Lwt.return
+            |> Lwt.map(Internal.mapEncoder(encode))
+          )
+        },
+      );
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(ReadDir({uri}), resolver) =>
     let promise =
-      uri
-      |> Uri.toFileSystemPath
-      |> Service_OS.Api.readdir
-      |> Lwt.map(List.map(Internal.dirEntryToExthostDirEntry))
-      |> Lwt.map(
-           Internal.mapEncoder(
-             Json.Encode.list(Exthost.Files.ReadDirResult.encode),
-           ),
-         );
+      Lwt.catch(
+        () => {
+          uri
+          |> Uri.toFileSystemPath
+          |> Service_OS.Api.readdir
+          |> Lwt.map(List.map(Internal.dirEntryToExthostDirEntry))
+          |> Lwt.map(
+               Internal.mapEncoder(
+                 Json.Encode.list(Exthost.Files.ReadDirResult.encode),
+               ),
+             )
+        },
+        _exn => {
+          Exthost.Files.FileSystemError.(
+            make(Code.fileNotFound)
+            |> Lwt.return
+            |> Lwt.map(Internal.mapEncoder(encode))
+          )
+        },
+      );
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(ReadFile({uri}), resolver) =>
     let promise =
-      uri
-      |> Uri.toFileSystemPath
-      |> Service_OS.Api.readFile
-      |> Lwt.map(Reply.okBuffer);
+      Lwt.catch(
+        () => {
+          uri
+          |> Uri.toFileSystemPath
+          |> Service_OS.Api.readFile
+          |> Lwt.map(Reply.okBuffer)
+        },
+        _exn => {
+          Exthost.Files.FileSystemError.(
+            make(Code.fileNotFound)
+            |> Lwt.return
+            |> Lwt.map(Internal.mapEncoder(encode))
+          )
+        },
+      );
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(WriteFile({uri, bytes}), resolver) =>
+    let maybePath =
+      uri |> Uri.toFileSystemPath |> FpExp.absoluteCurrentPlatform;
+
+    let mkdirPromise =
+      maybePath
+      // Get parent directory
+      |> Option.map(FpExp.dirName)
+      // ...and make sure it's created
+      |> Option.map(path => {Service_OS.Api.mkdirp(path)})
+      |> Option.value(~default=Lwt.return());
+
     let promise =
-      uri
-      |> Uri.toFileSystemPath
-      |> Service_OS.Api.writeFile(~contents=bytes)
-      |> Lwt.map(() => Reply.okEmpty);
+      mkdirPromise
+      |> LwtEx.flatMap(() => {
+           uri
+           |> Uri.toFileSystemPath
+           |> Service_OS.Api.writeFile(~contents=bytes)
+           |> Lwt.map(() => Reply.okEmpty)
+         });
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
@@ -136,12 +183,23 @@ let update = (msg, model) => {
     let targetPath = target |> Uri.toFileSystemPath;
 
     let promise =
-      Service_OS.Api.rename(
-        ~source=sourcePath,
-        ~target=targetPath,
-        ~overwrite=opts.overwrite,
-      )
-      |> Lwt.map(() => Reply.okEmpty);
+      Lwt.catch(
+        () => {
+          Service_OS.Api.rename(
+            ~source=sourcePath,
+            ~target=targetPath,
+            ~overwrite=opts.overwrite,
+          )
+          |> Lwt.map(() => Reply.okEmpty)
+        },
+        _exn => {
+          Exthost.Files.FileSystemError.(
+            make(Code.fileNotFound)
+            |> Lwt.return
+            |> Lwt.map(Internal.mapEncoder(encode))
+          )
+        },
+      );
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
@@ -160,10 +218,18 @@ let update = (msg, model) => {
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(Mkdir({uri}), resolver) =>
+    let maybePath =
+      uri |> Uri.toFileSystemPath |> FpExp.absoluteCurrentPlatform;
+
     let promise =
-      uri
-      |> Uri.toFileSystemPath
-      |> Service_OS.Api.mkdir
+      maybePath
+      |> Option.map(Service_OS.Api.mkdirp)
+      |> Option.value(
+           ~default=
+             Lwt.fail_with(
+               "Exthost.mkdir - invalid path: " ++ Uri.toString(uri),
+             ),
+         )
       |> Lwt.map(() => Reply.okEmpty);
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 

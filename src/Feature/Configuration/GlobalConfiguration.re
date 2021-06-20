@@ -206,6 +206,14 @@ module VimSettings = {
       |> VimSetting.decode_value_opt(bool)
       |> Option.value(~default=false)
     });
+
+  let lineSpace =
+    vim("linespace", lineSpaceSetting => {
+      lineSpaceSetting
+      |> VimSetting.decode_value_opt(int)
+      |> Option.map(LineHeight.padding)
+      |> Option.value(~default=LineHeight.default)
+    });
 };
 
 module Editor = {
@@ -215,6 +223,14 @@ module Editor = {
       "editor.codeLens",
       bool,
       ~default=true,
+    );
+
+  let lineHeight =
+    setting(
+      ~vim=VimSettings.lineSpace,
+      "editor.lineHeight",
+      custom(~decode=LineHeight.decode, ~encode=LineHeight.encode),
+      ~default=LineHeight.default,
     );
 
   let snippetSuggestions =
@@ -263,6 +279,15 @@ module Explorer = {
     );
 };
 
+module Files = {
+  let exclude =
+    setting(
+      "files.exclude",
+      list(string),
+      ~default=["_esy", ".git", "node_modules"],
+    );
+};
+
 module Workbench = {
   let activityBarVisible =
     setting("workbench.activityBar.visible", bool, ~default=true);
@@ -274,6 +299,9 @@ module Workbench = {
     setting("workbench.editor.enablePreview", bool, ~default=true);
 
   let treeIndent = setting("workbench.tree.indent", int, ~default=5);
+
+  let treeRenderIndentGuides =
+    setting("workbench.tree.renderIndentGuides", bool, ~default=true);
 };
 
 let contributions = [
@@ -283,10 +311,13 @@ let contributions = [
   vsync.spec,
   Editor.codeLensEnabled.spec,
   Editor.largeFileOptimizations.spec,
+  Editor.lineHeight.spec,
   Editor.snippetSuggestions.spec,
+  Files.exclude.spec,
   Explorer.autoReveal.spec,
   Workbench.activityBarVisible.spec,
   Workbench.editorShowTabs.spec,
   Workbench.editorEnablePreview.spec,
   Workbench.treeIndent.spec,
+  Workbench.treeRenderIndentGuides.spec,
 ];

@@ -112,7 +112,7 @@ module Internal = {
      });
 
   let extractKeywordsFromLines =
-      (~wordMap=StringMap.empty, ~isWordCharacter, ~getLine) => {
+      (~wordMap=StringMap.empty, ~isWordCharacter, getLine) => {
     let rec loop = (wordMap, lineNumber) => {
       switch (getLine(lineNumber)) {
       | None => wordMap
@@ -152,7 +152,7 @@ module Internal = {
            extractKeywordsFromLines(
              ~wordMap=StringMap.empty,
              ~isWordCharacter,
-             ~getLine,
+             getLine,
            );
 
          keywords == ["ghi", "def", "abc"];
@@ -176,5 +176,5 @@ let keywords = (~languageConfiguration, ~buffer) => {
       Some(lineString);
     };
 
-  Internal.extractKeywordsFromLines(~wordMap, ~isWordCharacter, ~getLine);
+  Internal.extractKeywordsFromLines(~wordMap, ~isWordCharacter, getLine);
 };

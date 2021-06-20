@@ -113,6 +113,14 @@ let toString =
       Fp.toString(path) |> String.split_on_char('/') |> String.concat("\\"),
     );
 
+let relativeToString: t(relative) => string =
+  fun
+  | Path(path) => {
+      let debugPath = Fp.toDebugString(path);
+      String.sub(debugPath, 2, String.length(debugPath) - 2);
+    }
+  | UNC(_) => "";
+
 let%test_module "UNC Paths" =
   (module
    {
@@ -154,18 +162,19 @@ let isDescendent = (~ofPath, path) => {
 let relativize = (~source, ~dest) => {
   switch (source, dest) {
   | (UNC({path: source, _}), UNC({path: dest, _})) =>
-    Fp.relativize(~source, ~dest)
-  | (Path(source), Path(dest)) => Fp.relativize(~source, ~dest)
+    Fp.relativize(~source, ~dest) |> Result.map(p => Path(p))
+  | (Path(source), Path(dest)) =>
+    Fp.relativize(~source, ~dest) |> Result.map(p => Path(p))
   | _ => Error(Invalid_argument("Not matching path types"))
   };
 };
 
-let baseName =
+let baseName: type kind. t(kind) => option(string) =
   fun
-  | UNC({path, _})
+  | UNC({path, _}) => Fp.baseName(path)
   | Path(path) => Fp.baseName(path);
 
-let dirName =
+let dirName: type kind. t(kind) => t(kind) =
   fun
   | UNC({path, server, share}) =>
     UNC({server, share, path: Fp.dirName(path)})
@@ -203,3 +212,15 @@ let append = At.(/);
 let compare = (a, b) => String.compare(toString(a), toString(b));
 
 let pp = toString;
+
+let explode: type kind. t(kind) => list(string) =
+  fp => {
+    let rec loop = (acc, currentPath) => {
+      switch (baseName(currentPath)) {
+      | None => acc
+      | Some(basename) => loop([basename, ...acc], dirName(currentPath))
+      };
+    };
+
+    loop([], fp);
+  };

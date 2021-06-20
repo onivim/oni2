@@ -5,81 +5,86 @@
  */
 open Oni_Core;
 
-[@deriving show({with_path: false})]
-type pane =
-  | Diagnostics
-  | Notifications
-  | Locations
-  | Output;
+module Schema: {
+  type t('model, 'msg);
 
-[@deriving show({with_path: false})]
-type msg;
+  let panel:
+    (
+      ~sub: (~isFocused: bool, 'model) => Isolinear.Sub.t('msg),
+      ~title: string,
+      ~id: option(string),
+      ~buttons: (
+                  ~font: UiFont.t,
+                  ~theme: ColorTheme.Colors.t,
+                  ~dispatch: 'msg => unit,
+                  ~model: 'model
+                ) =>
+                Revery.UI.element,
+      ~contextKeys: (~isFocused: bool, 'model) => WhenExpr.ContextKeys.t,
+      ~commands: 'model => list(Command.t('msg)),
+      ~view: (
+               ~config: Config.resolver,
+               ~editorFont: Service_Font.font,
+               ~font: UiFont.t,
+               ~isFocused: bool,
+               ~iconTheme: IconTheme.t,
+               ~languageInfo: Exthost.LanguageInfo.t,
+               ~workingDirectory: string,
+               ~theme: ColorTheme.Colors.t,
+               ~dispatch: 'msg => unit,
+               ~model: 'model
+             ) =>
+             Revery.UI.element,
+      ~keyPressed: string => 'msg
+    ) =>
+    t('model, 'msg);
 
-type outmsg =
-  | Nothing
-  | PaneButton(pane)
-  | OpenFile({
-      filePath: string,
-      position: EditorCoreTypes.CharacterPosition.t,
-    })
-  | PreviewFile({
-      filePath: string,
-      position: EditorCoreTypes.CharacterPosition.t,
-    })
-  | UnhandledWindowMovement(Component_VimWindows.outmsg)
-  | GrabFocus
-  | ReleaseFocus
-  | NotificationDismissed(Feature_Notification.notification)
-  | Effect(Isolinear.Effect.t(msg));
-
-module Msg: {
-  let keyPressed: string => msg;
-  let resizeHandleDragged: int => msg;
-  let resizeCommitted: msg;
-  let toggleMessages: msg;
+  let map:
+    (~msg: 'msgA => 'msgB, ~model: 'modelA => 'modelB, t('modelB, 'msgA)) =>
+    t('modelA, 'msgB);
 };
 
-type model;
+[@deriving show({with_path: false})]
+type msg('inner);
+
+module Msg: {
+  let keyPressed: string => msg(_);
+  let resizeHandleDragged: int => msg(_);
+  let resizeCommitted: msg(_);
+
+  let toggle: (~paneId: string) => msg(_);
+  let close: (~paneId: string) => msg(_);
+};
+
+type outmsg('msg) =
+  | Nothing
+  | NestedMessage('msg)
+  | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | GrabFocus
+  | ReleaseFocus;
+
+type model('model, 'msg);
 
 let update:
-  (
-    ~buffers: Feature_Buffers.model,
-    ~font: Service_Font.font,
-    ~languageInfo: Exthost.LanguageInfo.t,
-    ~previewEnabled: bool,
-    msg,
-    model
-  ) =>
-  (model, outmsg);
+  (msg('msg), model('model, 'msg)) => (model('model, 'msg), outmsg('msg));
 
 module Contributions: {
-  let commands: (~isFocused: bool, model) => list(Command.t(msg));
-  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
+  let commands:
+    (~isFocused: bool, 'model, model('model, 'msg)) =>
+    list(Command.t(msg('msg)));
+  let contextKeys:
+    (~isFocused: bool, 'model, model('model, 'msg)) => WhenExpr.ContextKeys.t;
   let keybindings: list(Feature_Input.Schema.keybinding);
 };
 
-let initial: model;
+let initial: list(Schema.t('model, 'msg)) => model('model, 'msg);
 
-let height: model => int;
-let selected: model => pane;
-let isOpen: model => bool;
+let height: model(_, _) => int;
+let isOpen: model(_, _) => bool;
 
-let setPane: (~pane: pane, model) => model;
-let show: (~pane: pane, model) => model;
-let toggle: (~pane: pane, model) => model;
-let close: model => model;
+let show: (~paneId: string, model('model, 'msg)) => model('model, 'msg);
 
-let setDiagnostics: (Feature_Diagnostics.model, model) => model;
-let setLocations:
-  (
-    ~maybeActiveBuffer: option(Oni_Core.Buffer.t),
-    ~locations: list(Exthost.Location.t),
-    model
-  ) =>
-  model;
-let setNotifications: (Feature_Notification.model, model) => model;
-
-let setOutput: (string, option(string), model) => model;
+let close: model('model, 'msg) => model('model, 'msg);
 
 module View: {
   let make:
@@ -91,10 +96,15 @@ module View: {
       ~languageInfo: Exthost.LanguageInfo.t,
       ~editorFont: Service_Font.font,
       ~uiFont: Oni_Core.UiFont.t,
-      ~dispatch: msg => unit,
-      ~pane: model,
+      ~dispatch: msg('msg) => unit,
+      ~pane: model('model, 'msg),
+      ~model: 'model,
       ~workingDirectory: string,
       unit
     ) =>
     Revery.UI.element;
 };
+
+let sub:
+  (~isFocused: bool, 'model, model('model, 'msg)) =>
+  Isolinear.Sub.t(msg('msg));

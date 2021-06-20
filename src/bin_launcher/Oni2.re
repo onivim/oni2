@@ -22,6 +22,8 @@ let spec =
       Arg.Set(stayAttached),
       " Stay attached to the foreground terminal.",
     ),
+    ("-n", passthrough, " Open a new Onivim 2 session"),
+    ("--new-window", passthrough, " Open a new Onivim 2 session"),
     ("-v", passthroughAndStayAttached, " Print version information."),
     (
       "-f",
@@ -42,6 +44,11 @@ let spec =
     ("--trace", passthrough, " Enable trace logging."),
     ("--quiet", passthrough, " Print only error log messages."),
     ("--silent", passthrough, " Do not print any logging."),
+    (
+      "--list-displays",
+      passthroughAndStayAttached,
+      " List information about the connected displays.",
+    ),
     ("--log-file", passthroughString, " Specify a file for the output logs."),
     ("--log-filter", passthroughString, " Filter log output."),
     (
@@ -106,6 +113,11 @@ let spec =
       "--force-device-scale-factor",
       passthroughFloat,
       " Force the DPI scaling for the editor.",
+    ),
+    (
+      "--window-position",
+      passthroughString,
+      " Set the window position x,y in display space",
     ),
     (
       "--working-directory",

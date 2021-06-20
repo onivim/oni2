@@ -12,7 +12,6 @@ type model = {
   defaults: Config.Settings.t,
   user: Config.Settings.t,
   merged: Config.Settings.t,
-  legacyConfiguration: LegacyConfiguration.t,
   loader: ConfigurationLoader.t,
   transformTasks: Task.model,
   // Keep track of when a synchronization with the extension host is required
@@ -22,21 +21,6 @@ type model = {
   extHostLastConfig: option(Config.Settings.t),
 };
 
-// DEPRECATED way of working with configuration
-module LegacyConfiguration = LegacyConfiguration;
-module LegacyConfigurationValues = LegacyConfigurationValues;
-module LegacyConfigurationParser = LegacyConfigurationParser;
-
-module Legacy = {
-  let configuration = ({legacyConfiguration, _}) => legacyConfiguration;
-
-  let getValue = (~fileType=?, selector, {legacyConfiguration, _}) => {
-    LegacyConfiguration.getValue(~fileType?, selector, legacyConfiguration);
-  };
-
-  let set = (legacyConfiguration, model) => {...model, legacyConfiguration};
-};
-
 let merge = model => {
   ...model,
   merged: Config.Settings.union(model.defaults, model.user),
@@ -44,9 +28,7 @@ let merge = model => {
 
 let initialLoad = model => {
   ConfigurationLoader.loadImmediate(model.loader)
-  |> Result.map(((user, legacyConfiguration)) => {
-       {...model, user, legacyConfiguration}
-     })
+  |> Result.map(user => {...model, user})
   |> Result.value(~default=model);
 };
 
@@ -62,7 +44,6 @@ let initial = (~loader, contributions) => {
     defaults,
     user: Config.Settings.empty,
     merged: Config.Settings.empty,
-    legacyConfiguration: LegacyConfiguration.default,
     loader,
     transformTasks: Task.initial(),
 
@@ -132,10 +113,7 @@ type msg =
   | Exthost(Exthost.Msg.Configuration.msg)
   | ExthostSyncDispatched({mergedConfig: [@opaque] Config.Settings.t})
   | TransformTask(Task.msg)
-  | UserSettingsChanged({
-      config: [@opaque] Config.Settings.t,
-      legacyConfiguration: [@opaque] LegacyConfiguration.t,
-    })
+  | UserSettingsChanged({config: [@opaque] Config.Settings.t})
   | ConfigurationParseError(string);
 
 module Msg = {
@@ -164,7 +142,7 @@ let update = (model, msg) =>
       Nothing,
     )
 
-  | UserSettingsChanged({config: user, legacyConfiguration}) =>
+  | UserSettingsChanged({config: user}) =>
     let previous = model;
     let updated =
       if (user == Config.Settings.empty) {
@@ -176,11 +154,7 @@ let update = (model, msg) =>
     let changed = Config.Settings.changed(previous.merged, updated.merged);
 
     (
-      {
-        ...updated,
-        legacyConfiguration,
-        extHostSyncTick: model.extHostSyncTick + 1,
-      },
+      {...updated, extHostSyncTick: model.extHostSyncTick + 1},
       ConfigurationChanged({changed: changed}),
     );
 
@@ -274,8 +248,7 @@ let sub =
     ConfigurationLoader.sub(loader)
     |> Isolinear.Sub.map(
          fun
-         | Ok((config, legacyConfiguration)) =>
-           UserSettingsChanged({config, legacyConfiguration})
+         | Ok(config) => UserSettingsChanged({config: config})
          | Error(msg) => ConfigurationParseError(msg),
        );
 

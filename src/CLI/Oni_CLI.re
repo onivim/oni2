@@ -10,11 +10,32 @@ open Rench;
 module CoreLog = Log;
 module Log = (val Log.withNamespace("Oni2.Core.Cli"));
 
+type position = {
+  x: int,
+  y: int,
+};
+
+let parsePosition = str => {
+  switch (String.split_on_char(',', str)) {
+  | [] => None
+  | [single] =>
+    int_of_string_opt(single) |> Option.map(pos => {x: pos, y: pos})
+  | [xStr, yStr] =>
+    Utility.OptionEx.map2(
+      (x, y) => {{x, y}},
+      int_of_string_opt(xStr),
+      int_of_string_opt(yStr),
+    )
+  | _ => None
+  };
+};
+
 type t = {
   gpuAcceleration: [ | `Auto | `ForceSoftware | `ForceHardware],
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
+  forceNewWindow: bool,
   overriddenExtensionsDir: option(FpExp.t(FpExp.absolute)),
   shouldLoadExtensions: bool,
   shouldLoadConfiguration: bool,
@@ -28,11 +49,18 @@ type t = {
   needsConsole: bool,
   proxyServer: Service_Net.Proxy.t,
   vimExCommands: list(string),
+  windowPosition: option(position),
 };
 
 type eff =
   | PrintVersion
   | CheckHealth
+  | DoRemoteCommand({
+      pipe: string,
+      filesToOpen: list(string),
+      folder: option(string),
+    })
+  | ListDisplays
   | ListExtensions
   | InstallExtension(string)
   | QueryExtension(string)
@@ -93,6 +121,7 @@ let parse = (~getenv: string => option(string), args) => {
   let shouldSyntaxHighlight = ref(true);
 
   let attachToForeground = ref(false);
+  let forceNewWindow = ref(false);
   let logLevel = ref(None);
   let isSilent = ref(false);
   let logExthost = ref(false);
@@ -122,6 +151,8 @@ let parse = (~getenv: string => option(string), args) => {
   let disableLoadConfiguration = () => shouldLoadConfiguration := false;
   let disableSyntaxHighlight = () => shouldSyntaxHighlight := false;
 
+  let windowPosition = ref(None);
+
   let setAttached = () => {
     attachToForeground := true;
     // Set log level if it hasn't already been set
@@ -138,6 +169,10 @@ let parse = (~getenv: string => option(string), args) => {
 
   getenv("ONI2_LOG_FILTER") |> Option.iter(v => logFilter := Some(v));
 
+  let setForceNewWindow = () => {
+    forceNewWindow := true;
+  };
+
   Arg.parse_argv(
     ~current=ref(0),
     sysArgs,
@@ -145,6 +180,8 @@ let parse = (~getenv: string => option(string), args) => {
       ("-c", String(str => vimExCommands := [str, ...vimExCommands^]), ""),
       ("-f", Unit(setAttached), ""),
       ("-v", setEffect(PrintVersion), ""),
+      ("-n", Unit(setForceNewWindow), ""),
+      ("--new-window", Unit(setForceNewWindow), ""),
       ("--nofork", Unit(setAttached), ""),
       ("--debug", Unit(() => logLevel := Some(Timber.Level.debug)), ""),
       ("--debug-exthost", Unit(() => logExthost := true), ""),
@@ -169,6 +206,7 @@ let parse = (~getenv: string => option(string), args) => {
       ("--log-file", String(str => logFile := Some(str)), ""),
       ("--log-filter", String(str => logFilter := Some(str)), ""),
       ("--checkhealth", setEffect(CheckHealth), ""),
+      ("--list-displays", setEffect(ListDisplays), ""),
       ("--list-extensions", setEffect(ListExtensions), ""),
       ("--install-extension", setStringEffect(s => InstallExtension(s)), ""),
       (
@@ -210,22 +248,20 @@ let parse = (~getenv: string => option(string), args) => {
       ),
       ("--extensions-dir", String(setRef(extensionsDir)), ""),
       ("--force-device-scale-factor", Float(setRef(scaleFactor)), ""),
+      (
+        "--window-position",
+        String(
+          str => {
+            let maybePosition = parsePosition(str);
+            windowPosition := maybePosition;
+          },
+        ),
+        "",
+      ),
     ],
     arg => additionalArgs := [arg, ...additionalArgs^],
     "",
   );
-
-  let shouldAlwaysAllocateConsole =
-    switch (eff^) {
-    | Run => false
-    | StartSyntaxServer(_) => false
-    | _ => true
-    };
-
-  let needsConsole =
-    (isSilent^ || Option.is_some(logLevel^))
-    && attachToForeground^
-    || shouldAlwaysAllocateConsole;
 
   let paths = additionalArgs^ |> List.rev;
 
@@ -296,9 +332,27 @@ let parse = (~getenv: string => option(string), args) => {
     | [] => None
     };
 
+  getenv("ONIVIM2_PARENT_PIPE")
+  |> Option.iter(v => {
+       eff := DoRemoteCommand({pipe: v, filesToOpen, folder})
+     });
+
+  let shouldAlwaysAllocateConsole =
+    switch (eff^) {
+    | Run => false
+    | StartSyntaxServer(_) => false
+    | _ => true
+    };
+
+  let needsConsole =
+    (isSilent^ || Option.is_some(logLevel^))
+    && attachToForeground^
+    || shouldAlwaysAllocateConsole;
+
   let cli = {
     folder,
     filesToOpen,
+    forceNewWindow: forceNewWindow^,
     forceScaleFactor: scaleFactor^,
     gpuAcceleration: gpuAcceleration^,
     overriddenExtensionsDir:
@@ -316,6 +370,7 @@ let parse = (~getenv: string => option(string), args) => {
     needsConsole,
     proxyServer: proxyServer^,
     vimExCommands: (vimExCommands^ |> List.rev) @ anonymousExCommands,
+    windowPosition: windowPosition^,
   };
 
   (cli, eff^);

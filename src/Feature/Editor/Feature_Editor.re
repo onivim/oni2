@@ -29,7 +29,8 @@ type msg = Msg.t;
 type outmsg =
   | Nothing
   | MouseHovered(option(CharacterPosition.t))
-  | MouseMoved(option(CharacterPosition.t));
+  | MouseMoved(option(CharacterPosition.t))
+  | ExecuteCommand(Exthost.Command.t);
 
 type model = Editor.t;
 
@@ -111,11 +112,20 @@ let update = (editor, msg) => {
       Editor.setInlineElementSize(~key, ~line, ~uniqueId, ~height, editor),
       Nothing,
     )
+  | InlineElementClicked({command, _}) => (
+      editor,
+      switch (command) {
+      | Some(cmd) => ExecuteCommand(cmd)
+      | None => Nothing
+      },
+    )
   | PreviewChanged(preview) => (
       Editor.setPreview(~preview, editor),
       Nothing,
     )
-  | Internal(msg) => (Editor.update(msg, editor), Nothing)
+  | Internal(msg) =>
+    let editor' = Editor.update(msg, editor);
+    (editor', Nothing);
   | EditorMouseMoved({time, pixelX, pixelY}) =>
     let editor' = editor |> Editor.mouseMove(~time, ~pixelX, ~pixelY);
 

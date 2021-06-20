@@ -12,14 +12,14 @@ echo "print_endline count: $PRINT_COUNT"
 echo "Printf.printf count: $PRINTF_COUNT"
 echo "magenta count: $MAGENTA_COUNT"
 
-if [ "$PRERR_COUNT" -ne "7" ]; then
+if [ "$PRERR_COUNT" -ne "8" ]; then
     echo "New prerr_endline introduced; please remove and re-check:"
     echo "---"
     echo "Output: $(git grep prerr_endline)"
     exit 3
 fi
 
-if [ "$PRINT_COUNT" -ne "16" ]; then
+if [ "$PRINT_COUNT" -ne "18" ]; then
     echo "New print_endline introduced; please remove and re-check."
     echo "---"
     echo "Output: $(git grep print_endline)"
@@ -33,7 +33,7 @@ if [ "$PRINTF_COUNT" -ne "3" ]; then
     exit 3
 fi
 
-if [ "$MAGENTA_COUNT" -ne "0" ]; then
+if [ "$MAGENTA_COUNT" -ne "1" ]; then
     echo "Debug magenta color left in; please remove and re-check"
     echo "---"
     echo "Output: $(git grep magenta)"

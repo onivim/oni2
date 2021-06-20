@@ -13,12 +13,18 @@ type panel =
 module Group: {
   type t;
 
+  type id;
+
+  let id: t => id;
+
   let allEditors: t => list(Editor.t);
 };
 
 type model;
 
+let activeGroup: model => Group.t;
 let activeLayoutGroups: model => list(Group.t);
+let setActiveGroup: (Group.id, model) => model;
 
 let initial: list(Editor.t) => model;
 

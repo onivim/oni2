@@ -19,7 +19,7 @@ module Schema: {
       ~icon: IconTheme.IconDefinition.t=?,
       ~isEnabledWhen: WhenExpr.t=?,
       string,
-      Yojson.Safe.json => 'msg
+      Yojson.Safe.t => 'msg
     ) =>
     Command.t('msg);
 };

@@ -2,6 +2,7 @@
  (name Feature_Notification)
  (public_name Oni2.feature.notification)
  (libraries Oni2.core Oni2.component.animation Oni2.components
-   Oni2.feature.configuration Oni2.feature.theme isolinear base Revery)
+   Oni2.component.vimList Oni2.feature.configuration Oni2.feature.pane
+   Oni2.feature.theme isolinear base Revery)
  (preprocess
   (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))

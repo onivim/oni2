@@ -61,14 +61,9 @@ static void notificationHandler(
     }
   }
 
-  caml_c_thread_register();
-  caml_acquire_runtime_system();
-
   value args[] = {Val_unit};
   caml_callbackN(*callbackFunc, 1, args);
 
-  caml_release_runtime_system();
-  
   CAMLreturn0;
 }
 

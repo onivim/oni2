@@ -175,7 +175,7 @@ module VimSettings = {
       |> Option.value(~default=false)
     });
 
-  let guifont =
+  let guifontFamily =
     vim("guifont", guifontSetting => {
       guifontSetting
       |> VimSetting.decode_value_opt(font)
@@ -185,12 +185,14 @@ module VimSettings = {
       |> Option.value(~default="JetBrainsMono-Regular.ttf")
     });
 
-  let lineSpace =
-    vim("linespace", lineSpaceSetting => {
-      lineSpaceSetting
-      |> VimSetting.decode_value_opt(int)
-      |> Option.map(LineHeight.padding)
-      |> Option.value(~default=LineHeight.default)
+  let guifontSize =
+    vim("guifont", guifontSetting => {
+      guifontSetting
+      |> VimSetting.decode_value_opt(font)
+      |> OptionEx.flatMap(({height, _}: VimSetting.fontDescription) =>
+           height
+         )
+      |> Option.value(~default=14.)
     });
 
   let wrap =
@@ -260,7 +262,7 @@ let detectIndentation =
 
 let fontFamily =
   setting(
-    ~vim=VimSettings.guifont,
+    ~vim=VimSettings.guifontFamily,
     "editor.fontFamily",
     string,
     ~default=Constants.defaultFontFile,
@@ -279,19 +281,18 @@ let fontLigatures =
     Codecs.fontLigatures,
     ~default=FontLigatures.enabled,
   );
-let fontSize = setting("editor.fontSize", Codecs.fontSize, ~default=14.);
+let fontSize =
+  setting(
+    ~vim=VimSettings.guifontSize,
+    "editor.fontSize",
+    Codecs.fontSize,
+    ~default=14.,
+  );
 let fontWeight =
   setting(
     "editor.fontWeight",
     Codecs.fontWeight,
     ~default=Revery.Font.Weight.Normal,
-  );
-let lineHeight =
-  setting(
-    ~vim=VimSettings.lineSpace,
-    "editor.lineHeight",
-    custom(~decode=LineHeight.decode, ~encode=LineHeight.encode),
-    ~default=LineHeight.default,
   );
 let enablePreview =
   setting("workbench.editor.enablePreview", bool, ~default=true);
@@ -327,6 +328,11 @@ let scrolloff =
     ~default=1,
   );
 let scrollShadow = setting("editor.scrollShadow", bool, ~default=true);
+
+let showDeprecated = setting("editor.showDeprecated", bool, ~default=true);
+
+let showUnused = setting("editor.showUnused", bool, ~default=true);
+
 let smoothScroll =
   setting(
     ~vim=VimSettings.smoothScroll,
@@ -393,7 +399,6 @@ let contributions = [
   fontSize.spec,
   fontSmoothing.spec,
   fontWeight.spec,
-  lineHeight.spec,
   enablePreview.spec,
   highlightActiveIndentGuide.spec,
   horizontalScrollbarSize.spec,
@@ -406,6 +411,8 @@ let contributions = [
   rulers.spec,
   scrollShadow.spec,
   scrolloff.spec,
+  showDeprecated.spec,
+  showUnused.spec,
   smoothScroll.spec,
   tabSize.spec,
   wordWrap.spec,

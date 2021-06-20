@@ -25,6 +25,7 @@ describe("Diagnostics", ({describe, _}) => {
           ~range,
           ~message="test diagnostic",
           ~severity=Exthost.Diagnostic.Severity.Error,
+          ~tags=[],
         );
       let diags =
         Diagnostic.explode(

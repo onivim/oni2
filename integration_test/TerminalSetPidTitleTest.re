@@ -17,12 +17,11 @@ runTest(~name="TerminalSetPidTitle", ({dispatch, wait, _}) => {
   // Spin up a terminal
   dispatch(
     Actions.Terminal(
-      Feature_Terminal.Command(
-        NewTerminal({
-          cmd: None,
-          splitDirection: Vertical,
-          closeOnExit: false,
-        }),
+      Feature_Terminal.Testing.newTerminalMsg(
+        ~cmd=None,
+        ~splitDirection=
+          Oni_Core.SplitDirection.Vertical({shouldReuse: false}),
+        ~closeOnExit=false,
       ),
     ),
   );
@@ -43,11 +42,15 @@ runTest(~name="TerminalSetPidTitle", ({dispatch, wait, _}) => {
     (state: State.t) =>
     switch (getTerminalOpt(state)) {
     | None => failwith("Terminal should be in state!")
-    | Some({id, pid, title, _}) =>
+    | Some(terminal: Feature_Terminal.Terminal.t) =>
       let logOpt = str =>
         str
         |> Option.map(str => "Some: " ++ str)
         |> Option.value(~default="None");
+
+      let id = Feature_Terminal.Terminal.id(terminal);
+      let pid = Feature_Terminal.Terminal.pid(terminal);
+      let title = Feature_Terminal.Terminal.title(terminal);
 
       prerr_endline(
         Printf.sprintf(

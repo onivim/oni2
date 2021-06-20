@@ -136,6 +136,9 @@ __Pass:__
 
 Prerequisite:
 - In configuration file, key "editor.fontFamily" either set to a __non absolute__ font name or absent (Ideally test both).
+  - Linux: "Inconsolata"
+  - Windows: "Consolas"
+  - OSX: "Menlo"
 
 - Run Onivim 2
 - Open configuration file
@@ -155,6 +158,7 @@ Regression test for #2926
 
 Prerequisite:
 - Install German (de-de) keyboard layout
+  - Linux: `setxkbmap -layout de` (`setxkbmap -layout us` to revert)
 
 - Run Onivim 2
 - Create new file (`:new test.txt`)
@@ -191,6 +195,7 @@ Regression test for #2924
 
 Prerequisite:
 - Install Romaji keyboard layout
+  - Linux: Use ibus to switch to Romaji
 
 - Switch keyboard layout to Romaji
 - Run Onivim 2
@@ -208,6 +213,7 @@ Regresion test for #3157
 
 Prerequisite:
 - Install ENG-INTL keyboard layout
+  - Linux: ibus w/ French+AltGr dead keys
 
 - Switch keyboard layout to English (International)
 - Run Onivim 2
@@ -267,6 +273,30 @@ __Pass:__
 - On OSX, Linux - run `echo $ONIVIM_TERMINAL`
 - On Windows Powershell - run `$env:ONIVIM_TERMINAL`
 - Validate version string is displayed
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 9.2 Open a file from integrated terminal
+
+- Open Onivim 2
+- Run `:term`
+- Run `oni2 test-file.ts`
+- Validate `test-file.ts` is opened in a new split
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 9.3 Open a folder from integrated terminal
+
+- Open Onivim2
+- Run `:term`
+- Run `oni2 ~/some-valid-folder`, replacing `some-valid-folder` with an actual folder on the filesystem
+- Validate the explorer has switched to the new folder
 
 __Pass:__
 - [ ] Win
@@ -355,3 +385,38 @@ __Setup:__
 
 __Pass:__
 - [ ] Win
+
+# 13. CLI
+
+## 13.1 Single Instance - Open file in running instance
+
+- Open Onivim 2
+- From CLI, run `oni2 some-file-that-exists.txt`
+- Validate the file is opened in the current instance
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 13.2 Single Instance - Open folder in running instance
+
+- Open Onivim 2
+- From CLI, run `oni2 /some/folder/that/exists`
+- Validate the folder is opened in the current instance
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 13.3 Force new instance
+
+- Open Onivim 2
+- From CLI, run `oni2 --new-window test.txt`
+- Validate a new instance of Onivim is opened, with the specified file active
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux

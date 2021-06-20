@@ -285,6 +285,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
         uiFont
         dispatch={msg => dispatch(Actions.Pane(msg))}
         pane={state.pane}
+        model=state
         workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
       />
     </View>

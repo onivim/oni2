@@ -31,6 +31,7 @@ let defaultKeyBindings =
     ),
   ]
   @ Feature_SideBar.Contributions.keybindings
+  @ Feature_Keyboard.Contributions.keybindings
   @ Feature_Clipboard.Contributions.keybindings
   @ Feature_Configuration.Contributions.keybindings
   @ Feature_Input.Schema.[
@@ -402,7 +403,8 @@ let defaultKeyBindings =
   @ Component_VimList.Contributions.keybindings
   @ Component_VimTree.Contributions.keybindings
   @ Feature_Snippets.Contributions.keybindings
-  @ Feature_Vim.Contributions.keybindings;
+  @ Feature_Vim.Contributions.keybindings
+  @ Feature_Diagnostics.Contributions.keybindings;
 
 type windowDisplayMode =
   | Minimized
@@ -415,6 +417,7 @@ type t = {
   bufferRenderers: BufferRenderers.t,
   changelog: Feature_Changelog.model,
   cli: Oni_CLI.t,
+  clientServer: Feature_ClientServer.model,
   clipboard: Feature_Clipboard.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
@@ -425,11 +428,13 @@ type t = {
   fileSystem: Feature_FileSystem.model,
   help: Feature_Help.model,
   input: Feature_Input.model,
+  keyboard: Feature_Keyboard.model,
   logging: Feature_Logging.model,
   messages: Feature_Messages.model,
-  terminalFont: Service_Font.font,
+  output: Feature_Output.model,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
+  quickOpen: Feature_QuickOpen.model,
   sideBar: Feature_SideBar.model,
   extensions: Feature_Extensions.model,
   exthost: Feature_Exthost.model,
@@ -455,7 +460,7 @@ type t = {
   workspace: Feature_Workspace.model,
   zen: Feature_Zen.model,
   // State of the bottom pane
-  pane: Feature_Pane.model,
+  pane: Feature_Pane.model(t, Actions.t),
   newQuickmenu: Feature_Quickmenu.model(Actions.t),
   searchPane: Feature_Search.model,
   focus: Focus.stack,
@@ -528,6 +533,7 @@ let initial =
     bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
     cli,
+    clientServer: Feature_ClientServer.create(),
     clipboard: Feature_Clipboard.initial,
     colorTheme:
       Feature_Theme.initial([
@@ -541,9 +547,9 @@ let initial =
     diagnostics: Feature_Diagnostics.initial,
     input:
       Feature_Input.initial(~loader=keybindingsLoader, defaultKeyBindings),
+    keyboard: Feature_Keyboard.initial,
     quickmenu: None,
     editorFont: defaultEditorFont,
-    terminalFont: defaultEditorFont,
     extensions:
       Feature_Extensions.initial(
         ~globalPersistence=extensionGlobalPersistence,
@@ -568,8 +574,10 @@ let initial =
           [Feature_Workspace.Contributions.menuGroup]
           @ Feature_LanguageSupport.Contributions.menuGroups
           @ Feature_SideBar.Contributions.menuGroups
-          @ Feature_Help.Contributions.menuGroups,
+          @ Feature_Help.Contributions.menuGroups
+          @ Feature_Keyboard.Contributions.menuGroups,
       ),
+    output: Feature_Output.initial,
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,
     registers: Feature_Registers.initial,
@@ -589,12 +597,48 @@ let initial =
     fileExplorer: Feature_Explorer.initial(~rootPath=maybeWorkspace),
     zen:
       Feature_Zen.initial(~isSingleFile=List.length(cli.filesToOpen) == 1),
-    pane: Feature_Pane.initial,
+    pane:
+      Feature_Pane.initial(
+        [
+          Feature_Diagnostics.Contributions.pane
+          |> Feature_Pane.Schema.map(
+               ~msg=msg => Actions.Diagnostics(msg),
+               ~model=state => state.diagnostics,
+             ),
+          Feature_Notification.Contributions.pane
+          |> Feature_Pane.Schema.map(
+               ~msg=msg => Actions.Notification(msg),
+               ~model=state => state.notifications,
+             ),
+        ]
+        @ (
+          Feature_LanguageSupport.Contributions.panes
+          |> List.map(
+               Feature_Pane.Schema.map(
+                 ~msg=msg => Actions.LanguageSupport(msg),
+                 ~model=state => state.languageSupport,
+               ),
+             )
+        )
+        @ [
+          Feature_Output.Contributions.pane
+          |> Feature_Pane.Schema.map(
+               ~msg=msg => Actions.Output(msg),
+               ~model=state => state.output,
+             ),
+          Feature_Terminal.Contributions.pane
+          |> Feature_Pane.Schema.map(
+               ~msg=msg => Actions.Terminal(msg),
+               ~model=state => state.terminals,
+             ),
+        ],
+      ),
     proxy: Feature_Proxy.default,
     newQuickmenu: Feature_Quickmenu.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
     modal: None,
+    quickOpen: Feature_QuickOpen.initial,
     snippets: Feature_Snippets.initial,
     terminals: Feature_Terminal.initial,
     textContentProviders: [],

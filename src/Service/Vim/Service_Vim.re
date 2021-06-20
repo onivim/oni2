@@ -245,9 +245,18 @@ module Effects = {
   };
 
   let saveAll = toMsg => {
-    Isolinear.Effect.createWithDispatch(~name="loadBuffer", dispatch => {
+    Isolinear.Effect.createWithDispatch(~name="saveAll", dispatch => {
       let (_: Vim.Context.t, _effects: list(Vim.Effect.t)) =
         Vim.command("wa!");
+      dispatch(toMsg());
+    });
+  };
+
+  let save = (~bufferId, toMsg) => {
+    Isolinear.Effect.createWithDispatch(~name="saveBuffer", dispatch => {
+      let context = {...Vim.Context.current(), bufferId};
+      let (_: Vim.Context.t, _effects: list(Vim.Effect.t)) =
+        Vim.command(~context, "w!");
       dispatch(toMsg());
     });
   };

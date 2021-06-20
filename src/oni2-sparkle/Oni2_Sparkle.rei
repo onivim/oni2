@@ -1,4 +1,5 @@
 let init: unit => unit;
+let version: option(string);
 
 module Updater: {
   type t;

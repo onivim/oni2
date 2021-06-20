@@ -1,0 +1,6 @@
+(library
+ (name Service_Keyboard)
+ (public_name Oni2.service.keyboard)
+ (libraries isolinear Revery)
+ (preprocess
+  (pps ppx_let ppx_deriving.show)))

@@ -6,12 +6,15 @@ open Utility;
 open Feature_Editor;
 
 module Group: {
+  type id = int;
   type t =
     pri {
       id: int,
       editors: list(Editor.t),
       selectedId: int,
     };
+
+  let id: t => id;
 
   let create: list(Editor.t) => t;
 
@@ -31,11 +34,15 @@ module Group: {
 
   let allEditors: t => list(Editor.t);
 } = {
+  type id = int;
+
   type t = {
     id: int,
     editors: list(Editor.t),
     selectedId: int,
   };
+
+  let id = ({id, _}) => id;
 
   let allEditors = ({editors, _}) => editors;
 
@@ -242,6 +249,11 @@ let visibleEditors = model =>
 
 let activeLayoutGroups = model => model |> activeLayout |> groups;
 
+let activeLayoutGroup = model => {
+  let layout = model |> activeLayout;
+  layout.activeGroupId;
+};
+
 let editorById = (id, model) =>
   Base.List.find_map(activeLayout(model).groups, ~f=group =>
     List.find_opt(editor => Editor.getId(editor) == id, group.editors)
@@ -291,6 +303,10 @@ let hasSplitToRight = model => {
     layout |> activeTree |> moveRight(layout.activeGroupId);
 
   layout.activeGroupId != newActiveGroupId;
+};
+
+let setActiveGroup = (groupId, model) => {
+  model |> updateActiveLayout(layout => {...layout, activeGroupId: groupId});
 };
 
 let split = (~shouldReuse, ~editor, direction, model) =>

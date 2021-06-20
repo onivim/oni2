@@ -154,15 +154,8 @@ runTest(
   });
 
   wait(~name="Wait for configuration to update (1)", (state: State.t) => {
-    Feature_Configuration.Legacy.getValue(
-      c => c.vimUseSystemClipboard,
-      state.config,
-    )
-    == Feature_Configuration.LegacyConfigurationValues.{
-         yank: false,
-         delete: false,
-         paste: true,
-       }
+    Feature_Vim.useSystemClipboard(state.vim)
+    == Feature_Vim.{yank: false, delete: false, paste: true}
   });
 
   input("y");

@@ -15,6 +15,19 @@ module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 module OptionEx = Core.Utility.OptionEx;
 
+let doRemoteCommand = (~pipe, ~files, ~folderToOpen) => {
+  let result =
+    Feature_ClientServer.Client.openFiles(~server=pipe, ~files, ~folderToOpen)
+    |> LwtEx.sync;
+
+  switch (result) {
+  | Ok () => 0
+  | Error(msg) =>
+    prerr_endline("Error executing command: " ++ Printexc.to_string(msg));
+    1;
+  };
+};
+
 let installExtension =
     (path, Oni_CLI.{overriddenExtensionsDir, proxyServer: proxy, _}) => {
   let setup = Core.Setup.init();
@@ -80,6 +93,27 @@ let uninstallExtension = (extensionId, {overriddenExtensionsDir, _}) => {
 
 let printVersion = () => {
   print_endline("Onivim 2 (" ++ Core.BuildInfo.version ++ ")");
+  0;
+};
+
+let listDisplays = () => {
+  let _ = Sdl2.init();
+  let displays = Sdl2.Display.getDisplays();
+
+  print_endline("Displays:");
+
+  displays
+  |> List.iteri((idx, display) => {
+       print_endline(
+         Printf.sprintf(
+           "%d: %s - %s",
+           idx,
+           Sdl2.Display.getName(display),
+           Sdl2.Display.getBounds(display) |> Sdl2.Rect.toString,
+         ),
+       )
+     });
+
   0;
 };
 

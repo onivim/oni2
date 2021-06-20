@@ -52,12 +52,11 @@ runTest(
     // it'll pull the default from configuration
     dispatch(
       Actions.Terminal(
-        Feature_Terminal.Command(
-          NewTerminal({
-            cmd: None,
-            splitDirection: Vertical,
-            closeOnExit: false,
-          }),
+        Feature_Terminal.Testing.newTerminalMsg(
+          ~cmd=None,
+          ~splitDirection=
+            Oni_Core.SplitDirection.Vertical({shouldReuse: false}),
+          ~closeOnExit=false,
         ),
       ),
     );
@@ -65,9 +64,11 @@ runTest(
     let expectedTerminalExists = (state: State.t) => {
       state.terminals
       |> Feature_Terminal.toList
-      |> List.exists((terminal: Feature_Terminal.terminal) => {
-           terminal.launchConfig.executable == expectedShellCmd
-           && terminal.launchConfig.arguments == expectedShellArgs
+      |> List.exists((terminal: Feature_Terminal.Terminal.t) => {
+           let launchConfig =
+             Feature_Terminal.Terminal.launchConfig(terminal);
+           launchConfig.executable == expectedShellCmd
+           && launchConfig.arguments == expectedShellArgs;
          });
     };
 

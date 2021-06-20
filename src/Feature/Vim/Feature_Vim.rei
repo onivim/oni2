@@ -12,30 +12,32 @@ let subMode: model => Vim.SubMode.t;
 
 let experimentalViml: model => list(string);
 
+type vimUseSystemClipboard = {
+  yank: bool,
+  delete: bool,
+  paste: bool,
+};
+
+let useSystemClipboard: model => vimUseSystemClipboard;
+
 // MSG
 
 [@deriving show]
-type msg =
-  | ModeChanged({
-      allowAnimation: bool,
-      mode: [@opaque] Vim.Mode.t,
-      subMode: [@opaque] Vim.SubMode.t,
-      effects: list(Vim.Effect.t),
-    })
-  | PasteCompleted({mode: [@opaque] Vim.Mode.t})
-  | Pasted(string)
-  | SearchHighlightsAvailable({
-      bufferId: int,
-      highlights: array(ByteRange.t),
-    })
-  | SettingChanged(Vim.Setting.t)
-  | MacroRecordingStarted({register: char})
-  | MacroRecordingStopped
-  | Output({
-      cmd: string,
-      output: option(string),
-    })
-  | Noop;
+type msg;
+
+module Msg: {
+  let modeChanged:
+    (
+      ~allowAnimation: bool,
+      ~subMode: Vim.SubMode.t,
+      ~mode: Vim.Mode.t,
+      ~effects: list(Vim.Effect.t)
+    ) =>
+    msg;
+  let output: (~cmd: string, ~output: option(string)) => msg;
+  let pasted: string => msg;
+  let settingChanged: (~setting: Vim.Setting.t) => msg;
+};
 
 type outmsg =
   | Nothing
@@ -93,6 +95,10 @@ module Effects: {
     Isolinear.Effect.t(msg);
 
   let save: (~bufferId: int) => Isolinear.Effect.t(msg);
+
+  let setTerminalLines:
+    (~editorId: int, ~bufferId: int, array(string)) =>
+    Isolinear.Effect.t(msg);
 };
 
 // CONFIGURATION
@@ -108,4 +114,6 @@ module Configuration: {
 module Contributions: {
   let keybindings: list(Feature_Input.Schema.keybinding);
   let configuration: list(Oni_Core.Config.Schema.spec);
+
+  let commands: list(Oni_Core.Command.t(msg));
 };

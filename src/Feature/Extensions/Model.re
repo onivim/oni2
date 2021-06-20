@@ -232,6 +232,8 @@ module Focus = {
 
   let initial = SearchText;
 
+  let searchText = initial;
+
   let moveDown = (~isSearching, focus) => {
     switch (focus) {
     | SearchText => Some(Installed)
@@ -738,10 +740,13 @@ let update = (~extHostClient, ~proxy, msg, model) => {
     let previousText = model.searchText |> Component_InputText.value;
     let (searchText', inputOutmsg) =
       Component_InputText.update(msg, model.searchText);
-    let outmsg =
+    let (model', outmsg) =
       switch (inputOutmsg) {
-      | Component_InputText.Nothing => Nothing
-      | Component_InputText.Focus => Focus
+      | Component_InputText.Nothing => (model, Nothing)
+      | Component_InputText.Focus => (
+          {...model, focusedWindow: Focus.searchText},
+          Focus,
+        )
       };
     let newText = searchText' |> Component_InputText.value;
     let (hasError, latestQuery) =
@@ -754,7 +759,7 @@ let update = (~extHostClient, ~proxy, msg, model) => {
 
     (
       {
-        ...model,
+        ...model',
         lastSearchHadError: hasError,
         searchText: searchText',
         latestQuery,

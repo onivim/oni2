@@ -247,6 +247,7 @@ let handlers =
     ext("ExtHostCustomEditors"),
     ext("ExtHostWebviewViews"),
     ext("ExtHostEditorInsets"),
+    ext("ExtHostEditorTabs"),
     ext("ExtHostProgress"),
     ext("ExtHostComments"),
     ext("ExtHostSecretState"),
@@ -261,6 +262,7 @@ let handlers =
     ext("ExtHostAuthentication"),
     ext("ExtHostTimeline"),
     ext("ExtHostTesting"),
+    ext("ExtHostTelemetry"),
   ]
   |> List.mapi((idx, v) => setId(~id=idx + 1, v));
 

@@ -1,0 +1,6 @@
+(library
+ (name Feature_Keyboard)
+ (public_name Oni2.feature.keyboard)
+ (libraries Oni2.core Oni2.feature.commands Oni2.feature.input Oni2.feature.menubar Oni2.service.keyboard)
+ (preprocess
+  (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))

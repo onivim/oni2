@@ -5,7 +5,7 @@ const path = require("path")
 const rootDir = __dirname
 const vendorDir = path.join(rootDir, "vendor")
 
-const nodeVendorDir = path.join(vendorDir, "node-v12.17.0")
+const nodeVendorDir = path.join(vendorDir, "node-v14.15.4")
 const yarnScript = path.join(vendorDir, "yarn-v1.14.0", "yarn-1.14.0.js")
 
 let nodeBinaryPath

@@ -42,7 +42,6 @@ module Msg: {
     (
       ~bufferId: int,
       ~newFilePath: option(string),
-      ~newFileType: Oni_Core.Buffer.FileType.t,
       ~version: int,
       ~isModified: bool
     ) =>
@@ -63,6 +62,8 @@ module Msg: {
 
   let selectFileTypeClicked: (~bufferId: int) => msg;
   let statusBarIndentationClicked: msg;
+
+  let copyActivePathToClipboard: msg;
 };
 
 type outmsg =
@@ -88,6 +89,7 @@ type outmsg =
       preview: bool,
     })
   | BufferModifiedSet(int, bool)
+  | SetClipboardText(string)
   | ShowMenu(
       (Exthost.LanguageInfo.t, IconTheme.t) =>
       Feature_Quickmenu.Schema.menu(msg),
@@ -99,7 +101,14 @@ type outmsg =
 // UPDATE
 
 let update:
-  (~activeBufferId: int, ~config: Config.fileTypeResolver, msg, model) =>
+  (
+    ~activeBufferId: int,
+    ~config: Config.fileTypeResolver,
+    ~languageInfo: Exthost.LanguageInfo.t,
+    ~workspace: Feature_Workspace.model,
+    msg,
+    model
+  ) =>
   (model, outmsg);
 
 let configurationChanged: (~config: Config.resolver, model) => model;
