@@ -30,11 +30,11 @@ module Styles = {
     ];
   };
 
-  let inner = (~opacity as opac, ~yOffset, ~xOffset) => [
+  let inner = (~availableWidth,~opacity as opac, ~yOffset, ~xOffset) => [
     position(`Absolute),
     top(int_of_float(yOffset)),
     left(int_of_float(xOffset)),
-    right(0),
+    width(availableWidth),
     flexDirection(`Row),
     flexGrow(1),
     opacity(opac),
@@ -43,10 +43,11 @@ module Styles = {
 
 module Item = {
   let make =
-      (~children, ~opacity: float, ~xOffset: float, ~yOffset: float, ()) => {
+      (~children, ~opacity: float, ~xOffset: float, ~yOffset: float, ~availableWidth: int, ()) => {
     <View
       // COMPONENT
-      style={Styles.inner(~xOffset, ~yOffset, ~opacity)}
+      style={Styles.inner(~availableWidth, ~xOffset, ~yOffset, ~opacity)}
+      children
     />;
   };
 };
@@ -109,6 +110,7 @@ module Container = {
                <Item
                  xOffset={gutterWidth +. leadingWhitespacePixels}
                  yOffset=height
+                 availableWidth=inlineElement.width
                  opacity>
                  <elem />
                </Item>;

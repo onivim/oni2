@@ -29,6 +29,7 @@ type element = {
     (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
     Revery.UI.element,
   measure: (~width: int) => int,
+  width: int, // last measured width
   command: option(Exthost.Command.t),
 };
 
@@ -427,14 +428,15 @@ let setWidth = (~getLeadingWhitespaceWidth, ~width, model) => {
 
   let update = (~key as _, ~lineNumber, ~uniqueId as _, element: element) => {
     let line = EditorCoreTypes.LineNumber.ofZeroBased(lineNumber);
-    let availableWidth = width -. getLeadingWhitespaceWidth(line);
+    let availableWidth = int_of_float(width -. getLeadingWhitespaceWidth(line));
     let calculatedHeight =
-      element.measure(~width=int_of_float(availableWidth)) |> float;
+      element.measure(~width=availableWidth) |> float;
 
     {
       ...element,
       opacity: Component_Animation.constant(1.0),
       height: Component_Animation.constant(calculatedHeight),
+      width: availableWidth,
     };
   };
 

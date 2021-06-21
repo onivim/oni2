@@ -30,6 +30,7 @@ type inlineElement = {
     Revery.UI.element,
   measure: (~width: int) => int,
   initialHeight: int,
+  initialWidth: int,
   command: option(Exthost.Command.t),
 };
 
@@ -994,6 +995,7 @@ let makeInlineElement =
       ~lineNumber,
       ~measure,
       ~initialHeight,
+      ~initialWidth,
       view,
     ) => {
   hidden: false,
@@ -1005,6 +1007,7 @@ let makeInlineElement =
   command,
   measure,
   initialHeight,
+  initialWidth,
 };
 
 let linesWithInlineElements = ({inlineElements, _}) => {
@@ -1028,6 +1031,7 @@ let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => 
              Component_Animation.make(
                Animation.expand(0., float(inlineElement.initialHeight)),
              ),
+           width: inlineElement.initialWidth,
            view: inlineElement.view,
            opacity: Component_Animation.make(Animation.fadeIn),
            command: inlineElement.command,
@@ -1111,6 +1115,7 @@ let setCodeLens =
            ~uniqueId,
            ~measure,
            ~initialHeight,
+           ~initialWidth=width,
            ~lineNumber,
            view,
          );
