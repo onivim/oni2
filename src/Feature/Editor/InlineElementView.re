@@ -43,17 +43,10 @@ module Styles = {
 
 module Item = {
   let make =
-      (
-        ~children,
-        ~opacity: float,
-        ~xOffset: float,
-        ~yOffset: float,
-        (),
-      ) => {
+      (~children, ~opacity: float, ~xOffset: float, ~yOffset: float, ()) => {
     <View
       // COMPONENT
       style={Styles.inner(~xOffset, ~yOffset, ~opacity)}
-      children
     />;
   };
 };
