@@ -30,7 +30,7 @@ module Styles = {
     ];
   };
 
-  let inner = (~availableWidth,~opacity as opac, ~yOffset, ~xOffset) => [
+  let inner = (~availableWidth, ~opacity as opac, ~yOffset, ~xOffset) => [
     position(`Absolute),
     top(int_of_float(yOffset)),
     left(int_of_float(xOffset)),
@@ -43,12 +43,18 @@ module Styles = {
 
 module Item = {
   let make =
-      (~children, ~opacity: float, ~xOffset: float, ~yOffset: float, ~availableWidth: int, ()) => {
-    <View
-      // COMPONENT
-      style={Styles.inner(~availableWidth, ~xOffset, ~yOffset, ~opacity)}
+      (
+        ~children,
+        ~opacity: float,
+        ~xOffset: float,
+        ~yOffset: float,
+        ~availableWidth: int,
+        (),
+      ) => {
+    // COMPONENT
+    <View style={Styles.inner(~availableWidth, ~xOffset, ~yOffset, ~opacity)}>
       children
-    />;
+    </View>;
   };
 };
 
@@ -110,7 +116,7 @@ module Container = {
                <Item
                  xOffset={gutterWidth +. leadingWhitespacePixels}
                  yOffset=height
-                 availableWidth=inlineElement.width
+                 availableWidth={inlineElement.width}
                  opacity>
                  <elem />
                </Item>;

@@ -428,9 +428,9 @@ let setWidth = (~getLeadingWhitespaceWidth, ~width, model) => {
 
   let update = (~key as _, ~lineNumber, ~uniqueId as _, element: element) => {
     let line = EditorCoreTypes.LineNumber.ofZeroBased(lineNumber);
-    let availableWidth = int_of_float(width -. getLeadingWhitespaceWidth(line));
-    let calculatedHeight =
-      element.measure(~width=availableWidth) |> float;
+    let availableWidth =
+      int_of_float(width -. getLeadingWhitespaceWidth(line));
+    let calculatedHeight = element.measure(~width=availableWidth) |> float;
 
     {
       ...element,
