@@ -49,21 +49,11 @@ type inlineElement;
 
 let setCodeLens:
   (
+    ~uiFont: UiFont.t,
     ~startLine: EditorCoreTypes.LineNumber.t,
     ~stopLine: EditorCoreTypes.LineNumber.t,
     ~handle: int,
     ~lenses: list(Feature_LanguageSupport.CodeLens.t),
-    t
-  ) =>
-  t;
-
-let setInlineElementSize:
-  (
-    ~allowAnimation: bool=?,
-    ~key: string,
-    ~line: EditorCoreTypes.LineNumber.t,
-    ~uniqueId: string,
-    ~height: int,
     t
   ) =>
   t;

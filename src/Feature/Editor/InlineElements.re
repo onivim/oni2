@@ -201,6 +201,10 @@ let recomputeSortedElements = keyToElements => {
   |> List.flatten;
 };
 
+let setWidth = (~width, model) => {
+  model
+};
+
 let recomputeCache = (~sortedElements) => {
   let ret = Cache.ofList(~sortedElements);
   ret;
@@ -407,6 +411,12 @@ let updateElement =
             )
        }),
      );
+};
+
+let setWidth = (~width, model) => {
+  let keyToElements = model.keyToElements;
+  keyToElements
+  |> makeConsistent
 };
 
 let setSize = (~animated, ~key, ~line, ~uniqueId, ~height, model) => {

@@ -1002,31 +1002,6 @@ let getInlineElements = (~line, {inlineElements, _}) => {
   InlineElements.allElementsForLine(~line, inlineElements);
 };
 
-let setInlineElementSize =
-    (~allowAnimation=true, ~key, ~line, ~uniqueId, ~height, editor) => {
-  let topBuffer = getTopVisibleBufferLine(editor);
-  let bottomBuffer = getBottomVisibleBufferLine(editor);
-  editor
-  |> withSteadyCursor(e =>
-       {
-         ...e,
-         inlineElements:
-           InlineElements.setSize(
-             ~animated=
-               allowAnimation
-               && editor.isAnimated
-               && line >= topBuffer
-               && line <= bottomBuffer,
-             ~key,
-             ~line,
-             ~uniqueId,
-             ~height=float(height),
-             e.inlineElements,
-           ),
-       }
-     );
-};
-
 let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => {
   let elements': list(InlineElements.element) =
     elements
@@ -1058,7 +1033,7 @@ let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => 
      );
 };
 
-let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
+let setCodeLens = (~uiFont: Oni_Core.UiFont.t, ~startLine, ~stopLine, ~handle, ~lenses, editor) => {
   let inlineElements =
     lenses
     |> List.map(lens => {
@@ -1070,10 +1045,22 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
            Feature_LanguageSupport.CodeLens.View.make(~codeLens=lens);
 
          // TODO: Actual item...
-         let measure = (~width as _) => 100;
+         let measure = (~width) => {
+           let ret = Revery.UI.measureText(
+            ~width,
+            ~style=Revery.UI.Style.[],
+            ~fontFamily=uiFont.family,
+            ~fontWeight=Revery.Font.Weight.Normal,
+            ~fontSize=uiFont.size,
+            uniqueId,
+           )
+
+           prerr_endline (Printf.sprintf("Measured text: %s to be %d", uniqueId, ret));
+           ret + 4;
+         };
 
          // TODO: Editor size
-         let initialHeight = measure(0);
+         let initialHeight = measure(~width=100);
 
          makeInlineElement(
            ~command=lens.command,
@@ -1656,7 +1643,9 @@ let setSize = (~pixelWidth, ~pixelHeight, originalEditor) => {
       editor.wrapState,
     );
 
-  let editor' = {...editor, wrapState};
+  let inlineElements = InlineElements.setWidth(~width=pixelWidth, editor.inlineElements);
+
+  let editor' = {...editor, inlineElements, wrapState};
 
   // If we hadn't measured before, make sure the cursor is in view
   if (!hasSetSize(originalEditor)) {
