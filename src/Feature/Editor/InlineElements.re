@@ -253,10 +253,6 @@ let makeConsistent = keyToElements => {
   {keyToElements, isAnimating, sortedElements, cache: cache'};
 };
 
-let setWidth = (~getLeadingWhitespaceWidth, ~width, model) => {
-  model |> makeConsistent;
-};
-
 let replace =
     (
       ~startLine: option(EditorCoreTypes.LineNumber.t)=None,
@@ -429,7 +425,7 @@ let mapElements = (f, keyToElements) => {
 let setWidth = (~getLeadingWhitespaceWidth, ~width, model) => {
   let keyToElements = model.keyToElements;
 
-  let update = (~key, ~lineNumber, ~uniqueId, element: element) => {
+  let update = (~key as _, ~lineNumber, ~uniqueId as _, element: element) => {
     let line = EditorCoreTypes.LineNumber.ofZeroBased(lineNumber);
     let availableWidth = width -. getLeadingWhitespaceWidth(line);
     let calculatedHeight =

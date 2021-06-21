@@ -44,19 +44,16 @@ module Styles = {
 module Item = {
   let make =
       (
-        ~dispatch: Msg.t => unit,
-        ~inlineKey: string,
-        ~uniqueId: string,
+        ~children,
         ~opacity: float,
         ~xOffset: float,
         ~yOffset: float,
-        ~lineNumber: LineNumber.t,
-        ~children,
         (),
       ) => {
     <View
       // COMPONENT
       style={Styles.inner(~xOffset, ~yOffset, ~opacity)}
+      children
     />;
   };
 };
@@ -117,10 +114,6 @@ module Container = {
 
              let newElement =
                <Item
-                 inlineKey
-                 uniqueId
-                 dispatch
-                 lineNumber=line
                  xOffset={gutterWidth +. leadingWhitespacePixels}
                  yOffset=height
                  opacity>
