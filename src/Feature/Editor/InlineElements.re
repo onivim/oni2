@@ -28,7 +28,7 @@ type element = {
   view:
     (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
     Revery.UI.element,
-  measure: (~width:int) => int,
+  measure: (~width: int) => int,
   command: option(Exthost.Command.t),
 };
 
@@ -201,10 +201,6 @@ let recomputeSortedElements = keyToElements => {
   |> List.flatten;
 };
 
-let setWidth = (~width, model) => {
-  model
-};
-
 let recomputeCache = (~sortedElements) => {
   let ret = Cache.ofList(~sortedElements);
   ret;
@@ -255,6 +251,10 @@ let makeConsistent = keyToElements => {
   let isAnimating = Internal.isAnimating(sortedElements);
   let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
   {keyToElements, isAnimating, sortedElements, cache: cache'};
+};
+
+let setWidth = (~getLeadingWhitespaceWidth, ~width, model) => {
+  model |> makeConsistent;
 };
 
 let replace =
@@ -413,10 +413,36 @@ let updateElement =
      );
 };
 
-let setWidth = (~width, model) => {
-  let keyToElements = model.keyToElements;
+let mapElements = (f, keyToElements) => {
   keyToElements
-  |> makeConsistent
+  |> IntMap.mapi((lineNumber, keyMap) => {
+       keyMap
+       |> KeyMap.mapi((key, idMap) => {
+            idMap
+            |> StringMap.mapi((uniqueId, element) => {
+                 f(~key, ~lineNumber, ~uniqueId, element)
+               })
+          })
+     });
+};
+
+let setWidth = (~getLeadingWhitespaceWidth, ~width, model) => {
+  let keyToElements = model.keyToElements;
+
+  let update = (~key, ~lineNumber, ~uniqueId, element: element) => {
+    let line = EditorCoreTypes.LineNumber.ofZeroBased(lineNumber);
+    let availableWidth = width -. getLeadingWhitespaceWidth(line);
+    let calculatedHeight =
+      element.measure(~width=int_of_float(availableWidth)) |> float;
+
+    {
+      ...element,
+      opacity: Component_Animation.constant(1.0),
+      height: Component_Animation.constant(calculatedHeight),
+    };
+  };
+
+  keyToElements |> mapElements(update) |> makeConsistent;
 };
 
 let setSize = (~animated, ~key, ~line, ~uniqueId, ~height, model) => {

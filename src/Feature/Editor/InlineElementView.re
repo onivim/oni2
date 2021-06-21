@@ -6,12 +6,12 @@ module LineNumber = EditorCoreTypes.LineNumber;
 
 module Styles = {
   open Style;
-  let container = (~opacity as opac, ~totalHeight, ~pixelY) => {
+  let container = (~minimapWidth, ~opacity as opac, ~totalHeight, ~pixelY) => {
     [
       position(`Absolute),
       top(int_of_float(pixelY)),
       left(0),
-      right(0),
+      right(int_of_float(minimapWidth)),
       height(totalHeight),
       opacity(opac),
       pointerEvents(`Allow),
@@ -43,22 +43,21 @@ module Styles = {
 
 module Item = {
   let make =
-                (
-                  ~dispatch: Msg.t => unit,
-                  ~inlineKey: string,
-                  ~uniqueId: string,
-                  ~opacity: float,
-                  ~xOffset: float,
-                  ~yOffset: float,
-                  ~lineNumber: LineNumber.t,
-                  ~children,
-                  (),
-                ) => {
-    // COMPONENT
+      (
+        ~dispatch: Msg.t => unit,
+        ~inlineKey: string,
+        ~uniqueId: string,
+        ~opacity: float,
+        ~xOffset: float,
+        ~yOffset: float,
+        ~lineNumber: LineNumber.t,
+        ~children,
+        (),
+      ) => {
     <View
+      // COMPONENT
       style={Styles.inner(~xOffset, ~yOffset, ~opacity)}
-      children>
-    </View>;
+    />;
   };
 };
 
@@ -79,6 +78,8 @@ module Container = {
 
     let leadingWhitespacePixels =
       Editor.getLeadingWhitespacePixels(line, editor);
+
+    let minimapWidth = Editor.minimapWidthInPixels(editor);
 
     let (maxOpacity, totalHeight, elems) =
       inlineElements
@@ -173,6 +174,7 @@ module Container = {
 
     <View
       style={Styles.container(
+        ~minimapWidth,
         ~opacity=maxOpacity,
         ~totalHeight=int_of_float(totalHeight),
         ~pixelY=pixelY -. totalHeight,
