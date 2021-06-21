@@ -59,7 +59,13 @@ module Schema = {
     |> and_then(fontString => {
          let splitString = String.split_on_char(':', fontString);
          switch (splitString) {
-         | [fontFamily, ..._] => Ok({fontFamily, height: None})
+         | [fontFamily, fontSize, ..._] =>
+           Ok({
+             fontFamily: StringEx.unquote(fontFamily),
+             height: Float.of_string_opt(fontSize),
+           })
+         | [fontFamily] =>
+           Ok({fontFamily: StringEx.unquote(fontFamily), height: None})
          | [] => Error("Unexpected format: " ++ fontString)
          };
        });

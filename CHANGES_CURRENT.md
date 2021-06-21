@@ -19,6 +19,7 @@
 - #3638 - Editor: Add clear search highlights default keybinding (fixes #3636)
 - #3645 - Terminal: Auto-scroll when key is pressed
 - #3652 - Syntax: Fix highlighting being lost after movement (fixes #3647)
+- #3607 - Vim: Fix crash when specifying empty guifont (fixes #3605)
 
 ### Performance
 
