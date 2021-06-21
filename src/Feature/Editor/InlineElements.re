@@ -28,6 +28,8 @@ type element = {
   view:
     (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
     Revery.UI.element,
+  measure: (~width: int) => int,
+  width: int, // last measured width
   command: option(Exthost.Command.t),
 };
 
@@ -408,22 +410,37 @@ let updateElement =
      );
 };
 
-let setSize = (~animated, ~key, ~line, ~uniqueId, ~height, model) => {
-  let setHeight = (curr: element) => {
+let mapElements = (f, keyToElements) => {
+  keyToElements
+  |> IntMap.mapi((lineNumber, keyMap) => {
+       keyMap
+       |> KeyMap.mapi((key, idMap) => {
+            idMap
+            |> StringMap.mapi((uniqueId, element) => {
+                 f(~key, ~lineNumber, ~uniqueId, element)
+               })
+          })
+     });
+};
+
+let setWidth = (~getLeadingWhitespaceWidth, ~width, model) => {
+  let keyToElements = model.keyToElements;
+
+  let update = (~key as _, ~lineNumber, ~uniqueId as _, element: element) => {
+    let line = EditorCoreTypes.LineNumber.ofZeroBased(lineNumber);
+    let availableWidth =
+      int_of_float(width -. getLeadingWhitespaceWidth(line));
+    let calculatedHeight = element.measure(~width=availableWidth) |> float;
+
     {
-      ...curr,
-      opacity: animated ? curr.opacity : Component_Animation.constant(1.0),
-      height:
-        animated
-          ? Component_Animation.make(
-              Animation.expand(Component_Animation.get(curr.height), height),
-            )
-          : Component_Animation.constant(height),
+      ...element,
+      opacity: Component_Animation.constant(1.0),
+      height: Component_Animation.constant(calculatedHeight),
+      width: availableWidth,
     };
   };
-  let keyToElements' =
-    updateElement(~key, ~line, ~uniqueId, ~f=setHeight, model.keyToElements);
-  keyToElements' |> makeConsistent;
+
+  keyToElements |> mapElements(update) |> makeConsistent;
 };
 
 let allElementsForLine = (~line, {keyToElements, _}) => {

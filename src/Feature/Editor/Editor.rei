@@ -36,34 +36,13 @@ let copy: t => t;
 
 type inlineElement;
 
-let makeInlineElement:
-  (
-    ~command: option(Exthost.Command.t)=?,
-    ~key: string,
-    ~uniqueId: string,
-    ~lineNumber: EditorCoreTypes.LineNumber.t,
-    (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
-    Revery.UI.element
-  ) =>
-  inlineElement;
-
 let setCodeLens:
   (
+    ~uiFont: UiFont.t,
     ~startLine: EditorCoreTypes.LineNumber.t,
     ~stopLine: EditorCoreTypes.LineNumber.t,
     ~handle: int,
     ~lenses: list(Feature_LanguageSupport.CodeLens.t),
-    t
-  ) =>
-  t;
-
-let setInlineElementSize:
-  (
-    ~allowAnimation: bool=?,
-    ~key: string,
-    ~line: EditorCoreTypes.LineNumber.t,
-    ~uniqueId: string,
-    ~height: int,
     t
   ) =>
   t;
@@ -192,6 +171,8 @@ let lineHeightInPixels: t => float;
 let linePaddingInPixels: t => float;
 let setLineHeight: (~lineHeight: LineHeight.t, t) => t;
 let characterWidthInPixels: t => float;
+
+let minimapWidthInPixels: t => float;
 
 let selections: t => list(VisualRange.t);
 

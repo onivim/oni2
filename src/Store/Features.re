@@ -926,6 +926,7 @@ let update =
           |> Feature_Layout.map(editor =>
                if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
                  Feature_Editor.Editor.setCodeLens(
+                   ~uiFont=state.uiFont,
                    ~startLine,
                    ~stopLine,
                    ~handle,
