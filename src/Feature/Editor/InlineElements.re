@@ -443,24 +443,6 @@ let setWidth = (~getLeadingWhitespaceWidth, ~width, model) => {
   keyToElements |> mapElements(update) |> makeConsistent;
 };
 
-let setSize = (~animated, ~key, ~line, ~uniqueId, ~height, model) => {
-  let setHeight = (curr: element) => {
-    {
-      ...curr,
-      opacity: animated ? curr.opacity : Component_Animation.constant(1.0),
-      height:
-        animated
-          ? Component_Animation.make(
-              Animation.expand(Component_Animation.get(curr.height), height),
-            )
-          : Component_Animation.constant(height),
-    };
-  };
-  let keyToElements' =
-    updateElement(~key, ~line, ~uniqueId, ~f=setHeight, model.keyToElements);
-  keyToElements' |> makeConsistent;
-};
-
 let allElementsForLine = (~line, {keyToElements, _}) => {
   let keyToElements =
     IntMap.find_opt(
