@@ -1101,7 +1101,6 @@ let setCodeLens =
            ret + 4;
          };
 
-         // TODO: Editor size
          let leadingWhitespacePixels =
            getLeadingWhitespacePixels(lineNumber, editor);
 
