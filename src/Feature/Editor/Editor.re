@@ -28,6 +28,9 @@ type inlineElement = {
   view:
     (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
     Revery.UI.element,
+  measure: (~width: int) => int,
+  initialHeight: int,
+  initialWidth: int,
   command: option(Exthost.Command.t),
 };
 
@@ -338,6 +341,11 @@ let getLayout = editor => {
     );
 
   layout;
+};
+
+let minimapWidthInPixels = editor => {
+  let layout: EditorLayout.t = editor |> getLayout;
+  float(layout.minimapWidthInPixels);
 };
 
 let viewLineToBufferLine = (viewLine, editor) => {
@@ -979,7 +987,17 @@ let withSteadyCursor = (f, editor) => {
   };
 };
 
-let makeInlineElement = (~command=None, ~key, ~uniqueId, ~lineNumber, view) => {
+let makeInlineElement =
+    (
+      ~command=None,
+      ~key,
+      ~uniqueId,
+      ~lineNumber,
+      ~measure,
+      ~initialHeight,
+      ~initialWidth,
+      view,
+    ) => {
   hidden: false,
   reconcilerKey: Brisk_reconciler.Key.create(),
   key,
@@ -987,6 +1005,9 @@ let makeInlineElement = (~command=None, ~key, ~uniqueId, ~lineNumber, view) => {
   lineNumber,
   view,
   command,
+  measure,
+  initialHeight,
+  initialWidth,
 };
 
 let linesWithInlineElements = ({inlineElements, _}) => {
@@ -998,31 +1019,6 @@ let getInlineElements = (~line, {inlineElements, _}) => {
   InlineElements.allElementsForLine(~line, inlineElements);
 };
 
-let setInlineElementSize =
-    (~allowAnimation=true, ~key, ~line, ~uniqueId, ~height, editor) => {
-  let topBuffer = getTopVisibleBufferLine(editor);
-  let bottomBuffer = getBottomVisibleBufferLine(editor);
-  editor
-  |> withSteadyCursor(e =>
-       {
-         ...e,
-         inlineElements:
-           InlineElements.setSize(
-             ~animated=
-               allowAnimation
-               && editor.isAnimated
-               && line >= topBuffer
-               && line <= bottomBuffer,
-             ~key,
-             ~line,
-             ~uniqueId,
-             ~height=float(height),
-             e.inlineElements,
-           ),
-       }
-     );
-};
-
 let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => {
   let elements': list(InlineElements.element) =
     elements
@@ -1031,10 +1027,15 @@ let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => 
            key: inlineElement.key,
            uniqueId: inlineElement.uniqueId,
            line: inlineElement.lineNumber,
-           height: Component_Animation.make(Animation.expand(0., 0.)),
+           height:
+             Component_Animation.make(
+               Animation.expand(0., float(inlineElement.initialHeight)),
+             ),
+           width: inlineElement.initialWidth,
            view: inlineElement.view,
            opacity: Component_Animation.make(Animation.fadeIn),
            command: inlineElement.command,
+           measure: inlineElement.measure,
          }
        );
   editor
@@ -1053,7 +1054,27 @@ let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => 
      );
 };
 
-let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
+let getLeadingWhitespacePixels = (lineNumber, editor) => {
+  let buffer = editor.buffer;
+  let lineCount = EditorBuffer.numberOfLines(buffer);
+  let line = lineNumber |> EditorCoreTypes.LineNumber.toZeroBased;
+  if (line < 0 || line >= lineCount) {
+    0.;
+  } else {
+    let bufferLine = buffer |> EditorBuffer.line(line);
+    BufferLine.getLeadingWhitespacePixels(bufferLine);
+  };
+};
+
+let setCodeLens =
+    (
+      ~uiFont: Oni_Core.UiFont.t,
+      ~startLine,
+      ~stopLine,
+      ~handle,
+      ~lenses,
+      editor,
+    ) => {
   let inlineElements =
     lenses
     |> List.map(lens => {
@@ -1063,10 +1084,37 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
          let uniqueId = Feature_LanguageSupport.CodeLens.text(lens);
          let view =
            Feature_LanguageSupport.CodeLens.View.make(~codeLens=lens);
+
+         // TODO: This has to be kept in sync with codelens rendering code.
+         // Investigate way to measure CodeLens element directly.
+         let measure = (~width) => {
+           let ret =
+             Revery.UI.measureText(
+               ~width,
+               ~style=Revery.UI.Style.[textWrap(Revery.TextWrapping.Wrap)],
+               ~fontFamily=uiFont.family,
+               ~fontWeight=Revery.Font.Weight.Normal,
+               ~fontSize=11.,
+               uniqueId,
+             );
+
+           ret + 4;
+         };
+
+         let leadingWhitespacePixels =
+           getLeadingWhitespacePixels(lineNumber, editor);
+
+         let bufferWidth = getContentPixelWidth(editor);
+         let width = int_of_float(bufferWidth -. leadingWhitespacePixels);
+         let initialHeight = measure(~width);
+
          makeInlineElement(
            ~command=lens.command,
            ~key="codelens:" ++ string_of_int(handle),
            ~uniqueId,
+           ~measure,
+           ~initialHeight,
+           ~initialWidth=width,
            ~lineNumber,
            view,
          );
@@ -1642,7 +1690,18 @@ let setSize = (~pixelWidth, ~pixelHeight, originalEditor) => {
       editor.wrapState,
     );
 
-  let editor' = {...editor, wrapState};
+  let getLeadingWhitespaceWidth = line => {
+    getLeadingWhitespacePixels(line, editor);
+  };
+
+  let inlineElements =
+    InlineElements.setWidth(
+      ~getLeadingWhitespaceWidth,
+      ~width=contentPixelWidth,
+      editor.inlineElements,
+    );
+
+  let editor' = {...editor, inlineElements, wrapState};
 
   // If we hadn't measured before, make sure the cursor is in view
   if (!hasSetSize(originalEditor)) {
@@ -2066,18 +2125,6 @@ let hasMouseEntered = ({hasMouseEntered, _}) => hasMouseEntered;
 let isMouseDown = ({isMouseDown, _}) => isMouseDown;
 
 let lastMouseMoveTime = ({lastMouseMoveTime, _}) => lastMouseMoveTime;
-
-let getLeadingWhitespacePixels = (lineNumber, editor) => {
-  let buffer = editor.buffer;
-  let lineCount = EditorBuffer.numberOfLines(buffer);
-  let line = lineNumber |> EditorCoreTypes.LineNumber.toZeroBased;
-  if (line < 0 || line >= lineCount) {
-    0.;
-  } else {
-    let bufferLine = buffer |> EditorBuffer.line(line);
-    BufferLine.getLeadingWhitespacePixels(bufferLine);
-  };
-};
 
 let autoScroll = (~deltaPixelX: float, ~deltaPixelY: float, editor) => {
   // Scroll editor to new position

@@ -20,6 +20,7 @@
 - #3645 - Terminal: Auto-scroll when key is pressed
 - #3652 - Syntax: Fix highlighting being lost after movement (fixes #3647)
 - #3607 - Vim: Fix crash when specifying empty guifont (fixes #3605)
+- #3665 - CodeLens: Fix overlapping codelens with editor text (fixes #3663)
 - #3668 - UX: Toggle drop-down menu on click (fixes #3569 - thanks @sijad !)
 
 ### Performance
@@ -39,5 +40,6 @@
 - #3632 - Dependency: revery -> 79c2572
 - #3639 - Dependency: Sparkle -> 1.26.0
 - #3653 - Dependency: revery -> 9ec44ff (fixes #3646)
+- #3688 - Dependency: esy-skia -> 1c81aac
 
 ### Infrastructure
