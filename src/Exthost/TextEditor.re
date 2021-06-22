@@ -70,21 +70,51 @@ module AddData = {
     id: string,
     documentUri: Uri.t,
     options: ResolvedConfiguration.t,
+    selections: list(Selection.t),
     // TODO:
-    // selections: list(Selection.t),
     // visibleRanges: list(Range.t),
     // editorPosition: option(EditorViewColumn.t),
   };
 
-  let encode = ({id, documentUri, options}) =>
+  let encode = ({id, documentUri, options, selections}) =>
     Json.Encode.(
       obj([
         ("id", id |> string),
         ("documentUri", documentUri |> Uri.encode),
         ("options", options |> ResolvedConfiguration.encode),
+        ("selections", selections |> list(Selection.encode)),
         // TODO:
-        ("selections", [] |> list(int)),
         ("visibleRanges", [] |> list(int)),
+      ])
+    );
+};
+
+module SelectionChangeEvent = {
+  type t = {
+    selections: list(Selection.t),
+    source: option(string),
+  };
+
+  let encode = ({selections, source}) =>
+    Json.Encode.(
+      obj([
+        ("selections", selections |> list(Selection.encode)),
+        ("source", source |> nullable(string)),
+      ])
+    );
+};
+
+module PropertiesChangeData = {
+  type t = {
+    selections: option(SelectionChangeEvent.t),
+    // options: IResolvedTextEditorConfiguration
+    // visibleRanges: IRange[]
+  };
+
+  let encode = ({selections}) =>
+    Json.Encode.(
+      obj([
+        ("selections", selections |> nullable(SelectionChangeEvent.encode)),
       ])
     );
 };

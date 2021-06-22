@@ -487,7 +487,13 @@ let update =
     };
 
   | Exthost(msg) =>
-    let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
+    let (model, outMsg) =
+      Feature_Exthost.update(
+        ~buffers=state.buffers,
+        ~editors=Feature_Layout.visibleEditors(state.layout),
+        msg,
+        state.exthost,
+      );
 
     let state = {...state, exthost: model};
     let eff =

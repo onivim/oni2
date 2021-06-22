@@ -5,6 +5,10 @@ type msg;
 
 module Msg: {
   let document: (Exthost.Msg.Documents.msg, Lwt.u(Exthost.Reply.t)) => msg;
+
+  let textEditors:
+    (Exthost.Msg.TextEditors.msg, Lwt.u(Exthost.Reply.t)) => msg;
+
   let initialized: msg;
 };
 
@@ -18,7 +22,14 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg));
 
-let update: (msg, model) => (model, outmsg);
+let update:
+  (
+    ~buffers: Feature_Buffers.model,
+    ~editors: list(Feature_Editor.Editor.t),
+    msg,
+    model
+  ) =>
+  (model, outmsg);
 
 // SUBSCRIPTION
 
