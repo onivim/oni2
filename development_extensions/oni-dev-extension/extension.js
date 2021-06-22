@@ -48,6 +48,13 @@ function activate(context) {
     )
 
     cleanup(
+        vscode.commands.registerCommand("developer.oni.showActiveEditorSelection", () => {
+            let editorSelection = vscode.window.activeTextEditor.selections;
+            vscode.window.showInformationMessage("Selections: " + JSON.stringify(editorSelection));
+        }),
+    )
+
+    cleanup(
         vscode.commands.registerCommand("_test.findFiles", (count) => {
             vscode.workspace.findFiles(
                 "*.json", undefined, count

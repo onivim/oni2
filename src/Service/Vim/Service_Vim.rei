@@ -6,6 +6,12 @@ let reload: unit => Isolinear.Effect.t(_);
 let saveAllAndQuit: unit => Isolinear.Effect.t(_);
 let quitAll: unit => Isolinear.Effect.t(_);
 
+module EditConverter: {
+  let extHostSingleEditToVimEdit:
+    (~buffer: Oni_Core.Buffer.t, Exthost.Edit.SingleEditOperation.t) =>
+    Vim.Edit.t;
+};
+
 module Effects: {
   let paste:
     (~context: Vim.Context.t=?, ~toMsg: Vim.Mode.t => 'msg, string) =>

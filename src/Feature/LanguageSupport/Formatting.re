@@ -140,47 +140,6 @@ module Internal = {
       }),
   };
 
-  let textToArray = (~removeTrailingNewLine) =>
-    fun
-    | None => [||]
-    | Some(text) =>
-      text
-      |> Utility.StringEx.removeWindowsNewLines
-      |> (
-        text =>
-          removeTrailingNewLine
-            ? Utility.StringEx.removeTrailingNewLine(text) : text
-      )
-      |> Utility.StringEx.splitNewLines;
-
-  let extHostEditToVimEdit =
-      (buffer, edit: Exthost.Edit.SingleEditOperation.t) => {
-    let range = edit.range |> Exthost.OneBasedRange.toRange;
-
-    let bufferRange = Oni_Core.Buffer.characterRange(buffer);
-
-    // We need to remove the trailing new line in some specific circumstances:
-    // - The edit covers the entire buffer
-    // AND
-    // - The buffer has no trailing new line
-
-    // Some formatters, like prettier or the ocaml formatter, send a single,
-    // uber-edit - with all the formatted lines in a buffer. In addition,
-    // they _might_ add a trailing new line (and if we don't handle it -
-    // will hit bugs like #3320).
-
-    // Other formatters, like Python or clangd, send line-by-line formats -
-    // it's important to not ignore the trailing new-lines for line-by-line
-    // edits, because otherwise we'll hit bugs like #3288
-
-    let removeTrailingNewLine =
-      !Oni_Core.Buffer.hasTrailingNewLine(buffer)
-      && CharacterRange.containsRange(~query=bufferRange, range);
-    (
-      {range, text: textToArray(~removeTrailingNewLine, edit.text)}: Vim.Edit.t
-    );
-  };
-
   let fallBackToDefaultFormatter =
       (~indentation, ~languageConfiguration, ~buffer, range: CharacterRange.t) => {
     let lines = buffer |> Oni_Core.Buffer.getLines;
@@ -305,7 +264,13 @@ module Internal = {
                     formatter,
                   ),
                 sessionId,
-                edits: List.map(extHostEditToVimEdit(buf), edits),
+                edits:
+                  List.map(
+                    Service_Vim.EditConverter.extHostSingleEditToVimEdit(
+                      ~buffer=buf,
+                    ),
+                    edits,
+                  ),
               })
             | Error(msg) => EditRequestFailed({sessionId, msg})
             }
@@ -379,7 +344,13 @@ module Internal = {
                         formatter,
                       ),
                     sessionId,
-                    edits: List.map(extHostEditToVimEdit(buf), edits),
+                    edits:
+                      List.map(
+                        Service_Vim.EditConverter.extHostSingleEditToVimEdit(
+                          ~buffer=buf,
+                        ),
+                        edits,
+                      ),
                   })
                 | Error(msg) => EditRequestFailed({sessionId, msg})
                 }

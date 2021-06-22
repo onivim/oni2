@@ -168,6 +168,23 @@ module DocumentsAndEditors = {
   };
 };
 
+module Editors = {
+  open Json.Encode;
+  let acceptEditorPropertiesChanged =
+      (~id, ~props: TextEditor.PropertiesChangeData.t, client) => {
+    Client.notify(
+      ~rpcName="ExtHostEditors",
+      ~method="$acceptEditorPropertiesChanged",
+      ~args=
+        `List([
+          `String(id),
+          props |> encode_value(TextEditor.PropertiesChangeData.encode),
+        ]),
+      client,
+    );
+  };
+};
+
 module ExtensionService = {
   open Json.Encode;
   let activateByEvent = (~event, client) => {

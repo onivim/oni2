@@ -3,6 +3,51 @@ open Oni_Core;
 open Oni_Core.Utility;
 module Log = (val Log.withNamespace("Service_Vim"));
 
+module EditConverter = {
+  open Oni_Core;
+
+  let textToArray = (~removeTrailingNewLine) =>
+    fun
+    | None => [||]
+    | Some(text) =>
+      text
+      |> Utility.StringEx.removeWindowsNewLines
+      |> (
+        text =>
+          removeTrailingNewLine
+            ? Utility.StringEx.removeTrailingNewLine(text) : text
+      )
+      |> Utility.StringEx.splitNewLines;
+
+  let extHostSingleEditToVimEdit =
+      (~buffer, edit: Exthost.Edit.SingleEditOperation.t) => {
+    let range = edit.range |> Exthost.OneBasedRange.toRange;
+
+    let bufferRange = Oni_Core.Buffer.characterRange(buffer);
+
+    // We need to remove the trailing new line in some specific circumstances:
+    // - The edit covers the entire buffer
+    // AND
+    // - The buffer has no trailing new line
+
+    // Some formatters, like prettier or the ocaml formatter, send a single,
+    // uber-edit - with all the formatted lines in a buffer. In addition,
+    // they _might_ add a trailing new line (and if we don't handle it -
+    // will hit bugs like #3320).
+
+    // Other formatters, like Python or clangd, send line-by-line formats -
+    // it's important to not ignore the trailing new-lines for line-by-line
+    // edits, because otherwise we'll hit bugs like #3288
+
+    let removeTrailingNewLine =
+      !Oni_Core.Buffer.hasTrailingNewLine(buffer)
+      && CharacterRange.containsRange(~query=bufferRange, range);
+    (
+      {range, text: textToArray(~removeTrailingNewLine, edit.text)}: Vim.Edit.t
+    );
+  };
+};
+
 let forceReload = () =>
   Isolinear.Effect.create(~name="vim.discardChanges", () =>
     ignore(Vim.command("e!"): (Vim.Context.t, list(Vim.Effect.t)))
