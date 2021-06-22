@@ -85,6 +85,7 @@ module Command: {
   type t = {
     id: option(string),
     label: option(Label.t),
+    arguments: list(Yojson.Safe.t),
   };
 
   let decode: Json.decoder(t);

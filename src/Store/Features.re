@@ -161,7 +161,7 @@ module Internal = {
           | Some(cmdId) =>
             Service_Exthost.Effects.Commands.executeContributedCommand(
               ~command=cmdId,
-              ~arguments=[`Null],
+              ~arguments=command.arguments,
               client,
             )
           }
