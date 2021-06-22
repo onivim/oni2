@@ -136,6 +136,9 @@ __Pass:__
 
 Prerequisite:
 - In configuration file, key "editor.fontFamily" either set to a __non absolute__ font name or absent (Ideally test both).
+  - Linux: "Inconsolata"
+  - Windows: "Consolas"
+  - OSX: "Menlo"
 
 - Run Onivim 2
 - Open configuration file
@@ -155,6 +158,7 @@ Regression test for #2926
 
 Prerequisite:
 - Install German (de-de) keyboard layout
+  - Linux: `setxkbmap -layout de` (`setxkbmap -layout us` to revert)
 
 - Run Onivim 2
 - Create new file (`:new test.txt`)
@@ -191,6 +195,7 @@ Regression test for #2924
 
 Prerequisite:
 - Install Romaji keyboard layout
+  - Linux: Use ibus to switch to Romaji
 
 - Switch keyboard layout to Romaji
 - Run Onivim 2
@@ -208,6 +213,7 @@ Regresion test for #3157
 
 Prerequisite:
 - Install ENG-INTL keyboard layout
+  - Linux: ibus w/ French+AltGr dead keys
 
 - Switch keyboard layout to English (International)
 - Run Onivim 2

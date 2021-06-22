@@ -8,10 +8,13 @@ module Sub = {
 
   type findInFilesParams = {
     exclude: list(string),
+    include_: list(string),
     directory: string,
     query: string,
     uniqueId: string,
     setup: Setup.t,
+    enableRegex: bool,
+    caseSensitive: bool,
   };
 
   module FindInFilesSub =
@@ -36,11 +39,15 @@ module Sub = {
         let dispose =
           ripgrep.Ripgrep.findInFiles(
             ~searchExclude=params.exclude,
+            ~searchInclude=params.include_,
             ~directory=params.directory,
             ~query=params.query,
             ~onUpdate=items => dispatch(GotMatches(items)),
             ~onComplete=() => {dispatch(Completed)},
             ~onError=msg => dispatch(Error(msg)),
+            ~enableRegex=params.enableRegex,
+            ~caseSensitive=params.caseSensitive,
+            (),
           );
         {dispose: dispose};
       };
@@ -58,11 +65,23 @@ module Sub = {
       (
         ~uniqueId: string,
         ~exclude: list(string),
+        ~include_: list(string),
         ~directory: string,
         ~query: string,
         ~setup: Setup.t,
+        ~enableRegex=false,
+        ~caseSensitive=false,
         toMsg,
       ) =>
-    FindInFilesSub.create({uniqueId, exclude, directory, query, setup})
+    FindInFilesSub.create({
+      uniqueId,
+      exclude,
+      include_,
+      directory,
+      query,
+      setup,
+      enableRegex,
+      caseSensitive,
+    })
     |> Isolinear.Sub.map(toMsg);
 };

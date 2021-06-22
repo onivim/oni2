@@ -2,29 +2,27 @@ open Oni_Core;
 
 // MODEL
 
-type terminal =
-  pri {
-    id: int,
-    launchConfig: Exthost.ShellLaunchConfig.t,
-    rows: int,
-    columns: int,
-    pid: option(int),
-    title: option(string),
-    screen: EditorTerminal.Screen.t,
-    cursor: EditorTerminal.Cursor.t,
-    closeOnExit: bool,
-  };
+module Terminal: {
+  type t;
+
+  let id: t => int;
+  let pid: t => option(int);
+  let title: t => option(string);
+  let launchConfig: t => Exthost.ShellLaunchConfig.t;
+};
 
 type t;
 
 let initial: t;
 
-let toList: t => list(terminal);
+let toList: t => list(Terminal.t);
 
-let getTerminalOpt: (int, t) => option(terminal);
+let getTerminalOpt: (int, t) => option(Terminal.t);
 
 // Font to be used for terminals
 let font: t => Service_Font.font;
+
+let configurationChanged: (~config: Config.resolver, t) => t;
 
 // UPDATE
 
@@ -161,7 +159,6 @@ module TerminalView: {
       ~config: Config.resolver,
       ~id: int,
       ~terminals: t,
-      ~font: Service_Font.font,
       ~theme: Oni_Core.ColorTheme.Colors.t,
       ~dispatch: msg => unit,
       unit

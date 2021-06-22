@@ -122,7 +122,12 @@ let show = (~contextKeys, ~commands, ~uniqueId, model) => {
 let update = (~contextKeys, ~commands, msg, model) => {
   switch (msg) {
   | MouseClicked({uniqueId}) =>
-    let model' = model |> show(~contextKeys, ~commands, ~uniqueId);
+    let model' =
+      if (model.activeSession != None) {
+        {...model, activeSession: None};
+      } else {
+        model |> show(~contextKeys, ~commands, ~uniqueId);
+      };
     (model', Nothing);
 
   | MouseOver({uniqueId}) =>

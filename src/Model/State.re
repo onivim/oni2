@@ -31,6 +31,7 @@ let defaultKeyBindings =
     ),
   ]
   @ Feature_SideBar.Contributions.keybindings
+  @ Feature_Keyboard.Contributions.keybindings
   @ Feature_Clipboard.Contributions.keybindings
   @ Feature_Configuration.Contributions.keybindings
   @ Feature_Input.Schema.[
@@ -427,11 +428,13 @@ type t = {
   fileSystem: Feature_FileSystem.model,
   help: Feature_Help.model,
   input: Feature_Input.model,
+  keyboard: Feature_Keyboard.model,
   logging: Feature_Logging.model,
   messages: Feature_Messages.model,
   output: Feature_Output.model,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
+  quickOpen: Feature_QuickOpen.model,
   sideBar: Feature_SideBar.model,
   extensions: Feature_Extensions.model,
   exthost: Feature_Exthost.model,
@@ -544,6 +547,7 @@ let initial =
     diagnostics: Feature_Diagnostics.initial,
     input:
       Feature_Input.initial(~loader=keybindingsLoader, defaultKeyBindings),
+    keyboard: Feature_Keyboard.initial,
     quickmenu: None,
     editorFont: defaultEditorFont,
     extensions:
@@ -570,7 +574,8 @@ let initial =
           [Feature_Workspace.Contributions.menuGroup]
           @ Feature_LanguageSupport.Contributions.menuGroups
           @ Feature_SideBar.Contributions.menuGroups
-          @ Feature_Help.Contributions.menuGroups,
+          @ Feature_Help.Contributions.menuGroups
+          @ Feature_Keyboard.Contributions.menuGroups,
       ),
     output: Feature_Output.initial,
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
@@ -633,6 +638,7 @@ let initial =
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
     modal: None,
+    quickOpen: Feature_QuickOpen.initial,
     snippets: Feature_Snippets.initial,
     terminals: Feature_Terminal.initial,
     textContentProviders: [],

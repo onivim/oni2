@@ -1,14 +1,25 @@
-type t = Oni_Core.Buffer.t;
+open Oni_Core;
 
-let ofBuffer = buffer => buffer;
-let id = Oni_Core.Buffer.getId;
-let getEstimatedMaxLineLength = Oni_Core.Buffer.getEstimatedMaxLineLength;
-let numberOfLines = Oni_Core.Buffer.getNumberOfLines;
-let line = Oni_Core.Buffer.getLine;
-let font = Oni_Core.Buffer.getFont;
+type t = Buffer.t;
 
-let fileType = Oni_Core.Buffer.getFileType;
-let measure = Oni_Core.Buffer.measure;
+let ofBuffer = buffer =>
+  if (Buffer.getNumberOfLines(buffer) > 0) {
+    buffer;
+  } else {
+    // #3629 - From the editor UI perspective, never render a totally empty buffer.
+    let font = Buffer.getFont(buffer);
+    let id = Buffer.getId(buffer);
+
+    Buffer.ofLines(~id, ~font, [|""|]);
+  };
+let id = Buffer.getId;
+let getEstimatedMaxLineLength = Buffer.getEstimatedMaxLineLength;
+let numberOfLines = Buffer.getNumberOfLines;
+let line = Buffer.getLine;
+let font = Buffer.getFont;
+
+let fileType = Buffer.getFileType;
+let measure = Buffer.measure;
 
 let hasLine = (lineNumber, buffer) => {
   let lineIdx = EditorCoreTypes.LineNumber.toZeroBased(lineNumber);

@@ -78,7 +78,7 @@ module QuickOpen = {
         Ok(SetItems({instance, items}));
       | ("$setError", `List([`Int(instance), errorJson])) =>
         Ok(SetError({instance, error: errorJson}))
-      | ("$input", `List([inputBoxOptionsJson, `Bool(validateInput)])) =>
+      | ("$input", `List([inputBoxOptionsJson, `Bool(validateInput), ..._])) =>
         let%bind inputBox =
           inputBoxOptionsJson |> Internal.decode_value(InputBoxOptions.decode);
         Ok(Input({options: inputBox, validateInput}));

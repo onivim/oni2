@@ -76,10 +76,11 @@ let setFont =
   let family =
     if (Constants.isDefaultFont(familyString)) {
       Constants.defaultFontFamily;
-    } else if (Rench.Path.isAbsolute(familyString)) {
-      Revery_Font.Family.fromFile(familyString);
     } else {
-      Revery_Font.Family.system(familyString);
+      switch (FpExp.absoluteCurrentPlatform(familyString)) {
+      | None => Revery_Font.Family.system(familyString)
+      | Some(fp) => Revery_Font.Family.fromFile(FpExp.toString(fp))
+      };
     };
 
   let features = fontLigatures |> FontLigatures.toHarfbuzzFeatures;
