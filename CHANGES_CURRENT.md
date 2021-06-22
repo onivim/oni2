@@ -23,6 +23,7 @@
 - #3665 - CodeLens: Fix overlapping codelens with editor text (fixes #3663)
 - #3668 - UX: Toggle drop-down menu on click (fixes #3569 - thanks @sijad !)
 - #3571 - Extension: Implement $tryApplyEdits (fixes #3545)
+- #3335 - Extension: Fix selection bounds (fixes #3335)
 
 ### Performance
 
