@@ -264,7 +264,13 @@ module Internal = {
                     formatter,
                   ),
                 sessionId,
-                edits: List.map(Service_Vim.EditConverter.extHostSingleEditToVimEdit(~buffer=buf), edits),
+                edits:
+                  List.map(
+                    Service_Vim.EditConverter.extHostSingleEditToVimEdit(
+                      ~buffer=buf,
+                    ),
+                    edits,
+                  ),
               })
             | Error(msg) => EditRequestFailed({sessionId, msg})
             }
@@ -338,7 +344,13 @@ module Internal = {
                         formatter,
                       ),
                     sessionId,
-                    edits: List.map(Service_Vim.EditConverter.extHostSingleEditToVimEdit(~buffer=buf), edits),
+                    edits:
+                      List.map(
+                        Service_Vim.EditConverter.extHostSingleEditToVimEdit(
+                          ~buffer=buf,
+                        ),
+                        edits,
+                      ),
                   })
                 | Error(msg) => EditRequestFailed({sessionId, msg})
                 }

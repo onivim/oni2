@@ -7,10 +7,9 @@ let saveAllAndQuit: unit => Isolinear.Effect.t(_);
 let quitAll: unit => Isolinear.Effect.t(_);
 
 module EditConverter: {
-  let extHostSingleEditToVimEdit: (
-    ~buffer: Oni_Core.Buffer.t,
-    Exthost.Edit.SingleEditOperation.t
-  ) =>  Vim.Edit.t;
+  let extHostSingleEditToVimEdit:
+    (~buffer: Oni_Core.Buffer.t, Exthost.Edit.SingleEditOperation.t) =>
+    Vim.Edit.t;
 };
 
 module Effects: {

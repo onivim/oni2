@@ -1750,21 +1750,29 @@ module TextEditors = {
       });
 
   let handle = (method, args: Yojson.Safe.t) => {
-      Base.Result.Let_syntax.(
-    switch (method) {
-    | "$tryApplyEdits" =>
-      switch (args) {
-      | `List([`String(id), `Int(modelVersionId), editsJson, _applyEditOptions]) =>
+    Base.Result.Let_syntax.(
+      switch (method) {
+      | "$tryApplyEdits" =>
+        switch (args) {
+        | `List([
+            `String(id),
+            `Int(modelVersionId),
+            editsJson,
+            _applyEditOptions,
+          ]) =>
           let%bind edits =
             editsJson
-            |> Internal.decode_value(Json.Decode.list(Edit.SingleEditOperation.decode));
-          Ok(TryApplyEdits({ id, modelVersionId, edits}))
-      | _ => Error("Unexpected arguments for $tryApplyEdits")  
-      }
+            |> Internal.decode_value(
+                 Json.Decode.list(Edit.SingleEditOperation.decode),
+               );
+          Ok(TryApplyEdits({id, modelVersionId, edits}));
+        | _ => Error("Unexpected arguments for $tryApplyEdits")
+        }
 
-    | unhandledMethod => Error("Unhandled TextEditor method: " ++ unhandledMethod)
-    }
-  )
+      | unhandledMethod =>
+        Error("Unhandled TextEditor method: " ++ unhandledMethod)
+      }
+    );
   };
 };
 

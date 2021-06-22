@@ -22,7 +22,14 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg));
 
-let update: (msg, model) => (model, outmsg);
+let update:
+  (
+    ~buffers: Feature_Buffers.model,
+    ~editors: list(Feature_Editor.Editor.t),
+    msg,
+    model
+  ) =>
+  (model, outmsg);
 
 // SUBSCRIPTION
 

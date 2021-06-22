@@ -11,8 +11,7 @@ module Internal = {
   let getVscodeEditorId = editorId =>
     "onivim.editor:" ++ string_of_int(editorId);
 
-  // TODO: Use this when applying edits...
-  let _editorIdFromVscodeEditorId = (vscodeEditorId: string) => {
+  let editorIdFromVscodeEditorId = (vscodeEditorId: string) => {
     String.sub(
       vscodeEditorId,
       prefixLength,
@@ -107,6 +106,11 @@ type msg =
       msg: Exthost.Msg.TextEditors.msg,
       resolver: [@opaque] Lwt.u(Exthost.Reply.t),
     })
+  | ApplyTextEditSuccess({resolver: [@opaque] Lwt.u(Exthost.Reply.t)})
+  | ApplyTextEditFailure({
+      errorMessage: string,
+      resolver: [@opaque] Lwt.u(Exthost.Reply.t),
+    })
   | Initialized;
 
 module Msg = {
@@ -140,9 +144,15 @@ module Effects = {
       Lwt.wakeup(resolver, Reply.okEmpty)
     });
   };
+
+  let resolveFailure = (~msg, resolver) => {
+    Isolinear.Effect.create(~name="resolve", () => {
+      Lwt.wakeup(resolver, Reply.error(msg))
+    });
+  };
 };
 
-let update = (msg: msg, model) =>
+let update = (~buffers, ~editors, msg: msg, model) =>
   switch (msg) {
   | Noop => (model, Nothing)
 
@@ -192,10 +202,71 @@ let update = (msg: msg, model) =>
       (model, Effect(Effects.resolve(resolver)));
     }
 
-  | ExthostTextEditors({ msg, resolver }) =>
-    // TODO
-    prerr_endline ("Got message: " ++ Exthost.Msg.TextEditors.show_msg(msg));
-    (model, Nothing)
+  | ApplyTextEditSuccess({resolver}) => (
+      model,
+      Effect(Effects.resolve(resolver)),
+    )
+
+  | ApplyTextEditFailure({errorMessage, resolver}) => (
+      model,
+      Effect(Effects.resolveFailure(~msg=errorMessage, resolver)),
+    )
+
+  | ExthostTextEditors({msg, resolver}) =>
+    switch (msg) {
+    | TryApplyEdits({id, modelVersionId, edits}) =>
+      // Find buffer id for editor
+      let eff =
+        editors
+        |> List.filter(editor =>
+             Feature_Editor.Editor.getId(editor)
+             == Internal.editorIdFromVscodeEditorId(id)
+           )
+        |> Utility.ListEx.nth_opt(0)
+        |> Option.map(Feature_Editor.Editor.getBufferId)
+        |> Utility.OptionEx.flatMap(bufferId =>
+             Feature_Buffers.get(bufferId, buffers)
+           )
+        |> Option.map(buffer => {
+             let bufferId = Oni_Core.Buffer.getId(buffer);
+             let vimEdits =
+               edits
+               |> List.map(
+                    Service_Vim.EditConverter.extHostSingleEditToVimEdit(
+                      ~buffer,
+                    ),
+                  );
+             let toMsg = (
+               fun
+               | Error(msg) =>
+                 ApplyTextEditFailure({resolver, errorMessage: msg})
+               | Ok(_) => ApplyTextEditSuccess({resolver: resolver})
+             );
+
+             Effect(
+               Service_Vim.Effects.applyEdits(
+                 ~shouldAdjustCursors=true,
+                 ~bufferId,
+                 ~version=modelVersionId,
+                 ~edits=vimEdits,
+                 toMsg,
+               ),
+             );
+           })
+        |> Option.value(
+             ~default=
+               Effect(
+                 EffectEx.value(
+                   ~name="ApplyTextEditFailure",
+                   ApplyTextEditFailure({
+                     resolver,
+                     errorMessage: "Unable to get buffer for editor: " ++ id,
+                   }),
+                 ),
+               ),
+           );
+      (model, eff);
+    }
 
   | Initialized => ({...model, isInitialized: true}, Nothing)
   };
