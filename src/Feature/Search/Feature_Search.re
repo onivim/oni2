@@ -10,6 +10,8 @@ module Constants = {
 
 type focus =
   | FindInput
+  | IncludeInput
+  | ExcludeInput
   | ResultsPane
   | ToggleRegexButton
   | ToggleCaseSensitiveButton
@@ -17,10 +19,14 @@ type focus =
 
 type model = {
   findInput: Component_InputText.model,
+  includeInput: Component_InputText.model,
+  excludeInput: Component_InputText.model,
   enableRegex: bool,
   caseSensitive: bool,
   optionsVisible: bool,
   query: string,
+  searchIncludeStr: string,
+  searchExcludeStr: string,
   searchNonce: int,
   hits: list(Ripgrep.Match.t),
   focus,
@@ -43,10 +49,14 @@ let resetFocus = (~query: option(string), model) => {
 
 let initial = {
   findInput: Component_InputText.create(~placeholder="Search"),
+  includeInput: Component_InputText.create(~placeholder="Include files"),
+  excludeInput: Component_InputText.create(~placeholder="Exclude files"),
   enableRegex: false,
   caseSensitive: false,
   optionsVisible: false,
   query: "",
+  searchIncludeStr: "",
+  searchExcludeStr: "",
   searchNonce: 0,
   hits: [],
   focus: FindInput,
@@ -121,6 +131,8 @@ type msg =
   | Complete
   | SearchError(string)
   | FindInput(Component_InputText.msg)
+  | IncludeInput(Component_InputText.msg)
+  | ExcludeInput(Component_InputText.msg)
   | VimWindowNav(Component_VimWindows.msg)
   | ResultsList(Component_VimTree.msg)
   | ToggleRegexButtonClicked
@@ -164,6 +176,46 @@ let update = (~previewEnabled, model, msg) => {
           let findInput =
             Component_InputText.handleInput(~key, model.findInput);
           {...model, findInput};
+        };
+
+      (model, None);
+    | IncludeInput =>
+      let model =
+        switch (key) {
+        | "<CR>" =>
+          let includeInputValue =
+            model.includeInput |> Component_InputText.value;
+          {
+            ...model,
+            searchIncludeStr: includeInputValue,
+            searchNonce: model.searchNonce + 1,
+          }
+          |> setHits([]);
+
+        | _ =>
+          let includeInput =
+            Component_InputText.handleInput(~key, model.includeInput);
+          {...model, includeInput};
+        };
+
+      (model, None);
+    | ExcludeInput =>
+      let model =
+        switch (key) {
+        | "<CR>" =>
+          let excludeInputValue =
+            model.excludeInput |> Component_InputText.value;
+          {
+            ...model,
+            searchExcludeStr: excludeInputValue,
+            searchNonce: model.searchNonce + 1,
+          }
+          |> setHits([]);
+
+        | _ =>
+          let excludeInput =
+            Component_InputText.handleInput(~key, model.excludeInput);
+          {...model, excludeInput};
         };
 
       (model, None);
@@ -214,6 +266,32 @@ let update = (~previewEnabled, model, msg) => {
       };
     ({...model', findInput: findInput'}, outmsg);
 
+  | IncludeInput(msg) =>
+    let (includeInput', inputOutmsg) =
+      Component_InputText.update(msg, model.includeInput);
+    let (model', outmsg) =
+      switch (inputOutmsg) {
+      | Component_InputText.Nothing => (model, None)
+      | Component_InputText.Focus => (
+          {...model, focus: IncludeInput},
+          Some(Focus),
+        )
+      };
+    ({...model', includeInput: includeInput'}, outmsg);
+
+  | ExcludeInput(msg) =>
+    let (excludeInput', inputOutmsg) =
+      Component_InputText.update(msg, model.excludeInput);
+    let (model', outmsg) =
+      switch (inputOutmsg) {
+      | Component_InputText.Nothing => (model, None)
+      | Component_InputText.Focus => (
+          {...model, focus: ExcludeInput},
+          Some(Focus),
+        )
+      };
+    ({...model', excludeInput: excludeInput'}, outmsg);
+
   | Update(items) => (model |> setHits(model.hits @ items), None)
 
   | VimWindowNav(navMsg) =>
@@ -249,7 +327,14 @@ let update = (~previewEnabled, model, msg) => {
           None,
         )
 
-      | (ToggleRegexButton | ToggleCaseSensitiveButton, _)
+      | (ToggleRegexButton | ToggleCaseSensitiveButton, _) => (
+          {...model', focus: IncludeInput},
+          None,
+        )
+
+      | (IncludeInput, _) => ({...model', focus: ExcludeInput}, None)
+
+      | (ExcludeInput, _)
       | (FindInput, false)
       | (ToggleOptionsButton, false) => (
           {...model', focus: ResultsPane},
@@ -259,8 +344,10 @@ let update = (~previewEnabled, model, msg) => {
       }
     | FocusUp =>
       switch (model'.focus, model'.optionsVisible) {
-      | (ResultsPane, true) => ({...model', focus: ToggleRegexButton}, None)
+      | (ResultsPane, true) => ({...model', focus: ExcludeInput}, None)
       | (ResultsPane, false) => ({...model', focus: FindInput}, None)
+      | (ExcludeInput, _) => ({...model', focus: IncludeInput}, None)
+      | (IncludeInput, _) => ({...model', focus: ToggleRegexButton}, None)
       | (ToggleRegexButton | ToggleCaseSensitiveButton, _) => (
           {...model', focus: FindInput},
           None,
@@ -323,11 +410,9 @@ let sub = (~config, ~workingDirectory, ~setup, model) => {
   } else {
     let exclude =
       Configuration.searchExclude.get(config)
-      |> List.append(
-           Feature_Configuration.GlobalConfiguration.Files.exclude.get(
-             config,
-           ),
-         );
+      @ Feature_Configuration.GlobalConfiguration.Files.exclude.get(config)
+      @ String.split_on_char(',', model.searchExcludeStr);
+    let include_ = String.split_on_char(',', model.searchIncludeStr);
     let toMsg =
       fun
       | Service_Ripgrep.Sub.GotMatches(items) => Update(items)
@@ -336,6 +421,7 @@ let sub = (~config, ~workingDirectory, ~setup, model) => {
 
     Service_Ripgrep.Sub.findInFiles(
       ~exclude,
+      ~include_,
       ~directory=workingDirectory,
       ~query=model.query,
       ~uniqueId=string_of_int(model.searchNonce),
@@ -439,45 +525,71 @@ let make =
         </Tooltip>
       </View>
       {model.optionsVisible
-         ? <View style=Styles.row>
-             <Tooltip text="Toggle regular expression syntax">
-               <Feature_Sneak.View.Sneakable
-                 sneakId="search.toggleRegex"
-                 style={Styles.inputOption(
-                   ~isFocused=model.focus == ToggleRegexButton,
-                   ~theme,
-                 )}
-                 onClick={_ => dispatch(ToggleRegexButtonClicked)}>
-                 <Codicon
-                   icon=Codicon.regex
-                   fontSize=Constants.optionIconSize
-                   color={
-                     model.enableRegex
-                       ? Colors.PanelTitle.activeForeground.from(theme)
-                       : Colors.PanelTitle.inactiveForeground.from(theme)
-                   }
+         ? <View>
+             <View style=Styles.row>
+               <Tooltip text="Toggle regular expression syntax">
+                 <Feature_Sneak.View.Sneakable
+                   sneakId="search.toggleRegex"
+                   style={Styles.inputOption(
+                     ~isFocused=model.focus == ToggleRegexButton,
+                     ~theme,
+                   )}
+                   onClick={_ => dispatch(ToggleRegexButtonClicked)}>
+                   <Codicon
+                     icon=Codicon.regex
+                     fontSize=Constants.optionIconSize
+                     color={
+                       model.enableRegex
+                         ? Colors.PanelTitle.activeForeground.from(theme)
+                         : Colors.PanelTitle.inactiveForeground.from(theme)
+                     }
+                   />
+                 </Feature_Sneak.View.Sneakable>
+               </Tooltip>
+               <Tooltip text="Toggle case-sensitivity">
+                 <Feature_Sneak.View.Sneakable
+                   sneakId="search.toggleCaseSensitive"
+                   style={Styles.inputOption(
+                     ~isFocused=model.focus == ToggleCaseSensitiveButton,
+                     ~theme,
+                   )}
+                   onClick={_ => dispatch(ToggleCaseSensitiveButtonClicked)}>
+                   <Codicon
+                     icon=Codicon.caseSensitive
+                     fontSize=Constants.optionIconSize
+                     color={
+                       model.caseSensitive
+                         ? Colors.PanelTitle.activeForeground.from(theme)
+                         : Colors.PanelTitle.inactiveForeground.from(theme)
+                     }
+                   />
+                 </Feature_Sneak.View.Sneakable>
+               </Tooltip>
+             </View>
+             <View style=Styles.row>
+               <View style=Styles.inputContainer>
+                 <Component_InputText.View
+                   model={model.includeInput}
+                   isFocused={isFocused && model.focus == IncludeInput}
+                   fontFamily={uiFont.family}
+                   fontSize={uiFont.size}
+                   dispatch={msg => dispatch(IncludeInput(msg))}
+                   theme
                  />
-               </Feature_Sneak.View.Sneakable>
-             </Tooltip>
-             <Tooltip text="Toggle case-sensitivity">
-               <Feature_Sneak.View.Sneakable
-                 sneakId="search.toggleCaseSensitive"
-                 style={Styles.inputOption(
-                   ~isFocused=model.focus == ToggleCaseSensitiveButton,
-                   ~theme,
-                 )}
-                 onClick={_ => dispatch(ToggleCaseSensitiveButtonClicked)}>
-                 <Codicon
-                   icon=Codicon.caseSensitive
-                   fontSize=Constants.optionIconSize
-                   color={
-                     model.caseSensitive
-                       ? Colors.PanelTitle.activeForeground.from(theme)
-                       : Colors.PanelTitle.inactiveForeground.from(theme)
-                   }
+               </View>
+             </View>
+             <View style=Styles.row>
+               <View style=Styles.inputContainer>
+                 <Component_InputText.View
+                   model={model.excludeInput}
+                   isFocused={isFocused && model.focus == ExcludeInput}
+                   fontFamily={uiFont.family}
+                   fontSize={uiFont.size}
+                   dispatch={msg => dispatch(ExcludeInput(msg))}
+                   theme
                  />
-               </Feature_Sneak.View.Sneakable>
-             </Tooltip>
+               </View>
+             </View>
            </View>
          : <View />}
     </View>

@@ -97,89 +97,71 @@ module Styles = {
   ];
 };
 
-let animation =
-  Revery.UI.Animation.(
-    animate(Revery.Time.milliseconds(250))
-    |> ease(Easing.ease)
-    |> tween(0., 1.)
-    |> delay(Revery.Time.milliseconds(150))
-  );
-
 let cmdOrCtrl =
   switch (Revery.Environment.os) {
   | Mac(_) => "Cmd"
   | _ => "Ctrl"
   };
 
-let%component make = (~isDark, ~theme, ~uiFont: UiFont.t, ~editorFont, ()) => {
-  let%hook (transition, _animationState, _reset) =
-    Hooks.animation(~name="WelcomeView transition", animation, ~active=true);
-
+let make = (~isDark, ~theme, ~uiFont: UiFont.t, ~editorFont, ()) => {
   let logoFile = isDark ? "title-logo.png" : "title-logo-light.png";
 
   <View style={Styles.container(~theme)}>
-    <Opacity opacity=transition>
-      <View style=Styles.header>
-        <Image
-          src={`File(logoFile)}
-          width=456
-          height=250
-          opacity=transition
-        />
-        <Text
-          style={Styles.title(~theme)}
-          fontFamily={uiFont.family}
-          fontSize=20.
-          text="Modal Editing from the Future"
-        />
-        <Text
-          style={Styles.version(~theme)}
-          fontFamily={uiFont.family}
-          fontSize=12.
-          text={Printf.sprintf(
-            "Version %s | %s",
-            Oni_Core.BuildInfo.version,
-            Oni_Core.BuildInfo.commitId,
-          )}
-        />
-      </View>
-      <View style=Styles.controls>
-        <KeyBindingView
-          name="Quick open"
-          shortcut={cmdOrCtrl ++ " + P"}
-          theme
-          uiFont
-          editorFont
-        />
-        <KeyBindingView
-          name="Command palette"
-          shortcut={cmdOrCtrl ++ " + Shift + P"}
-          theme
-          uiFont
-          editorFont
-        />
-        <KeyBindingView
-          name="Vim command"
-          shortcut=":"
-          theme
-          uiFont
-          editorFont
-        />
-        <KeyBindingView
-          name="Sneak"
-          shortcut="Ctrl + G"
-          theme
-          uiFont
-          editorFont
-        />
-        <KeyBindingView
-          name="Terminal"
-          shortcut=":term"
-          theme
-          uiFont
-          editorFont
-        />
-      </View>
-    </Opacity>
+    <View style=Styles.header>
+      <Image src={`File(logoFile)} width=456 height=250 />
+      <Text
+        style={Styles.title(~theme)}
+        fontFamily={uiFont.family}
+        fontSize=20.
+        text="Modal Editing from the Future"
+      />
+      <Text
+        style={Styles.version(~theme)}
+        fontFamily={uiFont.family}
+        fontSize=12.
+        text={Printf.sprintf(
+          "Version %s | %s",
+          Oni_Core.BuildInfo.version,
+          Oni_Core.BuildInfo.commitId,
+        )}
+      />
+    </View>
+    <View style=Styles.controls>
+      <KeyBindingView
+        name="Quick open"
+        shortcut={cmdOrCtrl ++ " + P"}
+        theme
+        uiFont
+        editorFont
+      />
+      <KeyBindingView
+        name="Command palette"
+        shortcut={cmdOrCtrl ++ " + Shift + P"}
+        theme
+        uiFont
+        editorFont
+      />
+      <KeyBindingView
+        name="Vim command"
+        shortcut=":"
+        theme
+        uiFont
+        editorFont
+      />
+      <KeyBindingView
+        name="Sneak"
+        shortcut="Ctrl + G"
+        theme
+        uiFont
+        editorFont
+      />
+      <KeyBindingView
+        name="Terminal"
+        shortcut=":term"
+        theme
+        uiFont
+        editorFont
+      />
+    </View>
   </View>;
 };

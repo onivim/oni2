@@ -108,10 +108,6 @@ let update = (editor, msg) => {
       editor |> Editor.mouseUp(~altKey, ~time, ~pixelX, ~pixelY),
       Nothing,
     )
-  | InlineElementSizeChanged({key, line, uniqueId, height}) => (
-      Editor.setInlineElementSize(~key, ~line, ~uniqueId, ~height, editor),
-      Nothing,
-    )
   | InlineElementClicked({command, _}) => (
       editor,
       switch (command) {

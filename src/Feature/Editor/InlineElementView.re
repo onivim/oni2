@@ -6,12 +6,12 @@ module LineNumber = EditorCoreTypes.LineNumber;
 
 module Styles = {
   open Style;
-  let container = (~opacity as opac, ~totalHeight, ~pixelY) => {
+  let container = (~minimapWidth, ~opacity as opac, ~totalHeight, ~pixelY) => {
     [
       position(`Absolute),
       top(int_of_float(pixelY)),
       left(0),
-      right(0),
+      right(int_of_float(minimapWidth)),
       height(totalHeight),
       opacity(opac),
       pointerEvents(`Allow),
@@ -30,11 +30,11 @@ module Styles = {
     ];
   };
 
-  let inner = (~opacity as opac, ~yOffset, ~xOffset) => [
+  let inner = (~availableWidth, ~opacity as opac, ~yOffset, ~xOffset) => [
     position(`Absolute),
     top(int_of_float(yOffset)),
     left(int_of_float(xOffset)),
-    right(0),
+    width(availableWidth),
     flexDirection(`Row),
     flexGrow(1),
     opacity(opac),
@@ -42,42 +42,17 @@ module Styles = {
 };
 
 module Item = {
-  let%component make =
-                (
-                  ~dispatch: Msg.t => unit,
-                  ~inlineKey: string,
-                  ~uniqueId: string,
-                  ~opacity: float,
-                  ~xOffset: float,
-                  ~yOffset: float,
-                  ~lineNumber: LineNumber.t,
-                  ~children,
-                  (),
-                ) => {
-    let%hook (measuredHeight, heightChangedDispatch) =
-      Hooks.reducer(~initialState=0, (newHeight, _prev) => newHeight);
-
-    let%hook () =
-      Hooks.effect(
-        If((!=), (measuredHeight, uniqueId)),
-        () => {
-          if (measuredHeight > 0) {
-            dispatch(
-              Msg.InlineElementSizeChanged({
-                key: inlineKey,
-                uniqueId,
-                line: lineNumber,
-                height: measuredHeight,
-              }),
-            );
-          };
-          None;
-        },
-      );
+  let make =
+      (
+        ~children,
+        ~opacity: float,
+        ~xOffset: float,
+        ~yOffset: float,
+        ~availableWidth: int,
+        (),
+      ) => {
     // COMPONENT
-    <View
-      style={Styles.inner(~xOffset, ~yOffset, ~opacity)}
-      onDimensionsChanged={({height, _}) => {heightChangedDispatch(height)}}>
+    <View style={Styles.inner(~availableWidth, ~xOffset, ~yOffset, ~opacity)}>
       children
     </View>;
   };
@@ -100,6 +75,8 @@ module Container = {
 
     let leadingWhitespacePixels =
       Editor.getLeadingWhitespacePixels(line, editor);
+
+    let minimapWidth = Editor.minimapWidthInPixels(editor);
 
     let (maxOpacity, totalHeight, elems) =
       inlineElements
@@ -137,12 +114,9 @@ module Container = {
 
              let newElement =
                <Item
-                 inlineKey
-                 uniqueId
-                 dispatch
-                 lineNumber=line
                  xOffset={gutterWidth +. leadingWhitespacePixels}
                  yOffset=height
+                 availableWidth={inlineElement.width}
                  opacity>
                  <elem />
                </Item>;
@@ -194,6 +168,7 @@ module Container = {
 
     <View
       style={Styles.container(
+        ~minimapWidth,
         ~opacity=maxOpacity,
         ~totalHeight=int_of_float(totalHeight),
         ~pixelY=pixelY -. totalHeight,

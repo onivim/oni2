@@ -3,6 +3,7 @@
 - #3613 - Input: add Emoji & Symbols panel on macOS
 - #3641 - Search: add button to enable RegEx
 - #3654 - Search: add button to enable case-sensitivity
+- #3661 - Search: add include/exclude file boxes
 
 ### Bug Fixes
 
@@ -18,8 +19,13 @@
 - #3638 - Editor: Add clear search highlights default keybinding (fixes #3636)
 - #3645 - Terminal: Auto-scroll when key is pressed
 - #3652 - Syntax: Fix highlighting being lost after movement (fixes #3647)
+- #3607 - Vim: Fix crash when specifying empty guifont (fixes #3605)
+- #3665 - CodeLens: Fix overlapping codelens with editor text (fixes #3663)
+- #3668 - UX: Toggle drop-down menu on click (fixes #3569 - thanks @sijad !)
 
 ### Performance
+
+- #3603 - UX: Fix a couple of orphaned animation timers (related #2407)
 
 ### Documentation
 
@@ -34,5 +40,6 @@
 - #3632 - Dependency: revery -> 79c2572
 - #3639 - Dependency: Sparkle -> 1.26.0
 - #3653 - Dependency: revery -> 9ec44ff (fixes #3646)
+- #3688 - Dependency: esy-skia -> 1c81aac
 
 ### Infrastructure

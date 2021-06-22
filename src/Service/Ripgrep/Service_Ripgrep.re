@@ -8,6 +8,7 @@ module Sub = {
 
   type findInFilesParams = {
     exclude: list(string),
+    include_: list(string),
     directory: string,
     query: string,
     uniqueId: string,
@@ -38,6 +39,7 @@ module Sub = {
         let dispose =
           ripgrep.Ripgrep.findInFiles(
             ~searchExclude=params.exclude,
+            ~searchInclude=params.include_,
             ~directory=params.directory,
             ~query=params.query,
             ~onUpdate=items => dispatch(GotMatches(items)),
@@ -63,6 +65,7 @@ module Sub = {
       (
         ~uniqueId: string,
         ~exclude: list(string),
+        ~include_: list(string),
         ~directory: string,
         ~query: string,
         ~setup: Setup.t,
@@ -73,6 +76,7 @@ module Sub = {
     FindInFilesSub.create({
       uniqueId,
       exclude,
+      include_,
       directory,
       query,
       setup,
