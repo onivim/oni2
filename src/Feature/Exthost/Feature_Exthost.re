@@ -192,8 +192,9 @@ let update = (msg: msg, model) =>
       (model, Effect(Effects.resolve(resolver)));
     }
 
-  | ExthostTextEditors(_) =>
+  | ExthostTextEditors({ msg, resolver }) =>
     // TODO
+    prerr_endline ("Got message: " ++ Exthost.Msg.TextEditors.show_msg(msg));
     (model, Nothing)
 
   | Initialized => ({...model, isInitialized: true}, Nothing)
