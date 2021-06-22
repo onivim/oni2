@@ -36,20 +36,31 @@ module Internal = {
         |> byteRangeToCharacterRange(byteRange)
         |> Option.map(range => {
              EditorCoreTypes.(
-               EditorCoreTypes.CharacterRange.(
+               EditorCoreTypes.CharacterRange.({
+
+                 let startColumn = range.start.character;
+                 let stopColumn = range.stop.character;
+                 let startLine = range.start.line;
+                 let stopLine = range.stop.line;
+
+                 let selectionStartColumn = (startColumn |> CharacterIndex.toInt) + 1;
+
+                 // If the start - end of the selection are the same, use startColumn.
+                 // Otherwise, for the selection, we need to add 2:
+                 // - Add 1 to move from zero-based to one-based characters for the extension host
+                 // - Add 1 because the selection is inclusive in Vim, but exclusive in the extension host API
+                 let positionColumn = (startLine == stopLine && startColumn == stopColumn) ? selectionStartColumn : ((stopColumn |> CharacterIndex.toInt) + 2);
                  EditorCoreTypes.CharacterPosition.[
                    Exthost.Selection.{
                      selectionStartLineNumber:
-                       range.start.line |> LineNumber.toOneBased,
-                     selectionStartColumn:
-                       (range.start.character |> CharacterIndex.toInt) + 1,
+                       startLine |> LineNumber.toOneBased,
+                     selectionStartColumn,
                      positionLineNumber:
-                       range.stop.line |> LineNumber.toOneBased,
-                     positionColumn:
-                       (range.stop.character |> CharacterIndex.toInt) + 1,
+                       stopLine |> LineNumber.toOneBased,
+                     positionColumn: positionColumn,
                    },
                  ]
-               )
+               })
              )
            })
         |> Option.value(~default=[]);
