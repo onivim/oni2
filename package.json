@@ -404,7 +404,7 @@
     "esy-skia": "*",
     "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.88",
+    "libvim": "8.10869.89",
     "ocaml": "~4.12",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#a80a9d9",
     "reason-fzy": "bryphe/reason-fzy#5a1daf4",
