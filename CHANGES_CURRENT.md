@@ -25,6 +25,7 @@
 - #3571 - Extension: Implement $tryApplyEdits (fixes #3545)
 - #3335 - Extension: Fix selection bounds (fixes #3335)
 - #3699 - Vim: Respect silent flag for output-producing commands (fixes #3680)
+- #3692 - CodeLens: Fix delegated commands not executing (related #2380)
 
 ### Performance
 
