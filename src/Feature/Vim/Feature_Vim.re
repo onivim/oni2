@@ -166,10 +166,11 @@ type msg =
   | Output({
       cmd: string,
       output: option(string),
+      isSilent: bool,
     });
 
 module Msg = {
-  let output = (~cmd, ~output) => Output({cmd, output});
+  let output = (~cmd, ~output, ~isSilent) => Output({cmd, output, isSilent});
 
   let settingChanged = (~setting) => SettingChanged(setting);
 
@@ -327,7 +328,10 @@ let update = (~vimContext, msg, model: model) => {
       SettingsChanged({name: fullName, value}),
     )
 
-  | Output({cmd, output}) => (model, Output({cmd, output}))
+  | Output({cmd, output, isSilent}) => (
+      model,
+      isSilent ? Nothing : Output({cmd, output}),
+    )
 
   | SearchHighlightsAvailable({bufferId, highlights}) =>
     let newHighlights =
