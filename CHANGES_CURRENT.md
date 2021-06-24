@@ -26,6 +26,7 @@
 - #3335 - Extension: Fix selection bounds (fixes #3335)
 - #3699 - Vim: Respect silent flag for output-producing commands (fixes #3680)
 - #3692 - CodeLens: Fix delegated commands not executing (related #2380)
+- #3702 - OSX: Fix crash on open-with (fixes #3698)
 
 ### Performance
 
