@@ -123,7 +123,6 @@ let update = (~isFocused, msg, model) => {
 
   switch (msg) {
   | ResizeInProgress(delta) =>
-    prerr_endline("ResizeInProgress!");
     let model' =
       if (model.isOpen) {
         {...model, resizeDelta: delta};
