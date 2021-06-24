@@ -1889,26 +1889,22 @@ let update =
     | Focus(Center) => (FocusManager.push(Editor, state), Effect.none)
 
     | Focus(Left) when sideBarLocation == Feature_SideBar.Left => (
-        Feature_SideBar.isOpen(state.sideBar)
-          ? switch (state.sideBar |> Feature_SideBar.selected) {
-            | FileExplorer => FocusManager.push(FileExplorer, state)
-            | SCM => FocusManager.push(SCM, state)
-            | Extensions => FocusManager.push(Extensions, state)
-            | Search => FocusManager.push(Search, state)
-            }
-          : state,
+        switch (state.sideBar |> Feature_SideBar.selected) {
+        | FileExplorer => FocusManager.push(FileExplorer, state)
+        | SCM => FocusManager.push(SCM, state)
+        | Extensions => FocusManager.push(Extensions, state)
+        | Search => FocusManager.push(Search, state)
+        },
         Effect.none,
       )
 
     | Focus(Right) when sideBarLocation == Feature_SideBar.Right => (
-        Feature_SideBar.isOpen(state.sideBar)
-          ? switch (state.sideBar |> Feature_SideBar.selected) {
-            | FileExplorer => FocusManager.push(FileExplorer, state)
-            | SCM => FocusManager.push(SCM, state)
-            | Extensions => FocusManager.push(Extensions, state)
-            | Search => FocusManager.push(Search, state)
-            }
-          : state,
+        switch (state.sideBar |> Feature_SideBar.selected) {
+        | FileExplorer => FocusManager.push(FileExplorer, state)
+        | SCM => FocusManager.push(SCM, state)
+        | Extensions => FocusManager.push(Extensions, state)
+        | Search => FocusManager.push(Search, state)
+        },
         Effect.none,
       )
 
