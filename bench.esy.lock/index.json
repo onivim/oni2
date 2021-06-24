@@ -1,5 +1,5 @@
 {
-  "checksum": "ecf83ae9b88f22dd34eef83dfacf2e82",
+  "checksum": "88603d1e9118d5c5ca46f4cfdb4da116",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -91,13 +91,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#b44f8fb@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#b44f8fb@d41d8cd9",
+    "revery@github:revery-ui/revery#dd10c87@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#dd10c87@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#b44f8fb",
+      "version": "github:revery-ui/revery#dd10c87",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#b44f8fb" ]
+        "source": [ "github:revery-ui/revery#dd10c87" ]
       },
       "overrides": [],
       "dependencies": [
@@ -853,7 +853,7 @@
       },
       "overrides": [ "bench.json" ],
       "dependencies": [
-        "revery@github:revery-ui/revery#b44f8fb@d41d8cd9",
+        "revery@github:revery-ui/revery#dd10c87@d41d8cd9",
         "reperf@1.5.1@d41d8cd9", "rench@1.10.0@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#a80a9d9@d41d8cd9",
         "reason-fzy@github:bryphe/reason-fzy#5a1daf4@d41d8cd9",
@@ -1768,20 +1768,20 @@
         "@opam/dune@opam:2.8.5@01003f12", "@opam/base@opam:v0.14.1@9b424fee"
       ]
     },
-    "@opam/ppx_js_style@opam:v0.14.0@7afb1a49": {
-      "id": "@opam/ppx_js_style@opam:v0.14.0@7afb1a49",
+    "@opam/ppx_js_style@opam:v0.14.1@03f2d62f": {
+      "id": "@opam/ppx_js_style@opam:v0.14.1@03f2d62f",
       "name": "@opam/ppx_js_style",
-      "version": "opam:v0.14.0",
+      "version": "opam:v0.14.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/ea/eab9c17616a2ba4cbd69a88db76070fd#md5:eab9c17616a2ba4cbd69a88db76070fd",
-          "archive:https://ocaml.janestreet.com/ocaml-core/v0.14/files/ppx_js_style-v0.14.0.tar.gz#md5:eab9c17616a2ba4cbd69a88db76070fd"
+          "archive:https://opam.ocaml.org/cache/md5/2d/2d79afa4f954aeafb81b64ecfc11c3fb#md5:2d79afa4f954aeafb81b64ecfc11c3fb",
+          "archive:https://github.com/janestreet/ppx_js_style/archive/refs/tags/v0.14.1.tar.gz#md5:2d79afa4f954aeafb81b64ecfc11c3fb"
         ],
         "opam": {
           "name": "ppx_js_style",
-          "version": "v0.14.0",
-          "path": "bench.esy.lock/opam/ppx_js_style.v0.14.0"
+          "version": "v0.14.1",
+          "path": "bench.esy.lock/opam/ppx_js_style.v0.14.1"
         }
       },
       "overrides": [],
@@ -2079,7 +2079,7 @@
       "dependencies": [
         "ocaml@4.12.0@d41d8cd9", "@opam/ppxlib@opam:0.15.0@bab450db",
         "@opam/ppx_sexp_conv@opam:v0.14.1@0c0aebbb",
-        "@opam/ppx_js_style@opam:v0.14.0@7afb1a49",
+        "@opam/ppx_js_style@opam:v0.14.1@03f2d62f",
         "@opam/ppx_hash@opam:v0.14.0@455f5f56",
         "@opam/ppx_enumerate@opam:v0.14.0@2be34197",
         "@opam/ppx_compare@opam:v0.14.0@fbd22977",
@@ -2089,7 +2089,7 @@
       "devDependencies": [
         "ocaml@4.12.0@d41d8cd9", "@opam/ppxlib@opam:0.15.0@bab450db",
         "@opam/ppx_sexp_conv@opam:v0.14.1@0c0aebbb",
-        "@opam/ppx_js_style@opam:v0.14.0@7afb1a49",
+        "@opam/ppx_js_style@opam:v0.14.1@03f2d62f",
         "@opam/ppx_hash@opam:v0.14.0@455f5f56",
         "@opam/ppx_enumerate@opam:v0.14.0@2be34197",
         "@opam/ppx_compare@opam:v0.14.0@fbd22977",
