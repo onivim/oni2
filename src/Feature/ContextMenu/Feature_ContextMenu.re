@@ -1,118 +1,147 @@
 open Oni_Core;
+open ContextMenu;
 module NativeMenu = Revery.Native.Menu;
 
-module Native = {
-  let keyBindingsToKeyEquivalent:
-    list(list(EditorInput.KeyPress.t)) =>
-    option(Revery.Native.Menu.KeyEquivalent.t) =
-    candidates => {
-      candidates
-      // Filter to single key press
-      |> List.filter_map(
-           fun
-           | [hd] => Some(hd)
-           | _ => None,
-         )
-      |> List.filter_map(EditorInput.KeyPress.toPhysicalKey)
-      |> List.filter(({modifiers, _}: EditorInput.PhysicalKey.t) => {
-           modifiers.super
-         })
-      |> (
-        l =>
-          List.nth_opt(l, 0)
-          |> Option.map(({modifiers, key}: EditorInput.PhysicalKey.t) => {
-               open Revery.Native.Menu;
-               let key =
-                 KeyEquivalent.ofString(EditorInput.Key.toString(key))
-                 |> (key => KeyEquivalent.enableShift(key, modifiers.shift))
-                 |> (key => KeyEquivalent.enableAlt(key, modifiers.alt))
-                 |> (key => KeyEquivalent.enableCtrl(key, modifiers.control));
+module Native = Native;
 
-               key;
-             })
-      );
-    };
+type menu = {
+  menuSchema: Schema.t,
+  contextMenu: Component_ContextMenu.model(string),
+  xPos: int,
+  yPos: int,
+};
 
-  let getKeyEquivalent = (~config, ~context, ~input, command) =>
-    switch (Revery.Environment.os) {
-    | Mac(_) =>
-      Feature_Input.commandToAvailableBindings(
-        ~command,
-        ~config,
-        ~context,
-        input,
-      )
-      |> keyBindingsToKeyEquivalent
+type model = option(menu);
 
-    | _ => None
-    };
+let initial = None;
 
-  let rec buildItem =
-          (
-            ~config,
-            ~context,
-            ~input,
-            ~dispatch,
-            parent: NativeMenu.t,
-            items: list(ContextMenu.Item.t),
-          ) => {
-    items
-    |> List.iter(item => {
-         let title = ContextMenu.Item.title(item);
-         if (ContextMenu.Item.isSubmenu(item)) {
-           let nativeMenu = NativeMenu.create(title);
-           NativeMenu.addSubmenu(~parent, ~child=nativeMenu);
-           buildGroup(
-             ~config,
-             ~context,
-             ~input,
-             ~dispatch,
-             nativeMenu,
-             ContextMenu.Item.submenu(item),
-           );
+let rec groupToContextMenu = (group: ContextMenu.Group.t) => {
+  let items =
+    ContextMenu.Group.items(group)
+    |> List.map(item =>
+         if (Item.isSubmenu(item)) {
+           let submenuItems = Item.submenu(item);
+           let groups = submenuItems |> List.map(groupToContextMenu);
+           Component_ContextMenu.Submenu({
+             label: Item.title(item),
+             items: groups,
+           });
          } else {
-           let command = ContextMenu.Item.command(item);
-           let keyEquivalent =
-             getKeyEquivalent(~config, ~context, ~input, command)
-             |> Option.value(
-                  ~default=Revery.Native.Menu.KeyEquivalent.ofString(""),
-                );
+           Component_ContextMenu.Item({
+             label: Item.title(item),
+             data: Item.command(item),
+             details: Revery.UI.React.empty,
+           });
+         }
+       );
 
-           let nativeMenuItem =
-             Revery.Native.Menu.Item.create(
-               ~title,
-               ~onClick=
-                 (~fromKeyPress, ()) =>
-                   if (!fromKeyPress) {
-                     dispatch(command);
-                   },
-               ~keyEquivalent,
-               (),
-             );
-           Revery.Native.Menu.addItem(parent, nativeMenuItem);
-         };
-       });
-  }
-  and buildGroup =
+  Component_ContextMenu.Group(items);
+};
+
+[@deriving show]
+type msg =
+  | MenuRequestedDisplayAt({
+      [@opaque]
+      menuSchema: Schema.t,
+      xPos: int,
+      yPos: int,
+    })
+  | ContextMenu(Component_ContextMenu.msg(string));
+
+type outmsg =
+  | Nothing
+  | ExecuteCommand({command: string});
+
+let update = (~contextKeys, ~commands, msg, model) =>
+  switch (msg) {
+  | MenuRequestedDisplayAt({menuSchema, xPos, yPos}) =>
+    let builtMenu = ContextMenu.build(~contextKeys, ~commands, menuSchema);
+    let topLevelItems = ContextMenu.top(menuSchema);
+
+    let maybeMenu = List.nth_opt(topLevelItems, 0);
+
+    let menu =
+      maybeMenu
+      |> Option.map(menu => {
+           let contextMenu =
+             Menu.contents(menu, builtMenu)
+             |> List.map(groupToContextMenu)
+             |> Component_ContextMenu.make;
+           {menuSchema, xPos, yPos, contextMenu};
+         });
+    (menu, Nothing);
+  | ContextMenu(contextMenuMsg) =>
+    let (model', eff) =
+      model
+      |> Option.map(menu => {
+           let (contextMenu', outmsg) =
+             Component_ContextMenu.update(contextMenuMsg, menu.contextMenu);
+
+           switch (outmsg) {
+           | Component_ContextMenu.Nothing => (
+               Some({...menu, contextMenu: contextMenu'}),
+               Nothing,
+             )
+           | Component_ContextMenu.Selected({data}) => (
+               None,
+               ExecuteCommand({command: data}),
+             )
+           | Component_ContextMenu.Cancelled => (None, Nothing)
+           };
+         })
+      |> Option.value(~default=(model, Nothing));
+
+    (model', eff);
+  };
+
+module Effects = {
+  let openMenuAt = (~menuSchema: Schema.t, ~xPos: int, ~yPos: int) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_ContextMenu.openMenuAt", dispatch =>
+      dispatch(MenuRequestedDisplayAt({menuSchema, xPos, yPos}))
+    );
+};
+
+module View = {
+  open Revery.UI;
+
+  module Styles = {
+    open Style;
+    let overlay = [
+      position(`Absolute),
+      top(0),
+      left(0),
+      bottom(0),
+      right(0),
+    ];
+
+    let coords = (~x, ~y) => [position(`Absolute), left(x), top(y)];
+  };
+  let make =
       (
+        ~contextMenu as model,
         ~config,
         ~context,
         ~input,
+        ~theme,
+        ~font: UiFont.t,
         ~dispatch,
-        parent: NativeMenu.t,
-        groups: list(ContextMenu.Group.t),
+        (),
       ) => {
-    let len = List.length(groups);
-    groups
-    |> List.iteri((idx, group) => {
-         let isLast = idx == len - 1;
-         let items = ContextMenu.Group.items(group);
-         buildItem(~config, ~context, ~input, ~dispatch, parent, items);
-
-         if (!isLast) {
-           let separator = Revery.Native.Menu.Item.createSeparator();
-           Revery.Native.Menu.addItem(parent, separator);
-         };
-       });
+    let elem =
+      model
+      |> Option.map(({contextMenu, xPos, yPos, _}) => {
+           <View style={Styles.coords(~x=xPos, ~y=yPos)}>
+             <Component_ContextMenu.View
+               model=contextMenu
+               orientation=(`Top, `Left)
+               dispatch={msg => dispatch(ContextMenu(msg))}
+               theme
+               font
+             />
+           </View>
+         })
+      |> Option.value(~default=React.empty);
+    <View style=Styles.overlay> elem </View>;
   };
 };

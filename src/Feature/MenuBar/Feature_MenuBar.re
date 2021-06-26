@@ -85,35 +85,12 @@ let show = (~contextKeys, ~commands, ~uniqueId, model) => {
     |> List.filter((menu: Menu.t) => Menu.uniqueId(menu) == uniqueId)
     |> (l => List.nth_opt(l, 0));
 
-  let rec groupToContextMenu = (group: ContextMenu.Group.t) => {
-    let items =
-      ContextMenu.Group.items(group)
-      |> List.map(item =>
-           if (Item.isSubmenu(item)) {
-             let submenuItems = Item.submenu(item);
-             let groups = submenuItems |> List.map(groupToContextMenu);
-             Component_ContextMenu.Submenu({
-               label: Item.title(item),
-               items: groups,
-             });
-           } else {
-             Component_ContextMenu.Item({
-               label: Item.title(item),
-               data: Item.command(item),
-               details: Revery.UI.React.empty,
-             });
-           }
-         );
-
-    Component_ContextMenu.Group(items);
-  };
-
   let session =
     maybeMenu
     |> Option.map(menu => {
          let contextMenu =
            Menu.contents(menu, builtMenu)
-           |> List.map(groupToContextMenu)
+           |> List.map(Feature_ContextMenu.groupToContextMenu)
            |> Component_ContextMenu.make;
          {activePath: uniqueId, contextMenu};
        });

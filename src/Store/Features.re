@@ -638,6 +638,28 @@ let update =
       }
     );
 
+  | ContextMenu(msg) =>
+    let contextKeys = Oni_Model.ContextKeys.all(state);
+    let commands = CommandManager.current(state);
+    let (model, outmsg) =
+      Feature_ContextMenu.update(
+        ~contextKeys,
+        ~commands,
+        msg,
+        state.contextMenu,
+      );
+
+    let eff =
+      Feature_ContextMenu.(
+        switch (outmsg) {
+        | Nothing => Isolinear.Effect.none
+        | ExecuteCommand({command}) =>
+          Internal.executeCommandEffect(command, `Null)
+        }
+      );
+
+    ({...state, contextMenu: model}, eff);
+
   | FileSystem(msg) =>
     let (model, outmsg) = Feature_FileSystem.update(msg, state.fileSystem);
 

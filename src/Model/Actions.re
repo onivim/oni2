@@ -23,6 +23,7 @@ type t =
     })
   | Commands(Feature_Commands.msg(t))
   | Configuration(Feature_Configuration.msg)
+  | ContextMenu(Feature_ContextMenu.msg)
   | Decorations(Feature_Decorations.msg)
   | Diagnostics(Feature_Diagnostics.msg)
   | EditorFont(Service_Font.msg)
