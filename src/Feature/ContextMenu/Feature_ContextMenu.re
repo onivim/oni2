@@ -38,6 +38,16 @@ let rec groupToContextMenu = (group: ContextMenu.Group.t) => {
   Component_ContextMenu.Group(items);
 };
 
+let augmentWithShortcutKeys = (~getShortcutKey, contextMenu) =>
+  contextMenu
+  |> Component_ContextMenu.map(~f=item =>
+       Component_ContextMenu.{
+         ...item,
+         label: item.label,
+         details: getShortcutKey(item.data),
+       }
+     );
+
 [@deriving show]
 type msg =
   | MenuRequestedDisplayAt({
@@ -128,9 +138,48 @@ module View = {
         ~dispatch,
         (),
       ) => {
+    let getShortcutKey = command => {
+      Feature_Input.commandToAvailableBindings(
+        ~command,
+        ~config,
+        ~context,
+        input,
+      )
+      |> (
+        l =>
+          List.nth_opt(l, 0)
+          |> Option.map(keys =>
+               keys
+               |> List.map(Feature_Input.keyPressToString)
+               |> String.concat(" ")
+             )
+          |> Utility.OptionEx.or_lazy(() =>
+               if (Utility.StringEx.startsWith(~prefix=":", command)) {
+                 Some(command);
+               } else {
+                 None;
+               }
+             )
+          |> Option.map(cmd =>
+               <Text
+                 fontFamily={font.family}
+                 fontSize=11.
+                 style=Style.[
+                   color(Feature_Theme.Colors.Menu.foreground.from(theme)),
+                   opacity(0.75),
+                 ]
+                 text=cmd
+               />
+             )
+          |> Option.value(~default=Revery.UI.React.empty)
+      );
+    };
+
     let elem =
       model
       |> Option.map(({contextMenu, xPos, yPos, _}) => {
+           let contextMenu =
+             contextMenu |> augmentWithShortcutKeys(~getShortcutKey);
            <View style={Styles.coords(~x=xPos, ~y=yPos)}>
              <Component_ContextMenu.View
                model=contextMenu
@@ -139,7 +188,7 @@ module View = {
                theme
                font
              />
-           </View>
+           </View>;
          })
       |> Option.value(~default=React.empty);
     <View style=Styles.overlay> elem </View>;

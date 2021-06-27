@@ -194,16 +194,6 @@ module View = {
     let text = fg => [color(fg)];
   };
 
-  let augmentWithShortcutKeys = (~getShortcutKey, contextMenu) =>
-    contextMenu
-    |> Component_ContextMenu.map(~f=item =>
-         Component_ContextMenu.{
-           ...item,
-           label: item.label,
-           details: getShortcutKey(item.data),
-         }
-       );
-
   module TopMenu = {
     let make =
         (
@@ -224,7 +214,10 @@ module View = {
           ? model.activeSession
             |> Option.map(({contextMenu, _}) => {
                  let contextMenu' =
-                   contextMenu |> augmentWithShortcutKeys(~getShortcutKey);
+                   contextMenu
+                   |> Feature_ContextMenu.augmentWithShortcutKeys(
+                        ~getShortcutKey,
+                      );
 
                  <Component_ContextMenu.View
                    model=contextMenu'
