@@ -180,7 +180,7 @@ module View = {
       |> Option.map(({contextMenu, xPos, yPos, _}) => {
            let contextMenu =
              contextMenu |> augmentWithShortcutKeys(~getShortcutKey);
-           <View style={Styles.coords(~x=xPos, ~y=yPos)}>
+           <View style={Styles.coords(~x=xPos + 1, ~y=yPos + 1)}>
              <Component_ContextMenu.View
                model=contextMenu
                orientation=(`Top, `Left)
