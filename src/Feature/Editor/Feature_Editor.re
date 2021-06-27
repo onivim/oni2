@@ -124,7 +124,13 @@ let update = (editor, msg) => {
         : Nothing;
     (
       editor
-      |> Editor.mouseDown(~altKey, ~time, ~pixelX=editorX, ~pixelY=editorY),
+      |> Editor.mouseDown(
+           ~altKey,
+           ~time,
+           ~pixelX=editorX,
+           ~pixelY=editorY,
+           ~button,
+         ),
       outmsg,
     );
   | EditorMouseUp({altKey, time, pixelX, pixelY}) => (

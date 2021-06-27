@@ -1887,7 +1887,7 @@ let moveScreenLines = (~position, ~count, editor) => {
   );
 };
 
-let mouseDown = (~altKey, ~time, ~pixelX, ~pixelY, editor) => {
+let mouseDown = (~altKey, ~time, ~pixelX, ~pixelY, ~button, editor) => {
   ignore(altKey);
   ignore(time);
   let bytePosition: BytePosition.t =
@@ -1903,12 +1903,9 @@ let mouseDown = (~altKey, ~time, ~pixelX, ~pixelY, editor) => {
     } else {
       Vim.Mode.Normal({cursor: bytePosition});
     };
-  {
-    ...editor,
-    mode,
-    isMouseDown: true,
-    mouseDownBytePosition: Some(bytePosition),
-  };
+  let isMouseDown = button != Revery.MouseButton.BUTTON_RIGHT;
+  let mouseDownBytePosition = isMouseDown ? Some(bytePosition) : None;
+  {...editor, mode, isMouseDown, mouseDownBytePosition};
 };
 
 let getCharacterUnderMouse = editor => {
