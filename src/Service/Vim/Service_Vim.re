@@ -1,7 +1,7 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
-module Log = (val Log.withNamespace("Service_Vim"));
+module Log = (val Log.withNamespace("Oni2.Service.Vim"));
 
 let forceReload = () =>
   Isolinear.Effect.create(~name="vim.discardChanges", () =>
@@ -43,6 +43,7 @@ module Effects = {
       let isNormalMode = Vim.Mode.isNormal(mode);
       let isVisualMode = Vim.Mode.isVisual(mode);
 
+
       if (isInsertMode || isCmdLineMode || isSelectMode) {
         if (!isCmdLineMode) {
           Vim.command("set paste") |> ignore;
@@ -58,7 +59,7 @@ module Effects = {
         };
       } else if (isVisualMode || isNormalMode) {
         let (latestContext: Vim.Context.t, _effects) =
-          Oni_Core.VimEx.inputString("\"*p");
+          Vim.input(~context, "\"*p");
         dispatch(toMsg(latestContext.mode));
       };
     });
