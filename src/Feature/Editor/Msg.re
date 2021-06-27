@@ -24,9 +24,12 @@ type t =
   | EditorMouseEnter
   | EditorMouseDown({
       altKey: bool,
+      button: [@opaque] Revery.MouseButton.t,
       time: [@opaque] Revery.Time.t,
-      pixelX: float,
-      pixelY: float,
+      windowX: float,
+      windowY: float,
+      editorX: float,
+      editorY: float,
     })
   | EditorMouseMoved({
       time: [@opaque] Revery.Time.t,

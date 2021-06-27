@@ -165,6 +165,13 @@ module Internal = {
               client,
             )
           }
+        | DisplayMenuAt({menu, xPos, yPos}) =>
+          Feature_ContextMenu.Effects.openMenuAt(
+            ~menuSchema=menu,
+            ~xPos,
+            ~yPos,
+          )
+          |> Isolinear.Effect.map(msg => ContextMenu(msg))
         };
 
       (layout, effect);
