@@ -43,7 +43,6 @@ module Effects = {
       let isNormalMode = Vim.Mode.isNormal(mode);
       let isVisualMode = Vim.Mode.isVisual(mode);
 
-
       if (isInsertMode || isCmdLineMode || isSelectMode) {
         if (!isCmdLineMode) {
           Vim.command("set paste") |> ignore;
