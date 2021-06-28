@@ -56,30 +56,89 @@ type msg =
       xPos: int,
       yPos: int,
     })
-  | ContextMenu(Component_ContextMenu.msg(string));
+  | ContextMenu(Component_ContextMenu.msg(string))
+  | NativeMenuItemClicked(string);
 
 type outmsg =
   | Nothing
-  | ExecuteCommand({command: string});
+  | ExecuteCommand({command: string})
+  | Effect(Isolinear.Effect.t(msg));
 
-let update = (~contextKeys, ~commands, msg, model) =>
+module Effects = {
+  let displayMenuAt = (~menuSchema: Schema.t, ~xPos: int, ~yPos: int) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_ContextMenu.displayMenuAt", dispatch =>
+      dispatch(MenuRequestedDisplayAt({menuSchema, xPos, yPos}))
+    );
+
+  let displayNativeMenuAt =
+      (~config, ~contextKeys, ~input, ~builtMenu, ~xPos, ~yPos, ~window) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="contextMenu.displayNativeMenuAt", dispatch => {
+      let topLevelItems = ContextMenu.top(builtMenu |> ContextMenu.schema);
+
+      Utility.OptionEx.iter2(
+        (item, window) => {
+          let title = ContextMenu.Menu.title(item);
+          let nativeMenu = NativeMenu.create(title);
+          Native.buildGroup(
+            ~config,
+            ~context=contextKeys,
+            ~input,
+            ~dispatch,
+            nativeMenu,
+            ContextMenu.Menu.contents(item, builtMenu),
+          );
+          Revery.Native.Menu.displayIn(
+            ~x=xPos,
+            ~y=yPos,
+            nativeMenu,
+            window |> Revery.Window.getSdlWindow,
+          );
+        },
+        List.nth_opt(topLevelItems, 0),
+        window,
+      );
+    });
+};
+
+let update = (~contextKeys, ~commands, ~config, ~input, ~window, msg, model) =>
   switch (msg) {
   | MenuRequestedDisplayAt({menuSchema, xPos, yPos}) =>
     let builtMenu = ContextMenu.build(~contextKeys, ~commands, menuSchema);
-    let topLevelItems = ContextMenu.top(menuSchema);
 
-    let maybeMenu = List.nth_opt(topLevelItems, 0);
+    if (Revery.Environment.isMac) {
+      let eff =
+        Effects.displayNativeMenuAt(
+          ~config,
+          ~contextKeys,
+          ~input,
+          ~builtMenu,
+          ~xPos,
+          ~yPos,
+          ~window,
+        )
+        |> Isolinear.Effect.map(str => NativeMenuItemClicked(str));
+      (None, Effect(eff));
+    } else {
+      let topLevelItems = ContextMenu.top(menuSchema);
+      let maybeMenu = List.nth_opt(topLevelItems, 0);
 
-    let menu =
-      maybeMenu
-      |> Option.map(menu => {
-           let contextMenu =
-             Menu.contents(menu, builtMenu)
-             |> List.map(groupToContextMenu)
-             |> Component_ContextMenu.make;
-           {menuSchema, xPos, yPos, contextMenu};
-         });
-    (menu, Nothing);
+      let menu =
+        maybeMenu
+        |> Option.map(menu => {
+             let contextMenu =
+               Menu.contents(menu, builtMenu)
+               |> List.map(groupToContextMenu)
+               |> Component_ContextMenu.make;
+             {menuSchema, xPos, yPos, contextMenu};
+           });
+      (menu, Nothing);
+    };
+  | NativeMenuItemClicked(command) => (
+      model,
+      ExecuteCommand({command: command}),
+    )
   | ContextMenu(contextMenuMsg) =>
     let (model', eff) =
       model
@@ -103,14 +162,6 @@ let update = (~contextKeys, ~commands, msg, model) =>
 
     (model', eff);
   };
-
-module Effects = {
-  let openMenuAt = (~menuSchema: Schema.t, ~xPos: int, ~yPos: int) =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="Feature_ContextMenu.openMenuAt", dispatch =>
-      dispatch(MenuRequestedDisplayAt({menuSchema, xPos, yPos}))
-    );
-};
 
 module View = {
   open Revery.UI;

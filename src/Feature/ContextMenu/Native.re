@@ -114,3 +114,51 @@ and buildGroup =
        };
      });
 };
+
+let buildApplicationItems =
+    (
+      ~config,
+      ~context,
+      ~input,
+      ~dispatch,
+      parent: NativeMenu.t,
+      items: list(ContextMenu.Item.t),
+    ) => {
+  items
+  |> List.iter(item => {
+       let title = ContextMenu.Item.title(item);
+       if (ContextMenu.Item.isSubmenu(item)) {
+         let nativeMenu = NativeMenu.create(title);
+         NativeMenu.insertSubmenuAt(~idx=1, ~parent, ~child=nativeMenu);
+         buildGroup(
+           ~config,
+           ~context,
+           ~input,
+           ~dispatch,
+           nativeMenu,
+           ContextMenu.Item.submenu(item),
+         );
+       } else {
+         ();
+         let command = ContextMenu.Item.command(item);
+         let keyEquivalent =
+           getKeyEquivalent(~config, ~context, ~input, command)
+           |> Option.value(
+                ~default=Revery.Native.Menu.KeyEquivalent.ofString(""),
+              );
+
+         let nativeMenuItem =
+           Revery.Native.Menu.Item.create(
+             ~title,
+             ~onClick=
+               (~fromKeyPress, ()) =>
+                 if (!fromKeyPress) {
+                   dispatch(command);
+                 },
+             ~keyEquivalent,
+             (),
+           );
+         Revery.Native.Menu.insertItemAt(parent, nativeMenuItem, 1);
+       };
+     });
+};
