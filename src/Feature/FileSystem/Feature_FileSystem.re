@@ -8,6 +8,10 @@ module Internal = {
     v |> Json.Encode.encode_value(encoder) |> Reply.okJson;
   };
 
+  let mapEncoderError = (encoder, v) => {
+    v |> Json.Encode.encode_value(encoder) |> Reply.errorJson;
+  };
+
   let fileTypeFromStat: Luv.File.Stat.t => Files.FileType.t =
     (statResult: Luv.File.Stat.t) => {
       Luv.File.(
@@ -103,7 +107,7 @@ let update = (msg, model) => {
           Exthost.Files.FileSystemError.(
             make(Code.fileNotFound)
             |> Lwt.return
-            |> Lwt.map(Internal.mapEncoder(encode))
+            |> Lwt.map(Internal.mapEncoderError(encode))
           )
         },
       );
@@ -128,7 +132,7 @@ let update = (msg, model) => {
           Exthost.Files.FileSystemError.(
             make(Code.fileNotFound)
             |> Lwt.return
-            |> Lwt.map(Internal.mapEncoder(encode))
+            |> Lwt.map(Internal.mapEncoderError(encode))
           )
         },
       );
@@ -148,7 +152,7 @@ let update = (msg, model) => {
           Exthost.Files.FileSystemError.(
             make(Code.fileNotFound)
             |> Lwt.return
-            |> Lwt.map(Internal.mapEncoder(encode))
+            |> Lwt.map(Internal.mapEncoderError(encode))
           )
         },
       );
@@ -196,7 +200,7 @@ let update = (msg, model) => {
           Exthost.Files.FileSystemError.(
             make(Code.fileNotFound)
             |> Lwt.return
-            |> Lwt.map(Internal.mapEncoder(encode))
+            |> Lwt.map(Internal.mapEncoderError(encode))
           )
         },
       );

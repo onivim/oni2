@@ -72,6 +72,10 @@ module Message: {
           requestId: int,
           error: string,
         })
+      | ReplyErrorJSON({
+          requestId: int,
+          error: Yojson.Safe.t,
+        })
       | Terminate;
   };
 
