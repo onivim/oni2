@@ -28,6 +28,7 @@
 - #3692 - CodeLens: Fix delegated commands not executing (related #2380)
 - #3702 - OSX: Fix crash on open-with (fixes #3698)
 - #3703 - Sidebar: Fix window navigation to sidebar when closed or zen mode (related #3681)
+- #3709 - Extension: Fix activation error with nim extension (fixes #3685)
 
 ### Performance
 

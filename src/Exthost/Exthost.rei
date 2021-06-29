@@ -1890,6 +1890,8 @@ module Reply: {
 
   let error: string => t;
 
+  let errorJson: Yojson.Safe.t => t;
+
   let okEmpty: t;
 
   let okJson: Yojson.Safe.t => t;
