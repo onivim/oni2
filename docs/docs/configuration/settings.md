@@ -102,6 +102,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
     - _"inline"_ - Show snippets sorted in-line with other suggestion items
     - _"hidden"_ - Don't show snippet suggestions at all
 
+- `editor.suggest.itemsToShow` __(_int_ default: `5`)__ - The maximum number of suggestions to show in the suggestion UI.
+
 - `editor.wordBasedSuggestions` __(_bool_ default: `true`)__ When `true`, keywords are provided as completion suggestions.
 
 - `editor.wordWrap` __(_bool_ default: `true`)__ When `true`, Onivim will soft-wrap lines at the viewport boundary.
