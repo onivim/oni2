@@ -41,19 +41,22 @@ let menus = (~isFocused, ~isNewQuickMenuOpen) => {
   );
 };
 
-let editors = (~isFocused) => {
-  Schema.(
-    fromList(
-      isFocused
-        ? [
-          bool("editorTextFocus", state =>
+let isEditorFocused = state => {
             switch (ModeManager.current(state)) {
             | TerminalInsert
             | TerminalNormal
             | TerminalVisual(_) => false
             | _ => true
             }
-          ),
+};
+
+let editors = (~isFocused) => {
+  Schema.(
+    fromList(
+      isFocused
+        ? [
+          bool("editorFocus", isEditorFocused),
+          bool("editorTextFocus", isEditorFocused),
           bool("terminalFocus", state =>
             switch (ModeManager.current(state)) {
             | TerminalInsert
