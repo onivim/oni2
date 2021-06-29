@@ -1,6 +1,8 @@
 (library
  (name Oni2_KeyboardLayout)
  (public_name Oni2.KeyboardLayout)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_deriving.show))
  (foreign_stubs
   (language c)
   (names keyboard-layout keyboard-layout-mac keyboard-layout-windows
