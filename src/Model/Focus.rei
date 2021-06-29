@@ -27,3 +27,4 @@ let pop: (focusable, stack) => stack;
 let current: stack => option(focusable);
 
 let isLayoutFocused: focusable => bool;
+let isSidebarFocused: focusable => bool;

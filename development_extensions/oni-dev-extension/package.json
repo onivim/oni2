@@ -13,6 +13,10 @@
 	"contributes": {
 		"commands": [
 			{
+				"command": "developer.oni.showActiveEditorSelection",
+				"title": "Onivim - Developer: Show Active Editor Selection"
+			},
+			{
 				"command": "developer.oni.showChoiceMessage",
 				"title": "Onivim - Developer: Show Choice Message"
 			},

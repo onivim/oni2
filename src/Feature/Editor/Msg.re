@@ -47,12 +47,6 @@ type t =
       mode: [@opaque] Vim.Mode.t,
       effects: [@opaque] list(Vim.Effect.t),
     })
-  | InlineElementSizeChanged({
-      key: string,
-      uniqueId: string,
-      line: EditorCoreTypes.LineNumber.t,
-      height: int,
-    })
   | InlineElementClicked({
       key: string,
       uniqueId: string,

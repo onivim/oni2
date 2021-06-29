@@ -723,7 +723,7 @@ void onCursorMoveScreenLine(screenLineMotion_T motion, int count, linenr_T start
 
 }
 
-void onOutput(char_u *cmd, char_u* output) {
+void onOutput(char_u *cmd, char_u* output, int isSilent) {
   CAMLparam0();
   CAMLlocal2(vStr, vMaybeOutput);
 
@@ -744,7 +744,7 @@ void onOutput(char_u *cmd, char_u* output) {
    if (lv_onOutput == NULL) {
      lv_onOutput = caml_named_value("lv_onOutput");
    }
-  caml_callback2(*lv_onOutput, vStr, vMaybeOutput);
+  caml_callback3(*lv_onOutput, vStr, vMaybeOutput, Val_bool(isSilent));
 
   CAMLreturn0;
 }

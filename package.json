@@ -404,7 +404,7 @@
     "esy-skia": "*",
     "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.88",
+    "libvim": "8.10869.89",
     "ocaml": "~4.12",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#a80a9d9",
     "reason-fzy": "bryphe/reason-fzy#5a1daf4",
@@ -412,8 +412,8 @@
     "revery": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#d737fcd",
-    "esy-skia": "revery-ui/esy-skia#6106223",
+    "revery": "revery-ui/revery#dd10c87",
+    "esy-skia": "revery-ui/esy-skia#1c81aac",
     "isolinear": "revery-ui/isolinear#049ad1e",
     "@opam/fs": "bryphe/reason-native:fs.opam#e16590c",
     "@opam/fp": "bryphe/reason-native:fp.opam#e16590c",

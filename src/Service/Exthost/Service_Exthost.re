@@ -549,7 +549,10 @@ module Sub = {
       type nonrec msg = unit;
       type nonrec params = editorParams;
 
-      type state = {id: string};
+      type state = {
+        id: string,
+        lastSelections: list(Exthost.Selection.t),
+      };
 
       let name = "Service_Exthost.EditorSubscription";
       let id = params => {
@@ -570,12 +573,34 @@ module Sub = {
           ~delta=addedDelta,
           params.client,
         );
-        {id: params.editor.id};
+        {id: params.editor.id, lastSelections: params.editor.selections};
       };
 
-      let update = (~params as _, ~state, ~dispatch as _) => {
-        state;
-      };
+      let update = (~params, ~state, ~dispatch as _) =>
+        if (params.editor.selections != state.lastSelections) {
+          open Exthost.TextEditor;
+          Log.infof(m =>
+            m("Sending updated selection for editor: %s", params.editor.id)
+          );
+          let () =
+            Exthost.Request.Editors.acceptEditorPropertiesChanged(
+              ~id=params.editor.id,
+              ~props=
+                PropertiesChangeData.{
+                  selections:
+                    Some(
+                      SelectionChangeEvent.{
+                        source: None,
+                        selections: params.editor.selections,
+                      },
+                    ),
+                },
+              params.client,
+            );
+          {...state, lastSelections: params.editor.selections};
+        } else {
+          state;
+        };
 
       let dispose = (~params, ~state) => {
         Log.infof(m =>

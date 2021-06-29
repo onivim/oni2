@@ -1738,6 +1738,44 @@ module TerminalService = {
   };
 };
 
+module TextEditors = {
+  [@deriving show]
+  type msg =
+    | TryApplyEdits({
+        id: string,
+        modelVersionId: int,
+        // TODO:
+        //opts: ApplyEditOptions.t,
+        edits: list(Edit.SingleEditOperation.t),
+      });
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    Base.Result.Let_syntax.(
+      switch (method) {
+      | "$tryApplyEdits" =>
+        switch (args) {
+        | `List([
+            `String(id),
+            `Int(modelVersionId),
+            editsJson,
+            _applyEditOptions,
+          ]) =>
+          let%bind edits =
+            editsJson
+            |> Internal.decode_value(
+                 Json.Decode.list(Edit.SingleEditOperation.decode),
+               );
+          Ok(TryApplyEdits({id, modelVersionId, edits}));
+        | _ => Error("Unexpected arguments for $tryApplyEdits")
+        }
+
+      | unhandledMethod =>
+        Error("Unhandled TextEditor method: " ++ unhandledMethod)
+      }
+    );
+  };
+};
+
 module Window = {
   [@deriving show]
   type msg =
@@ -1872,6 +1910,7 @@ type t =
   | Storage(Storage.msg)
   | Telemetry(Telemetry.msg)
   | TerminalService(TerminalService.msg)
+  | TextEditors(TextEditors.msg)
   | Window(Window.msg)
   | Workspace(Workspace.msg)
   | Initialized

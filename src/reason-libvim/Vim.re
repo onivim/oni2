@@ -465,8 +465,8 @@ let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queueEffect(Effect.Goto(gotoType));
 };
 
-let _onOutput = (cmd, output) => {
-  queueEffect(Effect.Output({cmd, output}));
+let _onOutput = (cmd, output, isSilent) => {
+  queueEffect(Effect.Output({cmd, output, isSilent}));
 };
 
 let _onClear = (target: Clear.target, count: int) => {

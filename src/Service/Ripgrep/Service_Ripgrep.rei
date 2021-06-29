@@ -10,9 +10,12 @@ module Sub: {
     (
       ~uniqueId: string,
       ~exclude: list(string),
+      ~include_: list(string),
       ~directory: string,
       ~query: string,
       ~setup: Setup.t,
+      ~enableRegex: bool=?,
+      ~caseSensitive: bool=?,
       findInFilesMsg => 'msg
     ) =>
     Isolinear.Sub.t('msg);
