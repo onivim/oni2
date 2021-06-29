@@ -102,7 +102,7 @@ let combineUnmatchedStrings = (keys: list(Matcher_internal.keyMatcher)) => {
             // ...or if the string is part of a unicode character (#3599)
             | Some((prev, prevMods))
                 when prevMods == mods || !isValidUtf8String(prev) =>
-              combine(acc, Some((prev ++ str, mods)), tail)
+              combine(acc, Some((prev ++ str, prevMods)), tail)
 
             // Modifiers don't match, so append the current to the key sequence,
             // and start a new sequence to track.
