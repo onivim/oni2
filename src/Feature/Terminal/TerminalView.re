@@ -98,7 +98,7 @@ module Terminal = {
       dispatch(
         Terminal({
           id: terminal.id,
-          msg: MouseWheelScrolled({deltaY: deltaY *. 25.0}),
+          msg: MouseWheelScrolled({deltaY: deltaY *. (-25.0)}),
         }),
       );
     };
