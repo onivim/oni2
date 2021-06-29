@@ -162,14 +162,14 @@ module VimSettings = {
   open VimSetting.Schema;
 
   let smoothScroll =
-    vim("smoothscroll", scrollSetting => {
+    vim("smoothscroll", ~compatibilityDefault=false, scrollSetting => {
       scrollSetting
       |> VimSetting.decode_value_opt(bool)
       |> Option.value(~default=false)
     });
 
   let minimap =
-    vim("minimap", scrollSetting => {
+    vim("minimap", ~compatibilityDefault=false, scrollSetting => {
       scrollSetting
       |> VimSetting.decode_value_opt(bool)
       |> Option.value(~default=false)
