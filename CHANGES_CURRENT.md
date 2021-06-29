@@ -29,6 +29,7 @@
 - #3702 - OSX: Fix crash on open-with (fixes #3698)
 - #3703 - Sidebar: Fix window navigation to sidebar when closed or zen mode (related #3681)
 - #3709 - Extension: Fix activation error with nim extension (fixes #3685)
+- #3612 - Input: Fix unicode parsing for keybindings (fixes #3599)
 
 ### Performance
 
