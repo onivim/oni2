@@ -42,12 +42,12 @@ let menus = (~isFocused, ~isNewQuickMenuOpen) => {
 };
 
 let isEditorFocused = state => {
-            switch (ModeManager.current(state)) {
-            | TerminalInsert
-            | TerminalNormal
-            | TerminalVisual(_) => false
-            | _ => true
-            }
+  switch (ModeManager.current(state)) {
+  | TerminalInsert
+  | TerminalNormal
+  | TerminalVisual(_) => false
+  | _ => true
+  };
 };
 
 let editors = (~isFocused) => {
