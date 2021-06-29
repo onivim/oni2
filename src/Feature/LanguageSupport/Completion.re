@@ -1565,7 +1565,7 @@ module View = {
       <View style=innerStyleWithShadow>
         <FlatList
           rowHeight=itemHeight
-          initialRowsToRender={numberOfItemsToShow}
+          initialRowsToRender=numberOfItemsToShow
           count={Array.length(items)}
           theme
           focused>
