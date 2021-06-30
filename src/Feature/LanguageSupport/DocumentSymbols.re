@@ -204,7 +204,7 @@ module Keybindings = {
 };
 
 module MenuItems = {
-  open MenuBar.Schema;
+  open ContextMenu.Schema;
 
   let gotoBufferSymbol =
     command(~title="Go to Symbol in Buffer...", Commands.gotoSymbol);
@@ -216,7 +216,7 @@ module Contributions = {
   let keybindings = Keybindings.[gotoSymbol];
 
   let menuGroups =
-    MenuBar.Schema.[
+    ContextMenu.Schema.[
       group(
         ~order=200,
         ~parent=Feature_MenuBar.Global.go,

@@ -1,46 +1,17 @@
 open Oni_Core;
 
-module Internal = {
-  let keyBindingsToKeyEquivalent:
-    list(list(EditorInput.KeyPress.t)) =>
-    option(Revery.Native.Menu.KeyEquivalent.t) =
-    candidates => {
-      candidates
-      // Filter to single key press
-      |> List.filter_map(
-           fun
-           | [hd] => Some(hd)
-           | _ => None,
-         )
-      |> List.filter_map(EditorInput.KeyPress.toPhysicalKey)
-      |> List.filter(({modifiers, _}: EditorInput.PhysicalKey.t) => {
-           modifiers.super
-         })
-      |> (
-        l =>
-          List.nth_opt(l, 0)
-          |> Option.map(({modifiers, key}: EditorInput.PhysicalKey.t) => {
-               open Revery.Native.Menu;
-               let key =
-                 KeyEquivalent.ofString(EditorInput.Key.toString(key))
-                 |> (key => KeyEquivalent.enableShift(key, modifiers.shift))
-                 |> (key => KeyEquivalent.enableAlt(key, modifiers.alt))
-                 |> (key => KeyEquivalent.enableCtrl(key, modifiers.control));
-
-               key;
-             })
-      );
-    };
-};
-
 module Sub = {
   type menuParams = {
-    builtMenu: MenuBar.builtMenu,
-    getKeyEquivalent: string => option(Revery.Native.Menu.KeyEquivalent.t),
+    builtMenu: ContextMenu.builtMenu,
+    config: Oni_Core.Config.resolver,
+    context: WhenExpr.ContextKeys.t,
+    input: Feature_Input.model,
   };
 
   module OSXMenuSub =
     Isolinear.Sub.Make({
+      open Feature_ContextMenu.Native;
+
       type nonrec msg = string;
       type nonrec params = menuParams;
       type state = unit;
@@ -52,111 +23,29 @@ module Sub = {
         module NativeMenu = Revery.Native.Menu;
         let menuBar = NativeMenu.getMenuBarHandle();
 
-        let topItems = MenuBar.top(params.builtMenu |> MenuBar.schema);
+        let topItems =
+          ContextMenu.top(params.builtMenu |> ContextMenu.schema);
 
-        let rec buildItem =
-                (parent: NativeMenu.t, items: list(MenuBar.Item.t)) => {
-          items
-          |> List.iter(item => {
-               let title = MenuBar.Item.title(item);
-               if (MenuBar.Item.isSubmenu(item)) {
-                 let nativeMenu = NativeMenu.create(title);
-                 NativeMenu.addSubmenu(~parent, ~child=nativeMenu);
-                 buildGroup(nativeMenu, MenuBar.Item.submenu(item));
-               } else {
-                 ();
-                 let command = MenuBar.Item.command(item);
-                 let keyEquivalent =
-                   params.getKeyEquivalent(command)
-                   |> Option.value(
-                        ~default=
-                          Revery.Native.Menu.KeyEquivalent.ofString(""),
-                      );
-
-                 let nativeMenuItem =
-                   Revery.Native.Menu.Item.create(
-                     ~title,
-                     ~onClick=
-                       (~fromKeyPress, ()) =>
-                         if (!fromKeyPress) {
-                           dispatch(command);
-                         },
-                     ~keyEquivalent,
-                     (),
-                   );
-                 Revery.Native.Menu.addItem(parent, nativeMenuItem);
-               };
-             });
-        }
-        and buildApplicationItems =
-            (parent: NativeMenu.t, items: list(MenuBar.Item.t)) => {
-          items
-          |> List.iter(item => {
-               let title = MenuBar.Item.title(item);
-               if (MenuBar.Item.isSubmenu(item)) {
-                 let nativeMenu = NativeMenu.create(title);
-                 NativeMenu.insertSubmenuAt(
-                   ~idx=1,
-                   ~parent,
-                   ~child=nativeMenu,
-                 );
-                 buildGroup(nativeMenu, MenuBar.Item.submenu(item));
-               } else {
-                 ();
-                 let command = MenuBar.Item.command(item);
-                 let keyEquivalent =
-                   params.getKeyEquivalent(command)
-                   |> Option.value(
-                        ~default=
-                          Revery.Native.Menu.KeyEquivalent.ofString(""),
-                      );
-
-                 let nativeMenuItem =
-                   Revery.Native.Menu.Item.create(
-                     ~title,
-                     ~onClick=
-                       (~fromKeyPress, ()) =>
-                         if (!fromKeyPress) {
-                           dispatch(command);
-                         },
-                     ~keyEquivalent,
-                     (),
-                   );
-                 Revery.Native.Menu.insertItemAt(parent, nativeMenuItem, 1);
-               };
-             });
-        }
-        and buildGroup =
-            (parent: NativeMenu.t, groups: list(MenuBar.Group.t)) => {
-          let len = List.length(groups);
-          groups
-          |> List.iteri((idx, group) => {
-               let isLast = idx == len - 1;
-               let items = MenuBar.Group.items(group);
-               buildItem(parent, items);
-
-               if (!isLast) {
-                 let separator = Revery.Native.Menu.Item.createSeparator();
-                 Revery.Native.Menu.addItem(parent, separator);
-               };
-             });
-        };
         topItems
         |> List.rev
         |> List.iter(item => {
-             let title = MenuBar.Menu.title(item);
+             let title = ContextMenu.Menu.title(item);
 
-             if (MenuBar.Menu.uniqueId(item) == "help") {
+             if (ContextMenu.Menu.uniqueId(item) == "help") {
                // Always add 'Help' last...
                let nativeMenu = NativeMenu.create(title);
                NativeMenu.addSubmenu(~parent=menuBar, ~child=nativeMenu);
                buildGroup(
+                 ~config=params.config,
+                 ~context=params.context,
+                 ~input=params.input,
+                 ~dispatch,
                  nativeMenu,
-                 MenuBar.Menu.contents(item, params.builtMenu),
+                 ContextMenu.Menu.contents(item, params.builtMenu),
                );
-             } else if (MenuBar.Menu.uniqueId(item) == "application") {
+             } else if (ContextMenu.Menu.uniqueId(item) == "application") {
                // Merge application items to existing bar
-               let groups = MenuBar.Menu.contents(item, params.builtMenu);
+               let groups = ContextMenu.Menu.contents(item, params.builtMenu);
                let maybeAppMenu =
                  NativeMenu.nth(menuBar, 0)
                  |> Utility.OptionEx.flatMap(NativeMenu.Item.getSubmenu);
@@ -173,8 +62,15 @@ module Sub = {
 
                     groups
                     |> List.iter(group => {
-                         let items = MenuBar.Group.items(group);
-                         buildApplicationItems(appMenu, items);
+                         let items = ContextMenu.Group.items(group);
+                         buildApplicationItems(
+                           ~config=params.config,
+                           ~context=params.context,
+                           ~input=params.input,
+                           ~dispatch,
+                           appMenu,
+                           items,
+                         );
                          let separator =
                            Revery.Native.Menu.Item.createSeparator();
                          Revery.Native.Menu.insertItemAt(
@@ -193,8 +89,12 @@ module Sub = {
                  ~child=nativeMenu,
                );
                buildGroup(
+                 ~config=params.config,
+                 ~context=params.context,
+                 ~input=params.input,
+                 ~dispatch,
                  nativeMenu,
-                 MenuBar.Menu.contents(item, params.builtMenu),
+                 ContextMenu.Menu.contents(item, params.builtMenu),
                );
              };
            });
@@ -211,19 +111,9 @@ module Sub = {
     });
 
   let menu =
-      (~config, ~context, ~input, ~builtMenu: MenuBar.builtMenu, ~toMsg) =>
+      (~config, ~context, ~input, ~builtMenu: ContextMenu.builtMenu, ~toMsg) =>
     if (Revery.Environment.isMac) {
-      let getKeyEquivalent = command => {
-        let bindings =
-          Feature_Input.commandToAvailableBindings(
-            ~config,
-            ~context,
-            ~command,
-            input,
-          );
-        Internal.keyBindingsToKeyEquivalent(bindings);
-      };
-      OSXMenuSub.create({getKeyEquivalent, builtMenu})
+      OSXMenuSub.create({builtMenu, config, context, input})
       |> Isolinear.Sub.map(toMsg);
     } else {
       Isolinear.Sub.none;

@@ -6,7 +6,10 @@ type msg;
 type model;
 
 let initial:
-  (~menus: list(MenuBar.Schema.menu), ~groups: list(MenuBar.Schema.group)) =>
+  (
+    ~menus: list(ContextMenu.Schema.menu),
+    ~groups: list(ContextMenu.Schema.group)
+  ) =>
   model;
 
 type outmsg =

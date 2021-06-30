@@ -714,7 +714,7 @@ module Keybindings = {
 };
 
 module MenuItems = {
-  open MenuBar.Schema;
+  open ContextMenu.Schema;
   module Edit = {
     let formatDocument =
       command(~title="Format Document", Commands.formatDocument);
@@ -739,7 +739,7 @@ module Contributions = {
     ];
 
   let menuGroups =
-    MenuBar.Schema.[
+    ContextMenu.Schema.[
       group(
         ~order=200,
         ~parent=Feature_MenuBar.Global.edit,

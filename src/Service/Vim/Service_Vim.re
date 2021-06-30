@@ -1,7 +1,7 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
-module Log = (val Log.withNamespace("Service_Vim"));
+module Log = (val Log.withNamespace("Oni2.Service.Vim"));
 
 module EditConverter = {
   open Oni_Core;
@@ -103,7 +103,7 @@ module Effects = {
         };
       } else if (isVisualMode || isNormalMode) {
         let (latestContext: Vim.Context.t, _effects) =
-          Oni_Core.VimEx.inputString("\"*p");
+          Vim.input(~context, "\"*p");
         dispatch(toMsg(latestContext.mode));
       };
     });

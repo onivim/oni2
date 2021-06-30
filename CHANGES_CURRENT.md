@@ -4,6 +4,7 @@
 - #3641 - Search: add button to enable RegEx
 - #3654 - Search: add button to enable case-sensitivity
 - #3661 - Search: add include/exclude file boxes
+- #3705 - Editor: add right click menus
 
 ### Bug Fixes
 

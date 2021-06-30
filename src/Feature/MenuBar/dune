@@ -2,6 +2,6 @@
  (name Feature_MenuBar)
  (public_name Oni2.feature.menubar)
  (libraries Oni2.core Oni2.component.contextMenu Oni2.feature.commands
-   Oni2.feature.theme Oni2.feature.input isolinear base)
+   Oni2.feature.theme Oni2.feature.input Oni2.feature.contextmenu isolinear base)
  (preprocess
   (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))
