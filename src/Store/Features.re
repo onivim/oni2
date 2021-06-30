@@ -161,10 +161,17 @@ module Internal = {
           | Some(cmdId) =>
             Service_Exthost.Effects.Commands.executeContributedCommand(
               ~command=cmdId,
-              ~arguments=[`Null],
+              ~arguments=command.arguments,
               client,
             )
           }
+        | DisplayMenuAt({menu, xPos, yPos}) =>
+          Feature_ContextMenu.Effects.displayMenuAt(
+            ~menuSchema=menu,
+            ~xPos,
+            ~yPos,
+          )
+          |> Isolinear.Effect.map(msg => ContextMenu(msg))
         };
 
       (layout, effect);
@@ -393,6 +400,7 @@ let update =
       ~minimize,
       ~close,
       ~restore,
+      ~window,
       ~setVsync,
       state: State.t,
       action: Actions.t,
@@ -487,7 +495,13 @@ let update =
     };
 
   | Exthost(msg) =>
-    let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
+    let (model, outMsg) =
+      Feature_Exthost.update(
+        ~buffers=state.buffers,
+        ~editors=Feature_Layout.visibleEditors(state.layout),
+        msg,
+        state.exthost,
+      );
 
     let state = {...state, exthost: model};
     let eff =
@@ -637,6 +651,34 @@ let update =
         (state, eff);
       }
     );
+
+  | ContextMenu(msg) =>
+    let contextKeys = Oni_Model.ContextKeys.all(state);
+    let commands = CommandManager.current(state);
+    let config = Selectors.configResolver(state);
+    let (model, outmsg) =
+      Feature_ContextMenu.update(
+        ~contextKeys,
+        ~commands,
+        ~config,
+        ~input=state.input,
+        ~window,
+        msg,
+        state.contextMenu,
+      );
+
+    let eff =
+      Feature_ContextMenu.(
+        switch (outmsg) {
+        | Nothing => Isolinear.Effect.none
+        | ExecuteCommand({command}) =>
+          Internal.executeCommandEffect(command, `Null)
+        | Effect(eff) =>
+          eff |> Isolinear.Effect.map(msg => Actions.ContextMenu(msg))
+        }
+      );
+
+    ({...state, contextMenu: model}, eff);
 
   | FileSystem(msg) =>
     let (model, outmsg) = Feature_FileSystem.update(msg, state.fileSystem);
@@ -926,6 +968,7 @@ let update =
           |> Feature_Layout.map(editor =>
                if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
                  Feature_Editor.Editor.setCodeLens(
+                   ~uiFont=state.uiFont,
                    ~startLine,
                    ~stopLine,
                    ~handle,
@@ -1882,26 +1925,22 @@ let update =
     | Focus(Center) => (FocusManager.push(Editor, state), Effect.none)
 
     | Focus(Left) when sideBarLocation == Feature_SideBar.Left => (
-        Feature_SideBar.isOpen(state.sideBar)
-          ? switch (state.sideBar |> Feature_SideBar.selected) {
-            | FileExplorer => FocusManager.push(FileExplorer, state)
-            | SCM => FocusManager.push(SCM, state)
-            | Extensions => FocusManager.push(Extensions, state)
-            | Search => FocusManager.push(Search, state)
-            }
-          : state,
+        switch (state.sideBar |> Feature_SideBar.selected) {
+        | FileExplorer => FocusManager.push(FileExplorer, state)
+        | SCM => FocusManager.push(SCM, state)
+        | Extensions => FocusManager.push(Extensions, state)
+        | Search => FocusManager.push(Search, state)
+        },
         Effect.none,
       )
 
     | Focus(Right) when sideBarLocation == Feature_SideBar.Right => (
-        Feature_SideBar.isOpen(state.sideBar)
-          ? switch (state.sideBar |> Feature_SideBar.selected) {
-            | FileExplorer => FocusManager.push(FileExplorer, state)
-            | SCM => FocusManager.push(SCM, state)
-            | Extensions => FocusManager.push(Extensions, state)
-            | Search => FocusManager.push(Search, state)
-            }
-          : state,
+        switch (state.sideBar |> Feature_SideBar.selected) {
+        | FileExplorer => FocusManager.push(FileExplorer, state)
+        | SCM => FocusManager.push(SCM, state)
+        | Extensions => FocusManager.push(Extensions, state)
+        | Search => FocusManager.push(Search, state)
+        },
         Effect.none,
       )
 

@@ -111,13 +111,6 @@ module View = {
         backgroundColor(bg(~isFocused).from(theme)),
       ];
 
-      // let icon = fgColor => [
-      //   fontFamily("seti.ttf"),
-      //   fontSize(Constants.fontSize),
-      //   marginRight(10),
-      //   color(fgColor),
-      // ];
-
       let label = (~theme, ~isFocused) => [
         textOverflow(`Ellipsis),
         color(Colors.Menu.foreground.from(theme)),
@@ -142,19 +135,6 @@ module View = {
           let ((isFocused, setIsFocused), hooks) =
             Hooks.state(false, hooks);
           let ((maybeBbox, setBbox), hooks) = Hooks.state(None, hooks);
-
-          // let iconView =
-          //   switch (item.icon) {
-          //   | Some(icon) =>
-          //     IconTheme.IconDefinition.(
-          //       <Text
-          //         style={Styles.icon(icon.fontColor)}
-          //         text={FontIcon.codeToIcon(icon.fontCharacter)}
-          //       />
-          //     )
-
-          //   | None => <Text style={Styles.icon(Colors.transparentWhite)} text="" />
-          //   };
 
           let labelView = {
             let style = Styles.label(~theme, ~isFocused);
@@ -440,10 +420,25 @@ module View = {
         Hooks.state(IntMap.empty);
       internalSetMenus := setMenus;
 
-      let onOverlayClick = _ => {
+      let onOverlayClick =
+          (
+            direction: [ | `Down | `Up],
+            evt: NodeEvents.mouseButtonEventParams,
+          ) => {
         let isClickInsideContextMenus = wasChildOnMouseDownPressed^;
         wasChildOnMouseDownPressed := false;
-        if (!isClickInsideContextMenus) {
+
+        let shouldCancel =
+          !isClickInsideContextMenus
+          && {
+            switch (evt.button, direction) {
+            | (MouseButton.BUTTON_RIGHT, `Down)
+            | (MouseButton.BUTTON_LEFT, `Up) => true
+            | _ => false
+            };
+          };
+
+        if (shouldCancel) {
           menus |> IntMap.iter((_key, {onCancel, _}) => onCancel());
         } else {
           ();
@@ -453,7 +448,10 @@ module View = {
       if (IntMap.is_empty(menus)) {
         React.empty;
       } else {
-        <View onMouseUp=onOverlayClick style=Styles.backdrop>
+        <View
+          onMouseUp={onOverlayClick(`Up)}
+          onMouseDown={onOverlayClick(`Down)}
+          style=Styles.backdrop>
           {IntMap.bindings(menus)
            |> List.map(snd)
            |> List.map(({menu, _}) => menu)
@@ -482,9 +480,7 @@ module View = {
           ~orientation=(`Bottom, `Left),
           ~offsetX=0,
           ~offsetY=0,
-          // ~onItemSelect,
           ~dispatch: msg('a) => unit,
-          // ~onCancel,
           ~theme,
           ~font,
           (),

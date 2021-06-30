@@ -85,6 +85,7 @@ module Command: {
   type t = {
     id: option(string),
     label: option(Label.t),
+    arguments: list(Yojson.Safe.t),
   };
 
   let decode: Json.decoder(t);
@@ -163,6 +164,7 @@ module Span: {
 };
 
 module Selection: {
+  [@deriving show]
   type t = {
     selectionStartLineNumber: int,
     selectionStartColumn: int,
@@ -1069,10 +1071,29 @@ module TextEditor: {
       id: string,
       documentUri: Uri.t,
       options: ResolvedConfiguration.t,
+      selections: list(Selection.t),
       // TODO:
-      // selections: list(Selection.t),
       // visibleRanges: list(Range.t),
       // editorPosition: option(EditorViewColumn.t),
+    };
+
+    let encode: Json.encoder(t);
+  };
+
+  module SelectionChangeEvent: {
+    type t = {
+      selections: list(Selection.t),
+      source: option(string),
+    };
+
+    let encode: Json.encoder(t);
+  };
+
+  module PropertiesChangeData: {
+    type t = {
+      selections: option(SelectionChangeEvent.t),
+      // options: IResolvedTextEditorConfiguration
+      // visibleRanges: IRange[]
     };
 
     let encode: Json.encoder(t);
@@ -1737,6 +1758,18 @@ module Msg: {
         });
   };
 
+  module TextEditors: {
+    [@deriving show]
+    type msg =
+      | TryApplyEdits({
+          id: string,
+          modelVersionId: int,
+          // TODO:
+          //opts: ApplyEditOptions.t,
+          edits: list(Edit.SingleEditOperation.t),
+        });
+  };
+
   module OutputService: {
     [@deriving show]
     type msg =
@@ -1831,6 +1864,7 @@ module Msg: {
     | Storage(Storage.msg)
     | Telemetry(Telemetry.msg)
     | TerminalService(TerminalService.msg)
+    | TextEditors(TextEditors.msg)
     | Window(Window.msg)
     | Workspace(Workspace.msg)
     | Initialized
@@ -1855,6 +1889,8 @@ module Reply: {
   let none: t;
 
   let error: string => t;
+
+  let errorJson: Yojson.Safe.t => t;
 
   let okEmpty: t;
 
@@ -1953,6 +1989,12 @@ module Request: {
   module DocumentsAndEditors: {
     let acceptDocumentsAndEditorsDelta:
       (~delta: DocumentsAndEditorsDelta.t, Client.t) => unit;
+  };
+
+  module Editors: {
+    let acceptEditorPropertiesChanged:
+      (~id: string, ~props: TextEditor.PropertiesChangeData.t, Client.t) =>
+      unit;
   };
 
   module ExtensionService: {

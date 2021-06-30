@@ -24,4 +24,10 @@ module Commands: {let paste: Command.t(msg);};
 module Contributions: {
   let commands: list(Command.t(msg));
   let keybindings: list(Feature_Input.Schema.keybinding);
+
+  module MenuItems: {
+    let all: list(ContextMenu.Schema.item);
+
+    let paste: ContextMenu.Schema.item;
+  };
 };

@@ -15,5 +15,5 @@ let update: (msg, model) => (model, outmsg);
 
 module Contributions: {
   let commands: list(Command.t(msg));
-  let menuGroups: list(MenuBar.Schema.group);
+  let menuGroups: list(ContextMenu.Schema.group);
 };
