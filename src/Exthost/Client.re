@@ -152,6 +152,16 @@ let start =
                 )
               );
               send(Outgoing.ReplyError({requestId, error: message}));
+
+            | ErrorJson({error}) =>
+              Log.tracef(m =>
+                m(
+                  "Responding to request %d with error: %s",
+                  requestId,
+                  error |> Yojson.Safe.to_string,
+                )
+              );
+              send(Outgoing.ReplyErrorJSON({requestId, error}));
             };
           };
 

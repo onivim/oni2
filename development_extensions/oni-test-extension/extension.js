@@ -41,6 +41,24 @@ function activate(context) {
             })();
         }),
     );
+
+    cleanup(
+        vscode.commands.registerCommand("oni-test.exthost.runFileSystemTests", () => {
+            
+            (async () => {
+                // From docs: https://code.visualstudio.com/api/references/vscode-api#ExtensionContext
+                // Given path might not exist - but parent directory will exist.
+                const nonExistentPath = path.join(context.storagePath, "some-non-existent-path");
+                const nonExistentUri = vscode.Uri.file(nonExistentPath);
+                try {
+                    await vscode.workspace.fs.stat(nonExistentUri);
+                    fail("#3685: Non-existent path should not have successful stat")
+                } catch (exn) {
+                    pass()
+                }
+        })();
+    })
+    );
 }
 
 // this method is called when your extension is deactivated

@@ -224,6 +224,16 @@ let create =
       | TerminalService(msg) =>
         Service_Terminal.handleExtensionMessage(msg);
         Lwt.return(Reply.okEmpty);
+
+      | TextEditors(textEditorMsg) =>
+        let (promise, resolver) = Lwt.task();
+        dispatch(
+          Actions.Exthost(
+            Feature_Exthost.Msg.textEditors(textEditorMsg, resolver),
+          ),
+        );
+        promise;
+
       | Window(OpenUri({uri})) =>
         Service_OS.Api.openURL(uri |> Oni_Core.Uri.toString)
           ? Lwt.return(Reply.okEmpty)

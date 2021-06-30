@@ -78,9 +78,13 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
          )
        );
 
+  let isOpen =
+    Feature_SideBar.isOpen(state.sideBar)
+    || Focus.isSidebarFocused(FocusManager.current(state));
   let width = Feature_SideBar.width(state.sideBar);
+
   let elem =
-    width > 25
+    width > 25 && isOpen
       ? switch (sideBar |> selected) {
         | FileExplorer =>
           let dispatch = msg => dispatch(Actions.FileExplorer(msg));
@@ -143,9 +147,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
         }
       : React.empty;
 
-  let separator =
-    Feature_SideBar.isOpen(state.sideBar) && width > 4
-      ? <separator /> : React.empty;
+  let separator = isOpen && width > 4 ? <separator /> : React.empty;
 
   let focus = FocusManager.current(state);
   let isFocused =
@@ -154,8 +156,10 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
     || focus == Focus.Extensions
     || focus == Focus.Search;
 
+  let widthTakingIntoAccountOpen = isOpen ? width : 0;
+
   let content =
-    <View ?key style={Styles.contents(~width)}>
+    <View ?key style={Styles.contents(~width=widthTakingIntoAccountOpen)}>
       <View style={Styles.heading(theme)}>
         <View style=Styles.titleContainer>
           <Text

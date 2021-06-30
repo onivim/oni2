@@ -184,7 +184,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
     };
 
   let sideBar = () =>
-    if (!zenMode) {
+    if (!zenMode || Focus.isSidebarFocused(FocusManager.current(state))) {
       <SideBarView config theme state dispatch />;
     } else {
       React.empty;

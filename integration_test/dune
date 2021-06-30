@@ -9,6 +9,7 @@
    ExCommandKeybindingNormTest ExtConfigurationChangedTest ExtHostContextTest
    ExtHostBufferOpenTest ExtHostBufferUpdatesTest
    ExtHostCommandActivationTest ExtHostCompletionTest ExtHostDefinitionTest
+   ExtHostFileSystemTest
    ExtHostFormatSingleEditTest ExtHostFormatFullEditTest
    ExtHostWorkspaceSearchTest FileWatcherTest FormatOnSaveTest
    KeybindingsInvalidJsonTest KeySequenceJJTest InputIgnoreTest
@@ -47,6 +48,7 @@
    ExtConfigurationChangedTest.exe ExtHostBufferOpenTest.exe
    ExtHostBufferUpdatesTest.exe ExtHostCommandActivationTest.exe
    ExtHostContextTest.exe ExtHostCompletionTest.exe ExtHostDefinitionTest.exe
+   ExtHostFileSystemTest.exe
    ExtHostWorkspaceSearchTest.exe FileWatcherTest.exe FormatOnSaveTest.exe
    KeybindingsInvalidJsonTest.exe KeySequenceJJTest.exe InputIgnoreTest.exe
    InputContextKeysTest.exe InputRemapMotionTest.exe LanguageCssTest.exe

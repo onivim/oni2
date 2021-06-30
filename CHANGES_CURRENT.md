@@ -20,6 +20,16 @@
 - #3645 - Terminal: Auto-scroll when key is pressed
 - #3652 - Syntax: Fix highlighting being lost after movement (fixes #3647)
 - #3607 - Vim: Fix crash when specifying empty guifont (fixes #3605)
+- #3665 - CodeLens: Fix overlapping codelens with editor text (fixes #3663)
+- #3668 - UX: Toggle drop-down menu on click (fixes #3569 - thanks @sijad !)
+- #3571 - Extension: Implement $tryApplyEdits (fixes #3545)
+- #3335 - Extension: Fix selection bounds (fixes #3335)
+- #3699 - Vim: Respect silent flag for output-producing commands (fixes #3680)
+- #3692 - CodeLens: Fix delegated commands not executing (related #2380)
+- #3702 - OSX: Fix crash on open-with (fixes #3698)
+- #3703 - Sidebar: Fix window navigation to sidebar when closed or zen mode (related #3681)
+- #3709 - Extension: Fix activation error with nim extension (fixes #3685)
+- #3612 - Input: Fix unicode parsing for keybindings (fixes #3599)
 
 ### Performance
 

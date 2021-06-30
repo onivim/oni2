@@ -194,9 +194,10 @@ let start =
       | SearchStringChanged(_) => ()
       | SearchClearHighlights => ()
 
-      // TODO: Move internal to Feature_Vim
-      | Output({cmd, output}) => {
-          dispatch(Actions.Vim(Feature_Vim.Msg.output(~cmd, ~output)));
+      | Output({cmd, output, isSilent}) => {
+          dispatch(
+            Actions.Vim(Feature_Vim.Msg.output(~cmd, ~output, ~isSilent)),
+          );
         }
 
       | Clear({target, count}) =>

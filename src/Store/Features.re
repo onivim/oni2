@@ -161,7 +161,7 @@ module Internal = {
           | Some(cmdId) =>
             Service_Exthost.Effects.Commands.executeContributedCommand(
               ~command=cmdId,
-              ~arguments=[`Null],
+              ~arguments=command.arguments,
               client,
             )
           }
@@ -495,7 +495,13 @@ let update =
     };
 
   | Exthost(msg) =>
-    let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
+    let (model, outMsg) =
+      Feature_Exthost.update(
+        ~buffers=state.buffers,
+        ~editors=Feature_Layout.visibleEditors(state.layout),
+        msg,
+        state.exthost,
+      );
 
     let state = {...state, exthost: model};
     let eff =
@@ -962,6 +968,7 @@ let update =
           |> Feature_Layout.map(editor =>
                if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
                  Feature_Editor.Editor.setCodeLens(
+                   ~uiFont=state.uiFont,
                    ~startLine,
                    ~stopLine,
                    ~handle,
@@ -1918,26 +1925,22 @@ let update =
     | Focus(Center) => (FocusManager.push(Editor, state), Effect.none)
 
     | Focus(Left) when sideBarLocation == Feature_SideBar.Left => (
-        Feature_SideBar.isOpen(state.sideBar)
-          ? switch (state.sideBar |> Feature_SideBar.selected) {
-            | FileExplorer => FocusManager.push(FileExplorer, state)
-            | SCM => FocusManager.push(SCM, state)
-            | Extensions => FocusManager.push(Extensions, state)
-            | Search => FocusManager.push(Search, state)
-            }
-          : state,
+        switch (state.sideBar |> Feature_SideBar.selected) {
+        | FileExplorer => FocusManager.push(FileExplorer, state)
+        | SCM => FocusManager.push(SCM, state)
+        | Extensions => FocusManager.push(Extensions, state)
+        | Search => FocusManager.push(Search, state)
+        },
         Effect.none,
       )
 
     | Focus(Right) when sideBarLocation == Feature_SideBar.Right => (
-        Feature_SideBar.isOpen(state.sideBar)
-          ? switch (state.sideBar |> Feature_SideBar.selected) {
-            | FileExplorer => FocusManager.push(FileExplorer, state)
-            | SCM => FocusManager.push(SCM, state)
-            | Extensions => FocusManager.push(Extensions, state)
-            | Search => FocusManager.push(Search, state)
-            }
-          : state,
+        switch (state.sideBar |> Feature_SideBar.selected) {
+        | FileExplorer => FocusManager.push(FileExplorer, state)
+        | SCM => FocusManager.push(SCM, state)
+        | Extensions => FocusManager.push(Extensions, state)
+        | Search => FocusManager.push(Search, state)
+        },
         Effect.none,
       )
 

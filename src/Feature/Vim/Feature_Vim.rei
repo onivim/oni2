@@ -34,7 +34,7 @@ module Msg: {
       ~effects: list(Vim.Effect.t)
     ) =>
     msg;
-  let output: (~cmd: string, ~output: option(string)) => msg;
+  let output: (~cmd: string, ~output: option(string), ~isSilent: bool) => msg;
   let pasted: string => msg;
   let settingChanged: (~setting: Vim.Setting.t) => msg;
 };
