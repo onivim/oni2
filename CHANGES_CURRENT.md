@@ -54,3 +54,5 @@
 - #3688 - Dependency: esy-skia -> 1c81aac
 
 ### Infrastructure
+
+- #3721 - Packaging - Linux: Bundle compiled glib settings (fixes #3706)
