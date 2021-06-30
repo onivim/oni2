@@ -165,6 +165,13 @@ module Internal = {
               client,
             )
           }
+        | DisplayMenuAt({menu, xPos, yPos}) =>
+          Feature_ContextMenu.Effects.displayMenuAt(
+            ~menuSchema=menu,
+            ~xPos,
+            ~yPos,
+          )
+          |> Isolinear.Effect.map(msg => ContextMenu(msg))
         };
 
       (layout, effect);
@@ -393,6 +400,7 @@ let update =
       ~minimize,
       ~close,
       ~restore,
+      ~window,
       ~setVsync,
       state: State.t,
       action: Actions.t,
@@ -643,6 +651,34 @@ let update =
         (state, eff);
       }
     );
+
+  | ContextMenu(msg) =>
+    let contextKeys = Oni_Model.ContextKeys.all(state);
+    let commands = CommandManager.current(state);
+    let config = Selectors.configResolver(state);
+    let (model, outmsg) =
+      Feature_ContextMenu.update(
+        ~contextKeys,
+        ~commands,
+        ~config,
+        ~input=state.input,
+        ~window,
+        msg,
+        state.contextMenu,
+      );
+
+    let eff =
+      Feature_ContextMenu.(
+        switch (outmsg) {
+        | Nothing => Isolinear.Effect.none
+        | ExecuteCommand({command}) =>
+          Internal.executeCommandEffect(command, `Null)
+        | Effect(eff) =>
+          eff |> Isolinear.Effect.map(msg => Actions.ContextMenu(msg))
+        }
+      );
+
+    ({...state, contextMenu: model}, eff);
 
   | FileSystem(msg) =>
     let (model, outmsg) = Feature_FileSystem.update(msg, state.fileSystem);

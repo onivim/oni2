@@ -112,7 +112,15 @@ let isMinimapEnabled: t => bool;
 
 // Mouse interactions
 let mouseDown:
-  (~altKey: bool, ~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+  (
+    ~altKey: bool,
+    ~time: Revery.Time.t,
+    ~pixelX: float,
+    ~pixelY: float,
+    ~button: Revery.MouseButton.t,
+    t
+  ) =>
+  t;
 let mouseUp:
   (~altKey: bool, ~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
 let mouseMove: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;

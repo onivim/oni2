@@ -378,7 +378,7 @@ let configurationChanged = (~hasWorkspace, ~config, model) => {
 };
 
 module MenuItems = {
-  open MenuBar.Schema;
+  open ContextMenu.Schema;
   module View = {
     let explorer = command(~title="Explorer", Commands.openExplorerPane);
 
@@ -422,10 +422,10 @@ module Contributions = {
       openSCM,
     ];
 
-  let menuItems = commands |> List.map(MenuBar.Schema.command);
+  let menuItems = commands |> List.map(ContextMenu.Schema.command);
 
   let menuGroups =
-    MenuBar.Schema.[
+    ContextMenu.Schema.[
       group(
         ~order=200,
         ~parent=Feature_MenuBar.Global.view,
@@ -442,7 +442,7 @@ module Contributions = {
         MenuItems.Edit.[findInFiles],
       ),
     ];
-  MenuBar.Schema.group(~parent=Feature_MenuBar.Global.view, menuItems);
+  ContextMenu.Schema.group(~parent=Feature_MenuBar.Global.view, menuItems);
 
   let contextKeys = (~isFocused) => {
     let common = ContextKeys.[sideBarVisible, activeViewlet];

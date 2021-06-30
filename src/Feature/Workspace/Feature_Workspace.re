@@ -160,7 +160,7 @@ module Commands = {
 };
 
 module MenuItems = {
-  open MenuBar.Schema;
+  open ContextMenu.Schema;
   open Feature_MenuBar;
 
   let openFolder = command(Commands.openFolder);

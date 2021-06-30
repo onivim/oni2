@@ -471,6 +471,7 @@ type t = {
   zoom: Feature_Zoom.model,
   autoUpdate: Feature_AutoUpdate.model,
   registration: Feature_Registration.model,
+  contextMenu: Feature_ContextMenu.model,
 };
 
 let initial =
@@ -646,5 +647,6 @@ let initial =
     zoom: Feature_Zoom.initial(~getZoom, ~setZoom),
     autoUpdate: Feature_AutoUpdate.initial,
     registration: Feature_Registration.initial(licenseKeyPersistence),
+    contextMenu: Feature_ContextMenu.initial,
   };
 };

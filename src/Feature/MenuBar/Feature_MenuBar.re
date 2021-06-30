@@ -1,5 +1,5 @@
 open Oni_Core;
-open MenuBar;
+open ContextMenu;
 
 module Colors = Feature_Theme.Colors;
 
@@ -77,42 +77,20 @@ type outmsg =
   | ExecuteCommand({command: string});
 
 let show = (~contextKeys, ~commands, ~uniqueId, model) => {
-  let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
-  let topLevelItems = MenuBar.top(model.menuSchema);
+  let builtMenu =
+    ContextMenu.build(~contextKeys, ~commands, model.menuSchema);
+  let topLevelItems = ContextMenu.top(model.menuSchema);
   let maybeMenu =
     topLevelItems
     |> List.filter((menu: Menu.t) => Menu.uniqueId(menu) == uniqueId)
     |> (l => List.nth_opt(l, 0));
-
-  let rec groupToContextMenu = (group: MenuBar.Group.t) => {
-    let items =
-      MenuBar.Group.items(group)
-      |> List.map(item =>
-           if (Item.isSubmenu(item)) {
-             let submenuItems = Item.submenu(item);
-             let groups = submenuItems |> List.map(groupToContextMenu);
-             Component_ContextMenu.Submenu({
-               label: Item.title(item),
-               items: groups,
-             });
-           } else {
-             Component_ContextMenu.Item({
-               label: Item.title(item),
-               data: Item.command(item),
-               details: Revery.UI.React.empty,
-             });
-           }
-         );
-
-    Component_ContextMenu.Group(items);
-  };
 
   let session =
     maybeMenu
     |> Option.map(menu => {
          let contextMenu =
            Menu.contents(menu, builtMenu)
-           |> List.map(groupToContextMenu)
+           |> List.map(Feature_ContextMenu.groupToContextMenu)
            |> Component_ContextMenu.make;
          {activePath: uniqueId, contextMenu};
        });
@@ -221,16 +199,6 @@ module View = {
     let text = fg => [color(fg)];
   };
 
-  let augmentWithShortcutKeys = (~getShortcutKey, contextMenu) =>
-    contextMenu
-    |> Component_ContextMenu.map(~f=item =>
-         Component_ContextMenu.{
-           ...item,
-           label: item.label,
-           details: getShortcutKey(item.data),
-         }
-       );
-
   module TopMenu = {
     let make =
         (
@@ -251,7 +219,10 @@ module View = {
           ? model.activeSession
             |> Option.map(({contextMenu, _}) => {
                  let contextMenu' =
-                   contextMenu |> augmentWithShortcutKeys(~getShortcutKey);
+                   contextMenu
+                   |> Feature_ContextMenu.augmentWithShortcutKeys(
+                        ~getShortcutKey,
+                      );
 
                  <Component_ContextMenu.View
                    model=contextMenu'
@@ -328,7 +299,7 @@ module View = {
     let bgColor = bgTheme.from(theme);
     let fgColor = fgTheme.from(theme);
 
-    let topLevelMenuItems = MenuBar.top(model.menuSchema);
+    let topLevelMenuItems = ContextMenu.top(model.menuSchema);
 
     let getShortcutKey = command => {
       Feature_Input.commandToAvailableBindings(
@@ -387,7 +358,8 @@ module View = {
 // SUBSCRIPTIOn
 
 let sub = (~config, ~contextKeys, ~commands, ~input, model) => {
-  let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
+  let builtMenu =
+    ContextMenu.build(~contextKeys, ~commands, model.menuSchema);
   NativeMenu.sub(
     ~config,
     ~context=contextKeys,
