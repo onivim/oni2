@@ -31,7 +31,7 @@ RUN yum -y install git222
 
 # 3706 - install gsettings-settings-daemon:
 # This includes the `org.gnome.settings-daemon.plugins.xsettings.gschema.xml` that needs to be overridden
-RUN yum -y gnome-settings-daemon
+RUN yum -y install gnome-settings-daemon
 
 RUN node -v
 RUN npm -v
