@@ -324,6 +324,15 @@ let make = (~dispatch, ~state: State.t, ()) => {
         font
         dispatch={msg => dispatch(Actions.Registration(msg))}
       />
+      <Feature_ContextMenu.View
+        contextMenu={state.contextMenu}
+        config
+        context
+        input={state.input}
+        theme
+        font
+        dispatch={msg => dispatch(Actions.ContextMenu(msg))}
+      />
     </Overlay>
     <statusBar />
     <Component_ContextMenu.View.Overlay />

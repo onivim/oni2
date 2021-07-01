@@ -30,7 +30,12 @@ type outmsg =
   | Nothing
   | MouseHovered(option(CharacterPosition.t))
   | MouseMoved(option(CharacterPosition.t))
-  | ExecuteCommand(Exthost.Command.t);
+  | ExecuteCommand(Exthost.Command.t)
+  | DisplayMenuAt({
+      menu: Oni_Core.ContextMenu.Schema.t,
+      xPos: int,
+      yPos: int,
+    });
 
 type model = Editor.t;
 
@@ -100,10 +105,34 @@ let update = (editor, msg) => {
   | HorizontalScrollbarMouseRelease
   | VerticalScrollbarMouseRelease
   | VerticalScrollbarMouseDown => (editor, Nothing)
-  | EditorMouseDown({altKey, time, pixelX, pixelY}) => (
-      editor |> Editor.mouseDown(~altKey, ~time, ~pixelX, ~pixelY),
-      Nothing,
-    )
+  | EditorMouseDown({
+      altKey,
+      time,
+      editorX,
+      editorY,
+      windowX,
+      windowY,
+      button,
+    }) =>
+    let outmsg =
+      button == Revery.MouseButton.BUTTON_RIGHT
+        ? DisplayMenuAt({
+            menu: Menu.rightClick,
+            xPos: int_of_float(windowX),
+            yPos: int_of_float(windowY),
+          })
+        : Nothing;
+    (
+      editor
+      |> Editor.mouseDown(
+           ~altKey,
+           ~time,
+           ~pixelX=editorX,
+           ~pixelY=editorY,
+           ~button,
+         ),
+      outmsg,
+    );
   | EditorMouseUp({altKey, time, pixelX, pixelY}) => (
       editor |> Editor.mouseUp(~altKey, ~time, ~pixelX, ~pixelY),
       Nothing,

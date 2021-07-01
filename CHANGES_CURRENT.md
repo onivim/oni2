@@ -4,6 +4,8 @@
 - #3641 - Search: add button to enable RegEx
 - #3654 - Search: add button to enable case-sensitivity
 - #3661 - Search: add include/exclude file boxes
+- #3705 - Editor: add right click menus
+- #3718 - Completion: Add `editor.suggest.itemsToShow` setting (fixes #3712)
 
 ### Bug Fixes
 
@@ -30,6 +32,7 @@
 - #3703 - Sidebar: Fix window navigation to sidebar when closed or zen mode (related #3681)
 - #3709 - Extension: Fix activation error with nim extension (fixes #3685)
 - #3612 - Input: Fix unicode parsing for keybindings (fixes #3599)
+- #3717 - Terminal: Fix mousewheel / trackpad scroll direction (fixes #3711)
 - #3719 - Input: Add 'editorFocus' context key (fixes #3716)
 
 ### Performance
@@ -52,3 +55,5 @@
 - #3688 - Dependency: esy-skia -> 1c81aac
 
 ### Infrastructure
+
+- #3721 - Packaging - Linux: Bundle compiled glib settings (fixes #3706)

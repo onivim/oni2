@@ -164,6 +164,13 @@ let acceptSuggestionOnTab =
     ~default=true,
   );
 
+let itemsToShow =
+  setting(
+    "editor.suggest.itemsToShow",
+    int,
+    ~default=Constants.defaultSuggestItemsToShow,
+  );
+
 let snippetSuggestions =
   setting(
     "editor.snippetSuggestions",

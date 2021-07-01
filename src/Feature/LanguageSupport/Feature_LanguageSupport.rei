@@ -319,7 +319,7 @@ module Contributions: {
   let configuration: list(Config.Schema.spec);
   let contextKeys: model => WhenExpr.ContextKeys.t;
   let keybindings: list(Feature_Input.Schema.keybinding);
-  let menuGroups: list(MenuBar.Schema.group);
+  let menuGroups: list(ContextMenu.Schema.group);
   let panes: list(Feature_Pane.Schema.t(model, msg));
 };
 

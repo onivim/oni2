@@ -39,6 +39,12 @@ cp -r extensions/ _release/Onivim2.AppDir/usr/bin
 cp -r node/ _release/Onivim2.AppDir/usr/share
 # cp -r src/textmate_service/ _release/Onivim2.AppDir/usr/bin
 
+# Copy and compile GLib schemas for bundled version of GTK
+# Needed for #3706 - newer schemas may be incompatible with the GTK we bundle with Onivim
+mkdir -p _release/Onivim2.AppDir/usr/share/glib-2.0/schemas
+cp /usr/share/glib-2.0/schemas/*.gschema.xml _release/Onivim2.AppDir/usr/share/glib-2.0/schemas/
+glib-compile-schemas _release/Onivim2.AppDir/usr/share/glib-2.0/schemas
+
 rm -f _release/Onivim2.AppDir/usr/bin/setup.json
 
 ARCH=x86_64 _staging/appimagetool-x86_64.AppImage _release/Onivim2.AppDir _release/Onivim2-x86_64.AppImage

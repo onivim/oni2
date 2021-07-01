@@ -20,7 +20,6 @@ module Schema: {
   let menus: list(menu) => t;
   let groups: list(group) => t;
 
-  //let toSchema: (~menus: list(menu)=?, ~items: list(item)) => t;
   let union: (t, t) => t;
   let ofList: list(t) => t;
 };

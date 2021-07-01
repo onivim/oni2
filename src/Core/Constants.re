@@ -14,6 +14,8 @@ let paneRowHeight = 20;
 let diffMarkerWidth = 3.;
 let gutterMargin = 3.;
 
+let defaultSuggestItemsToShow = 5;
+
 let isDefaultFont = str => {
   // Before we switched to JetBrains Mono as the default font...
   // "FiraCode-Regular.ttf" was specified in the default configuration file.
