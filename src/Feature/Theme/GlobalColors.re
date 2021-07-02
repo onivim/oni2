@@ -327,6 +327,20 @@ module EditorCursor = {
   let defaults = [background, foreground];
 };
 
+module EditorGroup = {
+  let border =
+    define(
+      "editorGroup.border",
+      {
+        dark: hex("#444444"),
+        light: hex("#E7E7E7"),
+        hc: ref(contrastBorder),
+      },
+    );
+
+  let defaults = [border];
+};
+
 module EditorGroupHeader = {
   let tabsBackground =
     define(
@@ -334,7 +348,9 @@ module EditorGroupHeader = {
       {dark: hex("#252526"), light: hex("#F3F3F3"), hc: unspecified},
     );
 
-  let defaults = [tabsBackground];
+  let border = define("editorGroupHeader.border", all(ref(tabsBackground)));
+
+  let defaults = [tabsBackground, border];
 };
 
 module EditorGutter = {
