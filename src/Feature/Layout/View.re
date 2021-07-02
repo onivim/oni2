@@ -280,6 +280,7 @@ module EditorGroupView = {
         ~uiFont,
         ~theme,
         ~isActive,
+        ~isTop,
         ~model: Group.t,
         ~dispatch,
         (),
@@ -339,7 +340,12 @@ module EditorGroupView = {
 
         <View style=Styles.editorContainer> tabs editorContainer </View>;
       } else {
-        editorContainer;
+        let bgColor = Feature_Theme.Colors.EditorGroup.border.from(theme);
+        let separator =
+          isTop
+            ? React.empty
+            : <View style=Style.[height(1), backgroundColor(bgColor)] />;
+        <View style=Styles.editorContainer> separator editorContainer </View>;
       };
     };
 
@@ -473,7 +479,7 @@ module Layout = {
           width(node.meta.width),
           height(node.meta.height),
         ]>
-        {renderWindow(id)}
+        {renderWindow(~isTop=node.meta.y == 0, id)}
       </View>
     };
   };
@@ -502,7 +508,7 @@ module Layout = {
         | Some((width, height)) =>
           let positioned = Positioned.fromLayout(0, 0, width, height, tree);
 
-          let renderWindow = id =>
+          let renderWindow = (~isTop, id) =>
             switch (groupById(id, layout)) {
             | Some(group) =>
               <EditorGroupView
@@ -510,6 +516,7 @@ module Layout = {
                 uiFont
                 config
                 showTabs
+                isTop
                 isActive={group.id == layout.activeGroupId && isFocused}
                 theme
                 model=group

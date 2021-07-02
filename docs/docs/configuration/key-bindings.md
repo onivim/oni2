@@ -132,6 +132,7 @@ Common contexts with VSCode:
 
 | Context Name | True When | 
 | --- | --- |
+| `editorFocus` | An editor has focus |
 | `editorTextFocus` | An editor has focus |
 | `inSnippetMode` | A snippet session is currently active |
 | `renameInputVisible` | The rename input is visible |

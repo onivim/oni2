@@ -1,5 +1,6 @@
 #!/bin/sh
 HERE=$(dirname $(readlink -f "${0}"))
+export GSETTINGS_SCHEMA_DIR="${HERE}/usr/share/glib-2.0/schemas/"
 export ONI2_ORIG_PATH="$PATH"
 export ONI2_ORIG_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
 export PATH="${HERE}/usr/bin:$PATH"
