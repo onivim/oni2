@@ -1,9 +1,14 @@
 #!/bin/sh
 HERE=$(dirname $(readlink -f "${0}"))
+
+# 3706 - Override XDG_DATA_DIRS and GSETTINGS_SCHEMA_DIR to pick up bundled schemas
+export XDG_DATA_DIRS="$HERE/usr/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 export GSETTINGS_SCHEMA_DIR="${HERE}/usr/share/glib-2.0/schemas/"
+
 export ONI2_ORIG_PATH="$PATH"
 export ONI2_ORIG_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
 export PATH="${HERE}/usr/bin:$PATH"
+
 export LD_LIBRARY_PATH="${HERE}/usr/lib/:$LD_LIBRARY_PATH"
 ${HERE}/usr/bin/Oni2 "$@"
 
