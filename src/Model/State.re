@@ -126,6 +126,21 @@ let defaultKeyBindings =
         ~condition="listFocus" |> WhenExpr.parse,
       ),
       bind(
+        ~key="<C-v>",
+        ~command=Commands.List.selectVertical.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-s>",
+        ~command=Commands.List.selectHorizontal.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-CR>",
+        ~command=Commands.List.selectNewTab.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
         ~key="<D-Z>",
         ~command=Commands.undo.id,
         ~condition="isMac && editorTextFocus" |> WhenExpr.parse,

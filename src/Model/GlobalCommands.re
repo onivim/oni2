@@ -43,7 +43,33 @@ module List = {
   let focusDown = register("list.focusDown", ListFocusDown);
   let focusUp = register("list.focusUp", ListFocusUp);
 
-  let select = register("list.select", ListSelect);
+  let select =
+    register(
+      "list.select",
+      ListSelect({direction: Oni_Core.SplitDirection.Current}),
+    );
+  let selectHorizontal =
+    register(
+      "list.selectHorizontal",
+      ListSelect({
+        direction: Oni_Core.SplitDirection.Horizontal,
+      }),
+    );
+  let selectVertical =
+    register(
+      "list.selectVertical",
+      ListSelect({
+        direction: Oni_Core.SplitDirection.Vertical({shouldReuse: false}),
+      }),
+    );
+  let selectNewTab =
+    register(
+      "list.selectNewTab",
+      ListSelect({
+        direction: Oni_Core.SplitDirection.NewTab,
+      }),
+    );
+
   let selectBackground =
     register("list.selectBackground", ListSelectBackground);
 };
