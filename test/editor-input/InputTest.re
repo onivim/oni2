@@ -847,6 +847,48 @@ describe("EditorInput", ({describe, _}) => {
       );
     });
 
+    test("#3729: no-recursive mapping emits in correct order", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers, bKeyNoModifiers]),
+             _ => true,
+             "testCommand",
+           );
+
+      let (bindings, _id) =
+        bindings
+        |> Input.addMapping(
+             ~allowRecursive=false,
+             Sequence([cKeyNoModifiers]),
+             _ => true,
+             // Important for repro - the initial binding (aKeyNoModifiers) must be used by an existing binding.
+             [aKeyNoModifiers, cKeyNoModifiers],
+           );
+
+      let (_bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=cKeyScancode,
+          ~key=candidate(cKeyNoModifiers),
+          bindings,
+        );
+
+      expect.equal(
+        effects,
+        [
+          Unhandled({
+            key: candidate(aKeyNoModifiers),
+            isProducedByRemap: true,
+          }),
+          Unhandled({
+            key: candidate(cKeyNoModifiers),
+            isProducedByRemap: true,
+          }),
+        ],
+      );
+    });
+
     test("unhandled, single key remap", ({expect, _}) => {
       let (bindings, _id) =
         Input.empty
@@ -935,11 +977,11 @@ describe("EditorInput", ({describe, _}) => {
       expect.equal(
         effects,
         [
-          RemapRecursionLimitHit,
           Unhandled({
             key: candidate(aKeyNoModifiers),
             isProducedByRemap: true,
           }),
+          RemapRecursionLimitHit,
         ],
       );
     });
