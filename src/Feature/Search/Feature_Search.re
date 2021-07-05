@@ -663,6 +663,12 @@ module Contributions = {
       isFocused && model.focus == FindInput
         ? Component_InputText.Contributions.contextKeys(model.findInput)
         : empty;
+
+    let hasSearchResult =
+      [Schema.bool("hasSearchResult", ({hits, _}) => hits != [])]
+      |> Schema.fromList
+      |> fromSchema(model);
+
     let vimNavKeys =
       isFocused
         ? Component_VimWindows.Contributions.contextKeys(
@@ -675,7 +681,7 @@ module Contributions = {
         ? Component_VimTree.Contributions.contextKeys(model.resultsTree)
         : empty;
 
-    [inputTextKeys, vimNavKeys, vimTreeKeys] |> unionMany;
+    [inputTextKeys, vimNavKeys, vimTreeKeys, hasSearchResult] |> unionMany;
   };
   let configuration = Configuration.[searchExclude.spec];
 };
