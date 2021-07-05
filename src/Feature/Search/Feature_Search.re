@@ -162,6 +162,28 @@ type outmsg =
   | Focus
   | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
+let openFileIfFocusChanged = (~previousModel, ~newModel) => {
+  let previousSelected =
+    Component_VimTree.selected(previousModel.resultsTree);
+  let newSelected = Component_VimTree.selected(newModel.resultsTree);
+
+  if (previousSelected == newSelected) {
+    None;
+  } else {
+    switch (newSelected) {
+    | None => None
+    | Some(Component_VimTree.Node(_)) => None
+    | Some(Component_VimTree.Leaf({data, _})) =>
+      Some(
+        OpenFile({
+          filePath: LocationListItem.(data.file),
+          location: LocationListItem.(data.location),
+        }),
+      )
+    };
+  };
+};
+
 let update = (~previewEnabled, model, msg) => {
   switch (msg) {
   | Command(NextSearchResult) =>
@@ -169,14 +191,14 @@ let update = (~previewEnabled, model, msg) => {
       ...model,
       resultsTree: Component_VimTree.selectNextNode(model.resultsTree),
     };
-    (model', None);
+    (model', openFileIfFocusChanged(~previousModel=model, ~newModel=model'));
 
   | Command(PreviousSearchResult) =>
     let model' = {
       ...model,
       resultsTree: Component_VimTree.selectPreviousNode(model.resultsTree),
     };
-    (model', None);
+    (model', openFileIfFocusChanged(~previousModel=model, ~newModel=model'));
 
   | Input(key) =>
     switch (model.focus) {
