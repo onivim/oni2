@@ -30,6 +30,7 @@ let defaultKeyBindings =
       ~condition="quickmenuCursorEnd" |> WhenExpr.parse,
     ),
   ]
+  @ Feature_Search.Contributions.keybindings
   @ Feature_SideBar.Contributions.keybindings
   @ Feature_Keyboard.Contributions.keybindings
   @ Feature_Clipboard.Contributions.keybindings

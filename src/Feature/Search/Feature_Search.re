@@ -124,7 +124,13 @@ let toggleCaseSensitive = model =>
 // UPDATE
 
 [@deriving show({with_path: false})]
+type command =
+  | NextSearchResult
+  | PreviousSearchResult;
+
+[@deriving show({with_path: false})]
 type msg =
+  | Command(command)
   | Input(string)
   | Pasted(string)
   | Update([@opaque] list(Ripgrep.Match.t))
@@ -643,11 +649,34 @@ let make =
   </View>;
 };
 
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let nextSearchResult =
+    define(
+      ~category="Search",
+      ~title="Next search result",
+      "search.action.focusNextSearchResult",
+      Command(NextSearchResult),
+    );
+
+  let prevSearchResult =
+    define(
+      ~category="Search",
+      ~title="Previous search result",
+      "search.action.focusPreviousSearchResult",
+      Command(PreviousSearchResult),
+    );
+
+  let static = [prevSearchResult, nextSearchResult];
+};
+
 module Contributions = {
   let commands = (~isFocused) => {
     !isFocused
-      ? []
-      : (
+      ? Commands.static
+      : Commands.static
+        @ (
           Component_VimWindows.Contributions.commands
           |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
         )
@@ -684,4 +713,19 @@ module Contributions = {
     [inputTextKeys, vimNavKeys, vimTreeKeys, hasSearchResult] |> unionMany;
   };
   let configuration = Configuration.[searchExclude.spec];
+
+  let keybindings = {
+    Feature_Input.Schema.[
+      bind(
+        ~key="<F4>",
+        ~command=Commands.nextSearchResult.id,
+        ~condition="hasSearchResult" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-F4>",
+        ~command=Commands.prevSearchResult.id,
+        ~condition="hasSearchResult" |> WhenExpr.parse,
+      ),
+    ];
+  };
 };
