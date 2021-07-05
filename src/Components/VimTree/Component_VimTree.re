@@ -118,13 +118,17 @@ type model('node, 'leaf) = {
 
 let count = ({treeAsList, _}) => Component_VimList.count(treeAsList);
 
+let treeListItemToNodeOrLeaf =
+  fun
+  | TreeList.ViewNode({expanded, indentationLevel, data}) =>
+    Node({expanded, indentation: indentationLevel, data: data.inner})
+  | TreeList.ViewLeaf({indentationLevel, data}) =>
+    Leaf({indentation: indentationLevel, data});
+
 let findIndex = (f, {treeAsList, _}) => {
-  let pred =
-    fun
-    | TreeList.ViewNode({expanded, indentationLevel, data}) =>
-      f(Node({expanded, indentation: indentationLevel, data: data.inner}))
-    | TreeList.ViewLeaf({indentationLevel, data}) =>
-      f(Leaf({indentation: indentationLevel, data}));
+  let pred = item => {
+    f(treeListItemToNodeOrLeaf(item));
+  };
 
   Component_VimList.findIndex(pred, treeAsList);
 };
@@ -155,7 +159,7 @@ let getNextNodeFromPosition = (~direction=1, ~position, {treeAsList, _}) => {
 };
 
 let selectNextNode = ({treeAsList, _} as model) => {
-  let selectedIdx = Component_VimList.getSelected(treeAsList);
+  let selectedIdx = Component_VimList.selectedIndex(treeAsList);
   let maybeNextSelected =
     getNextNodeFromPosition(~direction=1, ~position=selectedIdx, model);
 
@@ -166,7 +170,7 @@ let selectNextNode = ({treeAsList, _} as model) => {
 };
 
 let selectPreviousNode = ({treeAsList, _} as model) => {
-  let selectedIdx = Component_VimList.getSelected(treeAsList);
+  let selectedIdx = Component_VimList.selectedIndex(treeAsList);
   let maybePreviousSelected =
     getNextNodeFromPosition(~direction=-1, ~position=selectedIdx, model);
 
@@ -174,6 +178,11 @@ let selectPreviousNode = ({treeAsList, _} as model) => {
   | None => model
   | Some(newIndex) => setSelected(~selected=newIndex, model)
   };
+};
+
+let selected = ({treeAsList, _}) => {
+  Component_VimList.selected(treeAsList)
+  |> Option.map(treeListItemToNodeOrLeaf);
 };
 
 let keyPress = (key, {treeAsList, _} as model) => {
