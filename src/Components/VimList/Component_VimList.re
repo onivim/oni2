@@ -193,6 +193,8 @@ let setSelected = (~selected, model) => {
   {...model, selected: selected'} |> ensureSelectedVisible;
 };
 
+let getSelected = ({selected, _}) => selected;
+
 let setScrollY = (~allowOverscroll=false, ~scrollY, model) => {
   let maxScroll =
     if (allowOverscroll) {

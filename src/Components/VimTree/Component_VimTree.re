@@ -134,6 +134,48 @@ let setSelected = (~selected, {treeAsList, _} as model) => {
   {...model, treeAsList: treeAsList'};
 };
 
+let getNextNodeFromPosition = (~direction=1, ~position, {treeAsList, _}) => {
+  let count = Component_VimList.count(treeAsList);
+
+  let rec loop = (~start, ~offset) => {
+    let idx = IntEx.modulo(start + offset, count);
+    if (idx < 0 || idx >= count) {
+      None;
+    } else {
+      switch (Component_VimList.get(idx, treeAsList)) {
+      | None => loop(~start, ~offset=offset + direction)
+      | Some(item) when !TreeList.isLeaf(item) =>
+        loop(~start, ~offset=offset + direction)
+      | Some(_item) => Some(idx)
+      };
+    };
+  };
+
+  loop(~start=position + direction, ~offset=0);
+};
+
+let selectNextNode = ({treeAsList, _} as model) => {
+  let selectedIdx = Component_VimList.getSelected(treeAsList);
+  let maybeNextSelected =
+    getNextNodeFromPosition(~direction=1, ~position=selectedIdx, model);
+
+  switch (maybeNextSelected) {
+  | None => model
+  | Some(newIndex) => setSelected(~selected=newIndex, model)
+  };
+};
+
+let selectPreviousNode = ({treeAsList, _} as model) => {
+  let selectedIdx = Component_VimList.getSelected(treeAsList);
+  let maybePreviousSelected =
+    getNextNodeFromPosition(~direction=-1, ~position=selectedIdx, model);
+
+  switch (maybePreviousSelected) {
+  | None => model
+  | Some(newIndex) => setSelected(~selected=newIndex, model)
+  };
+};
+
 let keyPress = (key, {treeAsList, _} as model) => {
   ...model,
   treeAsList: Component_VimList.keyPress(key, treeAsList),
