@@ -164,6 +164,20 @@ type outmsg =
 
 let update = (~previewEnabled, model, msg) => {
   switch (msg) {
+  | Command(NextSearchResult) =>
+    let model' = {
+      ...model,
+      resultsTree: Component_VimTree.selectNextNode(model.resultsTree),
+    };
+    (model', None);
+
+  | Command(PreviousSearchResult) =>
+    let model' = {
+      ...model,
+      resultsTree: Component_VimTree.selectPreviousNode(model.resultsTree),
+    };
+    (model', None);
+
   | Input(key) =>
     switch (model.focus) {
     | FindInput =>

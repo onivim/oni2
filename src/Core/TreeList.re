@@ -10,6 +10,11 @@ type t('node, 'leaf) =
       data: 'node,
     });
 
+let isLeaf =
+  fun
+  | ViewLeaf(_) => true
+  | ViewNode(_) => false;
+
 let ofTree: Tree.t('node, 'leaf') => list(t('node, 'leaf)) =
   tree => {
     let rec loop = (acc, node, indentationLevel) => {
