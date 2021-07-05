@@ -133,6 +133,7 @@ Common contexts with VSCode:
 | Context Name | True When | 
 | --- | --- |
 | `editorTextFocus` | An editor has focus |
+| `hasSearchResults` | Search results are available |
 | `inSnippetMode` | A snippet session is currently active |
 | `renameInputVisible` | The rename input is visible |
 | `suggestWidgetVisible` | The suggest widget (auto-completion) is visible |
@@ -189,6 +190,13 @@ Onivim-specific contexts:
 | --- | --- | --- |
 | Up Arrow / Control+P | Move focus up | `list.focusUp` |
 | Down Arrow / Control+N | Move focus down | `list.focusDown` |
+
+### Search Pane
+
+| Default Key Binding | Description | Command |
+| --- | --- | --- |
+| F4 | Focus next search result | `search.action.focusNextSearchResult` |
+| Shift+F4 | Focus previous search result | `search.action.focusPreviousSearchResult` |
 
 ### Sidebar
 
