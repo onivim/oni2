@@ -6,6 +6,7 @@
 - #3661 - Search: add include/exclude file boxes
 - #3705 - Editor: add right click menus
 - #3718 - Completion: Add `editor.suggest.itemsToShow` setting (fixes #3712)
+- #3733 - Quick Open: Add bindings to open in splits, not current buffer.
 
 ### Bug Fixes
 
