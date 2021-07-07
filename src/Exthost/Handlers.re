@@ -167,7 +167,7 @@ let handlers =
       ~mapper=msg => Msg.StatusBar(msg),
       "MainThreadStatusBar",
     ),
-    mainNotImplemented("MainThreadSecretStaet"),
+    mainNotImplemented("MainThreadSecretState"),
     main(
       ~handler=Msg.Storage.handle,
       ~mapper=msg => Msg.Storage(msg),
