@@ -11,17 +11,17 @@
     https-proxy-agent "^2.2.4"
     vscode-nls "^4.1.2"
 
-"@onivim/vscode-exthost@1.56.2000":
-  version "1.56.2000"
-  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.56.2000.tgz#de61de6ff2a4087c7c3e102301bcdf9c61755a13"
-  integrity sha512-IpjyA3tqlFYsfkKobEabE0zX3BoxaCTHGl7av5BwrB4g0cuSzgYzz5zdjV+80Wduu7MbHrhPfcPXVy/ykv2DWQ==
+"@onivim/vscode-exthost@1.57.1001":
+  version "1.57.1001"
+  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.57.1001.tgz#f4642d8c077fc0ecae9dd266fa9a1dc72d84916d"
+  integrity sha512-17aJk0H24CJRAWcxFN0dR3sNsU1THdHS20GlXwzYA26ahEjtzSDqWDhphzEUVLL8jZW1sy/NFrR5FydwEZP6dg==
   dependencies:
-    graceful-fs "4.2.3"
+    graceful-fs "4.2.6"
     iconv-lite-umd "0.6.8"
     minimist "^1.2.5"
     native-watchdog "1.3.0"
-    node-pty "^0.10.0-beta19"
-    spdlog "^0.11.1"
+    node-pty "0.11.0-beta7"
+    spdlog "^0.13.0"
     vscode-proxy-agent "^0.11.0"
     vscode-regexpp "^3.1.0"
 
@@ -119,7 +119,7 @@ get-uri@^3.0.2:
     fs-extra "^8.1.0"
     ftp "^0.3.10"
 
-graceful-fs@4.2.3, graceful-fs@4.2.4, graceful-fs@^4.1.6, graceful-fs@^4.2.0:
+graceful-fs@4.2.4, graceful-fs@4.2.6, graceful-fs@^4.1.6, graceful-fs@^4.2.0:
   version "4.2.4"
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.4.tgz#2256bde14d3632958c465ebc96dc467ca07a29fb"
   integrity sha512-WjKPNJF79dtJAVniUlGGWHYGz2jWxT6VhN/4m1NdkbZ2nOsEF+cI1Edgql5zCRhs/VsQYRvrXctxktVXZUkixw==
@@ -173,7 +173,7 @@ minimist@^1.2.5:
   resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.5.tgz#67d66014b66a6a8aaa0c083c5fd58df4e4e97602"
   integrity sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==
 
-mkdirp@^0.5.1:
+mkdirp@^0.5.5:
   version "0.5.5"
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-0.5.5.tgz#d91cefd62d1436ca0f41620e251288d420099def"
   integrity sha512-NKmAlESf6jMGym1++R0Ra7wvhV+wFW63FaSOFPwRahvea0gMUcGUhVeAg/0BC0wiv9ih5NYPB1Wn1UEI1/L+xQ==
@@ -200,7 +200,7 @@ node-addon-api@^3.0.2:
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-3.1.0.tgz#98b21931557466c6729e51cb77cd39c965f42239"
   integrity sha512-flmrDNB06LIl5lywUz7YlNGZH/5p0M7W28k8hzd9Lshtdh1wshD2Y+U4h9LD6KObOy1f+fEVdgprPrEymjM5uw==
 
-node-pty@0.11.0-beta5, node-pty@^0.10.0-beta19:
+node-pty@0.11.0-beta5, node-pty@0.11.0-beta7:
   version "0.11.0-beta5"
   resolved "https://registry.yarnpkg.com/node-pty/-/node-pty-0.11.0-beta5.tgz#de9c5296fd2a74ec7875c5e8acb50335e1b38a19"
   integrity sha512-ZwBo5TviKYOBeUZvE+twH5negddJW9Ml03o5wLPr1WX+OzXkq6GXhPSOJm4zcXcuC/j0hn+lorvTzEyliDcsPA==
@@ -244,13 +244,13 @@ socks@2.6.1, socks@^2.3.3:
     ip "^1.1.5"
     smart-buffer "^4.1.0"
 
-spdlog@^0.11.1:
-  version "0.11.1"
-  resolved "https://registry.yarnpkg.com/spdlog/-/spdlog-0.11.1.tgz#29721b31018a5fe6a3ce2531f9d8d43e0bd6b825"
-  integrity sha512-M+sg9/Tnr0lrfnW2/hqgpoc4Z8Jzq7W8NUn35iiSslj+1uj1pgutI60MCpulDP2QyFzOpC8VsJmYD6Fub7wHoA==
+spdlog@^0.13.0:
+  version "0.13.5"
+  resolved "https://registry.yarnpkg.com/spdlog/-/spdlog-0.13.5.tgz#a31027dcccbe032e9a53579f42cb45428af08bad"
+  integrity sha512-D1xA5tRXw7eZOoFBCAnOxCxLN3JpHVDjpPJG/xjJ0nFZvtfOUTAzK66MVxJCDht/ZFwjLcBAltvzjfz4JTuSEw==
   dependencies:
     bindings "^1.5.0"
-    mkdirp "^0.5.1"
+    mkdirp "^0.5.5"
     nan "^2.14.0"
 
 string_decoder@~0.10.x:

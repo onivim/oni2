@@ -221,6 +221,7 @@ let handlers =
     mainNotImplemented("MainThreadNotebookDocuments"),
     mainNotImplemented("MainThreadNotebookEditors"),
     mainNotImplemented("MainThreadNotebookKernels"),
+    mainNotImplemented("MainThreadNotebookRenderers"),
     mainNotImplemented("MainThreadTheming"),
     mainNotImplemented("MainThreadTunnelService"),
     mainNotImplemented("MainThreadTimeline"),
@@ -265,6 +266,7 @@ let handlers =
     ext("ExtHosLabelService"), // SIC
     ext("ExtHostNotebook"),
     ext("ExtHostNotebookKernels"),
+    ext("ExtHostNotebookRenderers"),
     ext("ExtHostTheming"),
     ext("ExtHostTunnelService"),
     ext("ExtHostAuthentication"),

@@ -56,6 +56,7 @@
 - #3653 - Dependency: revery -> 9ec44ff (fixes #3646)
 - #3688 - Dependency: esy-skia -> 1c81aac
 - #3744 - Dependency: vscode-exthost -> 1.56.2 (fixes #3737)
+- #3745 - Dependency: vscode-exthost -> 1.57.1
 
 ### Infrastructure
 
