@@ -59,6 +59,12 @@ let findIndex:
 let setSelected:
   (~selected: int, model('node, 'leaf)) => model('node, 'leaf);
 
+let selected: model('node, 'leaf) => option(nodeOrLeaf('node, 'leaf));
+
+let selectNextNode: model('node, 'leaf) => model('node, 'leaf);
+
+let selectPreviousNode: model('node, 'leaf) => model('node, 'leaf);
+
 let scrollTo:
   (
     ~index: int,
