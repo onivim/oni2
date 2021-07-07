@@ -36,6 +36,7 @@
 - #3717 - Terminal: Fix mousewheel / trackpad scroll direction (fixes #3711)
 - #3719 - Input: Add 'editorFocus' context key (fixes #3716)
 - #3732 - Input: Fix remapped keys executing in wrong order (fixes #3729)
+- #3747 - Layout: Implement Control+W, C binding (related #1721)
 
 ### Performance
 
