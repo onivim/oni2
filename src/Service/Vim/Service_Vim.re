@@ -8,7 +8,7 @@ module EditConverter = {
 
   let textToArray = (~removeTrailingNewLine) =>
     fun
-    | None => [||]
+    | None => [|""|]
     | Some(text) =>
       text
       |> Utility.StringEx.removeWindowsNewLines
