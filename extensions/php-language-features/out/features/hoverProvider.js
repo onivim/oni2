@@ -22,7 +22,7 @@ class PHPHoverProvider {
         let entry = phpGlobalFunctions.globalfunctions[name] || phpGlobals.compiletimeconstants[name] || phpGlobals.globalvariables[name] || phpGlobals.keywords[name];
         if (entry && entry.description) {
             let signature = name + (entry.signature || '');
-            let contents = [markedTextUtil_1.textToMarkedString(entry.description), { language: 'php', value: signature }];
+            let contents = [(0, markedTextUtil_1.textToMarkedString)(entry.description), { language: 'php', value: signature }];
             return new vscode_1.Hover(contents, wordRange);
         }
         return undefined;
