@@ -167,7 +167,7 @@ let handlers =
       ~mapper=msg => Msg.StatusBar(msg),
       "MainThreadStatusBar",
     ),
-    mainNotImplemented("MainThreadSecretStaet"),
+    mainNotImplemented("MainThreadSecretState"),
     main(
       ~handler=Msg.Storage.handle,
       ~mapper=msg => Msg.Storage(msg),
@@ -218,6 +218,9 @@ let handlers =
     ),
     mainNotImplemented("MainThreadLabelService"),
     mainNotImplemented("MainThreadNotebook"),
+    mainNotImplemented("MainThreadNotebookDocuments"),
+    mainNotImplemented("MainThreadNotebookEditors"),
+    mainNotImplemented("MainThreadNotebookKernels"),
     mainNotImplemented("MainThreadTheming"),
     mainNotImplemented("MainThreadTunnelService"),
     mainNotImplemented("MainThreadTimeline"),
@@ -261,6 +264,7 @@ let handlers =
     ext("ExtHostOutputService"),
     ext("ExtHosLabelService"), // SIC
     ext("ExtHostNotebook"),
+    ext("ExtHostNotebookKernels"),
     ext("ExtHostTheming"),
     ext("ExtHostTunnelService"),
     ext("ExtHostAuthentication"),
