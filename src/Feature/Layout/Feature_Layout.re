@@ -183,25 +183,22 @@ let update = (~focus, model, msg) => {
     }
 
   | Command(CloseActiveGroup) =>
-    let curLayout = model |> activeLayout;
-    let activeGroupId = curLayout.activeGroupId;
-
-    let rec loop = (newModel: model) => {
-      let newLayout = newModel |> activeLayout;
-      if (newLayout.activeGroupId != activeGroupId) {
-        Some(newModel);
-      } else {
-        switch (removeActiveEditor(newModel)) {
-        | Some(model) => loop(model)
-        | None => None
-        };
-      };
-    };
-
-    let model' = loop(model);
+    let model' = tryCloseActiveGroup(model);
     switch (model') {
     | Some(model) => (model, Nothing)
     | None => (model, RemoveLastWasBlocked)
+    };
+
+  | Command(CloseActiveGroupUnlessLast) =>
+    let currentGroups = model |> activeLayout |> groups;
+    if (List.length(currentGroups) <= 1) {
+      (model, Nothing);
+    } else {
+      let model' = tryCloseActiveGroup(model);
+      switch (model') {
+      | Some(model) => (model, Nothing)
+      | None => (model, RemoveLastWasBlocked)
+      };
     };
 
   | Command(MoveLeft) =>
@@ -657,6 +654,13 @@ module Commands = {
       Command(CloseActiveGroup),
     );
 
+  let closeActiveSplitUnlessLast =
+    define(
+      ~category="View",
+      "view.closeSplitUnlessLast",
+      Command(CloseActiveGroupUnlessLast),
+    );
+
   let rotateForward =
     define(
       ~category="View",
@@ -893,6 +897,7 @@ module Contributions = {
       splitHorizontal,
       closeActiveEditor,
       closeActiveSplit,
+      closeActiveSplitUnlessLast,
       rotateForward,
       rotateBackward,
       moveLeft,

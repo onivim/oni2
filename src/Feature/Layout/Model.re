@@ -439,6 +439,25 @@ let removeActiveEditor = model => {
   removeEditor(activeEditorId, model);
 };
 
+let tryCloseActiveGroup = model => {
+  let curLayout = model |> activeLayout;
+  let activeGroupId = curLayout.activeGroupId;
+
+  let rec loop = (newModel: model) => {
+    let newLayout = newModel |> activeLayout;
+    if (newLayout.activeGroupId != activeGroupId) {
+      Some(newModel);
+    } else {
+      switch (removeActiveEditor(newModel)) {
+      | Some(model) => loop(model)
+      | None => None
+      };
+    };
+  };
+
+  loop(model);
+};
+
 let closeBuffer = (~force, buffer, model) => {
   let activeEditor = activeEditor(model);
   let activeEditorId = Editor.getId(activeEditor);

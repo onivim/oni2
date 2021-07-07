@@ -6,6 +6,7 @@ type command =
   | SplitHorizontal
   | CloseActiveEditor
   | CloseActiveGroup
+  | CloseActiveGroupUnlessLast
   | MoveLeft
   | MoveRight
   | MoveUp
