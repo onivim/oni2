@@ -223,8 +223,9 @@ module Effect = {
       Lwt.wakeup(resolver, Exthost.Reply.okJson(json))
     });
 
-  let logFailure = (msg) => Isolinear.Effect.create(~name="Feature_Extensions.Effect.logFailure", () => {
-      Log.error(msg);
+  let logFailure = msg =>
+    Isolinear.Effect.create(~name="Feature_Extensions.Effect.logFailure", () => {
+      Log.error(msg)
     });
 };
 
@@ -620,13 +621,15 @@ let update = (~extHostClient, ~proxy, msg, model) => {
 
   | Exthost(ExtensionRuntimeError({extensionId, errorsJson})) => (
       model,
-      Effect(Effect.logFailure(
-        Printf.sprintf(
-          "Extension runtime error %s:%s",
-          Exthost.ExtensionId.toString(extensionId),
-          Yojson.Safe.to_string(`List(errorsJson)),
+      Effect(
+        Effect.logFailure(
+          Printf.sprintf(
+            "Extension runtime error %s:%s",
+            Exthost.ExtensionId.toString(extensionId),
+            Yojson.Safe.to_string(`List(errorsJson)),
+          ),
         ),
-      )),
+      ),
     )
 
   | Exthost(ActivateExtension({extensionId, _})) => (
