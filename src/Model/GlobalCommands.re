@@ -51,9 +51,7 @@ module List = {
   let selectHorizontal =
     register(
       "list.selectHorizontal",
-      ListSelect({
-        direction: Oni_Core.SplitDirection.Horizontal,
-      }),
+      ListSelect({direction: Oni_Core.SplitDirection.Horizontal}),
     );
   let selectVertical =
     register(
@@ -65,9 +63,7 @@ module List = {
   let selectNewTab =
     register(
       "list.selectNewTab",
-      ListSelect({
-        direction: Oni_Core.SplitDirection.NewTab,
-      }),
+      ListSelect({direction: Oni_Core.SplitDirection.NewTab}),
     );
 
   let selectBackground =

@@ -13,7 +13,7 @@ describe("FilterJob", ({describe, _}) => {
     Actions.{
       category: None,
       name,
-      command: (_) => Actions.Noop,
+      command: _ => Actions.Noop,
       icon: None,
       highlight: [],
       handle: None,
