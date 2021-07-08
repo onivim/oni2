@@ -399,6 +399,16 @@ let defaultKeyBindings =
         ~command=Feature_Layout.Commands.closeActiveSplit.id,
         ~condition=windowCommandCondition,
       ),
+      bind(
+        ~key="<C-W>c",
+        ~command=Feature_Layout.Commands.closeActiveSplitUnlessLast.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-c>",
+        ~command=Feature_Layout.Commands.closeActiveSplitUnlessLast.id,
+        ~condition=windowCommandCondition,
+      ),
     ]
   @ Component_VimWindows.Contributions.keybindings
   @ Component_VimList.Contributions.keybindings
