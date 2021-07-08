@@ -6,6 +6,7 @@
 - #3661 - Search: add include/exclude file boxes
 - #3705 - Editor: add right click menus
 - #3718 - Completion: Add `editor.suggest.itemsToShow` setting (fixes #3712)
+- #3736 - Search: add default keys to go to next / previous search result (fixes #3713)
 - #3733 - Quick Open: Add bindings to open in splits, not current buffer.
 
 ### Bug Fixes
@@ -34,6 +35,10 @@
 - #3709 - Extension: Fix activation error with nim extension (fixes #3685)
 - #3612 - Input: Fix unicode parsing for keybindings (fixes #3599)
 - #3717 - Terminal: Fix mousewheel / trackpad scroll direction (fixes #3711)
+- #3719 - Input: Add 'editorFocus' context key (fixes #3716)
+- #3732 - Input: Fix remapped keys executing in wrong order (fixes #3729)
+- #3747 - Layout: Implement Control+W, C binding (related #1721)
+- #3746 - Extension: Fix edit application in trailing spaces plugin
 
 ### Performance
 
@@ -44,6 +49,7 @@
 - #3601 - Visual Mode: Add note about switching to block mode on Windows / Linux (thanks @rogererens !)
 - #3620 - Building: Add steps for Docker based build.
 - #3626 - Keybindings: Document nextEditor/previousEditor bindings (thanks @paul-louyot !)
+- #3740 - Getting Started: Fix dead links (thanks @Doerge !)
 
 ### Refactoring
 
@@ -53,6 +59,8 @@
 - #3639 - Dependency: Sparkle -> 1.26.0
 - #3653 - Dependency: revery -> 9ec44ff (fixes #3646)
 - #3688 - Dependency: esy-skia -> 1c81aac
+- #3744 - Dependency: vscode-exthost -> 1.56.2 (fixes #3737)
+- #3745 - Dependency: vscode-exthost -> 1.57.1
 
 ### Infrastructure
 

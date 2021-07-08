@@ -127,6 +127,7 @@ module Commands: {
 
   let closeActiveEditor: Command.t(msg);
   let closeActiveSplit: Command.t(msg);
+  let closeActiveSplitUnlessLast: Command.t(msg);
 
   let moveLeft: Command.t(msg);
   let moveRight: Command.t(msg);

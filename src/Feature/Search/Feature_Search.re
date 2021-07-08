@@ -124,7 +124,13 @@ let toggleCaseSensitive = model =>
 // UPDATE
 
 [@deriving show({with_path: false})]
+type command =
+  | NextSearchResult
+  | PreviousSearchResult;
+
+[@deriving show({with_path: false})]
 type msg =
+  | Command(command)
   | Input(string)
   | Pasted(string)
   | Update([@opaque] list(Ripgrep.Match.t))
@@ -156,8 +162,44 @@ type outmsg =
   | Focus
   | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
+let openFileIfFocusChanged = (~previousModel, ~newModel) => {
+  let previousSelected =
+    Component_VimTree.selected(previousModel.resultsTree);
+  let newSelected = Component_VimTree.selected(newModel.resultsTree);
+
+  if (previousSelected == newSelected) {
+    None;
+  } else {
+    switch (newSelected) {
+    | None => None
+    | Some(Component_VimTree.Node(_)) => None
+    | Some(Component_VimTree.Leaf({data, _})) =>
+      Some(
+        OpenFile({
+          filePath: LocationListItem.(data.file),
+          location: LocationListItem.(data.location),
+        }),
+      )
+    };
+  };
+};
+
 let update = (~previewEnabled, model, msg) => {
   switch (msg) {
+  | Command(NextSearchResult) =>
+    let model' = {
+      ...model,
+      resultsTree: Component_VimTree.selectNextNode(model.resultsTree),
+    };
+    (model', openFileIfFocusChanged(~previousModel=model, ~newModel=model'));
+
+  | Command(PreviousSearchResult) =>
+    let model' = {
+      ...model,
+      resultsTree: Component_VimTree.selectPreviousNode(model.resultsTree),
+    };
+    (model', openFileIfFocusChanged(~previousModel=model, ~newModel=model'));
+
   | Input(key) =>
     switch (model.focus) {
     | FindInput =>
@@ -643,11 +685,34 @@ let make =
   </View>;
 };
 
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let nextSearchResult =
+    define(
+      ~category="Search",
+      ~title="Next search result",
+      "search.action.focusNextSearchResult",
+      Command(NextSearchResult),
+    );
+
+  let prevSearchResult =
+    define(
+      ~category="Search",
+      ~title="Previous search result",
+      "search.action.focusPreviousSearchResult",
+      Command(PreviousSearchResult),
+    );
+
+  let static = [prevSearchResult, nextSearchResult];
+};
+
 module Contributions = {
   let commands = (~isFocused) => {
     !isFocused
-      ? []
-      : (
+      ? Commands.static
+      : Commands.static
+        @ (
           Component_VimWindows.Contributions.commands
           |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
         )
@@ -663,6 +728,12 @@ module Contributions = {
       isFocused && model.focus == FindInput
         ? Component_InputText.Contributions.contextKeys(model.findInput)
         : empty;
+
+    let hasSearchResult =
+      [Schema.bool("hasSearchResult", ({hits, _}) => hits != [])]
+      |> Schema.fromList
+      |> fromSchema(model);
+
     let vimNavKeys =
       isFocused
         ? Component_VimWindows.Contributions.contextKeys(
@@ -675,7 +746,22 @@ module Contributions = {
         ? Component_VimTree.Contributions.contextKeys(model.resultsTree)
         : empty;
 
-    [inputTextKeys, vimNavKeys, vimTreeKeys] |> unionMany;
+    [inputTextKeys, vimNavKeys, vimTreeKeys, hasSearchResult] |> unionMany;
   };
   let configuration = Configuration.[searchExclude.spec];
+
+  let keybindings = {
+    Feature_Input.Schema.[
+      bind(
+        ~key="<F4>",
+        ~command=Commands.nextSearchResult.id,
+        ~condition="hasSearchResult" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-F4>",
+        ~command=Commands.prevSearchResult.id,
+        ~condition="hasSearchResult" |> WhenExpr.parse,
+      ),
+    ];
+  };
 };
