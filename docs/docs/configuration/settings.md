@@ -167,6 +167,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 ### Layout
 
+- `workbench.activityBar.visible` __(_bool_ default: `true`)__ - Controls whether or not the activity bar (icon bar) is visible.
+
 - `workbench.editor.showTabs` __(_bool_ default: `true`)__ - When `false`, hides the editor tabs.
 
 - `workbench.sideBar.location` __(_"left"|"right"_ default: `"left"`)__ - Controls the location of the sidebar.
