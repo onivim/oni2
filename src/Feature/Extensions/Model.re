@@ -1,6 +1,8 @@
 open Oni_Core;
 open Exthost.Extension;
 
+module Log = (val Log.withNamespace("Feature_Extensions.Model"));
+
 module ViewModel = {
   [@deriving show]
   type msg =
@@ -219,6 +221,10 @@ module Effect = {
   let replyJson = (~resolver, json) =>
     Isolinear.Effect.create(~name="feature.extensions.replyJson", () => {
       Lwt.wakeup(resolver, Exthost.Reply.okJson(json))
+    });
+
+  let logFailure = (msg) => Isolinear.Effect.create(~name="Feature_Extensions.Effect.logFailure", () => {
+      Log.error(msg);
     });
 };
 
@@ -614,13 +620,13 @@ let update = (~extHostClient, ~proxy, msg, model) => {
 
   | Exthost(ExtensionRuntimeError({extensionId, errorsJson})) => (
       model,
-      NotifyFailure(
+      Effect(Effect.logFailure(
         Printf.sprintf(
           "Extension runtime error %s:%s",
           Exthost.ExtensionId.toString(extensionId),
           Yojson.Safe.to_string(`List(errorsJson)),
         ),
-      ),
+      )),
     )
 
   | Exthost(ActivateExtension({extensionId, _})) => (
