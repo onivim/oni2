@@ -81,5 +81,13 @@ let create =
   Subscription.create(
     id,
     (module Provider),
-    {followSymlinks, filesExclude, directory, ripgrep, onUpdate, onComplete, onError},
+    {
+      followSymlinks,
+      filesExclude,
+      directory,
+      ripgrep,
+      onUpdate,
+      onComplete,
+      onError,
+    },
   );

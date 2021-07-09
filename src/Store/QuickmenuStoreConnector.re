@@ -563,7 +563,10 @@ let subscriptions = (ripgrep, dispatch) => {
     let filesExclude =
       Feature_Configuration.GlobalConfiguration.Files.exclude.get(config);
 
-    let followSymlinks = Feature_Configuration.GlobalConfiguration.Search.followSymlinks.get(config);
+    let followSymlinks =
+      Feature_Configuration.GlobalConfiguration.Search.followSymlinks.get(
+        config,
+      );
 
     switch (Feature_Workspace.openedFolder(workspace)) {
     | None =>

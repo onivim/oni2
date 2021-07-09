@@ -289,13 +289,8 @@ module Files = {
 };
 
 module Search = {
-  let followSymlinks =
-    setting(
-      "search.followSymlinks", 
-      bool,
-      ~default=true
-    );
-}
+  let followSymlinks = setting("search.followSymlinks", bool, ~default=true);
+};
 
 module Workbench = {
   let activityBarVisible =

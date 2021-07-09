@@ -271,7 +271,10 @@ let search =
 
   let followArgs = followSymlinks ? ["--follow"] : [];
 
-  let args = globs @ followArgs @ ["--smart-case", "--hidden", "--files", "--", directory];
+  let args =
+    globs
+    @ followArgs
+    @ ["--smart-case", "--hidden", "--files", "--", directory];
 
   process(
     executablePath,

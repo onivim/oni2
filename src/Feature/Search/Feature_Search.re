@@ -461,7 +461,10 @@ let sub = (~config, ~workingDirectory, ~setup, model) => {
       | Service_Ripgrep.Sub.Completed => Complete
       | Service_Ripgrep.Sub.Error(msg) => SearchError(msg);
 
-    let followSymlinks=Feature_Configuration.GlobalConfiguration.Search.followSymlinks.get(config);
+    let followSymlinks =
+      Feature_Configuration.GlobalConfiguration.Search.followSymlinks.get(
+        config,
+      );
     Service_Ripgrep.Sub.findInFiles(
       ~followSymlinks,
       ~exclude,
