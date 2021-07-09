@@ -471,9 +471,8 @@ let closeBuffer = (~force, buffer, model) => {
   };
 };
 
-let addLayoutTab = model => {
-  let newEditor = activeEditor(model) |> Editor.copy;
-  let newGroup = Group.create([newEditor]);
+let addLayoutTab = (~editor, model) => {
+  let newGroup = Group.create([editor]);
 
   let newLayout = {
     tree: Layout.singleton(newGroup.id),
