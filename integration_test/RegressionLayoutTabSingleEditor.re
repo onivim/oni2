@@ -22,9 +22,10 @@ runTest(~name="RegressionLayoutTabSingleEditor", ({wait, _}) => {
     maybeFilePath != None;
   });
 
-  wait(~name="Prior to new tab, there should be a single layout", (state: State.t) => {
-    let layoutCount =
-      state.layout |> Feature_Layout.layouts |> List.length;
+  wait(
+    ~name="Prior to new tab, there should be a single layout",
+    (state: State.t) => {
+    let layoutCount = state.layout |> Feature_Layout.layouts |> List.length;
 
     layoutCount == 1;
   });
@@ -33,15 +34,15 @@ runTest(~name="RegressionLayoutTabSingleEditor", ({wait, _}) => {
   ignore(Vim.command("tabnew"): (Vim.Context.t, list(Vim.Effect.t)));
 
   wait(~name="Wait for group to be created", (state: State.t) => {
-    let layoutCount =
-      state.layout |> Feature_Layout.layouts |> List.length;
+    let layoutCount = state.layout |> Feature_Layout.layouts |> List.length;
 
     layoutCount == 2;
   });
 
-  wait(~name="There should only be a single editor in the new tab", (state: State.t) => {
-    let group =
-      state.layout |> Feature_Layout.activeGroup;
+  wait(
+    ~name="There should only be a single editor in the new tab",
+    (state: State.t) => {
+    let group = state.layout |> Feature_Layout.activeGroup;
 
     let editorCount = group |> Feature_Layout.Group.allEditors |> List.length;
 
