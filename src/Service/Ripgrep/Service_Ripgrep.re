@@ -9,6 +9,7 @@ module Sub = {
   type findInFilesParams = {
     exclude: list(string),
     include_: list(string),
+    followSymlinks: bool,
     directory: string,
     query: string,
     uniqueId: string,
@@ -38,6 +39,7 @@ module Sub = {
           );
         let dispose =
           ripgrep.Ripgrep.findInFiles(
+            ~followSymlinks=params.followSymlinks,
             ~searchExclude=params.exclude,
             ~searchInclude=params.include_,
             ~directory=params.directory,
@@ -64,6 +66,7 @@ module Sub = {
   let findInFiles =
       (
         ~uniqueId: string,
+        ~followSymlinks: bool,
         ~exclude: list(string),
         ~include_: list(string),
         ~directory: string,
@@ -74,6 +77,7 @@ module Sub = {
         toMsg,
       ) =>
     FindInFilesSub.create({
+      followSymlinks,
       uniqueId,
       exclude,
       include_,

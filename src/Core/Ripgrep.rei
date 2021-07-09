@@ -11,6 +11,7 @@ module Match: {
 type t = {
   search:
     (
+      ~followSymlinks: bool,
       ~filesExclude: list(string),
       ~directory: string,
       ~onUpdate: list(string) => unit,
@@ -20,6 +21,7 @@ type t = {
     dispose,
   findInFiles:
     (
+      ~followSymlinks: bool,
       ~searchExclude: list(string),
       ~searchInclude: list(string),
       ~directory: string,
