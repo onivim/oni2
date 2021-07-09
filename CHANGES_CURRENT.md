@@ -39,6 +39,7 @@
 - #3747 - Layout: Implement Control+W, C binding (related #1721)
 - #3746 - Extension: Fix edit application in trailing spaces plugin
 - #3755 - Vim: Fix extra 'editor tab' with `:tabnew`/`:tabedit` (fixes #3150)
+- #3753 - Extension: Don't bubble up extension runtime errors to notifications
 
 ### Performance
 
