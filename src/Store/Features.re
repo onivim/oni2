@@ -1529,7 +1529,8 @@ let update =
           )
         | SplitDirection.Vertical({shouldReuse}) =>
           Feature_Layout.split(~shouldReuse, ~editor, `Vertical, state.layout)
-        | SplitDirection.NewTab => Feature_Layout.addLayoutTab(state.layout)
+        | SplitDirection.NewTab =>
+          Feature_Layout.addLayoutTab(~editor, state.layout)
         };
 
       let editor' =

@@ -38,6 +38,7 @@
 - #3732 - Input: Fix remapped keys executing in wrong order (fixes #3729)
 - #3747 - Layout: Implement Control+W, C binding (related #1721)
 - #3746 - Extension: Fix edit application in trailing spaces plugin
+- #3755 - Vim: Fix extra 'editor tab' with `:tabnew`/`:tabedit` (fixes #3150)
 - #3753 - Extension: Don't bubble up extension runtime errors to notifications
 
 ### Performance
@@ -49,6 +50,8 @@
 - #3601 - Visual Mode: Add note about switching to block mode on Windows / Linux (thanks @rogererens !)
 - #3620 - Building: Add steps for Docker based build.
 - #3626 - Keybindings: Document nextEditor/previousEditor bindings (thanks @paul-louyot !)
+- #3740 - Getting Started: Fix dead links (thanks @Doerge !)
+- #3754 - Settings: Add `workbench.activityBar.visible` to documentation (fixes #3720)
 
 ### Refactoring
 

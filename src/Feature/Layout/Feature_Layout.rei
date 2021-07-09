@@ -20,11 +20,20 @@ module Group: {
   let allEditors: t => list(Editor.t);
 };
 
+module LayoutTab: {
+  type t;
+
+  let groups: t => list(Group.t);
+};
+
 type model;
 
 let activeGroup: model => Group.t;
 let activeLayoutGroups: model => list(Group.t);
 let setActiveGroup: (Group.id, model) => model;
+
+let layouts: model => list(LayoutTab.t);
+let activeLayout: model => LayoutTab.t;
 
 let initial: list(Editor.t) => model;
 
@@ -47,7 +56,7 @@ let activeGroupEditors: model => list(Editor.t);
 let openEditor: (~config: Config.resolver, Editor.t, model) => model;
 let closeBuffer: (~force: bool, Vim.Types.buffer, model) => option(model);
 
-let addLayoutTab: model => model;
+let addLayoutTab: (~editor: Editor.t, model) => model;
 let gotoLayoutTab: (int, model) => model;
 let previousLayoutTab: (~count: int=?, model) => model;
 let nextLayoutTab: (~count: int=?, model) => model;
