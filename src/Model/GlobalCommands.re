@@ -48,26 +48,29 @@ module List = {
       "list.select",
       ListSelect({direction: Oni_Core.SplitDirection.Current}),
     );
+
+  let selectBackground =
+    register("list.selectBackground", ListSelectBackground);
+
   let selectHorizontal =
     register(
-      "list.selectHorizontal",
+      "oni.list.selectHorizontal",
       ListSelect({direction: Oni_Core.SplitDirection.Horizontal}),
     );
+
   let selectVertical =
     register(
-      "list.selectVertical",
+      "oni.list.selectVertical",
       ListSelect({
         direction: Oni_Core.SplitDirection.Vertical({shouldReuse: false}),
       }),
     );
+
   let selectNewTab =
     register(
-      "list.selectNewTab",
+      "oni.list.selectNewTab",
       ListSelect({direction: Oni_Core.SplitDirection.NewTab}),
     );
-
-  let selectBackground =
-    register("list.selectBackground", ListSelectBackground);
 };
 
 module Oni = {
