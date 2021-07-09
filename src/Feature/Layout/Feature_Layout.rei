@@ -20,11 +20,20 @@ module Group: {
   let allEditors: t => list(Editor.t);
 };
 
+module LayoutTab: {
+  type t;
+
+  let groups: t => list(Group.t);
+};
+
 type model;
 
 let activeGroup: model => Group.t;
 let activeLayoutGroups: model => list(Group.t);
 let setActiveGroup: (Group.id, model) => model;
+
+let layouts: model => list(LayoutTab.t);
+let activeLayout: model => LayoutTab.t;
 
 let initial: list(Editor.t) => model;
 

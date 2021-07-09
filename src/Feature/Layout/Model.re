@@ -174,6 +174,12 @@ type layout = {
   activeGroupId: int,
 };
 
+module LayoutTab = {
+  type t = layout;
+
+  let groups = ({groups, _}: layout) => groups;
+};
+
 let activeTree = layout =>
   switch (layout.uncommittedTree) {
   | `Resizing(tree)
@@ -198,6 +204,8 @@ let initial = editors => {
 
   {layouts: [initialLayout], activeLayoutIndex: 0};
 };
+
+let layouts = ({layouts, _}) => layouts;
 
 let groups = ({groups, _}) => groups;
 
