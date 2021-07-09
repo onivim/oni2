@@ -66,6 +66,7 @@ module View = {
 
   let make =
       (
+        ~config,
         ~isActive,
         ~editorFont: Service_Font.font,
         ~uiFont: UiFont.t,
@@ -78,6 +79,7 @@ module View = {
     let fg = Feature_Theme.Colors.Terminal.foreground.from(theme);
     <View style=Style.[backgroundColor(bg), flexGrow(1)]>
       <Component_VimList.View
+        config
         isActive
         font=uiFont
         focusedIndex=None

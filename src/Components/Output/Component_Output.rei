@@ -41,6 +41,7 @@ module Contributions: {
 module View: {
   let make:
     (
+      ~config: Config.resolver,
       ~isActive: bool,
       ~editorFont: Service_Font.font,
       ~uiFont: UiFont.t,

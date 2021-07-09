@@ -580,6 +580,7 @@ module View = {
     };
 
     <Component_VimList.View
+      config
       isActive
       font
       focusedIndex

@@ -99,6 +99,7 @@ module ListView: {
   let make:
     (
       ~key: Brisk_reconciler.Key.t=?,
+      ~config: Config.resolver,
       ~model: model,
       ~proxy: Service_Net.Proxy.t,
       ~theme: ColorTheme.Colors.t,

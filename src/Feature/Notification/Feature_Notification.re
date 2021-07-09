@@ -483,7 +483,7 @@ module Contributions = {
         ~sub=(~isFocused as _, _model) => Isolinear.Sub.none,
         ~view=
           (
-            ~config as _,
+            ~config,
             ~editorFont as _,
             ~font,
             ~isFocused,
@@ -495,6 +495,7 @@ module Contributions = {
             ~model,
           ) =>
             <Pane.View
+              config
               uiFont=font
               isFocused
               theme
