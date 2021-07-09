@@ -22,7 +22,9 @@
    Regression2988SwitchEditorTest Regression3084CommandLoopTest
    Regression3323DiagnosticsTest RegressionCommandLineNoCompletionTest
    RegressionFontFallbackTest RegressionFileModifiedIndicationTest
-   RegressionNonExistentDirectory RegressionVspEmptyInitialBufferTest
+   RegressionNonExistentDirectory 
+   RegressionLayoutTabSingleEditor
+   RegressionVspEmptyInitialBufferTest
    RegressionVspEmptyExistingBufferTest SCMGitTest SyntaxHighlightPhpTest
    SyntaxHighlightTextMateTest SyntaxHighlightTreesitterTest
    AddRemoveSplitTest TerminalSetPidTitleTest TerminalConfigurationTest
@@ -58,6 +60,7 @@
    Regression3084CommandLoopTest.exe
    RegressionCommandLineNoCompletionTest.exe
    RegressionFileModifiedIndicationTest.exe RegressionFontFallbackTest.exe
+   RegressionLayoutTabSingleEditor.exe
    RegressionVspEmptyInitialBufferTest.exe RegressionNonExistentDirectory.exe
    RegressionVspEmptyExistingBufferTest.exe SCMGitTest.exe
    SearchShowClearHighlightsTest.exe SyntaxHighlightTextMateTest.exe

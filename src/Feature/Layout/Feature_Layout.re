@@ -571,7 +571,9 @@ let update = (~focus, model, msg) => {
 
   | Command(ResetSizes) => (resetWeights(model), Nothing)
 
-  | Command(AddLayout) => (addLayoutTab(model), Nothing)
+  | Command(AddLayout) =>
+    let editor = Feature_Editor.Editor.copy(activeEditor(model));
+    (addLayoutTab(~editor, model), Nothing);
 
   | Command(PreviousLayout) => (
       {
