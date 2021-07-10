@@ -40,6 +40,7 @@
 - #3746 - Extension: Fix edit application in trailing spaces plugin
 - #3755 - Vim: Fix extra 'editor tab' with `:tabnew`/`:tabedit` (fixes #3150)
 - #3753 - Extension: Don't bubble up extension runtime errors to notifications
+- #3757 - Buffers: Fix welcome buffer appearing when splitting (fixes #3631)
 
 ### Performance
 
