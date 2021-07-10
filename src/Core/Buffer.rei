@@ -82,6 +82,8 @@ let setVersion: (int, t) => t;
 let isModified: t => bool;
 let setModified: (bool, t) => t;
 
+let isEmpty: t => bool;
+
 let isIndentationSet: t => bool;
 let setIndentation: (Inferred.t(IndentationSettings.t), t) => t;
 let getIndentation: t => IndentationSettings.t;

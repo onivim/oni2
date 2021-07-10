@@ -1601,10 +1601,12 @@ let update =
              | Version => Some(BufferRenderer.Version)
              | UpdateChangelog => Some(BufferRenderer.UpdateChangelog)
              | Image => Some(BufferRenderer.Image)
-             | Welcome => Some(BufferRenderer.Welcome)
+             | Welcome when Oni_Core.Buffer.isEmpty(buffer) =>
+               Some(BufferRenderer.Welcome)
              | Changelog => Some(BufferRenderer.FullChangelog)
              | FilePath(_) => None
              | DebugInput => Some(BufferRenderer.DebugInput)
+             | _ => None
              }
            })
         |> Option.map(renderer => {
