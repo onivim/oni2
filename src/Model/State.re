@@ -30,6 +30,7 @@ let defaultKeyBindings =
       ~condition="quickmenuCursorEnd" |> WhenExpr.parse,
     ),
   ]
+  @ Feature_Search.Contributions.keybindings
   @ Feature_SideBar.Contributions.keybindings
   @ Feature_Keyboard.Contributions.keybindings
   @ Feature_Clipboard.Contributions.keybindings
@@ -396,6 +397,16 @@ let defaultKeyBindings =
       bind(
         ~key="<C-W>q",
         ~command=Feature_Layout.Commands.closeActiveSplit.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>c",
+        ~command=Feature_Layout.Commands.closeActiveSplitUnlessLast.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-c>",
+        ~command=Feature_Layout.Commands.closeActiveSplitUnlessLast.id,
         ~condition=windowCommandCondition,
       ),
     ]
