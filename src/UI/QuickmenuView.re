@@ -60,7 +60,10 @@ module Styles = {
 let onFocusedChange = index =>
   GlobalContext.current().dispatch(ListFocus(index));
 
-let onSelect = _ => GlobalContext.current().dispatch(ListSelect);
+let onSelect = _ =>
+  GlobalContext.current().dispatch(
+    ListSelect({direction: Oni_Core.SplitDirection.Current}),
+  );
 
 let progressBar = (~progress, ~theme, ()) => {
   let indicator = () => {

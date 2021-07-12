@@ -512,7 +512,7 @@ let start =
               name,
               category: None,
               icon: None,
-              command: () => Noop,
+              command: _ => Noop,
               highlight: [],
               handle: None,
             }

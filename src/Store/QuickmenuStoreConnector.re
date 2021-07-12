@@ -26,7 +26,7 @@ module Internal = {
          Actions.{
            category: item.category,
            name: item.label,
-           command: () =>
+           command: _ =>
              switch (Command.Lookup.get(item.command, commands)) {
              | Some({msg: `Arg0(msg), _}) => msg
              | Some({msg: `Arg1(msgf), _}) => msgf(Json.Encode.null)
@@ -46,7 +46,7 @@ module Internal = {
       handle: Some(item.handle),
       icon: None,
       highlight: [],
-      command: () => Actions.Noop,
+      command: _ => Actions.Noop,
     };
 
   let commandPaletteItems = (commands, menus, contextKeys) => {
@@ -69,9 +69,9 @@ module Internal = {
 };
 
 let start = () => {
-  let selectItemEffect = (item: Actions.menuItem) =>
+  let selectItemEffect = (~dir=None, item: Actions.menuItem) =>
     Isolinear.Effect.createWithDispatch(~name="quickmenu.selectItem", dispatch => {
-      let action = item.command();
+      let action = item.command(dir);
       dispatch(action);
     });
 
@@ -144,7 +144,7 @@ let start = () => {
              Actions.{
                category: None,
                name,
-               command: () => {
+               command: _ => {
                  Actions.OpenFileByPath(path, SplitDirection.Current, None);
                },
                icon:
@@ -431,7 +431,7 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | ListSelect =>
+    | ListSelect(args) =>
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, executeVimCommandEffect)
 
@@ -451,7 +451,7 @@ let start = () => {
 
       | Some({items, focused: Some(focused), _}) =>
         switch (items[focused]) {
-        | item => (None, selectItemEffect(item))
+        | item => (None, selectItemEffect(~dir=Some(args.direction), item))
         | exception (Invalid_argument(_)) => (state, Isolinear.Effect.none)
         }
 
@@ -491,7 +491,7 @@ let start = () => {
       | ListFocusDown =>
         let (newQuickmenu, eff) = Feature_Quickmenu.next(state.newQuickmenu);
         ({...state, newQuickmenu}, eff);
-      | ListSelect =>
+      | ListSelect(_) =>
         let (newQuickmenu, eff) =
           Feature_Quickmenu.select(state.newQuickmenu);
         ({...state, newQuickmenu}, eff);
@@ -575,8 +575,12 @@ let subscriptions = (ripgrep, dispatch) => {
         Actions.{
           category: None,
           name: Path.toRelative(~base=directory, fullPath),
-          command: () =>
-            Actions.OpenFileByPath(fullPath, SplitDirection.Current, None),
+          command: splitDir =>
+            switch (splitDir) {
+            | Some(dir) => Actions.OpenFileByPath(fullPath, dir, None)
+            | None =>
+              Actions.OpenFileByPath(fullPath, SplitDirection.Current, None)
+            },
           icon:
             Component_FileExplorer.getFileIcon(
               ~languageInfo,

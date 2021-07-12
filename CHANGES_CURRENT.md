@@ -7,6 +7,7 @@
 - #3705 - Editor: add right click menus
 - #3718 - Completion: Add `editor.suggest.itemsToShow` setting (fixes #3712)
 - #3736 - Search: add default keys to go to next / previous search result (fixes #3713)
+- #3733 - Quick Open: Add bindings to open in splits, not current buffer.
 
 ### Bug Fixes
 
