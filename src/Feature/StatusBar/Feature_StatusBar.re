@@ -866,9 +866,11 @@ module View = {
                   }
                 );
            let reactList = list |> React.listToElement;
-            
-            let count = list |> List.fold_left(((a, b) => b != React.empty ? a + 1 : a), 0);
-            
+
+           let count =
+             list
+             |> List.fold_left((a, b) => b != React.empty ? a + 1 : a, 0);
+
            if (noti && count > 0) {
              <sectionGroup background>
                <section align=`Center> reactList </section>
@@ -876,8 +878,8 @@ module View = {
              </sectionGroup>;
            } else if (noti) {
              <sectionGroup background>
-              <notificationPopups onlyAnimation compact=true />
-             </sectionGroup>
+               <notificationPopups onlyAnimation compact=true />
+             </sectionGroup>;
            } else {
              <sectionGroup background=defaultBackground>
                <section align=`Center> reactList </section>
