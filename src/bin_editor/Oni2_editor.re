@@ -408,10 +408,13 @@ switch (eff) {
       };
 
       let runEventLoop = () => {
+        // TODO: How many times should we run it?
+        // The ideal amount would be just enough to do pending work,
+        // but not too much to just spin. Unfortunately, it seems
         // Luv.Loop.run always returns [true] for us, so just keep polling:
-        ignore(
-          Luv.Loop.run(~mode=`NOWAIT, ()): bool,
-        );
+        for (_ in 1 to 100) {
+          ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
+        }
       };
 
       let title = (state: Model.State.t) => {
