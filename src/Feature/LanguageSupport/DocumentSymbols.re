@@ -123,6 +123,7 @@ let update = (~maybeBuffer, msg, model) => {
                Feature_Quickmenu.Schema.Renderer.defaultWithIcon(itemToIcon);
              Outmsg.ShowMenu(
                Feature_Quickmenu.Schema.menu(
+                 ~focusFirstItemByDefault=true,
                  ~onAccepted,
                  ~toString=(symbol: symbol) => symbol.name,
                  ~itemRenderer,

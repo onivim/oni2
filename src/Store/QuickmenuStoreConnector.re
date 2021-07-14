@@ -229,8 +229,9 @@ let start = () => {
             buffers,
           );
 
+        let focused = items != [||] ? Some(0) : None;
         (
-          Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
+          Some({...Quickmenu.defaults(OpenBuffersPicker), items, focused}),
           Isolinear.Effect.none,
         );
       } else {
@@ -263,9 +264,10 @@ let start = () => {
           iconTheme,
           buffers,
         );
+      let focused = items != [||] ? Some(0) : None;
 
       (
-        Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
+        Some({...Quickmenu.defaults(OpenBuffersPicker), items, focused}),
         Isolinear.Effect.none,
       );
 
