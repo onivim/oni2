@@ -7,6 +7,7 @@
 - #3705 - Editor: add right click menus
 - #3718 - Completion: Add `editor.suggest.itemsToShow` setting (fixes #3712)
 - #3736 - Search: add default keys to go to next / previous search result (fixes #3713)
+- #3733 - Quick Open: Add bindings to open in splits, not current buffer.
 
 ### Bug Fixes
 
@@ -40,6 +41,7 @@
 - #3746 - Extension: Fix edit application in trailing spaces plugin
 - #3755 - Vim: Fix extra 'editor tab' with `:tabnew`/`:tabedit` (fixes #3150)
 - #3753 - Extension: Don't bubble up extension runtime errors to notifications
+- #3756 - Search: Follow symlinks with ripgrep by default (fixes #1588)
 - #3757 - Buffers: Fix welcome buffer appearing when splitting (fixes #3631)
 
 ### Performance
