@@ -47,14 +47,15 @@ module Decoders = {
       ),
     ]);
 
-  let titleBarStyle: decoder([ | `Native | `Custom ]) = string
-  |> map(String.lowercase_ascii)
-  |> map(
-    fun
-    | "native" => `Native
-    | "custom" => `Custom
-    | _ => `Custom
-  );
+  let titleBarStyle: decoder([ | `Native | `Custom]) =
+    string
+    |> map(String.lowercase_ascii)
+    |> map(
+         fun
+         | "native" => `Native
+         | "custom" => `Custom
+         | _ => `Custom,
+       );
 };
 
 module Encoders = {
@@ -67,9 +68,10 @@ module Encoders = {
       | `Inline => string("inline")
       };
 
-  let titleBarStyle: encoder([ | `Native | `Custom ]) = fun
-  | `Native => string("native")
-  | `Custom => string("custom");
+  let titleBarStyle: encoder([ | `Native | `Custom]) =
+    fun
+    | `Native => string("native")
+    | `Custom => string("custom");
 };
 
 module Codecs = {
@@ -310,15 +312,18 @@ module Window = {
   // #3730 - Keyboard shortcuts for window movement broken
   // #3071 - Window has no shadow on Windows
   // #3063 - Part of onivim fullscreen is visible on second monitor
-  let defaultTitleBarStyle = switch (Revery.Environment.os) {
-  | Windows(_) => `Native
-  | _ => `Custom
-  }
-  let titleBarStyle = setting("window.titleBarStyle", custom(
-    ~decode=Decoders.titleBarStyle,
-    ~encode=Encoders.titleBarStyle,
-  ), ~default=defaultTitleBarStyle)
-}
+  let defaultTitleBarStyle =
+    switch (Revery.Environment.os) {
+    | Windows(_) => `Native
+    | _ => `Custom
+    };
+  let titleBarStyle =
+    setting(
+      "window.titleBarStyle",
+      custom(~decode=Decoders.titleBarStyle, ~encode=Encoders.titleBarStyle),
+      ~default=defaultTitleBarStyle,
+    );
+};
 
 module Workbench = {
   let activityBarVisible =

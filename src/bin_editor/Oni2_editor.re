@@ -162,7 +162,8 @@ switch (eff) {
       |> Option.map(pos => `Absolute(pos))
       |> Option.value(~default=`Centered);
 
-    let createWindow = (~configurationLoader, ~forceScaleFactor, ~maybeWorkspace, app) => {
+    let createWindow =
+        (~configurationLoader, ~forceScaleFactor, ~maybeWorkspace, app) => {
       let (x, y, width, height, maximized) = {
         Store.Persistence.Workspace.(
           maybeWorkspace
@@ -204,18 +205,27 @@ switch (eff) {
         )
       );
 
-      let settings = Feature_Configuration.ConfigurationLoader.loadImmediate(configurationLoader)
-      |> Result.value(~default=Oni_Core.Config.Settings.empty);
+      let settings =
+        Feature_Configuration.ConfigurationLoader.loadImmediate(
+          configurationLoader,
+        )
+        |> Result.value(~default=Oni_Core.Config.Settings.empty);
 
       let initialResolver = (~vimSetting as _, settingKey) => {
-        Oni_Core.Config.({
-          Settings.get(settingKey, settings)
-          |> Option.map(json => Json(json))
-          |> Option.value(~default=NotSet)
-        })
+        Oni_Core.Config.(
+          {
+            Settings.get(settingKey, settings)
+            |> Option.map(json => Json(json))
+            |> Option.value(~default=NotSet);
+          }
+        );
       };
 
-      let useNativeMenu = Feature_Configuration.GlobalConfiguration.Window.titleBarStyle.get(initialResolver) == `Native;
+      let useNativeMenu =
+        Feature_Configuration.GlobalConfiguration.Window.titleBarStyle.get(
+          initialResolver,
+        )
+        == `Native;
 
       let decorated =
         switch (Revery.Environment.os) {
@@ -224,7 +234,9 @@ switch (eff) {
         | _ => true
         };
 
-      let titlebarStyle = useNativeMenu ? Revery.WindowStyles.System: Revery.WindowStyles.Transparent;
+      let titlebarStyle =
+        useNativeMenu
+          ? Revery.WindowStyles.System : Revery.WindowStyles.Transparent;
 
       let icon =
         switch (Revery.Environment.os) {
@@ -296,7 +308,7 @@ switch (eff) {
         maybeWorkspace
         |> Option.map(FpExp.toString)
         |> Option.value(~default=initialWorkingDirectory);
-        
+
       let configurationLoader =
         Feature_Configuration.(
           if (!cliOptions.shouldLoadConfiguration) {
@@ -312,8 +324,6 @@ switch (eff) {
             |> Result.value(~default=ConfigurationLoader.none);
           }
         );
-
-
 
       let window =
         createWindow(
