@@ -34,7 +34,7 @@ module Styles = {
         alignItems(`Stretch),
       ]);
     if (Revery.Environment.isWindows && windowDisplayMode == State.Maximized) {
-      style := [margin(6), ...style^];
+      style := [margin(0), ...style^];
     };
     style^;
   };
