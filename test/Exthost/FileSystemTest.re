@@ -70,7 +70,16 @@ describe("FileSystem", ({describe, _}) => {
 
       let failHandler =
         fun
-        | Msg.FileSystem(Stat(_)) => Lwt.fail_with("Error!")
+        | Msg.FileSystem(Stat(_)) => {
+            let err = Exthost.Files.FileSystemError.(make(Code.fileNotFound));
+            Lwt.return(
+              err
+              |> Oni_Core.Json.Encode.encode_value(
+                   Exthost.Files.FileSystemError.encode,
+                 )
+              |> Reply.errorJson,
+            );
+          }
         | _ => Lwt.return(Reply.okEmpty);
 
       test("success case", _ => {

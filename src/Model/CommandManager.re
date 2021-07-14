@@ -27,6 +27,9 @@ let current = {
       Feature_Help.Contributions.commands
       |> Command.Lookup.fromList
       |> Command.Lookup.map(msg => Actions.Help(msg)),
+      Feature_Vim.Contributions.commands
+      |> Command.Lookup.fromList
+      |> Command.Lookup.map(msg => Actions.Vim(msg)),
       Feature_Zen.Contributions.commands
       |> Command.Lookup.fromList
       |> Command.Lookup.map(msg => Actions.Zen(msg)),

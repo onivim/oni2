@@ -24,5 +24,6 @@ type t =
   | Output({
       cmd: string,
       output: option(string),
+      isSilent: bool,
     })
   | WindowSplit(Split.t);

@@ -522,6 +522,7 @@ module Effect: {
     | Output({
         cmd: string,
         output: option(string),
+        isSilent: bool,
       })
     | WindowSplit(Split.t);
 };

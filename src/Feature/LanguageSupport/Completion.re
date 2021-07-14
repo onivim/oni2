@@ -455,6 +455,7 @@ type model = {
   isSnippetMode: bool,
   acceptOnEnter: bool,
   acceptOnTab: bool,
+  itemsToShow: int,
   snippetSortOrder: [ | `Bottom | `Hidden | `Inline | `Top],
   isShadowEnabled: bool,
   isAnimationEnabled: bool,
@@ -465,6 +466,7 @@ let initial = {
   isSnippetMode: false,
   acceptOnEnter: false,
   acceptOnTab: true,
+  itemsToShow: Constants.defaultSuggestItemsToShow,
   providers: [
     Session.create(
       ~triggerCharacters=[],
@@ -497,6 +499,7 @@ let configurationChanged = (~config, model) => {
     ...model,
     acceptOnEnter: CompletionConfig.acceptSuggestionOnEnter.get(config),
     acceptOnTab: CompletionConfig.acceptSuggestionOnTab.get(config),
+    itemsToShow: CompletionConfig.itemsToShow.get(config),
     snippetSortOrder: CompletionConfig.snippetSuggestions.get(config),
     isAnimationEnabled:
       Feature_Configuration.GlobalConfiguration.animation.get(config),
@@ -1122,6 +1125,7 @@ module Contributions = {
       wordBasedSuggestions.spec,
       acceptSuggestionOnEnter.spec,
       acceptSuggestionOnTab.spec,
+      itemsToShow.spec,
       snippetSuggestions.spec,
     ];
 
@@ -1508,7 +1512,8 @@ module View = {
 
     let width = 500;
     let itemHeight = int_of_float(ceil(lineHeight));
-    let maxHeight = itemHeight * 5;
+    let numberOfItemsToShow = completions.itemsToShow;
+    let maxHeight = itemHeight * numberOfItemsToShow;
     let height = min(maxHeight, Array.length(items) * itemHeight);
 
     // TODO: Bring back detail view:
@@ -1560,7 +1565,7 @@ module View = {
       <View style=innerStyleWithShadow>
         <FlatList
           rowHeight=itemHeight
-          initialRowsToRender=5
+          initialRowsToRender=numberOfItemsToShow
           count={Array.length(items)}
           theme
           focused>

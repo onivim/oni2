@@ -1,0 +1,29 @@
+opam-version: "2.0"
+maintainer: "Jane Street developers"
+authors: ["Jane Street Group, LLC"]
+homepage: "https://github.com/janestreet/ppx_js_style"
+bug-reports: "https://github.com/janestreet/ppx_js_style/issues"
+dev-repo: "git+https://github.com/janestreet/ppx_js_style.git"
+doc: "https://ocaml.janestreet.com/ocaml-core/latest/doc/ppx_js_style/index.html"
+license: "MIT"
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+]
+depends: [
+  "ocaml"    {>= "4.04.2"}
+  "base"     {>= "v0.14" & < "v0.15"}
+  "dune"     {>= "2.0.0"}
+  "octavius"
+  "ppxlib"   {>= "0.11.0"}
+]
+synopsis: "Code style checker for Jane Street Packages"
+description: "
+Part of the Jane Street's PPX rewriters collection.
+
+This packages is a no-op ppx rewriter. It is used as a 'lint' tool to
+enforce some coding conventions across all Jane Street packages.
+"
+url {
+  src: "https://github.com/janestreet/ppx_js_style/archive/refs/tags/v0.14.1.tar.gz"
+  checksum: "md5=2d79afa4f954aeafb81b64ecfc11c3fb"
+}

@@ -9,6 +9,7 @@
    ExCommandKeybindingNormTest ExtConfigurationChangedTest ExtHostContextTest
    ExtHostBufferOpenTest ExtHostBufferUpdatesTest
    ExtHostCommandActivationTest ExtHostCompletionTest ExtHostDefinitionTest
+   ExtHostFileSystemTest
    ExtHostFormatSingleEditTest ExtHostFormatFullEditTest
    ExtHostWorkspaceSearchTest FileWatcherTest FormatOnSaveTest
    KeybindingsInvalidJsonTest KeySequenceJJTest InputIgnoreTest
@@ -21,7 +22,9 @@
    Regression2988SwitchEditorTest Regression3084CommandLoopTest
    Regression3323DiagnosticsTest RegressionCommandLineNoCompletionTest
    RegressionFontFallbackTest RegressionFileModifiedIndicationTest
-   RegressionNonExistentDirectory RegressionVspEmptyInitialBufferTest
+   RegressionNonExistentDirectory 
+   RegressionLayoutTabSingleEditor
+   RegressionVspEmptyInitialBufferTest
    RegressionVspEmptyExistingBufferTest SCMGitTest SyntaxHighlightPhpTest
    SyntaxHighlightTextMateTest SyntaxHighlightTreesitterTest
    AddRemoveSplitTest TerminalSetPidTitleTest TerminalConfigurationTest
@@ -47,6 +50,7 @@
    ExtConfigurationChangedTest.exe ExtHostBufferOpenTest.exe
    ExtHostBufferUpdatesTest.exe ExtHostCommandActivationTest.exe
    ExtHostContextTest.exe ExtHostCompletionTest.exe ExtHostDefinitionTest.exe
+   ExtHostFileSystemTest.exe
    ExtHostWorkspaceSearchTest.exe FileWatcherTest.exe FormatOnSaveTest.exe
    KeybindingsInvalidJsonTest.exe KeySequenceJJTest.exe InputIgnoreTest.exe
    InputContextKeysTest.exe InputRemapMotionTest.exe LanguageCssTest.exe
@@ -56,6 +60,7 @@
    Regression3084CommandLoopTest.exe
    RegressionCommandLineNoCompletionTest.exe
    RegressionFileModifiedIndicationTest.exe RegressionFontFallbackTest.exe
+   RegressionLayoutTabSingleEditor.exe
    RegressionVspEmptyInitialBufferTest.exe RegressionNonExistentDirectory.exe
    RegressionVspEmptyExistingBufferTest.exe SCMGitTest.exe
    SearchShowClearHighlightsTest.exe SyntaxHighlightTextMateTest.exe

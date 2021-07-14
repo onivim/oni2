@@ -97,8 +97,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       let firstLine = lines[0];
       let action =
         switch (Model.FocusManager.current(state)) {
-        | Editor => Actions.Vim(Feature_Vim.Pasted(rawText))
-        | Wildmenu => Actions.Vim(Feature_Vim.Pasted(firstLine))
+        | Editor => Actions.Vim(Feature_Vim.Msg.pasted(rawText))
+        | Wildmenu => Actions.Vim(Feature_Vim.Msg.pasted(firstLine))
         | Quickmenu => Actions.QuickmenuPaste(firstLine)
         | NewQuickmenu =>
           Actions.Quickmenu(Feature_Quickmenu.Msg.pasted(firstLine))

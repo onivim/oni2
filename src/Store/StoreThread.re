@@ -183,6 +183,7 @@ let start =
         ~close,
         ~restore,
         ~setVsync,
+        ~window,
       ),
     ]);
 

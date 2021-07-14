@@ -90,7 +90,7 @@ module Commands = {
 };
 
 module MenuItems = {
-  open MenuBar.Schema;
+  open ContextMenu.Schema;
   open Commands;
 
   let website = command(~title="Website", website);

@@ -132,7 +132,9 @@ Common contexts with VSCode:
 
 | Context Name | True When | 
 | --- | --- |
+| `editorFocus` | An editor has focus |
 | `editorTextFocus` | An editor has focus |
+| `hasSearchResults` | Search results are available |
 | `inSnippetMode` | A snippet session is currently active |
 | `renameInputVisible` | The rename input is visible |
 | `suggestWidgetVisible` | The suggest widget (auto-completion) is visible |
@@ -170,6 +172,8 @@ Onivim-specific contexts:
 | Command+P / Control+P | Quick Open (File Picker) | `workbench.action.quickOpen` | 
 | Control+Tab | Navigate to next editor in group | `workbench.action.quickOpenNavigateNextInEditorPicker` |
 | Shift+Control+Tab | Navigate to previous editor in group | `workbench.action.quickOpenNavigatePreviousInEditorPicker` | 
+| Command+PageDown | Navigate to next tab | `workbench.action.nextEditor` |
+| Command+PageUp | Navigate to previous tab | `workbench.action.previousEditor` |
 | Command+= / Control+= | Zoom In | `workbench.action.zoomIn` | 
 | Command+- / Control+- | Zoom Out | `workbench.action.zoomOut` | 
 | Command+0 / Control+0 | Zoom Reset | `workbench.action.zoomReset` | 
@@ -183,10 +187,23 @@ Onivim-specific contexts:
 
 ### List / Menu commands
 
+> NOTE: Some of the list select commands may not be fully hooked up yet, such that they may not respect vertical/horizontal opening.
+
 | Default Key Binding | Description | Command |
 | --- | --- | --- |
 | Up Arrow / Control+P | Move focus up | `list.focusUp` |
 | Down Arrow / Control+N | Move focus down | `list.focusDown` |
+| Enter | Select current item | `list.select` |
+| Shift-Enter | Select current item (vertical open) | `oni.list.selectVertical` |
+| Ctrl-x | Select current item (horizontal open) | `oni.list.selectHorizontal` |
+| Ctrl-t | Select current item (new tab) | `oni.list.selectNewTab` |
+
+### Search Pane
+
+| Default Key Binding | Description | Command |
+| --- | --- | --- |
+| F4 | Focus next search result | `search.action.focusNextSearchResult` |
+| Shift+F4 | Focus previous search result | `search.action.focusPreviousSearchResult` |
 
 ### Sidebar
 

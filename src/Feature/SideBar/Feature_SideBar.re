@@ -58,7 +58,7 @@ type outmsg =
   | PopFocus;
 
 let selected = ({selected, _}) => selected;
-let isOpen = ({isOpen, _}) => isOpen;
+let isOpen = ({isOpen, resizeDelta, _}) => isOpen || resizeDelta != 0;
 let location = ({location, _}) => location;
 
 let isOpenByDefault = ({openByDefault, _}) => openByDefault;
@@ -73,24 +73,21 @@ let initial = {
   location: Left,
 };
 
-let width = ({width, resizeDelta, isOpen, location, shouldSnapShut, _}) =>
-  if (!isOpen) {
-    0;
-  } else {
-    let candidate =
-      switch (location) {
-      | Left => width + resizeDelta
-      | Right => width - resizeDelta
-      };
-
-    if (candidate < Constants.minWidth && shouldSnapShut) {
-      0;
-    } else if (candidate > Constants.maxWidth) {
-      Constants.maxWidth;
-    } else {
-      max(0, candidate);
+let width = ({width, resizeDelta, location, shouldSnapShut, _}) => {
+  let candidate =
+    switch (location) {
+    | Left => width + resizeDelta
+    | Right => width - resizeDelta
     };
+
+  if (candidate < Constants.minWidth && shouldSnapShut) {
+    0;
+  } else if (candidate > Constants.maxWidth) {
+    Constants.maxWidth;
+  } else {
+    max(0, candidate);
   };
+};
 
 let update = (~isFocused, msg, model) => {
   // Focus a pane if it is not open, or close it
@@ -130,13 +127,7 @@ let update = (~isFocused, msg, model) => {
       if (model.isOpen) {
         {...model, resizeDelta: delta};
       } else {
-        {
-          ...model,
-          width: 0,
-          resizeDelta: delta,
-          isOpen: true,
-          shouldSnapShut: false,
-        };
+        {...model, resizeDelta: delta, isOpen: true, shouldSnapShut: false};
       };
 
     (model', Nothing);
@@ -191,6 +182,10 @@ let toggle = (pane, state) =>
   } else {
     {...state, shouldSnapShut: true, isOpen: true, selected: pane};
   };
+
+let show = state => {
+  {...state, shouldSnapShut: true, isOpen: true};
+};
 
 let setDefaultLocation = (state, setting) => {
   let location = setting == `Right ? Right : Left;
@@ -383,7 +378,7 @@ let configurationChanged = (~hasWorkspace, ~config, model) => {
 };
 
 module MenuItems = {
-  open MenuBar.Schema;
+  open ContextMenu.Schema;
   module View = {
     let explorer = command(~title="Explorer", Commands.openExplorerPane);
 
@@ -427,10 +422,10 @@ module Contributions = {
       openSCM,
     ];
 
-  let menuItems = commands |> List.map(MenuBar.Schema.command);
+  let menuItems = commands |> List.map(ContextMenu.Schema.command);
 
   let menuGroups =
-    MenuBar.Schema.[
+    ContextMenu.Schema.[
       group(
         ~order=200,
         ~parent=Feature_MenuBar.Global.view,
@@ -447,7 +442,7 @@ module Contributions = {
         MenuItems.Edit.[findInFiles],
       ),
     ];
-  MenuBar.Schema.group(~parent=Feature_MenuBar.Global.view, menuItems);
+  ContextMenu.Schema.group(~parent=Feature_MenuBar.Global.view, menuItems);
 
   let contextKeys = (~isFocused) => {
     let common = ContextKeys.[sideBarVisible, activeViewlet];

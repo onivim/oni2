@@ -102,6 +102,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
     - _"inline"_ - Show snippets sorted in-line with other suggestion items
     - _"hidden"_ - Don't show snippet suggestions at all
 
+- `editor.suggest.itemsToShow` __(_int_ default: `5`)__ - The maximum number of suggestions to show in the suggestion UI.
+
 - `editor.wordBasedSuggestions` __(_bool_ default: `true`)__ When `true`, keywords are provided as completion suggestions.
 
 - `editor.wordWrap` __(_bool_ default: `true`)__ When `true`, Onivim will soft-wrap lines at the viewport boundary.
@@ -127,6 +129,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `files.autoSaveDelay` __(_int_ default: `1000`)__ - specifies the time, in milliseconds, to wait to auto-save a buffer when `files.autoSave` is set to `"afterDelay"`
 
 - `search.exclude` __(_list of string_ default: `[]`)__ - When using `Find in files` Onivim will not look at files located at the directories listed here, this inherit all the values from `files.exclude`
+
+- `search.followSymlinks` __(_bool_ default:  `true`)__ - Set whether to follow symlinks when searching
 
 - `workbench.colorCustomizations` __(_json_ default: `{}`)__ - Color theme overrides, using the same [Theme Colors as Code](https://code.visualstudio.com/api/references/theme-color) - for example:
 
@@ -164,6 +168,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `files.useExperimentalFileWatcher` __(_bool_ default: `true`)__ When `true`, a file watcher will be used to monitor file system changes and update the explorer in the sidebar.
 
 ### Layout
+
+- `workbench.activityBar.visible` __(_bool_ default: `true`)__ - Controls whether or not the activity bar (icon bar) is visible.
 
 - `workbench.editor.showTabs` __(_bool_ default: `true`)__ - When `false`, hides the editor tabs.
 

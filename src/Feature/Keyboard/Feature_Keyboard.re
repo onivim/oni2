@@ -31,7 +31,7 @@ module Commands = {
 };
 
 module MenuItems = {
-  open MenuBar.Schema;
+  open ContextMenu.Schema;
   module Edit = {
     let emojiAndSymbols =
       command(~title="Emoji & Symbols", Commands.showEmojiAndSymbols);
@@ -53,7 +53,7 @@ module Contributions = {
   let commands = Commands.[showEmojiAndSymbols];
 
   let menuGroups =
-    MenuBar.Schema.[
+    ContextMenu.Schema.[
       group(
         ~order=600,
         ~parent=Feature_MenuBar.Global.edit,

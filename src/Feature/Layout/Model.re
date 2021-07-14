@@ -174,6 +174,12 @@ type layout = {
   activeGroupId: int,
 };
 
+module LayoutTab = {
+  type t = layout;
+
+  let groups = ({groups, _}: layout) => groups;
+};
+
 let activeTree = layout =>
   switch (layout.uncommittedTree) {
   | `Resizing(tree)
@@ -198,6 +204,8 @@ let initial = editors => {
 
   {layouts: [initialLayout], activeLayoutIndex: 0};
 };
+
+let layouts = ({layouts, _}) => layouts;
 
 let groups = ({groups, _}) => groups;
 
@@ -439,6 +447,25 @@ let removeActiveEditor = model => {
   removeEditor(activeEditorId, model);
 };
 
+let tryCloseActiveGroup = model => {
+  let curLayout = model |> activeLayout;
+  let activeGroupId = curLayout.activeGroupId;
+
+  let rec loop = (newModel: model) => {
+    let newLayout = newModel |> activeLayout;
+    if (newLayout.activeGroupId != activeGroupId) {
+      Some(newModel);
+    } else {
+      switch (removeActiveEditor(newModel)) {
+      | Some(model) => loop(model)
+      | None => None
+      };
+    };
+  };
+
+  loop(model);
+};
+
 let closeBuffer = (~force, buffer, model) => {
   let activeEditor = activeEditor(model);
   let activeEditorId = Editor.getId(activeEditor);
@@ -452,9 +479,8 @@ let closeBuffer = (~force, buffer, model) => {
   };
 };
 
-let addLayoutTab = model => {
-  let newEditor = activeEditor(model) |> Editor.copy;
-  let newGroup = Group.create([newEditor]);
+let addLayoutTab = (~editor, model) => {
+  let newGroup = Group.create([editor]);
 
   let newLayout = {
     tree: Layout.singleton(newGroup.id),

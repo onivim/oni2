@@ -161,10 +161,17 @@ module Internal = {
           | Some(cmdId) =>
             Service_Exthost.Effects.Commands.executeContributedCommand(
               ~command=cmdId,
-              ~arguments=[`Null],
+              ~arguments=command.arguments,
               client,
             )
           }
+        | DisplayMenuAt({menu, xPos, yPos}) =>
+          Feature_ContextMenu.Effects.displayMenuAt(
+            ~menuSchema=menu,
+            ~xPos,
+            ~yPos,
+          )
+          |> Isolinear.Effect.map(msg => ContextMenu(msg))
         };
 
       (layout, effect);
@@ -244,6 +251,12 @@ module Internal = {
           state.layout,
         );
 
+      let terminals =
+        Feature_Terminal.configurationChanged(
+          ~config=resolver,
+          state.terminals,
+        );
+
       let vim = Feature_Vim.configurationChanged(~config=resolver, state.vim);
       let vimEffect =
         Oni_Core.EffectEx.value(
@@ -267,6 +280,7 @@ module Internal = {
           sideBar,
           layout,
           proxy,
+          terminals,
           vim,
           zen,
           zoom,
@@ -390,6 +404,7 @@ let update =
       ~minimize,
       ~close,
       ~restore,
+      ~window,
       ~setVsync,
       state: State.t,
       action: Actions.t,
@@ -484,7 +499,13 @@ let update =
     };
 
   | Exthost(msg) =>
-    let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
+    let (model, outMsg) =
+      Feature_Exthost.update(
+        ~buffers=state.buffers,
+        ~editors=Feature_Layout.visibleEditors(state.layout),
+        msg,
+        state.exthost,
+      );
 
     let state = {...state, exthost: model};
     let eff =
@@ -634,6 +655,34 @@ let update =
         (state, eff);
       }
     );
+
+  | ContextMenu(msg) =>
+    let contextKeys = Oni_Model.ContextKeys.all(state);
+    let commands = CommandManager.current(state);
+    let config = Selectors.configResolver(state);
+    let (model, outmsg) =
+      Feature_ContextMenu.update(
+        ~contextKeys,
+        ~commands,
+        ~config,
+        ~input=state.input,
+        ~window,
+        msg,
+        state.contextMenu,
+      );
+
+    let eff =
+      Feature_ContextMenu.(
+        switch (outmsg) {
+        | Nothing => Isolinear.Effect.none
+        | ExecuteCommand({command}) =>
+          Internal.executeCommandEffect(command, `Null)
+        | Effect(eff) =>
+          eff |> Isolinear.Effect.map(msg => Actions.ContextMenu(msg))
+        }
+      );
+
+    ({...state, contextMenu: model}, eff);
 
   | FileSystem(msg) =>
     let (model, outmsg) = Feature_FileSystem.update(msg, state.fileSystem);
@@ -925,6 +974,7 @@ let update =
           |> Feature_Layout.map(editor =>
                if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
                  Feature_Editor.Editor.setCodeLens(
+                   ~uiFont=state.uiFont,
                    ~startLine,
                    ~stopLine,
                    ~handle,
@@ -1326,10 +1376,13 @@ let update =
       |> Feature_Editor.Editor.getBufferId;
     let config = Feature_Configuration.resolver(state.config, state.vim);
 
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let (buffers, outmsg) =
       Feature_Buffers.update(
         ~activeBufferId,
         ~config,
+        ~languageInfo,
         ~workspace=state.workspace,
         msg,
         state.buffers,
@@ -1482,7 +1535,8 @@ let update =
           )
         | SplitDirection.Vertical({shouldReuse}) =>
           Feature_Layout.split(~shouldReuse, ~editor, `Vertical, state.layout)
-        | SplitDirection.NewTab => Feature_Layout.addLayoutTab(state.layout)
+        | SplitDirection.NewTab =>
+          Feature_Layout.addLayoutTab(~editor, state.layout)
         };
 
       let editor' =
@@ -1553,10 +1607,12 @@ let update =
              | Version => Some(BufferRenderer.Version)
              | UpdateChangelog => Some(BufferRenderer.UpdateChangelog)
              | Image => Some(BufferRenderer.Image)
-             | Welcome => Some(BufferRenderer.Welcome)
+             | Welcome when Oni_Core.Buffer.isEmpty(buffer) =>
+               Some(BufferRenderer.Welcome)
              | Changelog => Some(BufferRenderer.FullChangelog)
              | FilePath(_) => None
              | DebugInput => Some(BufferRenderer.DebugInput)
+             | _ => None
              }
            })
         |> Option.map(renderer => {
@@ -1878,26 +1934,22 @@ let update =
     | Focus(Center) => (FocusManager.push(Editor, state), Effect.none)
 
     | Focus(Left) when sideBarLocation == Feature_SideBar.Left => (
-        Feature_SideBar.isOpen(state.sideBar)
-          ? switch (state.sideBar |> Feature_SideBar.selected) {
-            | FileExplorer => FocusManager.push(FileExplorer, state)
-            | SCM => FocusManager.push(SCM, state)
-            | Extensions => FocusManager.push(Extensions, state)
-            | Search => FocusManager.push(Search, state)
-            }
-          : state,
+        switch (state.sideBar |> Feature_SideBar.selected) {
+        | FileExplorer => FocusManager.push(FileExplorer, state)
+        | SCM => FocusManager.push(SCM, state)
+        | Extensions => FocusManager.push(Extensions, state)
+        | Search => FocusManager.push(Search, state)
+        },
         Effect.none,
       )
 
     | Focus(Right) when sideBarLocation == Feature_SideBar.Right => (
-        Feature_SideBar.isOpen(state.sideBar)
-          ? switch (state.sideBar |> Feature_SideBar.selected) {
-            | FileExplorer => FocusManager.push(FileExplorer, state)
-            | SCM => FocusManager.push(SCM, state)
-            | Extensions => FocusManager.push(Extensions, state)
-            | Search => FocusManager.push(Search, state)
-            }
-          : state,
+        switch (state.sideBar |> Feature_SideBar.selected) {
+        | FileExplorer => FocusManager.push(FileExplorer, state)
+        | SCM => FocusManager.push(SCM, state)
+        | Extensions => FocusManager.push(Extensions, state)
+        | Search => FocusManager.push(Search, state)
+        },
         Effect.none,
       )
 

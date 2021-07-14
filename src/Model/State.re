@@ -30,6 +30,7 @@ let defaultKeyBindings =
       ~condition="quickmenuCursorEnd" |> WhenExpr.parse,
     ),
   ]
+  @ Feature_Search.Contributions.keybindings
   @ Feature_SideBar.Contributions.keybindings
   @ Feature_Keyboard.Contributions.keybindings
   @ Feature_Clipboard.Contributions.keybindings
@@ -123,6 +124,21 @@ let defaultKeyBindings =
       bind(
         ~key="<CR>",
         ~command=Commands.List.select.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-CR>",
+        ~command=Commands.List.selectVertical.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-x>",
+        ~command=Commands.List.selectHorizontal.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-t>",
+        ~command=Commands.List.selectNewTab.id,
         ~condition="listFocus" |> WhenExpr.parse,
       ),
       bind(
@@ -398,6 +414,16 @@ let defaultKeyBindings =
         ~command=Feature_Layout.Commands.closeActiveSplit.id,
         ~condition=windowCommandCondition,
       ),
+      bind(
+        ~key="<C-W>c",
+        ~command=Feature_Layout.Commands.closeActiveSplitUnlessLast.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-c>",
+        ~command=Feature_Layout.Commands.closeActiveSplitUnlessLast.id,
+        ~condition=windowCommandCondition,
+      ),
     ]
   @ Component_VimWindows.Contributions.keybindings
   @ Component_VimList.Contributions.keybindings
@@ -471,6 +497,7 @@ type t = {
   zoom: Feature_Zoom.model,
   autoUpdate: Feature_AutoUpdate.model,
   registration: Feature_Registration.model,
+  contextMenu: Feature_ContextMenu.model,
 };
 
 let initial =
@@ -646,5 +673,6 @@ let initial =
     zoom: Feature_Zoom.initial(~getZoom, ~setZoom),
     autoUpdate: Feature_AutoUpdate.initial,
     registration: Feature_Registration.initial(licenseKeyPersistence),
+    contextMenu: Feature_ContextMenu.initial,
   };
 };

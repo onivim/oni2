@@ -41,3 +41,11 @@ let isLayoutFocused =
   | Editor
   | Terminal(_) => true
   | _ => false;
+
+let isSidebarFocused =
+  fun
+  | Extensions
+  | FileExplorer
+  | SCM
+  | Search => true
+  | _ => false;

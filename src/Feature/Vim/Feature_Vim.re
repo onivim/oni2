@@ -141,10 +141,15 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
     ),
 };
 
+[@deriving show]
+type command =
+  | ClearSearchHighlights;
+
 // MSG
 
 [@deriving show]
 type msg =
+  | Command(command)
   | ModeChanged({
       allowAnimation: bool,
       mode: [@opaque] Vim.Mode.t,
@@ -158,13 +163,23 @@ type msg =
       highlights: array(ByteRange.t),
     })
   | SettingChanged(Vim.Setting.t)
-  | MacroRecordingStarted({register: char})
-  | MacroRecordingStopped
   | Output({
       cmd: string,
       output: option(string),
-    })
-  | Noop;
+      isSilent: bool,
+    });
+
+module Msg = {
+  let output = (~cmd, ~output, ~isSilent) => Output({cmd, output, isSilent});
+
+  let settingChanged = (~setting) => SettingChanged(setting);
+
+  let modeChanged = (~allowAnimation, ~subMode, ~mode, ~effects) => {
+    ModeChanged({allowAnimation, mode, subMode, effects});
+  };
+
+  let pasted = text => Pasted(text);
+};
 
 type outmsg =
   | Nothing
@@ -198,6 +213,11 @@ let handleEffect = (model, effect: Vim.Effect.t) => {
       searchPattern: None,
       searchHighlights: SearchHighlights.initial,
     }
+  | Vim.Effect.MacroRecordingStarted({register}) => {
+      ...model,
+      recordingMacro: Some(register),
+    }
+  | Vim.Effect.MacroRecordingStopped(_) => {...model, recordingMacro: None}
   | _ => model
   };
 };
@@ -279,6 +299,14 @@ module Effects = {
 
 let update = (~vimContext, msg, model: model) => {
   switch (msg) {
+  | Command(ClearSearchHighlights) => (
+      {
+        ...model,
+        searchPattern: None,
+        searchHighlights: SearchHighlights.initial,
+      },
+      Nothing,
+    )
   | ModeChanged({allowAnimation, mode, effects, subMode}) => (
       {...model, subMode} |> handleEffects(effects),
       ModeDidChange({allowAnimation, mode, effects}),
@@ -299,13 +327,11 @@ let update = (~vimContext, msg, model: model) => {
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
       SettingsChanged({name: fullName, value}),
     )
-  | MacroRecordingStarted({register}) => (
-      {...model, recordingMacro: Some(register)},
-      Nothing,
-    )
-  | MacroRecordingStopped => ({...model, recordingMacro: None}, Nothing)
 
-  | Output({cmd, output}) => (model, Output({cmd, output}))
+  | Output({cmd, output, isSilent}) => (
+      model,
+      isSilent ? Nothing : Output({cmd, output}),
+    )
 
   | SearchHighlightsAvailable({bufferId, highlights}) =>
     let newHighlights =
@@ -322,8 +348,6 @@ let update = (~vimContext, msg, model: model) => {
       },
       Nothing,
     );
-
-  | Noop => (model, Nothing)
   };
 };
 
@@ -385,6 +409,18 @@ let sub = (~buffer, ~topVisibleLine, ~bottomVisibleLine, model) => {
   |> Option.value(~default=Isolinear.Sub.none);
 };
 
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let clearSearchHighlights =
+    define(
+      ~category="Search",
+      ~title="Clear highlights",
+      "vim.clearSearchHighlights",
+      Command(ClearSearchHighlights),
+    );
+};
+
 module Keybindings = {
   open Feature_Input.Schema;
   let controlSquareBracketRemap =
@@ -404,11 +440,26 @@ module Keybindings = {
       ~toKeys="<C-^>",
       ~condition=WhenExpr.Value(True),
     );
+
+  let normalModeCondition = "editorTextFocus && normalMode" |> WhenExpr.parse;
+
+  let clearSearchHighlights =
+    bind(
+      ~key="<C-L>",
+      ~condition=normalModeCondition,
+      ~command=Commands.clearSearchHighlights.id,
+    );
 };
 
 module Contributions = {
   let keybindings =
-    Keybindings.[controlSquareBracketRemap, controlCaretRemap];
+    Keybindings.[
+      clearSearchHighlights,
+      controlSquareBracketRemap,
+      controlCaretRemap,
+    ];
+
+  let commands = Commands.[clearSearchHighlights];
 
   let configuration = Configuration.[experimentalViml.spec];
 };

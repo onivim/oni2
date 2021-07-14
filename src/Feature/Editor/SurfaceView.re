@@ -108,9 +108,17 @@ let%component make =
 
   let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-    |> Option.iter(((pixelX, pixelY, time)) => {
+    |> Option.iter(((editorX, editorY, time)) => {
          dispatch(
-           Msg.EditorMouseDown({altKey: evt.ctrlKey, time, pixelX, pixelY}),
+           Msg.EditorMouseDown({
+             altKey: evt.ctrlKey,
+             button: evt.button,
+             time,
+             editorX,
+             editorY,
+             windowX: evt.mouseX,
+             windowY: evt.mouseY,
+           }),
          )
        });
   };

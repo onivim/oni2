@@ -24,7 +24,7 @@ module SingleEditOperation = {
       obj(({field, _}) =>
         {
           range: field.required("range", OneBasedRange.decode),
-          text: field.optional("text", string),
+          text: field.withDefault("text", None, nullable(string)),
           forceMoveMarkers:
             field.withDefault("forceMoveMarkers", false, bool),
         }

@@ -347,5 +347,31 @@ describe("Matcher", ({describe, _}) => {
     //        ),
     //      );
     //    });
-  })
+  });
+  describe("utf8", ({test, _}) => {
+    test("#3599 - unicode characters parse correctly", ({expect, _}) => {
+      let result = defaultParse("œ");
+      expect.equal(
+        result,
+        Ok(Sequence([keyPress(Key.Character(Uchar.of_int(339)))])),
+      );
+    });
+
+    test(
+      "#3599 - unicode characters w/ vim-style modifiers parse correctly",
+      ({expect, _}) => {
+      let result = defaultParse("ctrl+œ");
+      expect.equal(
+        result,
+        Ok(
+          Sequence([
+            keyPress(
+              ~modifiers=modifiersControl,
+              Key.Character(Uchar.of_int(339)),
+            ),
+          ]),
+        ),
+      );
+    });
+  });
 });

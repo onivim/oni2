@@ -30,6 +30,7 @@ let defaults =
     Colors.EditorInfo.defaults,
     Colors.EditorHint.defaults,
     Colors.EditorCursor.defaults,
+    Colors.EditorGroup.defaults,
     Colors.EditorGroupHeader.defaults,
     Colors.EditorGutter.defaults,
     Colors.EditorHoverWidget.defaults,

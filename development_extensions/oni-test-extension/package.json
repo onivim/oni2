@@ -8,7 +8,8 @@
 	},
 	"activationEvents": [
 		"onCommand:oni-test.showMessage",
-		"onCommand:oni-test.exthost.validateLogPathIsDirectory"
+		"onCommand:oni-test.exthost.validateLogPathIsDirectory",
+		"onCommand:oni-test.exthost.runFileSystemTests"
 	],
 	"main": "./extension.js",
 	"contributes": {},

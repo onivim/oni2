@@ -23,6 +23,7 @@ type t =
     })
   | Commands(Feature_Commands.msg(t))
   | Configuration(Feature_Configuration.msg)
+  | ContextMenu(Feature_ContextMenu.msg)
   | Decorations(Feature_Decorations.msg)
   | Diagnostics(Feature_Diagnostics.msg)
   | EditorFont(Service_Font.msg)
@@ -102,7 +103,7 @@ type t =
   | ListFocus(int)
   | ListFocusUp
   | ListFocusDown
-  | ListSelect
+  | ListSelect({direction: SplitDirection.t})
   | ListSelectBackground
   | NewBuffer({direction: SplitDirection.t})
   | OpenBufferById({
@@ -181,7 +182,7 @@ and tick = {
 and menuItem = {
   category: option(string),
   name: string,
-  command: unit => t,
+  command: option(SplitDirection.t) => t,
   icon: [@opaque] option(IconTheme.IconDefinition.t),
   highlight: list((int, int)),
   handle: option(int),

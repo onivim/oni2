@@ -593,11 +593,11 @@ module Make = (Config: {
                  bindings,
                );
 
-             (bindings', effects' @ effs);
+             (bindings', effs @ effects');
            },
            (bindings, []),
          );
-    (bindings', List.rev(effects'));
+    (bindings', effects');
   }
 
   and flush =

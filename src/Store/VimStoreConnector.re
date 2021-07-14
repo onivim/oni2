@@ -194,9 +194,10 @@ let start =
       | SearchStringChanged(_) => ()
       | SearchClearHighlights => ()
 
-      // TODO: Move internal to Feature_Vim
-      | Output({cmd, output}) => {
-          dispatch(Actions.Vim(Feature_Vim.Output({cmd, output})));
+      | Output({cmd, output, isSilent}) => {
+          dispatch(
+            Actions.Vim(Feature_Vim.Msg.output(~cmd, ~output, ~isSilent)),
+          );
         }
 
       | Clear({target, count}) =>
@@ -232,8 +233,9 @@ let start =
             ),
           ),
         )
-      | SettingChanged(setting) =>
-        dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
+      | SettingChanged(setting) => {
+          dispatch(Actions.Vim(Feature_Vim.Msg.settingChanged(~setting)));
+        }
 
       | ColorSchemeChanged(maybeColorScheme) =>
         switch (maybeColorScheme) {
@@ -246,15 +248,9 @@ let start =
           )
         }
 
-      | MacroRecordingStarted({register}) =>
-        dispatch(
-          Actions.Vim(
-            Feature_Vim.MacroRecordingStarted({register: register}),
-          ),
-        )
+      | MacroRecordingStarted(_) => ()
 
-      | MacroRecordingStopped(_) =>
-        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped))
+      | MacroRecordingStopped(_) => ()
 
       | WindowSplit(split) => handleSplit(split) |> dispatch,
     );
@@ -343,29 +339,10 @@ let start =
   let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
-      let languageInfo =
-        getState().languageSupport |> Feature_LanguageSupport.languageInfo;
-      // TODO: This isn't buffer aware, so it won't be able to deal with the
-      // firstline way of getting syntax, which means if that is in use,
-      // it will get wiped when renaming the file.
-      //
-      // Other notes: The file path is going to be updated in BufferFilenameChanged,
-      // so you can't use the buffer here, as it will have the old path.
-      // Additionally, the syntax server will need to be notified on the filetype
-      // change / hook it up to onFileTypeChanged.
-      let fileType =
-        switch (meta.filePath) {
-        | Some(v) =>
-          Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v)
-          |> Oni_Core.Buffer.FileType.inferred
-        | None => Oni_Core.Buffer.FileType.none
-        };
-
       dispatch(
         Actions.Buffers(
           Feature_Buffers.Msg.fileNameChanged(
             ~bufferId=meta.id,
-            ~newFileType=fileType,
             ~newFilePath=meta.filePath,
             ~isModified=meta.modified,
             ~version=meta.version,
@@ -476,13 +453,13 @@ let start =
 
              let newBuffer =
                if (firstLineChanged) {
-                 let fileType =
-                   Oni_Core.Buffer.FileType.inferred(
-                     Exthost.LanguageInfo.getLanguageFromBuffer(
-                       languageInfo,
-                       newBuffer,
-                     ),
+                 let language =
+                   Exthost.LanguageInfo.getLanguageFromBuffer(
+                     languageInfo,
+                     newBuffer,
                    );
+                 let fileType = Oni_Core.Buffer.FileType.inferred(language);
+
                  newBuffer |> Core.Buffer.setFileType(fileType);
                } else {
                  newBuffer;
@@ -535,7 +512,7 @@ let start =
               name,
               category: None,
               icon: None,
-              command: () => Noop,
+              command: _ => Noop,
               highlight: [],
               handle: None,
             }
@@ -590,7 +567,12 @@ let start =
     dispatch(
       // TODO
       Actions.Vim(
-        Feature_Vim.ModeChanged({allowAnimation, subMode, mode, effects}),
+        Feature_Vim.Msg.modeChanged(
+          ~allowAnimation,
+          ~subMode,
+          ~mode,
+          ~effects,
+        ),
       ),
     );
   };

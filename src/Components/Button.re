@@ -29,11 +29,10 @@ module Sneakable = Feature_Sneak.View.Sneakable;
 module Styles = {
   open Style;
 
-  let container = (~margin, ~background, ~yOffset) => [
+  let container = (~margin, ~background) => [
     Style.backgroundColor(background),
     padding(8),
     Style.margin(margin),
-    transform([Transform.TranslateY(yOffset)]),
     flexDirection(`Row),
     justifyContent(`Center),
   ];
@@ -58,13 +57,6 @@ let%component make =
       ? Colors.Button.hoverBackground.from(theme)
       : Colors.Button.background.from(theme);
 
-  let%hook yOffset =
-    Hooks.transition(
-      ~name="Button Lift Transition",
-      ~duration=Animations.liftTransitionDuration,
-      isHovered ? (-2.0) : 0.0,
-    );
-
   let foreground = Colors.Button.foreground.from(theme);
 
   <Sneakable
@@ -72,7 +64,7 @@ let%component make =
     onClick
     onMouseEnter={_ => {dispatch(LocalState.MouseOver)}}
     onMouseLeave={_ => {dispatch(LocalState.MouseOut)}}
-    style={Styles.container(~margin, ~background, ~yOffset)}>
+    style={Styles.container(~margin, ~background)}>
     <Text
       fontFamily={font.family}
       fontSize=12.

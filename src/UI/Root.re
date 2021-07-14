@@ -184,7 +184,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
     };
 
   let sideBar = () =>
-    if (!zenMode) {
+    if (!zenMode || Focus.isSidebarFocused(FocusManager.current(state))) {
       <SideBarView config theme state dispatch />;
     } else {
       React.empty;
@@ -323,6 +323,15 @@ let make = (~dispatch, ~state: State.t, ()) => {
         registration={state.registration}
         font
         dispatch={msg => dispatch(Actions.Registration(msg))}
+      />
+      <Feature_ContextMenu.View
+        contextMenu={state.contextMenu}
+        config
+        context
+        input={state.input}
+        theme
+        font
+        dispatch={msg => dispatch(Actions.ContextMenu(msg))}
       />
     </Overlay>
     <statusBar />

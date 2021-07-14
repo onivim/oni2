@@ -465,8 +465,8 @@ let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queueEffect(Effect.Goto(gotoType));
 };
 
-let _onOutput = (cmd, output) => {
-  queueEffect(Effect.Output({cmd, output}));
+let _onOutput = (cmd, output, isSilent) => {
+  queueEffect(Effect.Output({cmd, output, isSilent}));
 };
 
 let _onClear = (target: Clear.target, count: int) => {
@@ -510,21 +510,11 @@ let _colorSchemesGet = pattern => {
 };
 
 let _onMacroStartRecording = (register: char) => {
-  queue(() => {
-    Event.dispatch(
-      Effect.MacroRecordingStarted({register: register}),
-      Listeners.effect,
-    )
-  });
+  queueEffect(MacroRecordingStarted({register: register}));
 };
 
 let _onMacroStopRecording = (register: char, value: option(string)) => {
-  queue(() => {
-    Event.dispatch(
-      Effect.MacroRecordingStopped({register, value}),
-      Listeners.effect,
-    )
-  });
+  queueEffect(MacroRecordingStopped({register, value}));
 };
 
 let _onInputMap = (mapping: Mapping.t) => {

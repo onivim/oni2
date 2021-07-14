@@ -59,7 +59,10 @@ Play around with switching between insert mode and normal mode, and when you're 
 - [Editing & Deleting Text](../using-onivim/editing-and-deleting)
 - [Visual Mode (Selection)](../using-onivim/visual-mode)
 - [Working with Files](../using-onivim/editing-and-deleting)
-- [Configuration](../using-onivim/configuration)
+- [Settings](../configuration/settings)
+- [Key Bindings](../configuration/key-bindings)
+- [Extensions](../configuration/extensions)
+
 
 
 

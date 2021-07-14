@@ -288,6 +288,10 @@ module Files = {
     );
 };
 
+module Search = {
+  let followSymlinks = setting("search.followSymlinks", bool, ~default=true);
+};
+
 module Workbench = {
   let activityBarVisible =
     setting("workbench.activityBar.visible", bool, ~default=true);
