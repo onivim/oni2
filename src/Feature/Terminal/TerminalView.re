@@ -73,16 +73,6 @@ module Terminal = {
     | _ => ()
     };
 
-    let lineHeightSize =
-      Oni_Core.LineHeight.calculate(~measuredFontHeight=fontSize, lineHeight);
-    let terminalFont =
-      EditorTerminal.Font.make(
-        ~smoothing,
-        ~size=fontSize,
-        ~lineHeight=lineHeightSize,
-        resolvedFont,
-      );
-
     let onDimensionsChanged =
         (
           {height, width, _}: Revery.UI.NodeEvents.DimensionsChangedEventParams.t,
@@ -149,7 +139,11 @@ module Terminal = {
       />;
 
     let elems = [element, scrollBar] |> React.listToElement;
-    <View onDimensionsChanged onBoundingBoxChanged onMouseWheel style={Styles.container(opacity)}>
+    <View
+      onDimensionsChanged
+      onBoundingBoxChanged
+      onMouseWheel
+      style={Styles.container(opacity)}>
       elems
     </View>;
   };

@@ -34,10 +34,7 @@ let isActive = model => {
   model.candidateText != "";
 };
 
-let clear =  (model) => {
-  ...model,
-  candidateText: ""
-};
+let clear = model => {...model, candidateText: ""};
 
 let update = (msg, model) =>
   switch (msg) {
