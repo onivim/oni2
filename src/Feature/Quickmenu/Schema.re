@@ -149,7 +149,7 @@ let menu:
   ) =>
   menu('outmsg) =
   (
-    ~focusFirstItemByDefault=false,
+    ~focusFirstItemByDefault=true,
     ~onItemFocused=?,
     ~onAccepted=?,
     ~onCancelled=?,
