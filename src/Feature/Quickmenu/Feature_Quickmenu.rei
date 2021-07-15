@@ -32,6 +32,7 @@ module Schema: {
 
   let menu:
     (
+      ~focusFirstItemByDefault: bool=?,
       ~onItemFocused: 'item => 'outmsg=?,
       ~onAccepted: (~text: string, ~item: option('item)) => 'outmsg=?,
       ~onCancelled: unit => 'outmsg=?,

@@ -43,6 +43,7 @@
 - #3753 - Extension: Don't bubble up extension runtime errors to notifications
 - #3756 - Search: Follow symlinks with ripgrep by default (fixes #1588)
 - #3757 - Buffers: Fix welcome buffer appearing when splitting (fixes #3631)
+- #3763 - Quickmenu: Select first item by default
 
 ### Performance
 
