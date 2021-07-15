@@ -43,6 +43,8 @@ module Terminal = {
 
     let%hook lastDimensions = Hooks.ref(None);
 
+    let%hook lastBoundingBox = Hooks.ref(None);
+
     // When the terminal id changes, we need to make sure we're dispatching the resized
     // event, too. The ideal fix would be to have this component 'keyed' on the `terminal.id`
     // but since we don't have the concept of a key prop, this `If` handler will be triggered
@@ -61,6 +63,15 @@ module Terminal = {
       );
 
     let terminalFont = font;
+
+    let onBoundingBoxChanged = bbox => {
+      lastBoundingBox := Some(bbox);
+    };
+
+    switch (lastBoundingBox^) {
+    | Some(bbox) when isActive => Oni_Core.IME.set(Some(bbox))
+    | _ => ()
+    };
 
     let onDimensionsChanged =
         (
@@ -128,7 +139,11 @@ module Terminal = {
       />;
 
     let elems = [element, scrollBar] |> React.listToElement;
-    <View onDimensionsChanged onMouseWheel style={Styles.container(opacity)}>
+    <View
+      onDimensionsChanged
+      onBoundingBoxChanged
+      onMouseWheel
+      style={Styles.container(opacity)}>
       elems
     </View>;
   };

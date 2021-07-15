@@ -165,6 +165,7 @@ let%component make =
                 (),
               ) => {
   let%hook textRef = Hooks.ref(None);
+  let%hook textBoundingBox = Hooks.ref(None);
   let%hook scrollOffset = Hooks.ref(0);
 
   let%hook () =
@@ -344,9 +345,15 @@ let%component make =
       fontSize
     />;
 
+  switch (textBoundingBox^) {
+  | Some(bbox) when isFocused => Oni_Core.IME.set(Some(bbox))
+  | _ => ()
+  };
+
   <Sneakable sneakId="text" onAnyClick=handleClick onSneak>
     <View
-      style={Styles.box(~shadowOpacity, ~theme, ~focused=model.isFocused)}>
+      style={Styles.box(~shadowOpacity, ~theme, ~focused=model.isFocused)}
+      onBoundingBoxChanged={bbox => {textBoundingBox := Some(bbox)}}>
       <View style=Styles.marginContainer>
         <selectionView />
         <cursor />

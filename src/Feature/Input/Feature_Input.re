@@ -1,5 +1,7 @@
+module InnerIME = IME;
 open Oni_Core;
 open Utility;
+module IME = InnerIME;
 module Log = (val Log.withNamespace("Oni2.Feature.Input"));
 
 module KeybindingsLoader = KeybindingsLoader;
@@ -164,21 +166,13 @@ module Configuration = {
       CustomDecoders.timeout,
       ~default=Timeout(Revery.Time.seconds(1)),
     );
+
+  module Debug = {
+    let showIMEFocus = setting("debug.ime.showFocus", bool, ~default=false);
+  };
 };
 
 // MSG
-
-type outmsg =
-  | Nothing
-  | DebugInputShown
-  | ErrorNotifications(list(string))
-  | MapParseError({
-      fromKeys: string,
-      toKeys: string,
-      error: string,
-    })
-  | OpenFile(FpExp.t(FpExp.absolute))
-  | TimedOut;
 
 type execute =
   InputStateMachine.execute =
@@ -198,6 +192,7 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
+  | IME(IME.msg)
   | KeybindingsUpdated([@opaque] list(Schema.resolvedKeybinding))
   | KeybindingsReloaded({
       bindings: [@opaque] list(Schema.resolvedKeybinding),
@@ -210,6 +205,19 @@ type msg =
     })
   | KeyDisplayer([@opaque] KeyDisplayer.msg)
   | Timeout;
+
+type outmsg =
+  | Nothing
+  | DebugInputShown
+  | Effect(Isolinear.Effect.t(msg))
+  | ErrorNotifications(list(string))
+  | MapParseError({
+      fromKeys: string,
+      toKeys: string,
+      error: string,
+    })
+  | OpenFile(FpExp.t(FpExp.absolute))
+  | TimedOut;
 
 module Msg = {
   let keybindingsUpdated = keybindings => KeybindingsUpdated(keybindings);
@@ -227,6 +235,16 @@ type model = {
   // such that we can provide a unique id for the timer to flush on timeout.
   inputTick: int,
   keybindingLoader: KeybindingsLoader.t,
+  ime: IME.t,
+};
+
+let configurationChanged = (~config, model: model) => {
+  ...model,
+  ime:
+    IME.setDebugView(
+      ~enabled=Configuration.Debug.showIMEFocus.get(config),
+      model.ime,
+    ),
 };
 
 type uniqueId = InputStateMachine.uniqueId;
@@ -280,6 +298,8 @@ let initial = (~loader, keybindings) => {
     keyDisplayer: None,
     inputTick: 0,
     keybindingLoader: loader,
+
+    ime: IME.initial,
   };
 };
 
@@ -292,6 +312,13 @@ type effect =
         isProducedByRemap: bool,
       })
     | RemapRecursionLimitHit;
+
+let imeEdit = (~candidateText, ~length, ~start, model) => {
+  ...model,
+  ime: IME.setCandidateText(~candidateText, ~length, ~start, model.ime),
+};
+
+let isImeActive = ({ime, _}) => IME.isActive(ime);
 
 let keyDown =
     (
@@ -366,6 +393,7 @@ let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
       ...model,
       inputStateMachine: inputStateMachine',
       keyDisplayer: keyDisplayer',
+      ime: IME.clear(model.ime),
     }
     |> incrementTick,
     effects,
@@ -561,6 +589,14 @@ let update = (msg, model) => {
       {...model, keyDisplayer: Some(KeyDisplayer.initial)},
       Nothing,
     )
+
+  | IME(imeMsg) =>
+    let (ime', imeEffect) = IME.update(imeMsg, model.ime);
+    (
+      {...model, ime: ime'},
+      Effect(imeEffect |> Isolinear.Effect.map(msg => IME(msg))),
+    );
+
   | VimMap(mapping) =>
     // When parsing Vim-style mappings, don't require a shift key.
     // In other words - characters like 'J' should resolve to 'Shift+j'
@@ -692,8 +728,9 @@ module Commands = {
 
 let sub =
     (
+      ~imeBoundingArea,
       ~config,
-      {keyDisplayer, inputTick, inputStateMachine, keybindingLoader, _},
+      {keyDisplayer, inputTick, inputStateMachine, keybindingLoader, ime, _},
     ) => {
   let keyDisplayerSub =
     switch (keyDisplayer) {
@@ -701,6 +738,9 @@ let sub =
     | Some(kd) =>
       KeyDisplayer.sub(kd) |> Isolinear.Sub.map(msg => KeyDisplayer(msg))
     };
+
+  let imeSub =
+    IME.sub(~imeBoundingArea, ime) |> Isolinear.Sub.map(msg => IME(msg));
 
   let timeoutSub =
     switch (Configuration.timeout.get(config)) {
@@ -724,7 +764,7 @@ let sub =
          KeybindingsReloaded({bindings, errors})
        });
 
-  [keyDisplayerSub, timeoutSub, loaderSub] |> Isolinear.Sub.batch;
+  [keyDisplayerSub, imeSub, timeoutSub, loaderSub] |> Isolinear.Sub.batch;
 };
 
 module ContextKeys = {
@@ -743,7 +783,8 @@ module Contributions = {
       openDefaultKeybindingsFile,
     ];
 
-  let configuration = Configuration.[leaderKey.spec, timeout.spec];
+  let configuration =
+    Configuration.[Debug.showIMEFocus.spec, leaderKey.spec, timeout.spec];
 
   let contextKeys = model => {
     WhenExpr.ContextKeys.(
@@ -761,11 +802,16 @@ module View = {
 
   module Overlay = {
     let make = (~input, ~uiFont, ~bottom, ~right, ()) => {
-      switch (input.keyDisplayer) {
-      | None => React.empty
-      | Some(keyDisplayer) =>
-        <KeyDisplayer model=keyDisplayer uiFont bottom right />
-      };
+      let keyDisplayerView =
+        switch (input.keyDisplayer) {
+        | None => React.empty
+        | Some(keyDisplayer) =>
+          <KeyDisplayer model=keyDisplayer uiFont bottom right />
+        };
+
+      let imeView = <IME.View ime={input.ime} />;
+
+      [keyDisplayerView, imeView] |> React.listToElement;
     };
   };
 

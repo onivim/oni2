@@ -271,6 +271,18 @@ let%component make =
       diffMarkers
     />;
 
+  let (pixelPosition: PixelPosition.t, _) =
+    Editor.bufferCharacterPositionToPixel(~position=cursorPosition, editor);
+  let left = Editor.pixelX(editor) +. pixelPosition.x +. gutterWidth;
+  let top = Editor.pixelY(editor) +. pixelPosition.y;
+  if (isActiveSplit && Vim.Mode.isInsert(mode)) {
+    Oni_Core.IME.set(
+      Some(
+        Revery.Math.BoundingBox2d.create(left, top, left +. 20., top +. 25.),
+      ),
+    );
+  };
+
   let hoverPopup = {
     let maybeHover =
       Feature_LanguageSupport.Hover.Popup.make(

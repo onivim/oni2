@@ -405,9 +405,11 @@ let start =
          )
       |> Isolinear.Sub.batch;
 
+    let imeBoundingArea = Oni_Core.IME.textArea();
+
     let inputSubscription =
       state.input
-      |> Feature_Input.sub(~config)
+      |> Feature_Input.sub(~imeBoundingArea, ~config)
       |> Isolinear.Sub.map(msg => Model.Actions.Input(msg));
 
     let notificationSub =
