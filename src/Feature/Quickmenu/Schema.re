@@ -123,6 +123,7 @@ module Renderer = {
 };
 
 type internal('item, 'outmsg) = {
+  focusFirstItemByDefault: bool,
   onItemFocused: option('item => 'outmsg),
   onAccepted: option((~text: string, ~item: option('item)) => 'outmsg),
   onCancelled: option(unit => 'outmsg),
@@ -137,6 +138,7 @@ type menu('outmsg) =
 
 let menu:
   (
+    ~focusFirstItemByDefault: bool=?,
     ~onItemFocused: 'item => 'outmsg=?,
     ~onAccepted: (~text: string, ~item: option('item)) => 'outmsg=?,
     ~onCancelled: unit => 'outmsg=?,
@@ -147,6 +149,7 @@ let menu:
   ) =>
   menu('outmsg) =
   (
+    ~focusFirstItemByDefault=true,
     ~onItemFocused=?,
     ~onAccepted=?,
     ~onCancelled=?,
@@ -156,6 +159,7 @@ let menu:
     initialItems,
   ) => {
     Menu({
+      focusFirstItemByDefault,
       onItemFocused,
       onAccepted,
       onCancelled,
@@ -356,17 +360,22 @@ module Instance = {
 };
 
 let instantiate: menu('outmsg) => Instance.t('outmsg) =
-  fun
-  | Menu(internal) =>
-    Instance.Instance({
-      schema: internal,
-      text:
-        Component_InputText.empty
-        |> Component_InputText.setPlaceholder(
-             ~placeholder=internal.placeholderText,
-           ),
-      allItems: internal.items,
-      filteredItems: [||],
-      focused: None,
-    })
-    |> Instance.updateFilteredItems;
+  menu =>
+    switch (menu) {
+    | Menu(internal) =>
+      let canFocusDefault =
+        internal.focusFirstItemByDefault && internal.items != [];
+      let focused = canFocusDefault ? Some(0) : None;
+      Instance.Instance({
+        schema: internal,
+        text:
+          Component_InputText.empty
+          |> Component_InputText.setPlaceholder(
+               ~placeholder=internal.placeholderText,
+             ),
+        allItems: internal.items,
+        filteredItems: [||],
+        focused,
+      })
+      |> Instance.updateFilteredItems;
+    };
