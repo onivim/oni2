@@ -93,7 +93,7 @@ let renderMinimap =
         if (marker != Unmodified) {
           renderMarker(
             ~x,
-            ~y=y -. scrollY,
+            ~y,
             ~rowHeight,
             ~width,
             ~canvasContext,
