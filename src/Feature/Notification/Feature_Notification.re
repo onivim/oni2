@@ -392,6 +392,15 @@ module View = {
         transform(Transform.[TranslateY(yOffset)]),
       ];
 
+      let containerCompact = (~background, ~yOffset) => [
+        position(`Relative),
+        backgroundColor(background),
+        flexDirection(`Row),
+        alignItems(`Center),
+        paddingHorizontal(10),
+        transform(Transform.[TranslateY(yOffset)]),
+      ];
+
       let text = (~foreground) => [
         textWrap(TextWrapping.NoWrap),
         marginLeft(6),
@@ -413,6 +422,8 @@ module View = {
           ~background,
           ~foreground,
           ~font: UiFont.t,
+          ~onlyAnimation: bool,
+          ~compact: bool,
           (),
         ) => {
       let yOffset = model.yOffset;
@@ -433,16 +444,24 @@ module View = {
         | None => React.empty
         };
 
-      <View ?key style={Styles.container(~background, ~yOffset)}>
-        <icon />
-        <source />
-        <Text
-          style={Styles.text(~foreground)}
-          fontFamily={font.family}
-          fontSize=11.
-          text={model.message}
-        />
-      </View>;
+      onlyAnimation
+        ? <View ?key style={Styles.container(~background, ~yOffset)} />
+        : <View
+            ?key
+            style={
+              compact
+                ? Styles.containerCompact(~background, ~yOffset)
+                : Styles.container(~background, ~yOffset)
+            }>
+            <icon />
+            <source />
+            <Text
+              style={Styles.text(~foreground)}
+              fontFamily={font.family}
+              fontSize=11.
+              text={model.message}
+            />
+          </View>;
     };
   };
   // LIST
