@@ -15,7 +15,7 @@ let getLibIntlPath = () =>
   try({
     let ic =
       Unix.open_process_in(
-        "find /usr/local/Cellar -name libintl.a -print 2>/dev/null",
+        "find /usr/local/Cellar /opt/homebrew/Cellar -name libintl.a -print 2>/dev/null",
       );
     let path = input_line(ic);
     let () = close_in(ic);
