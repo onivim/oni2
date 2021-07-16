@@ -78,7 +78,11 @@ let _createCompiledAnchorCache = (ac: option(anchorCache)) => {
     let a0_G1 = RegExp.create(v.raw_A0_G1);
     let a1_G1 = RegExp.create(v.raw_A1_G1);
     let a1_G0 = RegExp.create(v.raw_A1_G0);
-    Some({a0_G0, a0_G1, a1_G1, a1_G0});
+    switch (a0_G0, a0_G1, a1_G1, a1_G0) {
+    | (Some(a0_G0), Some(a0_G1), Some(a1_G1), Some(a1_G0)) =>
+      Some({a0_G0, a0_G1, a1_G1, a1_G0})
+    | _ => None
+    };
   };
 };
 
@@ -111,7 +115,7 @@ let create = (~allowBackReferences=true, str) => {
   // If no back-references, and no anchors, we can just cache the regex
   let regex =
     if (!hasUnresolvedBackReferences && !anchorA && !anchorG) {
-      Some(RegExp.create(str));
+      RegExp.create(str);
     } else {
       None;
     };
@@ -182,16 +186,17 @@ let compile = (allowA, allowG, v: t) =>
     RegExp.create(rawStr);
   } else {
     switch (v.regex) {
-    | Some(v) => v
+    | Some(v) => Some(v)
     | None =>
       switch (v.compiledAnchorCache, allowA, allowG) {
       | (None, _, _) => failwith("Should never hit this!")
 
       | (Some({a1_G1, _}), allowA, allowG)
-          when allowA == true && allowG == true => a1_G1
-      | (Some({a1_G0, _}), allowA, _) when allowA == true => a1_G0
-      | (Some({a0_G1, _}), _, allowG) when allowG == true => a0_G1
-      | (Some({a0_G0, _}), _, _) => a0_G0
+          when allowA == true && allowG == true =>
+        Some(a1_G1)
+      | (Some({a1_G0, _}), allowA, _) when allowA == true => Some(a1_G0)
+      | (Some({a0_G1, _}), _, allowG) when allowG == true => Some(a0_G1)
+      | (Some({a0_G0, _}), _, _) => Some(a0_G0)
       }
     };
   };

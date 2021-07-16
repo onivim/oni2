@@ -35,13 +35,10 @@ let toString = (v: t) => v.raw;
 let emptyMatches = [||];
 
 let create = (str: string) => {
-  let regexp =
-    switch (OnigRegExp.create(str)) {
-    | Ok(v) => v
-    | Error(msg) => failwith(msg)
-    };
-
-  {cachedResult: NotEvaluated, raw: str, regexp};
+  str
+  |> OnigRegExp.create
+  |> Result.to_option
+  |> Option.map(regexp => {{cachedResult: NotEvaluated, raw: str, regexp}});
 };
 
 let search = (stringToEvaluate: string, positionToEvaluate: int, v: t) => {
