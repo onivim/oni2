@@ -8,6 +8,10 @@
 - #3718 - Completion: Add `editor.suggest.itemsToShow` setting (fixes #3712)
 - #3736 - Search: add default keys to go to next / previous search result (fixes #3713)
 - #3733 - Quick Open: Add bindings to open in splits, not current buffer.
+- #3765 - UX: Add `"window.titleBarStyle"` configuration setting
+
+> __BREAKING:__ On Windows, the default setting is to use the `"native"` title bar.
+> Set `"window.titleBarStyle": "custom"` to keep the previous behavior.
 
 ### Bug Fixes
 

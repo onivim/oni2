@@ -181,6 +181,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `window.menuBarVisibility` __(_"visible" | "hidden"_ default: `"visible"`)__ - Controls the visibility of the menu bar.
 
+- `window.titleBarStyle` __(_"native" | "custom"_ default: `"native"` on Windows, `"custom"` otherwise)__ - Controls whether the titlebar is custom-rendered.
+
 - `oni.layout.showLayoutTabs` __(_"always"|"smart"|"never"_ default: `"smart"`)__ - Controls the display of layout tabs. `"smart"` will only show the tabs if there's more than one.
 
 - `oni.layout.layoutTabPosition` __(_"top"|"bottom"_ default: `"bottom"`)__ - Controls the position of the layout tabs.
