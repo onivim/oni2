@@ -72,3 +72,4 @@
 ### Infrastructure
 
 - #3721 - Packaging - Linux: Bundle compiled glib settings (fixes #3706)
+- #3770 - Build: Fix `esy watch` command (thanks @eEQK !)
