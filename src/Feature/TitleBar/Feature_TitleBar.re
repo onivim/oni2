@@ -548,6 +548,7 @@ module View = {
         ~theme,
         ~font: UiFont.t,
         ~height,
+        ~model,
         (),
       ) => {
     let title =
@@ -566,6 +567,7 @@ module View = {
         height
         majorVersion=major
       />
+    | Windows(_) when isNative(model) => menuBar
     | Windows(_) =>
       <Windows
         menuBar

@@ -61,6 +61,7 @@ module View: {
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~height: float,
+      ~model: model,
       unit
     ) =>
     Revery.UI.element;

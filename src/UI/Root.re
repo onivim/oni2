@@ -254,9 +254,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
   // Correct for zoom in title bar height
   let titlebarHeight = state.titlebarHeight /. zoom;
 
-  let nativeTitleBar =
-    Feature_Configuration.GlobalConfiguration.Window.titleBarStyle.get(config)
-    == `Native;
+  let nativeTitleBar = Feature_TitleBar.isNative(state.titleBar);
 
   <View style={Styles.root(~nativeTitleBar, theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
@@ -273,6 +271,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       dispatch=titleDispatch
       registrationDispatch
       height=titlebarHeight
+      model={state.titleBar}
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>
