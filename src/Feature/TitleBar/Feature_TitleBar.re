@@ -554,6 +554,7 @@ module View = {
     let title =
       title(~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config);
     switch (Revery.Environment.os) {
+    | Mac(_) when isNative(model) => React.empty
     | Mac({major, _}) =>
       <Mac
         isFocused
