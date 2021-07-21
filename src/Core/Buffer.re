@@ -68,6 +68,8 @@ type t = {
   saveTick: int,
 };
 
+let isEmpty = ({lines, _}) => Array.length(lines) == 0;
+
 module Internal = {
   let createMeasureFunction = (~font, ~indentation) => {
     let indentation = Inferred.value(indentation);

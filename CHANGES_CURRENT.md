@@ -46,6 +46,9 @@
 - #3755 - Vim: Fix extra 'editor tab' with `:tabnew`/`:tabedit` (fixes #3150)
 - #3753 - Extension: Don't bubble up extension runtime errors to notifications
 - #3756 - Search: Follow symlinks with ripgrep by default (fixes #1588)
+- #3757 - Buffers: Fix welcome buffer appearing when splitting (fixes #3631)
+- #3763 - Quickmenu: Select first item by default
+- #3767 - Minimap: Fix diff marker positions on scroll (fixes #3648)
 
 ### Performance
 
@@ -73,3 +76,4 @@
 ### Infrastructure
 
 - #3721 - Packaging - Linux: Bundle compiled glib settings (fixes #3706)
+- #3770 - Build: Fix `esy watch` command (thanks @eEQK !)

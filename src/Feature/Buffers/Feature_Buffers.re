@@ -596,6 +596,7 @@ let update =
     let menuFn =
         (_languageInfo: Exthost.LanguageInfo.t, _iconTheme: IconTheme.t) => {
       Feature_Quickmenu.Schema.menu(
+        ~focusFirstItemByDefault=true,
         ~onAccepted=
           (~text as _, ~item) => {
             item |> Option.map(snd) |> Option.value(~default=Noop)
@@ -613,6 +614,7 @@ let update =
       let menuFn =
           (_languageInfo: Exthost.LanguageInfo.t, _iconTheme: IconTheme.t) => {
         Feature_Quickmenu.Schema.menu(
+          ~focusFirstItemByDefault=true,
           ~onAccepted=
             (~text as _, ~item as maybeSize) =>
               maybeSize
@@ -649,6 +651,7 @@ let update =
           item |> snd |> Option.map(Feature_Quickmenu.Schema.Icon.seti);
         };
         Feature_Quickmenu.Schema.menu(
+          ~focusFirstItemByDefault=true,
           ~itemRenderer=
             Feature_Quickmenu.Schema.Renderer.defaultWithIcon(itemToIcon),
           ~onAccepted=
