@@ -14,7 +14,7 @@ function CodeSign {
 
 
 
-    &"C:/Program Files (x86)/Windows Kits/8.1/bin/x64/signtool.exe" sign /tr http://timestamp.digicert.com /fd sha256 /td sha256 /f $env:CODESIGN_CERTIFICATE /p $env:CODESIGN_PASSWORD $path
+    &"C:/Program Files (x86)/Windows Kits/8.1/bin/x64/signtool.exe" sign /tr http://timestamp.digicert.com /fd sha256 /td sha256 /f $env:CODESIGN_CERTIFICATE /p $env:CODESIGN_PASSWORD_WIN $path
 
 }
 
