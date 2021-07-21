@@ -15,6 +15,17 @@ type msg =
   | WindowCloseClicked
   | TitleDoubleClicked;
 
+type model = {
+  // We need to store this, as opposed to pulling it
+  // from config, because we need to respect the value
+  // used on initialization.
+  useNativeTitleBar: bool,
+};
+
+let isNative = ({useNativeTitleBar, _}) => useNativeTitleBar;
+
+let initial = (~useNativeTitleBar) => {useNativeTitleBar: useNativeTitleBar};
+
 module Log = (val Log.withNamespace("Oni2.Feature.TitleBar"));
 
 module Internal = {
@@ -155,7 +166,7 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg));
 
-let update = (~maximize, ~minimize, ~restore, ~close, msg) => {
+let update = (~maximize, ~minimize, ~restore, ~close, msg, model) => {
   let internalDoubleClickEffect =
     Isolinear.Effect.create(~name="window.doubleClick", () => {
       switch (Internal.getTitleDoubleClickBehavior()) {
@@ -174,11 +185,11 @@ let update = (~maximize, ~minimize, ~restore, ~close, msg) => {
     Isolinear.Effect.create(~name="window.restore", () => restore());
 
   switch (msg) {
-  | TitleDoubleClicked => Effect(internalDoubleClickEffect)
-  | WindowCloseClicked => Effect(internalWindowCloseEffect)
-  | WindowMaximizeClicked => Effect(internalWindowMaximizeEffect)
-  | WindowRestoreClicked => Effect(internalWindowRestoreEffect)
-  | WindowMinimizeClicked => Effect(internalWindowMinimizeEffect)
+  | TitleDoubleClicked => (model, Effect(internalDoubleClickEffect))
+  | WindowCloseClicked => (model, Effect(internalWindowCloseEffect))
+  | WindowMaximizeClicked => (model, Effect(internalWindowMaximizeEffect))
+  | WindowRestoreClicked => (model, Effect(internalWindowRestoreEffect))
+  | WindowMinimizeClicked => (model, Effect(internalWindowMinimizeEffect))
   };
 };
 

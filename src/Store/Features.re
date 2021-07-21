@@ -2542,21 +2542,25 @@ let update =
     );
 
   | TitleBar(titleBarMsg) =>
+    let (titleBar', outmsg) =
+      Feature_TitleBar.update(
+        ~maximize,
+        ~minimize,
+        ~close,
+        ~restore,
+        titleBarMsg,
+        state.titleBar,
+      );
     let eff =
-      switch (
-        Feature_TitleBar.update(
-          ~maximize,
-          ~minimize,
-          ~close,
-          ~restore,
-          titleBarMsg,
-        )
-      ) {
+      switch (outmsg) {
       | Feature_TitleBar.Effect(effect) => effect
       | Feature_TitleBar.Nothing => Isolinear.Effect.none
       };
 
-    (state, eff |> Isolinear.Effect.map(msg => TitleBar(msg)));
+    (
+      {...state, titleBar: titleBar'},
+      eff |> Isolinear.Effect.map(msg => TitleBar(msg)),
+    );
 
   | ExtensionBufferUpdateQueued({triggerKey}) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);

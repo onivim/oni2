@@ -190,6 +190,7 @@ let runTest =
         ~titlebarHeight=0.,
         ~setZoom,
         ~getZoom,
+        ~useNativeTitleBar=true,
       ),
     );
 

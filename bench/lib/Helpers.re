@@ -39,6 +39,7 @@ let simpleState = {
       ~titlebarHeight=0.,
       ~getZoom=() => 1.0,
       ~setZoom=_zoom => (),
+      ~useNativeTitleBar=true,
     );
 
   Reducer.reduce(

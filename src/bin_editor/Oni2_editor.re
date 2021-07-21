@@ -272,7 +272,7 @@ switch (eff) {
       Window.setBackgroundColor(window, Colors.black);
 
       win := Some(window);
-      window;
+      (window, useNativeMenu);
     };
     Log.infof(m =>
       m(
@@ -325,7 +325,7 @@ switch (eff) {
           }
         );
 
-      let window =
+      let (window, useNativeMenu) =
         createWindow(
           ~configurationLoader,
           ~forceScaleFactor=cliOptions.forceScaleFactor,
@@ -402,6 +402,7 @@ switch (eff) {
             ~titlebarHeight=Revery.Window.getTitlebarHeight(window),
             ~setZoom,
             ~getZoom,
+            ~useNativeTitleBar=useNativeMenu,
           ),
         );
 
