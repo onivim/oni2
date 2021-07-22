@@ -11,6 +11,8 @@ module ConfigurationLoader: {
   let none: t;
 
   let file: FpExp.t(FpExp.absolute) => t;
+
+  let loadImmediate: t => result(Config.Settings.t, string);
 };
 
 let initial:

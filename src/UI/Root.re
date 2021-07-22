@@ -20,7 +20,7 @@ module Constants = {
 module Styles = {
   open Style;
 
-  let root = (theme, windowDisplayMode) => {
+  let root = (~nativeTitleBar, theme, windowDisplayMode) => {
     let style =
       ref([
         backgroundColor(Colors.Editor.background.from(theme)),
@@ -33,7 +33,9 @@ module Styles = {
         justifyContent(`Center),
         alignItems(`Stretch),
       ]);
-    if (Revery.Environment.isWindows && windowDisplayMode == State.Maximized) {
+    if (Revery.Environment.isWindows
+        && windowDisplayMode == State.Maximized
+        && !nativeTitleBar) {
       style := [margin(6), ...style^];
     };
     style^;
@@ -252,7 +254,9 @@ let make = (~dispatch, ~state: State.t, ()) => {
   // Correct for zoom in title bar height
   let titlebarHeight = state.titlebarHeight /. zoom;
 
-  <View style={Styles.root(theme, state.windowDisplayMode)}>
+  let nativeTitleBar = Feature_TitleBar.isNative(state.titleBar);
+
+  <View style={Styles.root(~nativeTitleBar, theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
       menuBar=menuBarElement
       activeBuffer=maybeActiveBuffer
@@ -267,6 +271,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       dispatch=titleDispatch
       registrationDispatch
       height=titlebarHeight
+      model={state.titleBar}
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>

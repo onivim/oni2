@@ -8,6 +8,12 @@ type windowDisplayMode =
   | Maximized
   | Fullscreen;
 
+type model;
+
+let initial: (~useNativeTitleBar: bool) => model;
+
+let isNative: model => bool;
+
 [@deriving show]
 type msg;
 
@@ -32,9 +38,10 @@ let update:
     ~minimize: unit => unit,
     ~restore: unit => unit,
     ~close: unit => unit,
-    msg
+    msg,
+    model
   ) =>
-  outmsg;
+  (model, outmsg);
 
 // VIEW
 
@@ -54,6 +61,7 @@ module View: {
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~height: float,
+      ~model: model,
       unit
     ) =>
     Revery.UI.element;
