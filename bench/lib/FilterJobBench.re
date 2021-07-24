@@ -12,7 +12,7 @@ let createItem = name => {
   let ret: Actions.menuItem = {
     category: None,
     name,
-    command: () => Oni_Model.Actions.Noop,
+    command: _ => Oni_Model.Actions.Noop,
     icon: None,
     highlight: [],
     handle: None,

@@ -162,7 +162,8 @@ switch (eff) {
       |> Option.map(pos => `Absolute(pos))
       |> Option.value(~default=`Centered);
 
-    let createWindow = (~forceScaleFactor, ~maybeWorkspace, app) => {
+    let createWindow =
+        (~configurationLoader, ~forceScaleFactor, ~maybeWorkspace, app) => {
       let (x, y, width, height, maximized) = {
         Store.Persistence.Workspace.(
           maybeWorkspace
@@ -204,11 +205,38 @@ switch (eff) {
         )
       );
 
+      let settings =
+        Feature_Configuration.ConfigurationLoader.loadImmediate(
+          configurationLoader,
+        )
+        |> Result.value(~default=Oni_Core.Config.Settings.empty);
+
+      let initialResolver = (~vimSetting as _, settingKey) => {
+        Oni_Core.Config.(
+          {
+            Settings.get(settingKey, settings)
+            |> Option.map(json => Json(json))
+            |> Option.value(~default=NotSet);
+          }
+        );
+      };
+
+      let useNativeMenu =
+        Feature_Configuration.GlobalConfiguration.Window.titleBarStyle.get(
+          initialResolver,
+        )
+        == `Native;
+
       let decorated =
         switch (Revery.Environment.os) {
-        | Windows(_) => false
+        | Windows(_) when useNativeMenu => true
+        | Windows(_) when !useNativeMenu => false
         | _ => true
         };
+
+      let titlebarStyle =
+        useNativeMenu
+          ? Revery.WindowStyles.System : Revery.WindowStyles.Transparent;
 
       let icon =
         switch (Revery.Environment.os) {
@@ -229,7 +257,7 @@ switch (eff) {
               ~maximized,
               ~vsync=Vsync.Immediate,
               ~icon,
-              ~titlebarStyle=WindowStyles.Transparent,
+              ~titlebarStyle,
               ~x,
               ~y,
               ~width,
@@ -244,7 +272,7 @@ switch (eff) {
       Window.setBackgroundColor(window, Colors.black);
 
       win := Some(window);
-      window;
+      (window, useNativeMenu);
     };
     Log.infof(m =>
       m(
@@ -281,8 +309,25 @@ switch (eff) {
         |> Option.map(FpExp.toString)
         |> Option.value(~default=initialWorkingDirectory);
 
-      let window =
+      let configurationLoader =
+        Feature_Configuration.(
+          if (!cliOptions.shouldLoadConfiguration) {
+            ConfigurationLoader.none;
+          } else {
+            Oni_Core.Filesystem.getOrCreateConfigFile("configuration.json")
+            |> Result.map(ConfigurationLoader.file)
+            |> Oni_Core.Utility.ResultEx.tapError(msg =>
+                 Log.errorf(m =>
+                   m("Error initializing configuration file: %s", msg)
+                 )
+               )
+            |> Result.value(~default=ConfigurationLoader.none);
+          }
+        );
+
+      let (window, useNativeMenu) =
         createWindow(
+          ~configurationLoader,
           ~forceScaleFactor=cliOptions.forceScaleFactor,
           ~maybeWorkspace,
           app,
@@ -339,22 +384,6 @@ switch (eff) {
            )
         |> Result.value(~default=Feature_Input.KeybindingsLoader.none);
 
-      let configurationLoader =
-        Feature_Configuration.(
-          if (!cliOptions.shouldLoadConfiguration) {
-            ConfigurationLoader.none;
-          } else {
-            Oni_Core.Filesystem.getOrCreateConfigFile("configuration.json")
-            |> Result.map(ConfigurationLoader.file)
-            |> Oni_Core.Utility.ResultEx.tapError(msg =>
-                 Log.errorf(m =>
-                   m("Error initializing configurationj file: %s", msg)
-                 )
-               )
-            |> Result.value(~default=ConfigurationLoader.none);
-          }
-        );
-
       let currentState =
         ref(
           Model.State.initial(
@@ -373,6 +402,7 @@ switch (eff) {
             ~titlebarHeight=Revery.Window.getTitlebarHeight(window),
             ~setZoom,
             ~getZoom,
+            ~useNativeTitleBar=useNativeMenu,
           ),
         );
 

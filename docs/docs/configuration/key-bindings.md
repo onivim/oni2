@@ -187,10 +187,16 @@ Onivim-specific contexts:
 
 ### List / Menu commands
 
+> NOTE: Some of the list select commands may not be fully hooked up yet, such that they may not respect vertical/horizontal opening.
+
 | Default Key Binding | Description | Command |
 | --- | --- | --- |
 | Up Arrow / Control+P | Move focus up | `list.focusUp` |
 | Down Arrow / Control+N | Move focus down | `list.focusDown` |
+| Enter | Select current item | `list.select` |
+| Shift-Enter | Select current item (vertical open) | `oni.list.selectVertical` |
+| Ctrl-x | Select current item (horizontal open) | `oni.list.selectHorizontal` |
+| Ctrl-t | Select current item (new tab) | `oni.list.selectNewTab` |
 
 ### Search Pane
 

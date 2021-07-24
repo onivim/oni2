@@ -127,6 +127,21 @@ let defaultKeyBindings =
         ~condition="listFocus" |> WhenExpr.parse,
       ),
       bind(
+        ~key="<S-CR>",
+        ~command=Commands.List.selectVertical.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-x>",
+        ~command=Commands.List.selectHorizontal.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-t>",
+        ~command=Commands.List.selectNewTab.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
         ~key="<D-Z>",
         ~command=Commands.undo.id,
         ~condition="isMac && editorTextFocus" |> WhenExpr.parse,
@@ -478,6 +493,7 @@ type t = {
   modal: option(Feature_Modals.model),
   snippets: Feature_Snippets.model,
   textContentProviders: list((int, string)),
+  titleBar: Feature_TitleBar.model,
   vim: Feature_Vim.model,
   zoom: Feature_Zoom.model,
   autoUpdate: Feature_AutoUpdate.model,
@@ -501,6 +517,7 @@ let initial =
       ~titlebarHeight,
       ~getZoom,
       ~setZoom,
+      ~useNativeTitleBar,
     ) => {
   let config =
     Feature_Configuration.initial(
@@ -653,6 +670,7 @@ let initial =
     quickOpen: Feature_QuickOpen.initial,
     snippets: Feature_Snippets.initial,
     terminals: Feature_Terminal.initial,
+    titleBar: Feature_TitleBar.initial(~useNativeTitleBar),
     textContentProviders: [],
     vim: Feature_Vim.initial,
     zoom: Feature_Zoom.initial(~getZoom, ~setZoom),

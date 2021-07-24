@@ -7,6 +7,11 @@
 - #3705 - Editor: add right click menus
 - #3718 - Completion: Add `editor.suggest.itemsToShow` setting (fixes #3712)
 - #3736 - Search: add default keys to go to next / previous search result (fixes #3713)
+- #3733 - Quick Open: Add bindings to open in splits, not current buffer.
+- #3765 - UX: Add `"window.titleBarStyle"` configuration setting
+
+> __BREAKING:__ On Windows, the default setting is to use the `"native"` title bar.
+> Set `"window.titleBarStyle": "custom"` to keep the previous behavior.
 
 ### Bug Fixes
 
@@ -40,6 +45,10 @@
 - #3746 - Extension: Fix edit application in trailing spaces plugin
 - #3755 - Vim: Fix extra 'editor tab' with `:tabnew`/`:tabedit` (fixes #3150)
 - #3753 - Extension: Don't bubble up extension runtime errors to notifications
+- #3756 - Search: Follow symlinks with ripgrep by default (fixes #1588)
+- #3757 - Buffers: Fix welcome buffer appearing when splitting (fixes #3631)
+- #3763 - Quickmenu: Select first item by default
+- #3767 - Minimap: Fix diff marker positions on scroll (fixes #3648)
 
 ### Performance
 
@@ -67,3 +76,5 @@
 ### Infrastructure
 
 - #3721 - Packaging - Linux: Bundle compiled glib settings (fixes #3706)
+- #3770 - Build: Fix `esy watch` command (thanks @eEQK !)
+- #3780 - Chore: Update windows codesigning certificate

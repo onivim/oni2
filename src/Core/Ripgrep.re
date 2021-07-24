@@ -59,6 +59,7 @@ module Log = (val Log.withNamespace("Oni2.Core.Ripgrep"));
 type t = {
   search:
     (
+      ~followSymlinks: bool,
       ~filesExclude: list(string),
       ~directory: string,
       ~onUpdate: list(string) => unit,
@@ -68,6 +69,7 @@ type t = {
     dispose,
   findInFiles:
     (
+      ~followSymlinks: bool,
       ~searchExclude: list(string),
       ~searchInclude: list(string),
       ~directory: string,
@@ -241,6 +243,7 @@ let process = (rgPath, args, onUpdate, onComplete, onError) => {
 let search =
     (
       ~executablePath,
+      ~followSymlinks,
       ~filesExclude,
       ~directory,
       ~onUpdate,
@@ -266,7 +269,12 @@ let search =
     |> List.map(x => ["-g", x])
     |> List.concat;
 
-  let args = globs @ ["--smart-case", "--hidden", "--files", "--", directory];
+  let followArgs = followSymlinks ? ["--follow"] : [];
+
+  let args =
+    globs
+    @ followArgs
+    @ ["--smart-case", "--hidden", "--files", "--", directory];
 
   process(
     executablePath,
@@ -280,6 +288,7 @@ let search =
 let findInFiles =
     (
       ~executablePath,
+      ~followSymlinks,
       ~searchExclude,
       ~searchInclude,
       ~directory,
@@ -299,10 +308,13 @@ let findInFiles =
     searchInclude
     |> List.filter(str => !StringEx.isEmpty(str))
     |> List.concat_map(x => ["-g", x]);
+
+  let followArgs = followSymlinks ? ["--follow"] : [];
   let args =
     excludeArgs
     @ includeArgs
     @ (enableRegex ? [] : ["--fixed-strings"])
+    @ followArgs
     @ (caseSensitive ? ["--case-sensitive"] : ["--ignore-case"])
     @ ["--hidden", "--json", "--", query, directory];
   process(

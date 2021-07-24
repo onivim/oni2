@@ -1601,10 +1601,12 @@ let update =
              | Version => Some(BufferRenderer.Version)
              | UpdateChangelog => Some(BufferRenderer.UpdateChangelog)
              | Image => Some(BufferRenderer.Image)
-             | Welcome => Some(BufferRenderer.Welcome)
+             | Welcome when Oni_Core.Buffer.isEmpty(buffer) =>
+               Some(BufferRenderer.Welcome)
              | Changelog => Some(BufferRenderer.FullChangelog)
              | FilePath(_) => None
              | DebugInput => Some(BufferRenderer.DebugInput)
+             | _ => None
              }
            })
         |> Option.map(renderer => {
@@ -2540,21 +2542,25 @@ let update =
     );
 
   | TitleBar(titleBarMsg) =>
+    let (titleBar', outmsg) =
+      Feature_TitleBar.update(
+        ~maximize,
+        ~minimize,
+        ~close,
+        ~restore,
+        titleBarMsg,
+        state.titleBar,
+      );
     let eff =
-      switch (
-        Feature_TitleBar.update(
-          ~maximize,
-          ~minimize,
-          ~close,
-          ~restore,
-          titleBarMsg,
-        )
-      ) {
+      switch (outmsg) {
       | Feature_TitleBar.Effect(effect) => effect
       | Feature_TitleBar.Nothing => Isolinear.Effect.none
       };
 
-    (state, eff |> Isolinear.Effect.map(msg => TitleBar(msg)));
+    (
+      {...state, titleBar: titleBar'},
+      eff |> Isolinear.Effect.map(msg => TitleBar(msg)),
+    );
 
   | ExtensionBufferUpdateQueued({triggerKey}) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);

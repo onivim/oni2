@@ -130,6 +130,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `search.exclude` __(_list of string_ default: `[]`)__ - When using `Find in files` Onivim will not look at files located at the directories listed here, this inherit all the values from `files.exclude`
 
+- `search.followSymlinks` __(_bool_ default:  `true`)__ - Set whether to follow symlinks when searching
+
 - `workbench.colorCustomizations` __(_json_ default: `{}`)__ - Color theme overrides, using the same [Theme Colors as Code](https://code.visualstudio.com/api/references/theme-color) - for example:
 
 ```json
@@ -176,6 +178,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `workbench.sideBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the sidebar.
 
 - `window.menuBarVisibility` __(_"visible" | "hidden"_ default: `"visible"`)__ - Controls the visibility of the menu bar.
+
+- `window.titleBarStyle` __(_"native" | "custom"_ default: `"native"` on Windows, `"custom"` otherwise)__ - Controls whether the titlebar is custom-rendered.
 
 - `oni.layout.showLayoutTabs` __(_"always"|"smart"|"never"_ default: `"smart"`)__ - Controls the display of layout tabs. `"smart"` will only show the tabs if there's more than one.
 

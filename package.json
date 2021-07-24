@@ -361,7 +361,7 @@
     "check": "esy b dune build @check",
     "lint": "esy b bash ./scripts/lint.sh",
     "run": "esy x Oni2",
-    "watch": "dune build --watch -p libvim,textmate,Oni2 -j4",
+    "watch": "esy b dune build --watch -p treesitter,vterm,libvim,textmate,Oni2 -j4",
     "test": "esy @test run",
     "clean-extensions": "esy b bash ./scripts/clean-extensions.sh"
   },
