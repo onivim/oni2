@@ -1330,13 +1330,9 @@ class CommandCenter {
             picks.push(createBranch, createBranchFrom, checkoutDetached);
         }
         picks.push(...createCheckoutItems(repository));
-        const quickpick = vscode_1.window.createQuickPick();
-        quickpick.items = picks;
-        quickpick.placeholder = (opts === null || opts === void 0 ? void 0 : opts.detached) ? localize('select a ref to checkout detached', 'Select a ref to checkout in detached mode')
+        const placeholder = (opts === null || opts === void 0 ? void 0 : opts.detached) ? localize('select a ref to checkout detached', 'Select a ref to checkout in detached mode')
             : localize('select a ref to checkout', 'Select a ref to checkout');
-        quickpick.show();
-        const choice = await new Promise(c => quickpick.onDidAccept(() => c(quickpick.activeItems[0])));
-        quickpick.hide();
+        const choice = await vscode_1.window.showQuickPick(picks, { placeholder });
         if (!choice) {
             return false;
         }
