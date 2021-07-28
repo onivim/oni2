@@ -77,4 +77,4 @@
 
 - #3721 - Packaging - Linux: Bundle compiled glib settings (fixes #3706)
 - #3770 - Build: Fix `esy watch` command (thanks @eEQK !)
-- #3780 - Chore: Update windows codesigning certificate
+- #3780, #3786 - Chore: Update windows codesigning certificate

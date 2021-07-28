@@ -1,6 +1,10 @@
 steps:
   # Remove Rust:
   # https://github.com/actions/virtual-environments/blob/main/images/win/scripts/Installers/Install-Rust.ps1
+  - script: dir "C:\Program Files"
+    displayName: "List PF"
+  - script: dir "C:\Program Files (x86)"
+    displayName: "List PF x86"
   - script: rd /s /q "C:\Rust"
     displayName: 'Remove Rust'
   # Remove R
@@ -21,7 +25,7 @@ steps:
     displayName: "Remove TortoiseSVN"
   - script: rd /s /q "C:\Program Files\Internet Explorer"
     displayName: "Remove Internet Explorer"
-  - script: rd /s /q "C:\Program Files\Unity"
+  - script: rd /s /q "C:\Program Files\Unity Hub"
     displayName: "Remove Unity"
   - script: rd /s /q "C:\Program Files\Android"
     displayName: "Remove Android SDK"
