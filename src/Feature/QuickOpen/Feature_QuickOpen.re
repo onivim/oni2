@@ -72,7 +72,7 @@ module Msg = {
                 },
                 resolver,
               })
-            | QuickPick({id, items}) =>
+            | QuickPick({id, items, _}) =>
               ShowQuickPick({instance: id, items, resolver})
             };
           }
@@ -96,8 +96,6 @@ module Effects = {
   let selectItem =
       (~session, ~resolver, ~item: Exthost.QuickOpen.Item.t, client) =>
     Isolinear.Effect.create(~name="Feature_QuickOpen.select", () => {
-      prerr_endline("SELECTING:  " ++ string_of_int(item.handle));
-
       Exthost.Request.QuickOpen.onDidChangeActive(
         ~session,
         ~handles=[item.handle],
@@ -107,11 +105,6 @@ module Effects = {
       Exthost.Request.QuickOpen.onDidAccept(~session, client);
 
       Lwt.wakeup(resolver, Exthost.Reply.okJson(`Int(item.handle)));
-    });
-
-  let ok = (~resolver) =>
-    Isolinear.Effect.create(~name="Feature_QuickOpen.replyOk", () => {
-      Lwt.wakeup(resolver, Exthost.Reply.okEmpty)
     });
 };
 
@@ -152,7 +145,7 @@ let update = (~client, msg, model) =>
         menu(
           ~onItemFocused=_item => Noop,
           ~onAccepted=
-            (~text, ~item) => {
+            (~text as _, ~item) => {
               switch (item) {
               | Some(item) => MenuItemSelected({item: item})
               | None => MenuCancelled
