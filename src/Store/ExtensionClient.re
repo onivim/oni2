@@ -149,18 +149,21 @@ let create =
 
       | QuickOpen(msg) =>
         switch (msg) {
-        | QuickOpen.Show({instance, _}) =>
-          let (promise, resolver) = Lwt.task();
-          dispatch(
-            QuickmenuShow(
-              Extension({id: instance, hasItems: false, resolver}),
-            ),
-          );
+          // TODO: Remove Extension menu type, and remove UpdateExtensionItems action
 
-          promise |> Lwt.map(handle => Reply.okJson(`Int(handle)));
-        | QuickOpen.SetItems({instance, items}) =>
-          dispatch(QuickmenuUpdateExtensionItems({id: instance, items}));
-          Lwt.return(Reply.okEmpty);
+        // | QuickOpen.Show({instance, _}) =>
+        // prerr_endline ("QuickOpen.show");
+        //   let (promise, resolver) = Lwt.task();
+        //   dispatch(
+        //     QuickmenuShow(
+        //       Extension({id: instance, hasItems: false, resolver}),
+        //     ),
+        //   );
+
+        //   promise |> Lwt.map(handle => Reply.okJson(`Int(handle)));
+        // | QuickOpen.SetItems({instance, items}) =>
+        //   dispatch(QuickmenuUpdateExtensionItems({id: instance, items}));
+        //   Lwt.return(Reply.okEmpty);
 
         // | QuickOpen.Input(_) => Lwt.return(Reply.okJson(`String("Testing")))
         | msg =>

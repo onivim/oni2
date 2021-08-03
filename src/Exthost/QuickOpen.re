@@ -199,6 +199,7 @@ let decode = {
     obj(({field, whatever, _}) => {
       let pickType = field.required("type", string);
 
+      prerr_endline ("PICKTYPE: " ++ pickType);
       if (pickType == "quickPick") {
         QuickPick(whatever(QuickPick.decode));
       } else {
