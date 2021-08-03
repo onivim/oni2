@@ -148,39 +148,11 @@ let create =
            )
 
       | QuickOpen(msg) =>
-        switch (msg) {
-        // TODO: Remove Extension menu type, and remove UpdateExtensionItems action
-
-        // | QuickOpen.Show({instance, _}) =>
-        // prerr_endline ("QuickOpen.show");
-        //   let (promise, resolver) = Lwt.task();
-        //   dispatch(
-        //     QuickmenuShow(
-        //       Extension({id: instance, hasItems: false, resolver}),
-        //     ),
-        //   );
-
-        //   promise |> Lwt.map(handle => Reply.okJson(`Int(handle)));
-        // | QuickOpen.SetItems({instance, items}) =>
-        //   dispatch(QuickmenuUpdateExtensionItems({id: instance, items}));
-        //   Lwt.return(Reply.okEmpty);
-
-        // | QuickOpen.Input(_) => Lwt.return(Reply.okJson(`String("Testing")))
-        | msg =>
-          let (promise, resolver) = Lwt.task();
-          dispatch(
-            Actions.QuickOpen(Feature_QuickOpen.Msg.exthost(~resolver, msg)),
-          );
-          // TODO: Additional quick open messages
-          // Log.warnf(m =>
-          //   m(
-          //     "Unhandled QuickOpen message: %s",
-          //     Exthost.Msg.QuickOpen.show_msg(msg),
-          //   )
-          // );
-          // TODO: Pass resolver to feature
-          promise;
-        }
+        let (promise, resolver) = Lwt.task();
+        dispatch(
+          Actions.QuickOpen(Feature_QuickOpen.Msg.exthost(~resolver, msg)),
+        );
+        promise;
 
       | StatusBar(
           SetEntry({
