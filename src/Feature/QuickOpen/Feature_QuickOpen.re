@@ -1,6 +1,31 @@
-type model = unit;
 
-let initial = ();
+module Model = {
+  type session = {
+    id: int,
+    resolver: Lwt.u(Exthost.Reply.t),
+  };
+
+  type t = option(session);
+  let start = (~id, ~resolver, current) =>
+  switch (current ){
+  | Some({id: previousId, _}) when previousId == id => current
+  | Some({id: previousId, _}) when previousId != id =>
+    Some({ id, resolver})
+  | None =>
+    Some({ id, resolver})
+  | _ => failwith("Never hit this")
+  };
+
+
+  let reset = (_: t) => None;
+
+  let initial = None;
+};
+
+type model = Model.t;
+
+let initial = Model.initial;
+
 
 exception UserCancelled;
 
@@ -12,7 +37,8 @@ type msg =
       resolver: [@opaque] Lwt.u(Exthost.Reply.t),
     })
   | Cancelled({resolver: [@opaque] Lwt.u(Exthost.Reply.t)})
-  | MenuItemSelected({resolver: [@opaque] Lwt.u(Exthost.Reply.t), item: Exthost.QuickOpen.Item.t})
+  | MenuCancelled
+  | MenuItemSelected({item: Exthost.QuickOpen.Item.t})
   | ShowInput({
       options: Exthost.InputBoxOptions.t,
       resolver: [@opaque] Lwt.u(Exthost.Reply.t),
@@ -66,18 +92,36 @@ module Effects = {
 let update = (msg, model) =>
   switch (msg) {
   | Accepted({resolver, text}) => (
-      model,
+      model |> Model.reset,
       Effect(Effects.accept(~resolver, text)),
     )
 
-  | Cancelled({resolver}) => (model, Effect(Effects.cancel(~resolver)))
+  | Cancelled({resolver}) => (model |> Model.reset, Effect(Effects.cancel(~resolver)))
 
-  | MenuItemSelected({item, resolver}) => (
-    model,
-    Effect(Effects.selectItem(~resolver, ~item))
+  | MenuItemSelected({item}) => 
+
+  let eff = switch (model) {
+  | None => Isolinear.Effect.none
+  | Some({resolver, _}) => Effects.selectItem(~resolver, ~item)
+  };
+
+    (
+    model |> Model.reset,
+    Effect(eff)
   )
 
-  | ShowQuickPick({items, resolver}) =>
+  | MenuCancelled => 
+
+  let eff = switch (model) {
+  | None => Isolinear.Effect.none
+  | Some({resolver, _}) => Effects.cancel(~resolver)
+  };
+    (
+    model |> Model.reset,
+    Effect(eff)
+  )
+
+  | ShowQuickPick({instance, items, resolver}) =>
     let placeholderText = "";
     let menu =
       Feature_Quickmenu.Schema.(
@@ -85,8 +129,8 @@ let update = (msg, model) =>
           ~onItemFocused=_item => Noop,
           ~onAccepted=(~text, ~item) => {
             switch (item) {
-          | Some(item) => MenuItemSelected({item, resolver})
-          | None => Cancelled({resolver: resolver})
+          | Some(item) => MenuItemSelected({item: item})
+          | None => MenuCancelled
           }
           },
           ~onCancelled=_item => {Cancelled({resolver: resolver})},
@@ -96,7 +140,7 @@ let update = (msg, model) =>
           items,
         )
       );
-    (model, ShowMenu(menu));
+    (model |> Model.start(~id=instance, ~resolver), ShowMenu(menu));
 
   | ShowInput({options, resolver}) =>
     let placeholderText =
@@ -114,7 +158,7 @@ let update = (msg, model) =>
           [],
         )
       );
-    (model, ShowMenu(menu));
+    (model |> Model.reset, ShowMenu(menu));
 
   | Noop => (model, Nothing)
   };
