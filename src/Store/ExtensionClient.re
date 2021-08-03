@@ -149,7 +149,7 @@ let create =
 
       | QuickOpen(msg) =>
         switch (msg) {
-          // TODO: Remove Extension menu type, and remove UpdateExtensionItems action
+        // TODO: Remove Extension menu type, and remove UpdateExtensionItems action
 
         // | QuickOpen.Show({instance, _}) =>
         // prerr_endline ("QuickOpen.show");
