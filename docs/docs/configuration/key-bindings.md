@@ -147,6 +147,9 @@ The `activeViewlet` context key corresponds to the id of the open sidebar pane:
 - `workbench.view.scm` - SCM
 - `workbench.view.search` - Search
 
+The `editorLangId` context key corresponds to the language identifier of the active editor (the same value shown in the statusbar), and can be combined with other context keys, like:
+`'when': 'editorFocus && editorLangId == typescript'`
+
 Onivim-specific contexts:
 
 | Context Name | True When | 
