@@ -749,14 +749,14 @@ let moveToExtent =
              meta: {
                weight: 1.0,
              },
-             kind: `Split((`Vertical, addToChildren(window, [tree']))),
+             kind: `Split((`Horizontal, addToChildren(window, children))),
            };
          } else {
            AbstractTree.{
              meta: {
                weight: 1.0,
              },
-             kind: `Split((`Horizontal, addToChildren(window, children))),
+             kind: `Split((`Vertical, addToChildren(window, [tree']))),
            };
          }
 
@@ -766,14 +766,14 @@ let moveToExtent =
              meta: {
                weight: 1.0,
              },
-             kind: `Split((`Vertical, addToChildren(window, children))),
+             kind: `Split((`Horizontal, addToChildren(window, [tree']))),
            };
          } else {
            AbstractTree.{
              meta: {
                weight: 1.0,
              },
-             kind: `Split((`Horizontal, addToChildren(window, [tree']))),
+             kind: `Split((`Vertical, addToChildren(window, children))),
            };
          }
 

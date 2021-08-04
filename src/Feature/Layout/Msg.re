@@ -13,6 +13,10 @@ type command =
   | MoveDown
   | MoveTopLeft
   | MoveBottomRight
+  | MoveToFarLeft
+  | MoveToFarRight
+  | MoveToTop
+  | MoveToBottom
   | CycleForward
   | CycleBackward
   | RotateForward
