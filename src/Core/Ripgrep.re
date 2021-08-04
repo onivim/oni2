@@ -60,6 +60,7 @@ type t = {
   search:
     (
       ~followSymlinks: bool,
+      ~useIgnoreFiles: bool,
       ~filesExclude: list(string),
       ~directory: string,
       ~onUpdate: list(string) => unit,
@@ -70,6 +71,7 @@ type t = {
   findInFiles:
     (
       ~followSymlinks: bool,
+      ~useIgnoreFiles: bool,
       ~searchExclude: list(string),
       ~searchInclude: list(string),
       ~directory: string,
@@ -244,6 +246,7 @@ let search =
     (
       ~executablePath,
       ~followSymlinks,
+      ~useIgnoreFiles,
       ~filesExclude,
       ~directory,
       ~onUpdate,
@@ -271,7 +274,7 @@ let search =
 
   let followArgs = followSymlinks ? ["--follow"] : [];
 
-  let ignoreArgs = ["--no-ignore"];
+  let ignoreArgs = useIgnoreFiles ? [] : ["--no-ignore"];
 
   let args =
     globs
@@ -292,6 +295,7 @@ let findInFiles =
     (
       ~executablePath,
       ~followSymlinks,
+      ~useIgnoreFiles,
       ~searchExclude,
       ~searchInclude,
       ~directory,
@@ -314,7 +318,7 @@ let findInFiles =
 
   let followArgs = followSymlinks ? ["--follow"] : [];
 
-  let ignoreArgs = ["--no-ignore"];
+  let ignoreArgs = useIgnoreFiles ? [] : ["--no-ignore"];
 
   let args =
     excludeArgs

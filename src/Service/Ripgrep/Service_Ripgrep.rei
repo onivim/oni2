@@ -10,6 +10,7 @@ module Sub: {
     (
       ~uniqueId: string,
       ~followSymlinks: bool,
+      ~useIgnoreFiles: bool,
       ~exclude: list(string),
       ~include_: list(string),
       ~directory: string,
