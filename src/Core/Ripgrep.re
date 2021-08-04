@@ -271,9 +271,12 @@ let search =
 
   let followArgs = followSymlinks ? ["--follow"] : [];
 
+  let ignoreArgs = ["--no-ignore"];
+
   let args =
     globs
     @ followArgs
+    @ ignoreArgs
     @ ["--smart-case", "--hidden", "--files", "--", directory];
 
   process(
@@ -310,9 +313,13 @@ let findInFiles =
     |> List.concat_map(x => ["-g", x]);
 
   let followArgs = followSymlinks ? ["--follow"] : [];
+
+  let ignoreArgs = ["--no-ignore"];
+
   let args =
     excludeArgs
     @ includeArgs
+    @ ignoreArgs
     @ (enableRegex ? [] : ["--fixed-strings"])
     @ followArgs
     @ (caseSensitive ? ["--case-sensitive"] : ["--ignore-case"])
