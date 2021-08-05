@@ -678,6 +678,39 @@ module LanguageFeatures = {
   };
 };
 
+module QuickOpen = {
+  let onItemSelected = (~handle, client) => {
+    Client.notify(
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostQuickOpen",
+      ~method="$onItemSelected",
+      ~args=`List([`Int(handle)]),
+      client,
+    );
+  };
+
+  let onDidChangeActive = (~session, ~handles, client) => {
+    let handlesJson = handles |> List.map(handle => `Int(handle));
+    Client.notify(
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostQuickOpen",
+      ~method="$onDidChangeActive",
+      ~args=`List([`Int(session), `List(handlesJson)]),
+      client,
+    );
+  };
+
+  let onDidAccept = (~session, client) => {
+    Client.notify(
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostQuickOpen",
+      ~method="$onDidAccept",
+      ~args=`List([`Int(session)]),
+      client,
+    );
+  };
+};
+
 module SCM = {
   let provideOriginalResource = (~handle, ~uri, client) => {
     Client.request(

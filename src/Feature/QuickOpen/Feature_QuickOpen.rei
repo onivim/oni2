@@ -15,4 +15,4 @@ module Msg: {
     (~resolver: Lwt.u(Exthost.Reply.t), Exthost.Msg.QuickOpen.msg) => msg;
 };
 
-let update: (msg, model) => (model, outmsg);
+let update: (~client: Exthost.Client.t, msg, model) => (model, outmsg);
