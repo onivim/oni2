@@ -2216,6 +2216,13 @@ module Request: {
       Lwt.t(option(list(Edit.SingleEditOperation.t)));
   };
 
+  module QuickOpen: {
+    let onItemSelected: (~handle: int, Client.t) => unit;
+    let onDidChangeActive:
+      (~session: int, ~handles: list(int), Client.t) => unit;
+    let onDidAccept: (~session: int, Client.t) => unit;
+  };
+
   module SCM: {
     let provideOriginalResource:
       (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(option(Uri.t));

@@ -16,12 +16,7 @@ and variant =
     | EditorsPicker
     | FilesPicker
     | OpenBuffersPicker
-    | Wildmenu(Vim.Types.cmdlineType)
-    | Extension({
-        id: int,
-        hasItems: bool,
-        resolver: Lwt.u(int),
-      });
+    | Wildmenu(Vim.Types.cmdlineType);
 
 let placeholderText =
   fun

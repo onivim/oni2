@@ -2354,7 +2354,7 @@ let update =
 
   | QuickOpen(msg) =>
     let (quickOpen', outmsg) =
-      Feature_QuickOpen.update(msg, state.quickOpen);
+      Feature_QuickOpen.update(~client=extHostClient, msg, state.quickOpen);
 
     let (state', eff) =
       switch (outmsg) {

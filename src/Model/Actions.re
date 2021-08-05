@@ -87,10 +87,6 @@ type t =
   | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
-  | QuickmenuUpdateExtensionItems({
-      id: int,
-      items: list(Exthost.QuickOpen.Item.t),
-    })
   | QuickmenuSearch(string)
   | QuickmenuClose
   | QuickOpen(Feature_QuickOpen.msg)
@@ -179,7 +175,6 @@ and menuItem = {
   command: option(SplitDirection.t) => t,
   icon: [@opaque] option(IconTheme.IconDefinition.t),
   highlight: list((int, int)),
-  handle: option(int),
 }
 and quickmenuVariant =
   | CommandPalette
@@ -187,11 +182,6 @@ and quickmenuVariant =
   | FilesPicker
   | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
-  | Extension({
-      id: int,
-      hasItems: bool,
-      resolver: [@opaque] Lwt.u(int),
-    })
 and progress =
   | Loading
   | InProgress(float)
