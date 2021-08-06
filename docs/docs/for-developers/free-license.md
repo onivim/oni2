@@ -14,7 +14,7 @@ The requirements are as follows:
 
 1) The fix or change must be non-trivial (ie, not a typo fix).
 2) The contribution must resolve an issue or implement a feature.
-3) The fix or change must be complete work (ie, it fully resolves the root cause - not a 'hack' or a 'band-aid' fix).
+3) The fix or change must be complete work (meaning, it fully resolves the root cause of a bug or fully implements a feature - not a 'hack').
 4) Any required test cases or benchmarks must be implemented.
 5) The work must be primarily done by you. We're happy to help and give feedback.
 6) The pull request must address an issue logged by another user. 
