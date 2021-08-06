@@ -305,6 +305,8 @@ module Files = {
 
 module Search = {
   let followSymlinks = setting("search.followSymlinks", bool, ~default=true);
+
+  let useIgnoreFiles = setting("search.useIgnoreFiles", bool, ~default=true);
 };
 
 module Window = {
@@ -352,6 +354,8 @@ let contributions = [
   Editor.snippetSuggestions.spec,
   Files.exclude.spec,
   Explorer.autoReveal.spec,
+  Search.followSymlinks.spec,
+  Search.useIgnoreFiles.spec,
   Window.titleBarStyle.spec,
   Workbench.activityBarVisible.spec,
   Workbench.editorShowTabs.spec,
