@@ -10,6 +10,8 @@
 
 ### Documentation
 
+- #3801 - Bounty: Clarify guidelines around license key bounty
+
 ### Refactoring
 
 ### Infrastructure
