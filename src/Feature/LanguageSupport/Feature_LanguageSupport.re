@@ -149,6 +149,10 @@ module Msg = {
   module Hover = {
     let show = Hover(Hover.(Command(Show)));
 
+    let scrollDown = Hover(Hover.(Command(ScrollDown)));
+
+    let scrollDown = Hover(Hover.(Command(ScrollUp)));
+
     let mouseHovered = location => Hover(Hover.MouseHovered(location));
     let mouseMoved = location => Hover(Hover.MouseMoved(location));
 
