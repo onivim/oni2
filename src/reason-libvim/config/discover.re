@@ -4,6 +4,10 @@ type os =
   | Linux
   | Unknown;
 
+type arch =
+  | Arm64
+  | X86;
+
 let uname = () => {
   let ic = Unix.open_process_in("uname");
   let uname = input_line(ic);
@@ -11,12 +15,29 @@ let uname = () => {
   uname;
 };
 
+let get_arch = () => {
+  let ic = Unix.open_process_in("arch");
+  let arch = input_line(ic);
+  let () = close_in(ic);
+  switch (arch) {
+  | "arm64" => Arm64
+  | _ => X86
+  };
+};
+
 let getLibIntlPath = () =>
   try({
     let ic =
-      Unix.open_process_in(
-        "find /usr/local/Cellar -name libintl.a -print 2>/dev/null",
-      );
+      switch (get_arch()) {
+      | Arm64 =>
+        Unix.open_process_in(
+          "find /opt/homebrew/Cellar -name libintl.a -print 2>/dev/null",
+        )
+      | _ =>
+        Unix.open_process_in(
+          "find /usr/local/Cellar -name libintl.a -print 2>/dev/null",
+        )
+      };
     let path = input_line(ic);
     let () = close_in(ic);
     path;
