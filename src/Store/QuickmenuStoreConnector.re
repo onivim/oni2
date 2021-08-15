@@ -34,20 +34,9 @@ module Internal = {
              },
            icon: item.icon,
            highlight: [],
-           handle: None,
          }
        )
     |> Array.of_list;
-
-  let extensionItem: Exthost.QuickOpen.Item.t => Actions.menuItem =
-    item => {
-      category: None,
-      name: item.label,
-      handle: Some(item.handle),
-      icon: None,
-      highlight: [],
-      command: _ => Actions.Noop,
-    };
 
   let commandPaletteItems = (commands, menus, contextKeys) => {
     let contextKeys =
@@ -90,21 +79,6 @@ let start = () => {
       dispatch(
         Actions.KeyboardInput({isText: false, input: "<ESC>"}),
       )
-    });
-
-  exception MenuCancelled;
-
-  let selectExtensionItemEffect = (~resolver, item: Actions.menuItem) =>
-    Isolinear.Effect.create(~name="quickmenu.selectExtensionItem", () => {
-      switch (item.handle) {
-      | Some(handle) => Lwt.wakeup(resolver, handle)
-      | None => Lwt.wakeup_exn(resolver, MenuCancelled)
-      }
-    });
-
-  let cancelExtensionMenuEffect = (~resolver) =>
-    Isolinear.Effect.create(~name="quickmenu.cancelExtensionMenu", () => {
-      Lwt.wakeup_exn(resolver, MenuCancelled)
     });
 
   let makeBufferCommands =
@@ -154,7 +128,6 @@ let start = () => {
                    path,
                  ),
                highlight: [],
-               handle: None,
              },
            maybeName,
            maybePath,
@@ -209,14 +182,6 @@ let start = () => {
         }),
         Isolinear.Effect.none,
       );
-
-    | QuickmenuShow(Extension({id, hasItems, resolver})) => (
-        Some({
-          ...Quickmenu.defaults(Extension({id, hasItems, resolver})),
-          focused: Some(0),
-        }),
-        Isolinear.Effect.none,
-      )
 
     | QuickmenuShow(FilesPicker) =>
       if (Feature_Workspace.openedFolder(workspace) == None) {
@@ -352,27 +317,6 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuUpdateExtensionItems({items, _}) => (
-        Option.map(
-          (state: Quickmenu.t) => {
-            switch (state.variant) {
-            | Extension({id, resolver, _}) => {
-                ...
-                  Quickmenu.defaults(
-                    Extension({id, hasItems: true, resolver}),
-                  ),
-                focused: None,
-                items:
-                  items |> List.map(Internal.extensionItem) |> Array.of_list,
-              }
-            | _ => state
-            }
-          },
-          state,
-        ),
-        Isolinear.Effect.none,
-      )
-
     | QuickmenuUpdateFilterProgress(items, progress) => (
         Option.map(
           (state: Quickmenu.t) => {
@@ -436,20 +380,6 @@ let start = () => {
     | ListSelect(args) =>
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, executeVimCommandEffect)
-
-      | Some({
-          variant: Extension({resolver, _}),
-          items,
-          focused: Some(focused),
-          _,
-        }) =>
-        switch (items[focused]) {
-        | item => (None, selectExtensionItemEffect(~resolver, item))
-        | exception (Invalid_argument(_)) => (
-            None,
-            cancelExtensionMenuEffect(~resolver),
-          )
-        }
 
       | Some({items, focused: Some(focused), _}) =>
         switch (items[focused]) {
@@ -570,6 +500,11 @@ let subscriptions = (ripgrep, dispatch) => {
         config,
       );
 
+    let useIgnoreFiles =
+      Feature_Configuration.GlobalConfiguration.Search.useIgnoreFiles.get(
+        config,
+      );
+
     switch (Feature_Workspace.openedFolder(workspace)) {
     | None =>
       // It's not really clear what the behavior should be for the ripgrep subscription w/o
@@ -595,12 +530,12 @@ let subscriptions = (ripgrep, dispatch) => {
               fullPath,
             ),
           highlight: [],
-          handle: None,
         };
       [
         RipgrepSubscription.create(
           ~id="workspace-search",
           ~followSymlinks,
+          ~useIgnoreFiles,
           ~filesExclude,
           ~directory,
           ~ripgrep,
@@ -627,9 +562,6 @@ let subscriptions = (ripgrep, dispatch) => {
       | CommandPalette
       | EditorsPicker
       | OpenBuffersPicker => [filter(query, quickmenu.items)]
-
-      | Extension({hasItems, _}) =>
-        hasItems ? [filter(query, quickmenu.items)] : []
 
       | FilesPicker =>
         [filter(query, quickmenu.items)]

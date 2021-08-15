@@ -16,7 +16,6 @@ describe("FilterJob", ({describe, _}) => {
       command: _ => Actions.Noop,
       icon: None,
       highlight: [],
-      handle: None,
     };
 
   let rec runToCompletion = job =>

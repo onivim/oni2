@@ -160,7 +160,7 @@ jobs:
   timeoutInMinutes: 180
   displayName: "Windows - Build & Package"
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-2019'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
@@ -193,7 +193,7 @@ jobs:
   # Run if not master
   condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-2019'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
