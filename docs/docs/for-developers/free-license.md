@@ -13,15 +13,19 @@ If you make a contribution to Onivim that fixes a bug or implements a new featur
 The requirements are as follows:
 
 1) The fix or change must be non-trivial (ie, not a typo fix).
-2) The contribution must completely resolve an issue or implement a feature.
-3) Any required test cases or benchmarks must be implemented.
-4) The work must be primarily done by you. We're happy to help and give feedback.
-5) The pull request must address an issue logged by another user. 
-6) The code must follow all relevant [style guidelines](./style-guide.md).
+2) The contribution must resolve an issue or implement a feature.
+3) The fix or change must be complete work (meaning, it fully resolves the root cause of a bug or fully implements a feature - not a 'hack').
+4) Any required test cases or benchmarks must be implemented.
+5) The work must be primarily done by you. We're happy to help and give feedback.
+6) The pull request must address an issue logged by another user. 
+7) The code must follow all relevant [style guidelines](./style-guide.md).
+8) The pull request must be merged.
 
-Some of these are judgement calls - for example, there may be a long investigation to make a single-line fix. We'll do our best to be fair and revise these guidelines as we go.
+Some of these are judgement calls - for example, there may be a long investigation to make a single-line fix. We'll do our best to be fair and revise these guidelines as we go. The product team has the final say on whether a PR meets these requirements.
 
-If you have an idea for a feature or work that doesn't meet these guidelines, feel free to reach out.
+To help, here are some examples of [pull requests that have met the guidelines](https://github.com/onivim/oni2/pulls?q=is%3Apr+label%3AB-license-key+is%3Aclosed) and [pull requests that have not met the requirements](https://github.com/onivim/oni2/pulls?q=is%3Apr+label%3AB-not-qualified+is%3Aclosed).
+
+If you have an idea for a feature or fix that doesn't quite match the requirements, feel free to reach out and run it by us.
 
 ## Eligible Projects
 

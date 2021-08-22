@@ -11,6 +11,7 @@ module Provider = {
   type params = {
     filesExclude: list(string),
     followSymlinks: bool,
+    useIgnoreFiles: bool,
     directory: string,
     ripgrep: Ripgrep.t, // TODO: Necessary dependency?
     onUpdate: list(string) => unit, // TODO: Should return action
@@ -25,6 +26,7 @@ module Provider = {
         ~id,
         ~params as {
           followSymlinks,
+          useIgnoreFiles,
           filesExclude,
           directory,
           ripgrep,
@@ -39,6 +41,7 @@ module Provider = {
     let dispose: unit => unit =
       ripgrep.Ripgrep.search(
         ~followSymlinks,
+        ~useIgnoreFiles,
         ~filesExclude,
         ~directory,
         ~onUpdate,
@@ -71,6 +74,7 @@ let create =
     (
       ~id,
       ~followSymlinks,
+      ~useIgnoreFiles,
       ~filesExclude,
       ~directory,
       ~ripgrep,
@@ -83,6 +87,7 @@ let create =
     (module Provider),
     {
       followSymlinks,
+      useIgnoreFiles,
       filesExclude,
       directory,
       ripgrep,

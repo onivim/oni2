@@ -15,7 +15,6 @@ let createItem = name => {
     command: _ => Oni_Model.Actions.Noop,
     icon: None,
     highlight: [],
-    handle: None,
   };
   ret;
 };

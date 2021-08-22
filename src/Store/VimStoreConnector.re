@@ -514,7 +514,6 @@ let start =
               icon: None,
               command: _ => Noop,
               highlight: [],
-              handle: None,
             }
           },
           completions,

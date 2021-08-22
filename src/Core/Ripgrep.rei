@@ -12,6 +12,7 @@ type t = {
   search:
     (
       ~followSymlinks: bool,
+      ~useIgnoreFiles: bool,
       ~filesExclude: list(string),
       ~directory: string,
       ~onUpdate: list(string) => unit,
@@ -22,6 +23,7 @@ type t = {
   findInFiles:
     (
       ~followSymlinks: bool,
+      ~useIgnoreFiles: bool,
       ~searchExclude: list(string),
       ~searchInclude: list(string),
       ~directory: string,
