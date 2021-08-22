@@ -500,6 +500,11 @@ let subscriptions = (ripgrep, dispatch) => {
         config,
       );
 
+    let useIgnoreFiles =
+      Feature_Configuration.GlobalConfiguration.Search.useIgnoreFiles.get(
+        config,
+      );
+
     switch (Feature_Workspace.openedFolder(workspace)) {
     | None =>
       // It's not really clear what the behavior should be for the ripgrep subscription w/o
@@ -530,6 +535,7 @@ let subscriptions = (ripgrep, dispatch) => {
         RipgrepSubscription.create(
           ~id="workspace-search",
           ~followSymlinks,
+          ~useIgnoreFiles,
           ~filesExclude,
           ~directory,
           ~ripgrep,

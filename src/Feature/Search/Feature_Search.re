@@ -465,8 +465,15 @@ let sub = (~config, ~workingDirectory, ~setup, model) => {
       Feature_Configuration.GlobalConfiguration.Search.followSymlinks.get(
         config,
       );
+
+    let useIgnoreFiles =
+      Feature_Configuration.GlobalConfiguration.Search.useIgnoreFiles.get(
+        config,
+      );
+
     Service_Ripgrep.Sub.findInFiles(
       ~followSymlinks,
+      ~useIgnoreFiles,
       ~exclude,
       ~include_,
       ~directory=workingDirectory,

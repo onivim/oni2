@@ -135,6 +135,11 @@ let all = (state: State.t) => {
     |> Schema.map(({sideBar, _}: State.t) => sideBar)
     |> fromSchema(state);
 
+  let editorContextKeys =
+    state.layout
+    |> Feature_Layout.activeEditor
+    |> Feature_Editor.Editor.contextKeys;
+
   // TODO: These sidebar-specific UI pieces should be encapsulated
   // by Feature_SideBar.contextKeys.
   let scmContextKeys =
@@ -190,6 +195,7 @@ let all = (state: State.t) => {
     explorerContextKeys,
     sideBarContext,
     scmContextKeys,
+    editorContextKeys,
     extensionContextKeys,
     searchContextKeys,
     paneContextKeys,

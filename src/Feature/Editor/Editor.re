@@ -150,6 +150,20 @@ type t = {
   showDeprecated: bool,
 };
 
+module ContextKeys = {
+  open WhenExpr.ContextKeys.Schema;
+
+  let editorLangId =
+    string("editorLangId", ({buffer, _}) => {
+      EditorBuffer.fileType(buffer) |> Oni_Core.Buffer.FileType.toString
+    });
+};
+
+let contextKeys = editor => {
+  WhenExpr.ContextKeys.(
+    ContextKeys.[editorLangId] |> Schema.fromList |> fromSchema(editor)
+  );
+};
 let setBoundingBox = (bbox, editor) => {
   let (left, top, _, _) = Revery.Math.BoundingBox2d.getBounds(bbox);
   {...editor, pixelY: top, pixelX: left};
