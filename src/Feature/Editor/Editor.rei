@@ -34,6 +34,8 @@ let create:
   t;
 let copy: t => t;
 
+let contextKeys: t => WhenExpr.ContextKeys.t;
+
 type inlineElement;
 
 let setCodeLens:

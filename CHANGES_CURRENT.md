@@ -1,6 +1,7 @@
 ### Features 
 
 - #3795 - Search: Add `search.useIgnoreFiles` configuration setting (fixes #3792)
+- #3794 - Input: Add `editorLangId` context key (related #3783)
 
 ### Bug Fixes
 
