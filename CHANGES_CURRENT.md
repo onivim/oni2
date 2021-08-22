@@ -6,6 +6,7 @@
 ### Bug Fixes
 
 - #3791 - SCM: Fix 'Git: Checkout to' command (fixes #2525)
+- #3800 - Completion: Fix completion item parsing resiliency (fixes #3787)
 
 ### Performance
 
