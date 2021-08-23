@@ -128,13 +128,25 @@ let sortText = ({sortText, label, _}) => {
   };
 };
 
+module SuggestItemLabel = {
+  type t = string;
+
+  let decode =
+    Json.Decode.(
+      one_of([
+        ("string", string),
+        ("record", obj(({field, _}) => {field.required("label", string)})),
+      ])
+    );
+};
+
 module Dto = {
   let decode = (~defaultRange) => {
     Json.Decode.(
       obj(({field, _}) => {
         // These fields come from the `ISuggestDataDtoField` definition:
         // https://github.com/onivim/vscode-exthost/blob/50bef147f7bbd250015361a4e3cad3305f65bc27/src/vs/workbench/api/common/extHost.protocol.ts#L1089
-        let label = field.required("a", string);
+        let label = field.required("a", SuggestItemLabel.decode);
 
         let kind =
           field.withDefault(
@@ -147,11 +159,12 @@ module Dto = {
                ),
           );
 
-        let detail = field.optional("c", string);
-        let documentation = field.optional("d", MarkdownString.decode);
-        let sortText = field.optional("e", string);
-        let filterText = field.optional("f", string);
-        let insertText = field.optional("h", string);
+        let detail = field.withDefault("c", None, nullable(string));
+        let documentation =
+          field.withDefault("d", None, nullable(MarkdownString.decode));
+        let sortText = field.withDefault("e", None, nullable(string));
+        let filterText = field.withDefault("f", None, nullable(string));
+        let insertText = field.withDefault("h", None, nullable(string));
         let insertTextRules =
           field.withDefault(
             "i",
