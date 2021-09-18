@@ -63,18 +63,7 @@ If you did not receive a license key - feel free to send me a mail at [orders@ou
 
 ### Is Onivim 2 open-source?
 
-We're developing Onivim 2 [in the open](https://github.com/onivim/oni2), but it is licensed under a [commercial EULA](https://github.com/onivim/oni2/blob/master/Outrun-Labs-EULA-v1.1.md).
-
-However, we value open source - and to that end, we've implemented a 'time-delay' open source license. __Each commit that makes it to `master` will be dual-licensed under the permissive MIT license after 18 months__.
-We maintain a [separate repo](https://github.com/onivim/oni2-mit) containing the MIT licensed code, which is sync'd daily. 
-
-We hope that this can help us strike a balance: __the sustainability of a commercial offering__ while __giving back to the open source community__.
-
-When we talk about sustainability - we mean not only in the context of Onivim 2, but in the broader context of open-source. 
-
-To that end, we dedicate a portion of the proceeds from sales of Onivim 2 to open-source projects we leverage, like:
-- [Vim](https://www.vim.org/sponsor/hall_of_honour.php)
-- [Neovim](https://salt.bountysource.com/teams/neovim/supporters)
+As of September 2021, the source code for Onivim 2 has been re-licensed under the [MIT](https://github.com/onivim/oni2/blob/master/LICENSE.md)
 
 ### What is the refund policy?
 
