@@ -23,10 +23,10 @@
 *esy.lock/* linguist-generated
 
 # Hide vendored extension code
-extensions/* linguist-generated
+extensions/** linguist-generated
 
 # Hide vendored code
-vendor/* linguist-vendored
+vendor/** linguist-vendored
 
 # Test files
 integration_test/test.crlf text eol=crlf
