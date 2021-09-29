@@ -34,6 +34,9 @@ integration_test/large-c-file.c linguist-generated
 # Hide vendored sqlite
 bench/reason-treesitter/sqlite3.c linguist-vendored
 
+# Hide large bench files
+bench/collateral/* linguist-vendored
+
 # Test files
 integration_test/test.crlf text eol=crlf
 integration_test/test.lf text eol=lf
