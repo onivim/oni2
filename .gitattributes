@@ -25,6 +25,9 @@
 # Hide vendored extension code
 extensions/* linguist-generated
 
+# Hide vendored code
+vendor/* linguist-vendored
+
 # Test files
 integration_test/test.crlf text eol=crlf
 integration_test/test.lf text eol=lf
