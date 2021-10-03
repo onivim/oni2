@@ -62,30 +62,9 @@ Please also see our [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ## License
 
-Onivim 2 is licensed under the [Outrun Labs EULA 1.1](./Outrun-Labs-EULA-v1.1.md).
+Onivim 2 source code is licensed under the [MIT](LICENSE.md) license.
 
-The TL;DR is:
-- __Free__ for __non-commercial__ and __educational use__.
-- __Commercial use__ requires the purchase of a license.
-- You may not redistribute source code or binaries under a different license.
-
-You can pre-order a commercial license here: https://v2.onivim.io
-
-As we get closer to shipping our MVP, we'll increase the pre-order price, until we settle on our full pricing model.
-
-> __NOTE:__ Anyone who contributed financially to Onivim v1 via our past funding sources (BountySource, Patreon, PayPal, OpenCollective) - gets a lifetime license. If you haven't received your license key, and you contributed previously, please contact me at bryphe@outrunlabs.com (or feel free to reach out at [Twitter](https://twitter.com/oni_vim) or our [Discord](https://discord.gg/7maEAxV)). __Thank you for supporting the project!__
-
-Alternatively, you can contribute to the project through [Patreon](https://www.patreon.com/onivim), which helps us with ongoing costs.
-
-#### 'Time-Delay' Dual License
-
-Because of the support we've received from open source communities, we've decided to __dual-license the code after 18 months__ - every commit, starting with [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), will be dual-licensed via the __MIT License__ 18 months from that commit's date to `master`. For commit [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), as it was committed to `master` on __4/18/2019__ that means it would be dual-licensed with __MIT License__ on __10/18/2020__. 
-
-For convenience, we will maintain an [oni2-mit](https://github.com/onivim/oni2-mit) repo containing the MIT-licensed code. The first commit to that repo will be on __July 2, 2020__.
-
-Any external contributions to the project from outside Outrun Labs, LLC will not be subject to this 'time-delay' - they'll be dual-licensed immediately under the MIT License.
-
-We hope that this approach will bring us the best of worlds - the ability to have a commercially sustainable product, with high quality - as well as giving back to the open source communities by having our work eventually end up in the open, and ensuring that external contributions are always open source.
+Onivim 2 downloads, available at https://v2.onivim.io/, are licensed under the [Outrun Labs EULA 1.1](./Outrun-Labs-EULA-v1.1.md).
 
 #### Third-Party Code
 
