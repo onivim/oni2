@@ -13,6 +13,7 @@
 ### Documentation
 
 - #3801 - Bounty: Clarify guidelines around license key bounty
+- #3826 - Documentation: Add `#` and `Control+L` commands (thanks @dingfanATyykj !)
 
 ### Refactoring
 
