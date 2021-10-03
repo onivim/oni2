@@ -41,8 +41,6 @@ steps:
     displayName: "Remove Selenium"
   - script: rd /s /q "C:\SeleniumWebDrivers"
     displayName: "Remove Selenium Web Drivers"
-  - script: rd /s /q "C:\mysql-5.7.21-winx64"
-    displayName: "Remove MySQL"
 
   - script: dir "C:/Program Files/"
     displayName: "List Program Files"
