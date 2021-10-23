@@ -16,6 +16,10 @@
 - #3801 - Bounty: Clarify guidelines around license key bounty
 - #3826 - Documentation: Add `#` and `Control+L` commands (thanks @dingfanATyykj !)
 
+### Dependencies
+
+- #3831 - Upgrade vscode-exthost -> 1.58.2
+
 ### Refactoring
 
 ### Infrastructure
