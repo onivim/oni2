@@ -18,3 +18,5 @@
 ### Refactoring
 
 ### Infrastructure
+
+- #3829 - CI: Re-use esy installation step for hygiene check
