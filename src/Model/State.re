@@ -556,6 +556,7 @@ let initial =
         Feature_Theme.Contributions.configuration,
         Feature_LanguageSupport.Contributions.configuration,
         Feature_Layout.Contributions.configuration,
+        Feature_Proxy.Contributions.configuration,
         Feature_StatusBar.Contributions.configuration,
         Feature_TitleBar.Contributions.configuration,
         Feature_Vim.Contributions.configuration,
