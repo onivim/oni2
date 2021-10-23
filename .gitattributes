@@ -23,7 +23,19 @@
 *esy.lock/* linguist-generated
 
 # Hide vendored extension code
-extensions/* linguist-generated
+extensions/** linguist-generated
+
+# Hide vendored code
+vendor/** linguist-vendored
+
+# Hide large integration test file
+integration_test/large-c-file.c linguist-generated
+
+# Hide vendored sqlite
+bench/reason-treesitter/sqlite3.c linguist-vendored
+
+# Hide large bench files
+bench/collateral/* linguist-vendored
 
 # Test files
 integration_test/test.crlf text eol=crlf

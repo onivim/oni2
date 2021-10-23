@@ -4,8 +4,7 @@ steps:
   - task: NodeTool@0
     inputs:
       versionSpec: "14.15.4"
-  - script: npm install -g esy@0.6.7
-    displayName: 'npm install -g esy@0.6.7'
+  - template: use-esy.yml
   - script: npm install -g yarn
     displayName: 'npm install -g yarn'
   - script: npm install -g prettier
