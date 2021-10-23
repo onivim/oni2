@@ -144,6 +144,12 @@ module Commands: {
   let moveDown: Command.t(msg);
   let moveTopLeft: Command.t(msg);
   let moveBottomRight: Command.t(msg);
+
+  let moveToBottom: Command.t(msg);
+  let moveToFarLeft: Command.t(msg);
+  let moveToFarRight: Command.t(msg);
+  let moveToTop: Command.t(msg);
+
   let cycleForward: Command.t(msg);
   let cycleBackward: Command.t(msg);
 
