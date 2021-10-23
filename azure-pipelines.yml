@@ -51,7 +51,7 @@ jobs:
   - script: brew cleanup
     continueOnError: true
   - script: brew update-reset
-  - script: brew install ragel
+  - script: brew install ragel curl
   - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
   - template: .ci/js-build-steps.yml
@@ -140,7 +140,7 @@ jobs:
   - script: brew cleanup
     continueOnError: true
   - script: brew update-reset
-  - script: brew install ragel
+  - script: brew install ragel curl
   - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
   - template: .ci/js-build-steps.yml
