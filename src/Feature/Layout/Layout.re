@@ -624,6 +624,48 @@ let%test_module "insertWindow" =
      };
    });
 
+let find = (target, tree) => {
+  let rec traverse = node =>
+    switch (node.kind) {
+    | `Split(_direction, children) =>
+      switch (List.filter_map(traverse, children)) {
+      | [] => None
+      // BUG: Collapsing disabled as it doesn't preserve weight properly.
+      // | [child] => Some(child)
+      | [targetChild, ..._tail] => Some(targetChild)
+      }
+    | `Window(id) when id == target => Some(node)
+    | `Window(_) => None
+    };
+
+  traverse(tree);
+};
+
+let%test_module "find" =
+  (module
+   {
+     let%test "nested - valid window 4" = {
+       let initial =
+         vsplit([
+           hsplit([window(3), window(2)]),
+           hsplit([window(4), window(1)]),
+         ]);
+
+       let maybeWindow = find(4, initial);
+       maybeWindow != None;
+     };
+     let%test "invalid window" = {
+       let initial =
+         vsplit([
+           hsplit([window(3), window(2)]),
+           hsplit([window(4), window(1)]),
+         ]);
+
+       let maybeWindow = find(5, initial);
+       maybeWindow == None;
+     };
+   });
+
 /**
  * removeWindow
  */
@@ -676,6 +718,79 @@ let%test_module "removeWindow" =
        actual == vsplit([hsplit([window(1)])]);
      };
    });
+
+let moveToExtent =
+    (direction: [ | `Left | `Right | `Top | `Bottom], target, tree) => {
+  let isVertical = direction == `Top || direction == `Bottom;
+  let isFirst = direction == `Left || direction == `Top;
+
+  // Get existing window metadata
+  let maybeWindow = tree |> find(target);
+
+  maybeWindow
+  |> Option.map(window => {
+       let ids = AbstractTree.windows(window);
+
+       let tree' =
+         ids
+         |> List.fold_left((acc, curr) => {removeWindow(curr, acc)}, tree);
+
+       let addToChildren = (node, children) =>
+         if (isFirst) {
+           [node] @ children;
+         } else {
+           children @ [node];
+         };
+
+       switch (AbstractTree.(tree'.kind)) {
+       | `Split(direction, children) when direction == `Horizontal =>
+         if (isVertical) {
+           AbstractTree.{
+             meta: {
+               weight: 1.0,
+             },
+             kind: `Split((`Horizontal, addToChildren(window, children))),
+           };
+         } else {
+           AbstractTree.{
+             meta: {
+               weight: 1.0,
+             },
+             kind: `Split((`Vertical, addToChildren(window, [tree']))),
+           };
+         }
+
+       | `Split(direction, children) when direction == `Vertical =>
+         if (isVertical) {
+           AbstractTree.{
+             meta: {
+               weight: 1.0,
+             },
+             kind: `Split((`Horizontal, addToChildren(window, [tree']))),
+           };
+         } else {
+           AbstractTree.{
+             meta: {
+               weight: 1.0,
+             },
+             kind: `Split((`Vertical, addToChildren(window, children))),
+           };
+         }
+
+       | `Window(_) =>
+         let direction = isVertical ? `Vertical : `Horizontal;
+         AbstractTree.{
+           meta: {
+             weight: 1.,
+           },
+           kind: `Split((direction, addToChildren(window, [tree']))),
+         };
+
+       | _ => tree'
+       };
+     })
+  |> Option.value(~default=tree);
+};
 
 /**
  * resizeWindowByAxis

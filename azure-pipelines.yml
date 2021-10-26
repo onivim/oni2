@@ -92,7 +92,7 @@ jobs:
   displayName: 'Linux - CentOS - Docker Image'
   timeoutInMinutes: 120
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-18.04'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
@@ -105,6 +105,10 @@ jobs:
   steps:
   - template: .ci/clean-linux-deps.yml
   - template: .ci/restore-build-cache.yml
+  - script: sudo apt-get update
+    displayName: 'sudo apt-get update'
+  - script: sudo apt-get install libegl1-mesa
+    displayName: 'Install dependencies'
   - script: docker build --network=host -t centos scripts/docker/centos
     displayName: 'docker: build Dockerfile'
   - script: docker container run --rm --volume `pwd`:/oni2 centos /bin/bash -c 'cd oni2 && git --version'

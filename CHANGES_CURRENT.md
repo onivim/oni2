@@ -7,6 +7,7 @@
 
 - #3791 - SCM: Fix 'Git: Checkout to' command (fixes #2525)
 - #3800 - Completion: Fix completion item parsing resiliency (fixes #3787)
+- #3798 - Layout: Implement window shift movement (fixes #3777)
 
 ### Performance
 
@@ -15,8 +16,13 @@
 - #3801 - Bounty: Clarify guidelines around license key bounty
 - #3826 - Documentation: Add `#` and `Control+L` commands (thanks @dingfanATyykj !)
 
+### Dependencies
+
+- #3831 - Upgrade vscode-exthost -> 1.58.2
+
 ### Refactoring
 
 ### Infrastructure
 
 - #3829 - CI: Re-use esy installation step for hygiene check
+- #3832 - CI: Fix CentOS docker build

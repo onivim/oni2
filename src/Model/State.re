@@ -350,6 +350,26 @@ let defaultKeyBindings =
         ~condition=windowCommandCondition,
       ),
       bind(
+        ~key="<C-W><S-J>",
+        ~command=Feature_Layout.Commands.moveToBottom.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><S-K>",
+        ~command=Feature_Layout.Commands.moveToTop.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><S-H>",
+        ~command=Feature_Layout.Commands.moveToFarLeft.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><S-L>",
+        ~command=Feature_Layout.Commands.moveToFarRight.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
         ~key="<C-W>R",
         ~command=Feature_Layout.Commands.rotateForward.id,
         ~condition=windowCommandCondition,
