@@ -26,3 +26,4 @@
 
 - #3829 - CI: Re-use esy installation step for hygiene check
 - #3832 - CI: Fix CentOS docker build
+- #3834 - CI: Fix macOS build
