@@ -46,6 +46,19 @@ open {
            }
          );
 
+       let moveToExtent = direction =>
+         updateActiveLayout(layout =>
+           {
+             ...layout,
+             tree:
+               Layout.moveToExtent(
+                 direction,
+                 layout.activeGroupId,
+                 activeTree(layout),
+               ),
+           }
+         );
+
        let resizeWindowByAxis = (direction, delta) =>
          updateActiveLayout(layout =>
            {
@@ -98,6 +111,17 @@ open {
            }
          );
      };
+
+let updateCenter = (~focus, f, model) => {
+  switch (focus) {
+  | Some(Center) => (f(model), Nothing)
+
+  | Some(Left)
+  | Some(Bottom)
+  | Some(Right)
+  | None => (model, Nothing)
+  };
+};
 
 let update = (~focus, model, msg) => {
   switch (msg) {
@@ -391,162 +415,81 @@ let update = (~focus, model, msg) => {
     );
 
   | Command(RotateForward) =>
-    switch (focus) {
-    | Some(Center) => (rotate(`Forward, model), Nothing)
-
-    | Some(Left)
-    | Some(Bottom)
-    | Some(Right)
-    | None => (model, Nothing)
-    }
+    model |> updateCenter(~focus, rotate(`Forward))
 
   | Command(RotateBackward) =>
-    switch (focus) {
-    | Some(Center) => (rotate(`Backward, model), Nothing)
+    model |> updateCenter(~focus, rotate(`Backward))
 
-    | Some(Left)
-    | Some(Bottom)
-    | Some(Right)
-    | None => (model, Nothing)
-    }
+  | Command(MoveToFarLeft) =>
+    model |> updateCenter(~focus, moveToExtent(`Left))
+
+  | Command(MoveToFarRight) =>
+    model |> updateCenter(~focus, moveToExtent(`Right))
+
+  | Command(MoveToBottom) =>
+    model |> updateCenter(~focus, moveToExtent(`Bottom))
+
+  | Command(MoveToTop) => model |> updateCenter(~focus, moveToExtent(`Top))
 
   | Command(DecreaseSize) =>
-    switch (focus) {
-    | Some(Center) => (
-        model
-        |> resizeWindowByAxis(`Horizontal, 0.95)
-        |> resizeWindowByAxis(`Vertical, 0.95),
-        Nothing,
-      )
-
-    | Some(Left)
-    | Some(Bottom)
-    | Some(Right)
-    | None => (model, Nothing)
-    }
+    model
+    |> updateCenter(~focus, model => {
+         model
+         |> resizeWindowByAxis(`Horizontal, 0.95)
+         |> resizeWindowByAxis(`Vertical, 0.95)
+       })
 
   | Command(IncreaseSize) =>
-    switch (focus) {
-    | Some(Center) => (
-        model
-        |> resizeWindowByAxis(`Horizontal, 1.05)
-        |> resizeWindowByAxis(`Vertical, 1.05),
-        Nothing,
-      )
-
-    | Some(Left)
-    | Some(Bottom)
-    | Some(Right)
-    | None => (model, Nothing)
-    }
+    model
+    |> updateCenter(~focus, model => {
+         model
+         |> resizeWindowByAxis(`Horizontal, 1.05)
+         |> resizeWindowByAxis(`Vertical, 1.05)
+       })
 
   | Command(DecreaseHorizontalSize) =>
-    switch (focus) {
-    | Some(Center) => (
-        model |> resizeWindowByAxis(`Horizontal, 0.95),
-        Nothing,
-      )
-
-    | Some(Left)
-    | Some(Bottom)
-    | Some(Right)
-    | None => (model, Nothing)
-    }
+    model
+    |> updateCenter(~focus, model => {
+         model |> resizeWindowByAxis(`Horizontal, 0.95)
+       })
 
   | Command(IncreaseHorizontalSize) =>
-    switch (focus) {
-    | Some(Center) => (
-        model |> resizeWindowByAxis(`Horizontal, 1.05),
-        Nothing,
-      )
-
-    | Some(Left)
-    | Some(Bottom)
-    | Some(Right)
-    | None => (model, Nothing)
-    }
+    model
+    |> updateCenter(~focus, model => {
+         model |> resizeWindowByAxis(`Horizontal, 1.05)
+       })
 
   | Command(DecreaseVerticalSize) =>
-    switch (focus) {
-    | Some(Center) => (
-        model |> resizeWindowByAxis(`Vertical, 0.95),
-        Nothing,
-      )
-
-    | Some(Left)
-    | Some(Bottom)
-    | Some(Right)
-    | None => (model, Nothing)
-    }
+    model
+    |> updateCenter(~focus, model => {
+         model |> resizeWindowByAxis(`Vertical, 0.95)
+       })
 
   | Command(IncreaseVerticalSize) =>
-    switch (focus) {
-    | Some(Center) => (
-        model |> resizeWindowByAxis(`Vertical, 1.05),
-        Nothing,
-      )
-
-    | Some(Left)
-    | Some(Bottom)
-    | Some(Right)
-    | None => (model, Nothing)
-    }
+    model
+    |> updateCenter(~focus, model => {
+         model |> resizeWindowByAxis(`Vertical, 1.05)
+       })
 
   | Command(IncreaseWindowSize(direction)) =>
-    switch (focus) {
-    | Some(Center) => (
-        model |> resizeWindowByDirection(direction, 1.05),
-        Nothing,
-      )
-
-    | Some(Left)
-    | Some(Bottom)
-    | Some(Right)
-    | None => (model, Nothing)
-    }
+    model
+    |> updateCenter(~focus, model => {
+         model |> resizeWindowByDirection(direction, 1.05)
+       })
 
   | Command(DecreaseWindowSize(direction)) =>
-    switch (focus) {
-    | Some(Center) => (
-        model |> resizeWindowByDirection(direction, 0.95),
-        Nothing,
-      )
+    model
+    |> updateCenter(~focus, model => {
+         model |> resizeWindowByDirection(direction, 0.95)
+       })
 
-    | Some(Left)
-    | Some(Bottom)
-    | Some(Right)
-    | None => (model, Nothing)
-    }
-
-  | Command(Maximize) =>
-    switch (focus) {
-    | Some(Center) => (maximize(model), Nothing)
-
-    | Some(Left)
-    | Some(Bottom)
-    | Some(Right)
-    | None => (model, Nothing)
-    }
+  | Command(Maximize) => model |> updateCenter(~focus, maximize)
 
   | Command(MaximizeHorizontal) =>
-    switch (focus) {
-    | Some(Center) => (maximize(~direction=`Horizontal, model), Nothing)
-
-    | Some(Left)
-    | Some(Bottom)
-    | Some(Right)
-    | None => (model, Nothing)
-    }
+    model |> updateCenter(~focus, maximize(~direction=`Horizontal))
 
   | Command(MaximizeVertical) =>
-    switch (focus) {
-    | Some(Center) => (maximize(~direction=`Vertical, model), Nothing)
-
-    | Some(Left)
-    | Some(Bottom)
-    | Some(Right)
-    | None => (model, Nothing)
-    }
+    model |> updateCenter(~focus, maximize(~direction=`Vertical))
 
   | Command(ToggleMaximize) =>
     let model =
@@ -723,6 +666,37 @@ module Commands = {
       Command(MoveBottomRight),
     );
 
+  let moveToBottom =
+    define(
+      ~category="View",
+      ~title="Move Current Window To Bottom",
+      "window.moveToBottom",
+      Command(MoveToBottom),
+    );
+
+  let moveToFarLeft =
+    define(
+      ~category="View",
+      ~title="Move Current Window To Left",
+      "window.moveToFarLeft",
+      Command(MoveToFarLeft),
+    );
+
+  let moveToFarRight =
+    define(
+      ~category="View",
+      ~title="Move Current Window To Right",
+      "window.moveToFarRight",
+      Command(MoveToFarRight),
+    );
+
+  let moveToTop =
+    define(
+      ~category="View",
+      ~title="Move Current Window To Top",
+      "window.moveToTop",
+      Command(MoveToTop),
+    );
   let cycleForward = define("window.cycleForward", Command(CycleForward));
 
   let cycleBackward = define("window.cycleBackward", Command(CycleBackward));
@@ -908,6 +882,10 @@ module Contributions = {
       moveDown,
       moveTopLeft,
       moveBottomRight,
+      moveToBottom,
+      moveToFarLeft,
+      moveToFarRight,
+      moveToTop,
       cycleForward,
       cycleBackward,
       increaseSize,

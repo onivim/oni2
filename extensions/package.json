@@ -7,7 +7,7 @@
     "@emmetio/math-expression": "^0.1.1",
     "byline": "^5.0.0",
     "file-type": "^7.2.0",
-    "highlight.js": "10.1.2",
+    "highlight.js": "10.4.1",
     "iconv-lite-umd": "0.6.8",
     "image-size": "^0.5.2",
     "jschardet": "2.2.1",

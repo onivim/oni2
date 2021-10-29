@@ -11,10 +11,10 @@
     https-proxy-agent "^2.2.4"
     vscode-nls "^4.1.2"
 
-"@onivim/vscode-exthost@1.57.1001":
-  version "1.57.1001"
-  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.57.1001.tgz#f4642d8c077fc0ecae9dd266fa9a1dc72d84916d"
-  integrity sha512-17aJk0H24CJRAWcxFN0dR3sNsU1THdHS20GlXwzYA26ahEjtzSDqWDhphzEUVLL8jZW1sy/NFrR5FydwEZP6dg==
+"@onivim/vscode-exthost@1.58.2001":
+  version "1.58.2001"
+  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.58.2001.tgz#1f7281c4023c1b86707afca7fedf12e2199b61b1"
+  integrity sha512-vCuy7qWdoriMSKSXiRexBiSfUqPuvMKeSe3fh10jH12JN6m8qzMO9E3SFg3YpBrfjrR2qzBoMcT+V2RtWHUJdw==
   dependencies:
     graceful-fs "4.2.6"
     iconv-lite-umd "0.6.8"
@@ -245,9 +245,9 @@ socks@2.6.1, socks@^2.3.3:
     smart-buffer "^4.1.0"
 
 spdlog@^0.13.0:
-  version "0.13.5"
-  resolved "https://registry.yarnpkg.com/spdlog/-/spdlog-0.13.5.tgz#a31027dcccbe032e9a53579f42cb45428af08bad"
-  integrity sha512-D1xA5tRXw7eZOoFBCAnOxCxLN3JpHVDjpPJG/xjJ0nFZvtfOUTAzK66MVxJCDht/ZFwjLcBAltvzjfz4JTuSEw==
+  version "0.13.6"
+  resolved "https://registry.yarnpkg.com/spdlog/-/spdlog-0.13.6.tgz#26b2e13d46cbf8f2334c12ba2a8cc82de5a28f02"
+  integrity sha512-iGqDoA88G3Rv3lkbVQglTulp3nv12FzND6LDC7cOZ+OoFvWnXVb3+Ebhed60oZ6+IWWGwDtjXK6ympwr7C1XmQ==
   dependencies:
     bindings "^1.5.0"
     mkdirp "^0.5.5"
