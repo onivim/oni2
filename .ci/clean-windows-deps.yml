@@ -27,8 +27,6 @@ steps:
     displayName: "Remove Internet Explorer"
   - script: rd /s /q "C:\Program Files\Unity Hub"
     displayName: "Remove Unity"
-  - script: rd /s /q "C:\Program Files\Android"
-    displayName: "Remove Android SDK"
   - script: rd /s /q "C:\Program Files\MongoDB"
     displayName: "Remove MongoDB"
   - script: rd /s /q "%JAVA_HOME%"
