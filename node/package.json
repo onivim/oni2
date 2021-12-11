@@ -9,9 +9,8 @@
   },
   "dependencies": {
     "@onivim/request-light": "0.4.1",
-    "@onivim/vscode-exthost": "1.57.1001",
+    "@onivim/vscode-exthost": "1.58.2001",
     "fs-extra": "^8.1.0",
-    "node-pty": "0.11.0-beta7",
     "sudo-prompt": "^9.0.0",
     "vscode-proxy-agent": "^0.11.0",
     "yauzl": "^2.5.1"
