@@ -48,14 +48,41 @@ module Codec: {
     );
 };
 
+module VimSettings = {
+  open Config.Schema;
+
+  let singleTabMode =
+    vim(
+      "__singletabmode", // We don't have a vim setting for this, today.
+      ~compatibilityDefault=true,
+      _setting =>
+      false
+    );
+
+  let layoutTabPosition =
+    vim(
+      "__layouttabposition", // No vim setting for this, either...
+      ~compatibilityDefault=`top,
+      _setting =>
+      `top
+    );
+};
+
 let showLayoutTabs =
   setting("oni.layout.showLayoutTabs", Codec.showLayoutTabs, ~default=`smart);
 
 let layoutTabPosition =
   setting(
+    ~vim=VimSettings.layoutTabPosition,
     "oni.layout.layoutTabPosition",
     Codec.layoutTabPosition,
     ~default=`bottom,
   );
 
-let singleTabMode = setting("oni.layout.singleTabMode", bool, ~default=false);
+let singleTabMode =
+  setting(
+    ~vim=VimSettings.singleTabMode,
+    "oni.layout.singleTabMode",
+    bool,
+    ~default=false,
+  );
