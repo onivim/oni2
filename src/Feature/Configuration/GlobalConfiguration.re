@@ -240,6 +240,8 @@ module Editor = {
       ~default=true,
     );
 
+  let mouseWheelScrollPixels =
+    setting("editor.mouseWheelScrollPixels", float, ~default=50.);
   let lineHeight =
     setting(
       ~vim=VimSettings.lineSpace,
@@ -351,6 +353,7 @@ let contributions = [
   Editor.codeLensEnabled.spec,
   Editor.largeFileOptimizations.spec,
   Editor.lineHeight.spec,
+  Editor.mouseWheelScrollPixels.spec,
   Editor.snippetSuggestions.spec,
   Files.exclude.spec,
   Explorer.autoReveal.spec,

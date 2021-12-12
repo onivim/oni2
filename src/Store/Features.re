@@ -119,12 +119,12 @@ module Internal = {
     |> Isolinear.Effect.map(msg => Actions.Workspace(msg));
   };
 
-  let updateEditor = (~editorId, ~msg, ~client, layout) => {
+  let updateEditor = (~config, ~editorId, ~msg, ~client, layout) => {
     switch (Feature_Layout.editorById(editorId, layout)) {
     | Some(editor) =>
       open Feature_Editor;
 
-      let (updatedEditor, outmsg) = update(editor, msg);
+      let (updatedEditor, outmsg) = update(~config, editor, msg);
       let layout =
         Feature_Layout.map(
           editor => Editor.getId(editor) == editorId ? updatedEditor : editor,
@@ -181,6 +181,7 @@ module Internal = {
 
   let updateEditors =
       (
+        ~config: Config.resolver,
         ~scope: EditorScope.t,
         ~msg: Feature_Editor.msg,
         ~client: Exthost.Client.t,
@@ -194,14 +195,15 @@ module Internal = {
             let (layout, effects) = prev;
             let editorId = Feature_Editor.Editor.getId(editor);
             let (layout', effect') =
-              updateEditor(~editorId, ~msg, ~client, layout);
+              updateEditor(~config, ~editorId, ~msg, ~client, layout);
             (layout', [effect', ...effects]);
           },
           (layout, []),
           layout,
         );
       (layout', Isolinear.Effect.batch(effects));
-    | Editor(editorId) => updateEditor(~client, ~editorId, ~msg, layout)
+    | Editor(editorId) =>
+      updateEditor(~config, ~client, ~editorId, ~msg, layout)
     };
   };
 
@@ -298,7 +300,6 @@ module Internal = {
       |> Feature_Layout.activeEditor
       |> Feature_Editor.Editor.getPrimaryCursor;
 
-    let config = Selectors.configResolver(state);
     let editor = Feature_Layout.activeEditor(state.layout);
     let maybeBuffer = Selectors.getActiveBuffer(state);
 
@@ -314,8 +315,9 @@ module Internal = {
     let msg: Feature_Editor.msg =
       ModeChanged({allowAnimation, mode, effects});
     let scope = EditorScope.Editor(activeEditorId);
+    let config = Selectors.configResolver(state);
     let (layout, editorEffect) =
-      updateEditors(~client, ~scope, ~msg, state.layout);
+      updateEditors(~config, ~client, ~scope, ~msg, state.layout);
 
     let isInInsertMode =
       Vim.Mode.isInsertOrSelect(
@@ -2277,8 +2279,10 @@ let update =
     (state, eff);
 
   | Editor({scope, msg}) =>
+    let config = Selectors.configResolver(state);
     let (layout, effect) =
       Internal.updateEditors(
+        ~config,
         ~client=extHostClient,
         ~scope,
         ~msg,

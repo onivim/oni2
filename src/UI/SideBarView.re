@@ -105,6 +105,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
         | SCM =>
           <Feature_SCM.Pane
             model={state.scm}
+            config
             workingDirectory={Feature_Workspace.workingDirectory(
               state.workspace,
             )}
@@ -137,6 +138,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
         | Extensions =>
           let extensionDispatch = msg => dispatch(Actions.Extensions(msg));
           <Feature_Extensions.ListView
+            config
             model={state.extensions}
             proxy={state.proxy |> Feature_Proxy.proxy}
             theme

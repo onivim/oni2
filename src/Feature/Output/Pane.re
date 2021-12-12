@@ -55,10 +55,21 @@ let update = (msg, model) => {
 
 module View = {
   open Revery.UI;
-  let make = (~model, ~isActive, ~editorFont, ~uiFont, ~theme, ~dispatch, ()) => {
+  let make =
+      (
+        ~config,
+        ~model,
+        ~isActive,
+        ~editorFont,
+        ~uiFont,
+        ~theme,
+        ~dispatch,
+        (),
+      ) => {
     model.output
     |> Option.map(model => {
          <Component_Output.View
+           config
            model
            isActive
            editorFont
@@ -84,7 +95,7 @@ let pane = {
       ~sub=(~isFocused as _, _model) => Isolinear.Sub.none,
       ~view=
         (
-          ~config as _,
+          ~config,
           ~editorFont,
           ~font,
           ~isFocused,
@@ -96,6 +107,7 @@ let pane = {
           ~model,
         ) =>
           <View
+            config
             editorFont
             uiFont=font
             isActive=isFocused
