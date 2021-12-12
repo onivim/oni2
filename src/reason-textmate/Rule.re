@@ -21,31 +21,42 @@ let show = (v: t) => {
 };
 
 let ofMatch = (allowA, allowG, match: Pattern.patternMatch) => {
-  Some({
-    regex: RegExpFactory.compile(allowA, allowG, match.matchRegex),
-    name: match.matchName,
-    captures: match.captures,
-    popStack: None,
-    pushStack: None,
-  });
+  RegExpFactory.compile(allowA, allowG, match.matchRegex)
+  |> Option.map(regex =>
+       {
+         regex,
+         name: match.matchName,
+         captures: match.captures,
+         popStack: None,
+         pushStack: None,
+       }
+     );
 };
 
 let ofMatchRangeBegin = (allowA, allowG, matchRange: Pattern.matchRange) => {
-  Some({
-    regex: RegExpFactory.compile(allowA, allowG, matchRange.beginRegex),
-    name: matchRange.name,
-    captures: matchRange.beginCaptures,
-    popStack: None,
-    pushStack: Some(matchRange),
-  });
+  RegExpFactory.compile(allowA, allowG, matchRange.beginRegex)
+  |> Option.map(regex =>
+       {
+         regex,
+         name: matchRange.name,
+         captures: matchRange.beginCaptures,
+         popStack: None,
+         pushStack: Some(matchRange),
+       }
+     );
 };
 
 let ofMatchRangeEnd = (allowA, allowG, matchRange: Pattern.matchRange) => {
-  regex: RegExpFactory.compile(allowA, allowG, matchRange.endRegex),
-  name: matchRange.name,
-  captures: matchRange.endCaptures,
-  popStack: Some(matchRange),
-  pushStack: None,
+  RegExpFactory.compile(allowA, allowG, matchRange.endRegex)
+  |> Option.map(regex =>
+       {
+         regex,
+         name: matchRange.name,
+         captures: matchRange.endCaptures,
+         popStack: Some(matchRange),
+         pushStack: None,
+       }
+     );
 };
 
 let ofPatterns =
@@ -80,19 +91,22 @@ let ofPatterns =
 
   let initialRules =
     switch (activeRange) {
-    | Some(v) when v.applyEndPatternLast == true => [
-        ofMatchRangeEnd(isFirstLine, isAnchorPos, v),
-      ]
+    | Some(v) when v.applyEndPatternLast == true =>
+      switch (ofMatchRangeEnd(isFirstLine, isAnchorPos, v)) {
+      | Some(v) => [v]
+      | None => []
+      }
     | _ => []
     };
 
   let rules = List.fold_left(f, initialRules, patterns);
 
   switch (activeRange) {
-  | Some(v) when v.applyEndPatternLast == false => [
-      ofMatchRangeEnd(isFirstLine, isAnchorPos, v),
-      ...rules,
-    ]
+  | Some(v) when v.applyEndPatternLast == false =>
+    switch (ofMatchRangeEnd(isFirstLine, isAnchorPos, v)) {
+    | Some(v) => [v, ...rules]
+    | None => rules
+    }
   | _ => rules
   };
 };
