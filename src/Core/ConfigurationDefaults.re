@@ -36,6 +36,12 @@ let getDefaultConfigString = configName =>
   "workbench.sideBar.location": "left",
   "workbench.sideBar.visible": true,
   "workbench.statusBar.visible": true,
+  "workbench.statusBar.items": {
+    "start": ["notificationCount", "macro", "...", "diagnosticCount", "git"],
+    "showOnNotification": ["modeIndicator", "notificationCount"],
+    "end": ["...", "lineEndings", "indentation", "fileType", "position", "modeIndicator"],
+    "hidden": [],
+  },
   "workbench.tree.indent": 2,
   "vim.useSystemClipboard": ["yank"]
 }

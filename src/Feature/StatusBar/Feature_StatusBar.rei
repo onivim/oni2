@@ -17,6 +17,21 @@ module Item: {
     t;
 };
 
+module ConfigurationItems: {
+  type notificationMode =
+    | Default
+    | KeepPosition
+    | Compact
+    | CompactPlus;
+
+  type t = {
+    startItems: list(string),
+    endItems: list(string),
+    hidden: list(string),
+    showOnNotification: list(string),
+    notificationMode,
+  };
+};
 // MODEL
 
 [@deriving show]
@@ -62,6 +77,7 @@ module View: {
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,
       ~workingDirectory: string,
+      ~items: ConfigurationItems.t,
       unit
     ) =>
     Revery.UI.element;
@@ -69,7 +85,10 @@ module View: {
 
 // CONFIGURATION
 
-module Configuration: {let visible: Config.Schema.setting(bool);};
+module Configuration: {
+  let visible: Config.Schema.setting(bool);
+  let items: Config.Schema.setting(ConfigurationItems.t);
+};
 
 // CONTRIBUTIONS
 

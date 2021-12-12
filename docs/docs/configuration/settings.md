@@ -179,8 +179,6 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `workbench.sideBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the sidebar.
 
-- `workbench.statusBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the status bar.
-
 - `window.menuBarVisibility` __(_"visible" | "hidden"_ default: `"visible"`)__ - Controls the visibility of the menu bar.
 
 - `window.titleBarStyle` __(_"native" | "custom"_ default: `"native"` on Windows, `"custom"` otherwise)__ - Controls whether the titlebar is custom-rendered.
@@ -190,6 +188,51 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `oni.layout.layoutTabPosition` __(_"top"|"bottom"_ default: `"bottom"`)__ - Controls the position of the layout tabs.
 
 - `oni.layout.singleTabMode` __(_bool_ default: `false`)__ - When `true`, groups will only hold a single editor, and closing this editor will always close the group. It will also hide the editor tabs, and therefore essentially hide the concept of editor groups.
+
+#### Status Bar
+
+- `workbench.statusBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the status bar.
+
+##### Status Bar Items
+- `workbench.statusBar.items` - Controls the position and visibility of the individual items on the status bar.
+
+```JSON
+    "workbench.statusBar.items": {
+        "start": ["notificationCount", "macro", "...", "diagnosticCount", "git"],
+        "end": ["...", "lineEndings", "indentation", "fileType", "position", "modeIndicator"],
+        "showOnNotification": ["modeIndicator", "notificationCount"],
+        "hidden": [],
+        "notificationMode": "default",
+    }
+```
+
+- `start` __(_[ __items__ ]_ default: `["notificationCount", "macro", "...", "diagnosticCount", "git"]`)__ - Defines the first group of items that appear.
+
+- `end` __(_[ __items__ ]_ default: `["...", "lineEndings", "indentation", "fileType", "position", "modeIndicator"]`)__ - Defines the group of items that appears at the end of the status bar.
+
+- `showOnNotification` __(_[ __items__ ]_ default: `["notificationCount", "modeIndicator"]`)__ - Defines the group of items that are hidden by the notification popup text. Only works on `notificationMode` `default|keepPosition`
+
+- `hidden` __(_[ __items__ ]_ default: `[ ]`)__ - Defines the group of items that are always hiden.
+
+- Possible __Items__:
+    - _"notificationCount"_ - Notification Count icon and counter
+    - _"macro"_ - The vim macro indicator
+    - _"leftItems/rightItems"_ - Items that generated based on other factors, like extensions
+    - _"diagnosticCount"_ - Problem icon and counter
+    - _"git"_ - Source control information
+    - _"lineEndings"_ - Line endings information
+    - _"indentation"_ - Indentation information
+    - _"fileType"_ - File type information
+    - _"position"_ - Position information
+    - _"modeIndicator"_ - Vim mode indicator
+    - _"..."_ - The rest of the items in that group, as by the default, that are not defined in other groups 
+    - _Extension Item ID_ - Any known extension item ID can be used to as an item.
+
+- `notificationMode` __(_"default | keepPosition | compact | compact+"_ default: `[ ]`)__ - Defines how the notification popup. 
+    - _"default"_  - The notification popup hides the __items__ on the `showOnNotification`, and reorganizes the items to be together based on if they are on `showOnNotification`.
+    - _"keepPosition"_  - The notification popup hides the __items__ on the `showOnNotification`.
+    - _"compact"_  - The notification popups take the minimum space available, but notifications can stack up on the status bar.
+    - _"compact+"_ - The same as `compact` but notification popups do not stack up.
 
 ### Proxy
 

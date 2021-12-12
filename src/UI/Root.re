@@ -162,6 +162,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
           workingDirectory={Feature_Workspace.workingDirectory(
             state.workspace,
           )}
+          items={Feature_StatusBar.Configuration.items.get(config)}
         />
       </View>;
     } else {
