@@ -4,18 +4,6 @@ open EditorInput;
 // TODO: Move to Service_Input
 module ReveryKeyConverter = ReveryKeyConverter;
 
-type outmsg =
-  | Nothing
-  | DebugInputShown
-  | ErrorNotifications(list(string))
-  | MapParseError({
-      fromKeys: string,
-      toKeys: string,
-      error: string,
-    })
-  | OpenFile(FpExp.t(FpExp.absolute))
-  | TimedOut;
-
 [@deriving show]
 type command;
 
@@ -73,6 +61,19 @@ module KeybindingsLoader: {
 [@deriving show]
 type msg;
 
+type outmsg =
+  | Nothing
+  | DebugInputShown
+  | Effect(Isolinear.Effect.t(msg))
+  | ErrorNotifications(list(string))
+  | MapParseError({
+      fromKeys: string,
+      toKeys: string,
+      error: string,
+    })
+  | OpenFile(FpExp.t(FpExp.absolute))
+  | TimedOut;
+
 module Msg: {
   let keybindingsUpdated: list(Schema.resolvedKeybinding) => msg;
   let vimMap: Vim.Mapping.t => msg;
@@ -116,6 +117,11 @@ let timeout:
 let text:
   (~text: string, ~time: Revery.Time.t, model) => (model, list(effect));
 
+let imeEdit:
+  (~candidateText: string, ~length: int, ~start: int, model) => model;
+
+let isImeActive: model => bool;
+
 let candidates:
   (~config: Config.resolver, ~context: WhenExpr.ContextKeys.t, model) =>
   list((EditorInput.Matcher.t, execute));
@@ -155,13 +161,21 @@ let disable: model => model;
 
 let notifyFileSaved: (FpExp.t(FpExp.absolute), model) => model;
 
+let configurationChanged: (~config: Config.resolver, model) => model;
+
 // UPDATE
 
 let update: (msg, model) => (model, outmsg);
 
 // SUBSCRIPTION
 
-let sub: (~config: Config.resolver, model) => Isolinear.Sub.t(msg);
+let sub:
+  (
+    ~imeBoundingArea: option(Revery.Math.BoundingBox2d.t),
+    ~config: Config.resolver,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
 
 // CONTRIBUTIONS
 

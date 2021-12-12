@@ -230,6 +230,9 @@ module Internal = {
         state.buffers
         |> Feature_Buffers.configurationChanged(~config=resolver);
 
+      let input =
+        state.input |> Feature_Input.configurationChanged(~config=resolver);
+
       let languageSupport =
         state.languageSupport
         |> Feature_LanguageSupport.configurationChanged(~config=resolver);
@@ -272,6 +275,7 @@ module Internal = {
           buffers,
           colorTheme,
           fileExplorer,
+          input,
           languageSupport,
           sideBar,
           layout,
@@ -706,6 +710,8 @@ let update =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
       | DebugInputShown => Internal.openFileEffect("oni://DebugInput")
+
+      | Effect(eff) => eff |> Isolinear.Effect.map(msg => Input(msg))
 
       | ErrorNotifications(errorMessages) =>
         errorMessages

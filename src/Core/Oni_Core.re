@@ -30,6 +30,7 @@ module FontLigatures = FontLigatures;
 module FontSmoothing = FontSmoothing;
 module FontMeasurementCache = FontMeasurementCache;
 module Glob = Glob;
+module IME = IME;
 module IconTheme = IconTheme;
 module Indentation = Indentation;
 module IndentationConverter = IndentationConverter;
