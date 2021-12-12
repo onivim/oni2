@@ -51,6 +51,7 @@ module Span = Span;
 module SuggestItem = SuggestItem;
 module SuggestResult = SuggestResult;
 module SymbolKind = SymbolKind;
+module Terminal = Terminal;
 module TextEditor = TextEditor;
 module ThemeColor = ThemeColor;
 module WorkspaceData = WorkspaceData;

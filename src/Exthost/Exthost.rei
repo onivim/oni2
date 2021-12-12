@@ -748,6 +748,26 @@ module SymbolKind: {
   let decode: Json.decoder(t);
 };
 
+module Terminal: {
+  module LaunchConfig: {
+    [@deriving show]
+    type t = {
+      name: option(string),
+      shellPath: option(string),
+      shellArgs: list(string),
+      cwd: option(Oni_Core.Uri.t),
+      // TODO: Env
+      //env:
+      waitOnExit: bool,
+      strictEnv: bool,
+      hideFromUser: bool,
+      isExtensionTerminal: bool,
+    };
+
+    let decode: Json.decoder(t);
+  };
+};
+
 module DocumentSymbol: {
   [@deriving show]
   type t = {
@@ -1739,6 +1759,22 @@ module Msg: {
   module TerminalService: {
     [@deriving show]
     type msg =
+      | CreateTerminal({config: Terminal.LaunchConfig.t})
+      | Dispose({terminalId: int})
+      | Hide({terminalId: int})
+      | SendText({
+          terminalId: int,
+          text: string,
+          addNewLine: bool,
+        })
+      | Show({
+          terminalId: int,
+          preserveFocus: bool,
+        })
+      | StartSendingDataEvents
+      | StopSendingDataEvents
+      | StartHandlingLinks
+      | StopHandlingLinks
       | SendProcessTitle({
           terminalId: int,
           title: string,

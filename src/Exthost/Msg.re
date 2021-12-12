@@ -1676,6 +1676,27 @@ module SCM = {
 module TerminalService = {
   [@deriving show]
   type msg =
+    | CreateTerminal({config: Terminal.LaunchConfig.t})
+    | Dispose({terminalId: int})
+    | Hide({terminalId: int})
+    | SendText({
+        terminalId: int,
+        text: string,
+        addNewLine: bool,
+      })
+    | Show({
+        terminalId: int,
+        preserveFocus: bool,
+      })
+    | StartSendingDataEvents
+    | StopSendingDataEvents
+    | StartHandlingLinks
+    | StopHandlingLinks
+    // TODO:
+    //    | SetEnvironmentVariableCollection({
+    //      extensionId: string,
+    //      persistent: bool,
+    //    })
     | SendProcessTitle({
         terminalId: int,
         title: string,
@@ -1695,46 +1716,92 @@ module TerminalService = {
       });
 
   let handle = (method, args: Yojson.Safe.t) => {
-    switch (method) {
-    | "$sendProcessTitle" =>
-      switch (args) {
-      | `List([`Int(terminalId), `String(title)]) =>
-        Ok(SendProcessTitle({terminalId, title}))
-      | _ => Error("Unexpected arguments for $sendProcessTitle")
+    Base.Result.Let_syntax.(
+      switch (method) {
+      | "$createTerminal" =>
+        switch (args) {
+        | `List([configJson]) =>
+          let%bind config =
+            configJson |> Internal.decode_value(Terminal.LaunchConfig.decode);
+          Ok(CreateTerminal({config: config}));
+        | _ => Error("Unexpected arguments for $createTerminal")
+        }
+
+      | "$dispose" =>
+        switch (args) {
+        | `List([terminalIdJson]) =>
+          let%bind terminalId =
+            terminalIdJson |> Internal.decode_value(Decode.int);
+          Ok(Dispose({terminalId: terminalId}));
+        | _ => Error("Unexpected arguments for $dispose")
+        }
+
+      | "$hide" =>
+        switch (args) {
+        | `List([terminalIdJson]) =>
+          let%bind terminalId =
+            terminalIdJson |> Internal.decode_value(Decode.int);
+          Ok(Hide({terminalId: terminalId}));
+        | _ => Error("Unexpected arguments for $dispose")
+        }
+
+      | "$show" =>
+        switch (args) {
+        | `List([terminalIdJson, `Bool(preserveFocus)]) =>
+          let%bind terminalId =
+            terminalIdJson |> Internal.decode_value(Decode.int);
+          Ok(Show({terminalId, preserveFocus}));
+        | _ => Error("Unexpected arguments for $dispose")
+        }
+
+      | "$startSendingDataEvents" => Ok(StartSendingDataEvents)
+
+      | "$stopSendingDataEvents" => Ok(StopSendingDataEvents)
+
+      | "$startHandlingLinks" => Ok(StartHandlingLinks)
+
+      | "$stopHandlingLinks" => Ok(StopHandlingLinks)
+
+      | "$sendProcessTitle" =>
+        switch (args) {
+        | `List([`Int(terminalId), `String(title)]) =>
+          Ok(SendProcessTitle({terminalId, title}))
+        | _ => Error("Unexpected arguments for $sendProcessTitle")
+        }
+
+      | "$sendProcessData" =>
+        switch (args) {
+        | `List([`Int(terminalId), `String(data)]) =>
+          Ok(SendProcessData({terminalId, data}))
+        | _ => Error("Unexpected arguments for $sendProcessData")
+        }
+
+      | "$sendProcessReady" =>
+        switch (args) {
+        | `List([`Int(terminalId), `Int(pid), `String(workingDirectory)]) =>
+          Ok(SendProcessReady({terminalId, pid, workingDirectory}))
+
+        | _ => Error("Unexpected arguments for $sendProcessReady")
+        }
+
+      | "$sendProcessExit" =>
+        switch (args) {
+        | `List([`Int(terminalId), `Int(exitCode)]) =>
+          Ok(SendProcessExit({terminalId, exitCode}))
+
+        | _ => Error("Unexpected arguments for $sendProcessExit")
+        }
+
+      | _ =>
+        Error(
+          Printf.sprintf(
+            "Unhandled Terminal message - %s: %s",
+            method,
+            Yojson.Safe.to_string(args),
+          ),
+        )
       }
-
-    | "$sendProcessData" =>
-      switch (args) {
-      | `List([`Int(terminalId), `String(data)]) =>
-        Ok(SendProcessData({terminalId, data}))
-      | _ => Error("Unexpected arguments for $sendProcessData")
-      }
-
-    | "$sendProcessReady" =>
-      switch (args) {
-      | `List([`Int(terminalId), `Int(pid), `String(workingDirectory)]) =>
-        Ok(SendProcessReady({terminalId, pid, workingDirectory}))
-
-      | _ => Error("Unexpected arguments for $sendProcessReady")
-      }
-
-    | "$sendProcessExit" =>
-      switch (args) {
-      | `List([`Int(terminalId), `Int(exitCode)]) =>
-        Ok(SendProcessExit({terminalId, exitCode}))
-
-      | _ => Error("Unexpected arguments for $sendProcessExit")
-      }
-
-    | _ =>
-      Error(
-        Printf.sprintf(
-          "Unhandled Terminal message - %s: %s",
-          method,
-          Yojson.Safe.to_string(args),
-        ),
-      )
-    };
+    );
   };
 };
 
