@@ -66,7 +66,9 @@ module IDGenerator =
 
 [@deriving show({with_path: false})]
 type command =
-  | Show;
+  | Show
+  | ScrollDown
+  | ScrollUp;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -140,6 +142,8 @@ let update =
       msg,
     ) =>
   switch (msg) {
+  | Command(ScrollDown)
+  | Command(ScrollUp)
   | Command(Show) =>
     switch (maybeBuffer) {
     | Some(buffer) =>
@@ -280,10 +284,27 @@ module Commands = {
       "editor.action.showHover",
       Command(Show),
     );
+
+  let scrollDown =
+    define(
+      ~category="Hover",
+      ~title="Scroll down",
+      "editor.action.scrollHoverDown",
+      Command(ScrollDown)
+    )
+
+
+  let scrollUp =
+    define(
+      ~category="Hover",
+      ~title="Scroll up",
+      "editor.action.scrollHoverUp",
+      Command(ScrollUp)
+    )
 };
 
 module Contributions = {
-  let commands = Commands.[show];
+  let commands = Commands.[show, scrollDown, scrollUp];
 };
 
 module Styles = {
