@@ -14,12 +14,12 @@ chmod +x _staging/linuxdeploy-x86_64.AppImage
 wget -O _staging/appimagetool-x86_64.AppImage https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage
 chmod +x _staging/appimagetool-x86_64.AppImage
 
-cp scripts/linux/Onivim2.desktop _release/linux/Onivim2.desktop
+cp scripts/linux/Outrun-Onivim2.desktop _release/linux/Outrun-Onivim2.desktop
 cp assets/images/icon512.png _release/linux/Onivim2.png
 
-./_staging/linuxdeploy-x86_64.AppImage -e _release/linux/bin/Oni2_editor --appdir _release/Onivim2.AppDir -d _release/linux/Onivim2.desktop -i _release/linux/Onivim2.png
+./_staging/linuxdeploy-x86_64.AppImage -e _release/linux/bin/Oni2_editor --appdir _release/Onivim2.AppDir -d _release/linux/Outrun-Onivim2.desktop -i _release/linux/Onivim2.png
 
-cp scripts/linux/Onivim2.desktop _release/Onivim2.AppDir/Onivim2.desktop
+cp scripts/linux/Outrun-Onivim2.desktop _release/Onivim2.AppDir/Outrun-Onivim2.desktop
 cp scripts/linux/AppRun _release/Onivim2.AppDir/AppRun
 chmod +x _release/Onivim2.AppDir/AppRun
 cp assets/images/icon512.png _release/Onivim2.AppDir/Onivim2.png
