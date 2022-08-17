@@ -27,7 +27,7 @@ RUN yum -y install nasm
 RUN yum -y install https://repo.ius.io/ius-release-el7.rpm
 RUN yum -y remove git
 RUN yum -y install epel-release
-RUN yum -y install git222
+RUN yum -y install git236
 
 # 3706 - install gsettings-settings-daemon:
 # This includes the `org.gnome.settings-daemon.plugins.xsettings.gschema.xml` that needs to be overridden
